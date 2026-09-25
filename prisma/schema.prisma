@@ -1,0 +1,48 @@
+// Prisma schema for structured, frequently-updated data.
+// Long-form content (articles, projects) lives in content/*.mdx instead —
+// see docs/ARCHITECTURE.md for why the split exists.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// One row = one day of practice in one area. A day "counts" toward a streak
+// the moment a row exists for it, regardless of `isPublic` — streaks measure
+// practice, not publishing. See docs/ARCHITECTURE.md#streaks.
+model LearningLog {
+  id         String   @id @default(cuid())
+  date       String // "YYYY-MM-DD", local to the site owner's timezone (see OPERATIONS.md)
+  area       String // "english" | "chinese" | "dev" | "other" (open string, not an enum, so new areas need no migration)
+  activity   String // short label, e.g. "Shadowing practice — HSK4 unit 3"
+  minutes    Int?
+  note       String? // longer reflection; only rendered publicly when isPublic is true
+  isPublic   Boolean  @default(true)
+  articleSlug String? // optional link to content/articles/<slug>.mdx that discusses this session
+  createdAt  DateTime @default(now())
+
+  @@index([date])
+  @@index([area])
+}
+
+// Schema is defined now so the data model doesn't need to change later,
+// but there is no UI reading/writing this table yet — see docs/ROADMAP.md.
+// Third-party details (company, interviewer) are free-text specifically so
+// they can be anonymized ("Company A", "Interviewer 1") at entry time.
+model InterviewRecord {
+  id            String   @id @default(cuid())
+  roleTitle     String
+  companyLabel  String // anonymized label, e.g. "Series B fintech, Company A"
+  stage         String // "phone-screen" | "technical" | "onsite" | "offer" | "rejected" | etc.
+  date          String // "YYYY-MM-DD"
+  prepMethod    String?
+  questions     String? // free text / JSON-encoded list
+  lessons       String?
+  improvements  String?
+  isPublic      Boolean  @default(false) // defaults closed: interview notes are private unless explicitly opened up
+  createdAt     DateTime @default(now())
+}
