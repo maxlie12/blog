@@ -115,6 +115,14 @@ LearningLog (SQLite) — unchanged: the original hand-logged practice-streak tab
 InterviewRecord (SQLite, schema only — still no UI, see docs/ROADMAP.md)
 ```
 
+**Lesson material and attempt answers are text/URLs, not binary blobs.** A Listening lesson's
+`material` can be an audio URL (played back with a plain `<audio>` element if it looks like one
+— see `src/components/LessonDetailView.tsx`); a Speaking attempt's `response` is always a typed
+transcript, even though the submission form offers an in-browser recording for the learner's
+own playback. Neither ever uploads a file — there is no blob storage configured (see
+[ROADMAP.md](ROADMAP.md)), so nothing would be able to persist one. See
+[DECISIONS.md](DECISIONS.md).
+
 **Skill progress is computed, never stored.** `src/lib/lessonsData.ts#getSkillProgress`
 derives each skill's `completed/total` from live `Attempt` rows (a lesson counts once it has at
 least one `reviewStatus: "reviewed"` attempt) every time it's read. There is no cached progress
@@ -126,11 +134,18 @@ number anywhere that could drift from the underlying attempts.
   request time. `/`, `/blog`, `/learning` are now `force-dynamic` (not statically generated)
   specifically so a Studio publish/attempt is visible on the next request, not just the next
   deploy.
-- **Write (Studio → Post/Lesson/Attempt/Journey):** a Server Action
+- **Write (Studio → Post/Lesson/Journey, and Studio's own attempt review):** a Server Action
   (`src/app/studio/**/actions.ts`) re-checks the session, validates input, writes via Prisma,
   and calls `revalidatePath` on every public route that could show the change. No separate API
   layer — Server Actions are the only write path, called directly from Studio's client
   components.
+- **Write (attempt submission, from the public lesson page):** a separate Server Action
+  (`src/app/learning/attemptActions.ts#submitAttempt`) — not under `/studio` — lets a signed-in
+  owner submit an attempt directly from `/learning/[lessonId]`, so practicing doesn't require a
+  detour through Studio. It independently checks `hasStudioSession()` (not
+  `requireStudioSession()`, since a public page must still render for signed-out visitors) and
+  always creates the attempt with `reviewStatus: "pending"` — only Studio's own attempt editor
+  can mark one `"reviewed"`. See [DECISIONS.md](DECISIONS.md).
 - **Write (articles/projects, learning-log CLI):** unchanged from before — file edits + git
   commit, and `npm run log`, respectively.
 
@@ -140,7 +155,7 @@ number anywhere that could drift from the underlying attempts.
 |---|---|---|
 | `Post.status: "draft"` | No | `getPublicArticles()`/`getPublicArticleBySlug()` only ever select `status: "published"` |
 | Articles marked `draft: true` (MDX) | No | Filtered in `getAllArticles()` in production, same as before |
-| `Attempt` rows | Yes (response/feedback are shown on the public lesson page once `reviewStatus: "reviewed"`) | There is no private/public flag on an attempt — Studio is the only place attempts are created, so nothing unreviewed or sensitive is exposed by construction. If a future attempt ever needs to stay private, that needs a new field, not implied behavior. |
+| `Attempt` rows | Yes, always — the attempt-detail page (`/learning/[lessonId]/attempts/[id]`) shows the response/feedback regardless of `reviewStatus` | There is no private/public flag on an attempt. Anyone who created it did so as the signed-in owner (submission is gated — see "Data flows"), so there's no visitor-submitted content to protect against; a pending attempt is just as visible as a reviewed one, it simply doesn't count toward completion yet. If a future attempt ever needs to stay private, that needs a new field. |
 | `JourneyEvidence` | Yes, always | Free-text and short by design (see content model) — don't put anything in an evidence note you wouldn't want public. |
 | `LearningLog` rows | Yes, but only if `isPublic: true` | Unchanged from before |
 | `InterviewRecord` rows | No (defaults `isPublic: false`) | Unchanged — no UI yet |

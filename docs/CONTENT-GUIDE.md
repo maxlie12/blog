@@ -105,19 +105,45 @@ for why). In practice:
 If a slug is misspelled, the link silently doesn't render rather than breaking the build —
 double-check slugs against the actual filenames in `content/`.
 
-## Managing lessons and attempts (Studio)
+## Managing lessons (Studio)
 
 1. `/studio/learning` → **+ New lesson**. Fields: skill, title, target level (a CEFR-style
-   label — cosmetic, never derived from anything), instructions, source/material (optional),
-   exercise(s) (optional), and completion criteria (what "done" means for this lesson).
-2. Open a saved lesson to **record an attempt**: date, response/notes, feedback, and a review
-   status (`pending`, `reviewed`, `needs-revision`). A lesson counts toward its skill's public
-   progress bar once it has at least one `reviewed` attempt — see
-   [ARCHITECTURE.md](ARCHITECTURE.md#content-model).
-3. **Attempts are separate from the lesson** specifically so you can inspect and correct
-   history — click **Correct** on any past attempt to edit its date/response/feedback/status,
-   or **Delete** to remove it. Editing an attempt never touches the lesson definition.
-4. Deleting a lesson deletes all its attempts (confirmed before it happens).
+   label — cosmetic, never derived from anything), instructions, source/material (optional — for
+   a Listening lesson, paste a direct audio file URL here to get a playable player on the public
+   lesson page; anything else renders as plain text), exercise(s) (optional), and completion
+   criteria (what "done" means for this lesson).
+2. Deleting a lesson deletes all its attempts (confirmed before it happens).
+
+## Taking a lesson and submitting an attempt
+
+This happens on the **public** lesson page (`/learning/<lessonId>`), while signed into Studio —
+not inside `/studio` itself, so you can practice from the normal site without switching context.
+Signed-out visitors see the same page read-only, with a "Sign in" link instead of the form.
+
+1. Open a lesson from `/learning` (or a skill card's lesson list).
+2. Read the instructions/material/exercise, then fill in the answer field:
+   - **Writing / Reading:** a plain text answer.
+   - **Listening:** if the lesson has an audio `material` URL, it plays inline; write your
+     answer/notes below it.
+   - **Speaking:** an in-browser **Record** button lets you record and play back your own voice
+     for self-checking — **this recording is never uploaded or saved** (no audio storage is
+     configured, see [ROADMAP.md](ROADMAP.md)). Type a transcript of what you said in the field
+     below; the transcript is what actually gets submitted.
+3. **Submit attempt.** The button is disabled/blocked until you've written a real answer (a few
+   characters minimum) — this is enforced both by the browser (`required`/`minLength`) and
+   again on the server, so a stripped-down request can't skip it either.
+4. On success you get a confirmation and a permalink to the attempt (`/learning/<lessonId>/
+   attempts/<attemptId>`) that persists — reload it, or open it on another signed-in device, and
+   the answer is still there (it's a real database row, not browser storage).
+5. **Submitting again does not overwrite the previous attempt** — each submission is a new row,
+   and the lesson page's "Attempt history" list shows all of them, each linking to its own
+   permalink.
+6. **A submitted attempt does not by itself mark the lesson complete.** It starts
+   `reviewStatus: "pending"`. To review it: `/studio/learning/lessons/<id>` → find the attempt →
+   **Correct** → set review status to `reviewed` (optionally add feedback) → **Save correction**.
+   Only then does it count toward that skill's progress bar, on both `/studio/learning` and the
+   public `/learning` page. This is a deliberate, explicit step — see
+   [DECISIONS.md](DECISIONS.md) for why nothing infers completion automatically.
 
 ## Editing the mountain-journey map (Studio)
 

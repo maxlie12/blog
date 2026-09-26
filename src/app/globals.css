@@ -1934,3 +1934,88 @@ a.skill-card {
     padding: 1.25rem 1rem 2rem;
   }
 }
+
+/* ---- Attempt submission (public lesson page) ---- */
+
+.lesson-detail__audio {
+  width: 100%;
+}
+
+.lesson-detail__submit {
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+}
+
+.attempt-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.attempt-form__recorder {
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.attempt-form__recorder-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.attempt-form__recorder-controls audio {
+  height: 32px;
+}
+.attempt-form__recorder-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.attempt-form__success {
+  background: color-mix(in srgb, var(--accent-teal) 14%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent-teal) 40%, transparent);
+  border-radius: 10px;
+  padding: 1rem;
+}
+.attempt-form__success p {
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+.attempt-form__success-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.attempt-form__success-actions a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-size: 0.9rem;
+}
+
+.attempt-history {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.attempt-history a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  font-size: 0.88rem;
+}
+.attempt-history a:hover {
+  border-color: var(--accent);
+}

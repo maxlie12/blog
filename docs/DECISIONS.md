@@ -3,6 +3,54 @@
 Reverse-chronological log of decisions with material impact and their rationale. See linked
 docs for full detail; this file is the "why," not the "how."
 
+## 2026-09-26 — Attempt submission requires the Studio session, on the public lesson page
+
+**Decision:** `/learning/[lessonId]` now shows a real answer form and Submit action, but only
+to a visitor with a valid Studio session (`hasStudioSession()`); everyone else sees a read-only
+page with a "Sign in to submit an attempt" link. The submit Server Action
+(`src/app/learning/attemptActions.ts`) independently re-checks the session and refuses
+(returns an error, doesn't silently no-op) if it's missing.
+
+**Why:** asked directly and confirmed explicitly (see chat) rather than assumed — the
+alternative (open to any visitor) would have made attempt submission the site's first
+unauthenticated write endpoint, which didn't fit the existing model where every write goes
+through the same one-owner session. Keeping it gated means the public lesson page can host the
+"do the lesson" experience directly (no need to detour through `/studio` to practice) without
+changing who can write to the site.
+
+**Consequence:** the answer form lives on the public URL, not under `/studio`, so the owner can
+browse the normal public site while signed in and practice there — the gating is by session,
+not by route.
+
+## 2026-09-26 — Speaking recordings are local-only; the persisted answer is always text
+
+**Decision:** the Speaking lesson type offers an in-browser record/playback control
+(`MediaRecorder` via `SpeakingRecorder` in `AttemptSubmitForm.tsx`), but the audio is never
+uploaded — `Attempt.response` always stores a typed transcript, which is what's actually
+validated and saved.
+
+**Why:** there's no blob/file storage configured (cover images have the same limitation — see
+`docs/ROADMAP.md`), so there is nothing to persist a recording *to*. Silently discarding the
+recording without saying so would violate the instruction to label the transcript fallback
+clearly; the UI says outright, next to the record button, that the recording is for
+self-review only and the transcript is what gets submitted. This is an honest scope limit, not
+a hidden one.
+
+**Revisit when:** blob storage is added (see `docs/ROADMAP.md`) — at that point `Attempt` would
+need a new field (e.g. `audioUrl`) rather than overloading `response`.
+
+## 2026-09-26 — Submitting an attempt never changes skill progress by itself
+
+**Decision:** `getSkillProgress()` (unchanged by this pass) still only counts a lesson as
+complete once it has an attempt with `reviewStatus: "reviewed"`. A freshly submitted attempt
+always starts `"pending"`, regardless of whether it was submitted via the public page or
+Studio's own form.
+
+**Why:** explicit, repeated instruction across every pass touching this feature — never infer
+CEFR proficiency or completion from submitted attempts alone. Verified live: submitting two
+attempts against a lesson left its skill progress at `0/2`; only after the owner reviewed one
+attempt in Studio did it become `1/2`, on both the Studio and public pages.
+
 ## 2026-09-26 — Studio auth: single password + signed cookie, not a real auth system
 
 **Decision:** `/studio` is gated by one `STUDIO_PASSWORD` env var and an HMAC-signed session

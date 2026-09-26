@@ -54,9 +54,12 @@ Conditions to start: enough real lesson/attempt history exists to know what's ac
 
 ## Phase 5 — media, ergonomics, polish
 
-- **Image upload.** Cover images and journey evidence currently take a pasted URL only — no
-  blob storage is configured. Adding this needs a storage decision (Vercel Blob, S3, etc.) and
-  an upload endpoint gated the same way as other Studio writes.
+- **Media upload (images and audio).** Cover images and journey evidence take a pasted URL
+  only; Speaking-lesson recordings play back locally and are never saved (see
+  [DECISIONS.md](DECISIONS.md)) — no blob storage is configured for any of these. Adding this
+  needs a storage decision (Vercel Blob, S3, etc.), an upload endpoint gated the same way as
+  other Studio/attempt writes, and — for recordings specifically — a new `Attempt` field (e.g.
+  `audioUrl`) rather than overloading `response`.
 - Calendar heatmap of practice days on the Learning page.
 - Rich-text (not just Markdown-with-toolbar) editing, if plain Markdown proves limiting.
 - Migrate `src/middleware.ts` to the `proxy.ts` convention Next.js 16 prefers (currently just a

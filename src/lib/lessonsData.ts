@@ -84,6 +84,19 @@ export async function getSkillProgress(): Promise<Record<SkillId, { completed: n
   return progress;
 }
 
+export async function getAttemptWithLesson(attemptId: string) {
+  const attempt = await prisma.attempt.findUnique({
+    where: { id: attemptId },
+    include: { lesson: true },
+  });
+  if (!attempt) return null;
+  return {
+    ...attempt,
+    createdAt: attempt.createdAt.toISOString(),
+    lesson: { ...attempt.lesson, skill: attempt.lesson.skill as SkillId },
+  };
+}
+
 export async function getRecentAttempts(limit = 10) {
   const attempts = await prisma.attempt.findMany({
     orderBy: { createdAt: "desc" },

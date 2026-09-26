@@ -35,15 +35,21 @@ A single public site that is a genuine record of growth, not a highlight reel:
    `content/articles/` or `content/projects/` and commit it; the public blog merges both
    sources. Kept for content that benefits from being in git (see
    [ARCHITECTURE.md](ARCHITECTURE.md)).
-4. **Managing a lesson and its attempts** — the owner defines a lesson (skill, instructions,
-   completion criteria) in Studio, then records attempts against it over time (date,
-   response/notes, feedback, review status). A lesson counts toward its skill's public progress
-   once it has a reviewed attempt. History can be corrected, not just appended to.
-5. **Practicing (tracked, non-lesson)** — the owner runs `npm run log` to record a day's
+4. **Defining a lesson** — the owner creates a lesson (skill, instructions, completion
+   criteria) in Studio.
+5. **Taking a lesson** — the owner, signed in, opens that lesson on the *public* page
+   (`/learning/<id>`) and submits an answer (text for Writing/Reading/Listening, a typed
+   transcript for Speaking — an in-browser recording is available for self-check but isn't
+   saved). The attempt is real and persists across devices immediately; retrying creates a new
+   attempt without touching earlier ones. See [CONTENT-GUIDE.md](CONTENT-GUIDE.md).
+6. **Reviewing an attempt** — the owner marks a submitted attempt `reviewed` (optionally with
+   feedback) in Studio. Only then does it count toward that skill's public progress — submitting
+   alone never does. History can be corrected, not just appended to.
+7. **Practicing (tracked, non-lesson)** — the owner runs `npm run log` to record a day's
    practice that isn't tied to a specific Studio lesson. The entry always counts toward the
    streak; it's only shown publicly if marked public. Kept deliberately separate from
    Lesson/Attempt — see [DECISIONS.md](DECISIONS.md).
-6. **Updating the mountain journey** — the owner edits checkpoints and attaches evidence in
+8. **Updating the mountain journey** — the owner edits checkpoints and attaches evidence in
    Studio, and explicitly sets which checkpoint is current. Never automatic.
 
 ## MVP scope (original) + Studio extension
@@ -63,16 +69,29 @@ A single public site that is a genuine record of growth, not a highlight reel:
 - Theme (light/dark) and accent-color switcher, persisted per-browser.
 - Mobile-friendly layout, basic SEO, accessible semantic HTML, real empty states.
 
-**In (new, this pass — Studio):**
+**In (Studio, previous pass):**
 - `/studio`, password-gated: Overview, Blog posts (list + editor with Save Draft / Preview /
-  Publish / Unpublish / Delete), Learning (lesson list + editor + attempt recording/correction),
+  Publish / Unpublish / Delete), Learning (lesson list/editor + attempt review/correction),
   Mountain journey (checkpoint + evidence editor).
 - All Studio-authored data persists in the existing SQLite database (`Post`, `Lesson`,
   `Attempt`, `JourneyCheckpoint`, `JourneyEvidence`) — not `localStorage`, not files.
 
+**In (new, this pass — attempt submission):**
+- The public lesson page (`/learning/[lessonId]`) has a real answer form and Submit action,
+  visible only to a signed-in Studio session (see [ARCHITECTURE.md](ARCHITECTURE.md#studio-auth)
+  and [DECISIONS.md](DECISIONS.md) for why it's gated this way rather than open to any visitor).
+  Skill-appropriate input: text for Writing/Reading, text + inline audio playback for Listening
+  (when the lesson has an audio `material` URL), a local-only recording aid + required text
+  transcript for Speaking.
+- Attempts persist in the database (not `localStorage`) and are visible after a refresh or on
+  another signed-in device — verified live, not just asserted.
+- An attempt-detail permalink (`/learning/[lessonId]/attempts/[attemptId]`).
+- Retrying creates a new attempt; nothing is overwritten.
+
 **Deliberately excluded / scoped down** (see [ROADMAP.md](ROADMAP.md)):
-- **Image/file upload.** Cover images and journey evidence are URL strings you paste in — no
-  blob storage is configured yet.
+- **Image/file upload.** Cover images, journey evidence, and Speaking recordings are never
+  uploaded — no blob storage is configured yet. Speaking submissions are always a typed
+  transcript; the in-browser recording is for the learner's own playback only.
 - **Journey evidence as a relational link.** Evidence is a free-text label/note, not a picker
   that attaches an actual `Post`/`Lesson` row (see [DECISIONS.md](DECISIONS.md)).
 - **Interview record UI** — schema exists, no reading/writing flow yet, unchanged from before.
@@ -88,8 +107,11 @@ A single public site that is a genuine record of growth, not a highlight reel:
 - `npm run build` and `npm run lint` pass.
 - **End-to-end, verified:** create a draft in Studio → preview it → publish it → it appears on
   `/blog` → unpublish it → it disappears from `/blog`.
-- **End-to-end, verified:** create a lesson in Studio → record a reviewed attempt → the skill's
-  progress count updates, both in Studio and on the public `/learning` page.
-- `/studio` is unreachable without the correct password, from a fresh browser session.
+- **End-to-end, verified:** open a lesson on the public page while signed in → submit an answer
+  → refresh → the saved attempt is still there → submit a second attempt (retry) → both appear
+  in history, unmodified → the skill's progress stays unchanged until the owner reviews one in
+  Studio → then it updates, on both Studio and the public page.
+- `/studio` is unreachable without the correct password, from a fresh browser session; the
+  public lesson page's submit form is likewise invisible without a valid session.
 - Every placeholder (profile bio, Atlas project body, the sample article) is visually marked
   as a sample/placeholder so it can never be mistaken for real content.

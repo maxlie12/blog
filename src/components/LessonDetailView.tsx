@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SKILLS, type SkillId } from "@/lib/lessonsData";
+import { AttemptSubmitForm } from "@/components/AttemptSubmitForm";
 
 interface AttemptView {
   id: string;
@@ -7,9 +8,16 @@ interface AttemptView {
   reviewStatus: string;
 }
 
+const AUDIO_EXTENSION = /\.(mp3|wav|ogg|m4a|webm)(\?.*)?$/i;
+
+function isAudioUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value) && AUDIO_EXTENSION.test(value);
+}
+
 export function LessonDetailView({
   lesson,
   attempts,
+  canSubmit,
 }: {
   lesson: {
     id: string;
@@ -22,6 +30,7 @@ export function LessonDetailView({
     completionCriteria: string;
   };
   attempts: AttemptView[];
+  canSubmit: boolean;
 }) {
   const reviewedCount = attempts.filter((a) => a.reviewStatus === "reviewed").length;
 
@@ -48,7 +57,11 @@ export function LessonDetailView({
       {lesson.material && (
         <section className="lesson-detail__section">
           <h2>Material</h2>
-          <p>{lesson.material}</p>
+          {lesson.skill === "listening" && isAudioUrl(lesson.material) ? (
+            <audio controls src={lesson.material} className="lesson-detail__audio" />
+          ) : (
+            <p>{lesson.material}</p>
+          )}
         </section>
       )}
 
@@ -74,9 +87,40 @@ export function LessonDetailView({
           </p>
         )}
       </div>
+
+      {canSubmit ? (
+        <section className="lesson-detail__section lesson-detail__submit">
+          <h2>Submit an attempt</h2>
+          <AttemptSubmitForm lessonId={lesson.id} skill={lesson.skill} />
+        </section>
+      ) : (
+        <p className="lesson-detail__disclaimer">
+          <Link href="/studio/login">Sign in</Link> to submit an attempt at this lesson.
+        </p>
+      )}
+
+      {attempts.length > 0 && (
+        <section className="lesson-detail__section">
+          <h2>Attempt history</h2>
+          <ul className="attempt-history">
+            {attempts.map((a) => (
+              <li key={a.id}>
+                <Link href={`/learning/${lesson.id}/attempts/${a.id}`}>
+                  <span>{a.date}</span>
+                  <span className={`status-pill status-pill--${a.reviewStatus}`}>
+                    {a.reviewStatus}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <p className="lesson-detail__disclaimer">
-        Attempts are recorded and reviewed privately in Studio — this page is read-only. This
-        reflects real, tracked practice, not a self-reported checkbox.
+        Submitting an attempt does not by itself mark this lesson complete — completion is
+        recorded once the attempt has been reviewed. This reflects real, tracked practice, not a
+        self-reported checkbox.
       </p>
     </article>
   );
