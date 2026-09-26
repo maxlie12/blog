@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { skills, lessonsBySkill, type SkillId } from "@/data/lessons";
-import { useProgress } from "@/lib/progress";
+import { SKILLS, type SkillId, type LessonSummary } from "@/lib/lessonsData";
 import { useLessonFilter } from "@/lib/lessonFilter";
 
 const SKILL_ICON: Record<SkillId, string> = {
@@ -15,16 +14,19 @@ const SKILL_ICON: Record<SkillId, string> = {
 
 /** Selecting a skill card filters the lesson list — state lives in LessonFilterProvider so
  * these two components can sit in different layout regions (e.g. separate grid columns on
- * the homepage) while staying in sync. */
-export function SkillCards() {
+ * the homepage) while staying in sync. Lessons/progress come from the database via props,
+ * not a static import — see src/lib/lessonsData.ts. */
+export function SkillCards({
+  progress,
+}: {
+  progress: Record<SkillId, { completed: number; total: number }>;
+}) {
   const { filter, setFilter } = useLessonFilter();
-  const { completed } = useProgress();
 
   return (
     <div className="skill-cards" role="group" aria-label="Filter lessons by skill">
-      {skills.map((skill) => {
-        const skillLessons = lessonsBySkill(skill.id);
-        const done = skillLessons.filter((l) => completed[l.id]).length;
+      {SKILLS.map((skill) => {
+        const { completed, total } = progress[skill.id];
         const active = filter === skill.id;
         return (
           <button
@@ -42,15 +44,13 @@ export function SkillCards() {
               <span className="skill-card__title-row">
                 <span className="skill-card__title">{skill.label}</span>
                 <span className="skill-card__count">
-                  {done}/{skillLessons.length}
+                  {completed}/{total}
                 </span>
               </span>
               <span className="skill-card__progress" aria-hidden="true">
                 <span
                   className="skill-card__progress-fill"
-                  style={{
-                    width: `${skillLessons.length ? (done / skillLessons.length) * 100 : 0}%`,
-                  }}
+                  style={{ width: `${total ? (completed / total) * 100 : 0}%` }}
                 />
               </span>
               <span className="skill-card__desc">{skill.description}</span>
@@ -62,10 +62,18 @@ export function SkillCards() {
   );
 }
 
-export function LessonPicker({ compact = false }: { compact?: boolean }) {
+export function LessonPicker({
+  lessons,
+  compact = false,
+}: {
+  lessons: LessonSummary[];
+  compact?: boolean;
+}) {
   const { filter, setFilter } = useLessonFilter();
-  const { isComplete } = useProgress();
-  const visible = useMemo(() => lessonsBySkill(filter), [filter]);
+  const visible = useMemo(
+    () => (filter === "all" ? lessons : lessons.filter((l) => l.skill === filter)),
+    [lessons, filter]
+  );
 
   return (
     <div className="lesson-picker">
@@ -86,7 +94,7 @@ export function LessonPicker({ compact = false }: { compact?: boolean }) {
         >
           All
         </button>
-        {skills.map((skill) => (
+        {SKILLS.map((skill) => (
           <button
             key={skill.id}
             type="button"
@@ -110,18 +118,22 @@ export function LessonPicker({ compact = false }: { compact?: boolean }) {
               <span className="lesson-item__body">
                 <span className="lesson-item__title-row">
                   <span className="lesson-item__title">{lesson.title}</span>
-                  {isComplete(lesson.id) && (
+                  {lesson.reviewedCount > 0 && (
                     <span className="lesson-item__done" title="Completed">
                       ✓
                     </span>
                   )}
                 </span>
                 <span className="lesson-item__meta">
-                  <span className="tag">{skills.find((s) => s.id === lesson.skill)?.label}</span>
+                  <span className="tag">{SKILLS.find((s) => s.id === lesson.skill)?.label}</span>
                   <span className="tag tag--level">{lesson.level}</span>
-                  <span className="lesson-item__minutes">~{lesson.minutes} min</span>
+                  {lesson.attemptCount > 0 && (
+                    <span className="lesson-item__minutes">
+                      {lesson.attemptCount} attempt{lesson.attemptCount === 1 ? "" : "s"}
+                    </span>
+                  )}
                 </span>
-                <span className="lesson-item__summary">{lesson.summary}</span>
+                <span className="lesson-item__summary">{lesson.completionCriteria}</span>
               </span>
               <span className="lesson-item__chevron" aria-hidden="true">
                 →

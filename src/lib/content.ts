@@ -5,7 +5,9 @@ import readingTime from "reading-time";
 
 const CONTENT_DIR = path.join(process.cwd(), "content");
 
-export type ArticleArea = "dev" | "work" | "learning" | "life";
+// A small set of known values get a friendly label in BlogCard; any other free-text category
+// (Studio posts allow arbitrary categories) falls back to its own uppercased text.
+export type ArticleArea = "dev" | "work" | "learning" | "life" | (string & {});
 
 export interface ArticleFrontmatter {
   title: string;
@@ -23,6 +25,9 @@ export interface Article extends ArticleFrontmatter {
   slug: string;
   content: string;
   readingMinutes: number;
+  coverImage?: string;
+  relatedLearning?: boolean;
+  tags?: string[];
 }
 
 export interface ProjectFrontmatter {

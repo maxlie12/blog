@@ -13,7 +13,12 @@ export function BlogCard({ article }: { article: Article }) {
 
   return (
     <Link href={`/blog/${article.slug}`} className="blog-card">
-      <div className="blog-card__thumb" aria-hidden="true" data-area={article.areas[0]} />
+      {article.coverImage ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={article.coverImage} alt="" className="blog-card__thumb blog-card__thumb--image" />
+      ) : (
+        <div className="blog-card__thumb" aria-hidden="true" data-area={article.areas[0]} />
+      )}
       <div className="blog-card__body">
         <div className="blog-card__meta">
           <span className="blog-card__category">{category}</span>

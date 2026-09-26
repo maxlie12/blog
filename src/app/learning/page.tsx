@@ -1,14 +1,21 @@
 import type { Metadata } from "next";
 import { MountainJourney } from "@/components/MountainJourney";
 import { SkillCards, LessonPicker } from "@/components/LearningExplorer";
-import { DailyGoalWidget } from "@/components/DailyGoalWidget";
 import { PracticeLogSection } from "@/components/PracticeLogSection";
 import { LessonFilterProvider } from "@/lib/lessonFilter";
+import { getAllLessons, getSkillProgress } from "@/lib/lessonsData";
+import { getJourneyCheckpoints } from "@/lib/journeyData";
 
 export const metadata: Metadata = { title: "Learning" };
 export const dynamic = "force-dynamic";
 
-export default function LearningPage() {
+export default async function LearningPage() {
+  const [lessons, progress, checkpoints] = await Promise.all([
+    getAllLessons(),
+    getSkillProgress(),
+    getJourneyCheckpoints(),
+  ]);
+
   return (
     <div className="learning-page">
       <header className="section-page__header">
@@ -19,15 +26,14 @@ export default function LearningPage() {
       <div className="journey-hero journey-hero--wide">
         <h2>The ascent to C1</h2>
         <p>A long-term journey to clearer expression, deeper understanding, and a more open world.</p>
-        <MountainJourney />
+        <MountainJourney checkpoints={checkpoints} />
       </div>
 
       <LessonFilterProvider>
         <div className="learning-board">
-          <SkillCards />
+          <SkillCards progress={progress} />
           <div className="learning-board__picker">
-            <LessonPicker />
-            <DailyGoalWidget />
+            <LessonPicker lessons={lessons} />
           </div>
         </div>
       </LessonFilterProvider>

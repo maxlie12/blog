@@ -33,6 +33,9 @@
     "tailwindcss": "^4",
     "typescript": "^5"
   },
+  "prisma": {
+    "seed": "node prisma/seed.mjs"
+  },
   "allowScripts": {
     "@prisma/client@6.19.3": true,
     "@prisma/engines@6.19.3": true,

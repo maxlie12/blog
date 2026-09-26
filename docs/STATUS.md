@@ -1,45 +1,117 @@
 # Status
 
-Last verified: 2026-09-26.
+Last verified: 2026-09-26 (Studio pass).
 
 ## What's implemented and working
 
-- **New editorial UI** (this pass) — full visual redesign matching the reference brief: charcoal/deep-teal + warm-ivory palette, serif headings (Fraunces), paper texture, soft-shadow cards, on every page. Nav renamed **Blog** (was "Writing" — route moved from `/writing` to `/blog`), **Projects**, **Learning**, **About**.
-- **Theme switcher** — moon/sun toggle (light ivory ↔ dark teal) plus 4 accent-color swatches (ivory/teal/deep-teal/amber). Both persist to `localStorage` (`site-theme`, `site-accent`) and apply before first paint via an inline script in `layout.tsx` (no flash of the wrong theme). Verified: toggling both in a live browser session actually recolors the whole UI, including the mountain-journey hero and all cards.
-- **Home (`/`)** — three-column layout: recent blog cards (left), the mountain-journey hero + 4 skill cards (center), lesson picker + daily-goal widget (right), matching the reference image's structure.
-- **Mountain journey** (`src/components/MountainJourney.tsx`, data in `src/data/journey.ts`) — B1+ → B2 → C1, with C2 marked "Optional". `currentCheckpointId` is a **hand-set value in a data file**, not derived from lesson completion or the practice-log streak. A visible caption states this explicitly. Verified: the caption renders on every page that shows the journey (`/`, `/learning`).
-- **Skill cards + lesson picker** (`/`, `/learning`) — four skill cards (Writing/Listening/Speaking/Reading) with a completed/total count and progress bar; clicking one filters the lesson list to that skill (verified live: clicking "Speaking" narrowed 6 lessons to 2, and re-clicking cleared the filter). Skill cards and the lesson list share filter state via `LessonFilterProvider` (React context) so they can live in separate layout regions.
-- **Lesson detail** (`/learning/[lessonId]`) — sample prompt + sample response for 6 placeholder lessons across all four skills (realistic frontend-dev/Atlas/interview-prep content, not real assessment material). "Mark complete" / "Mark as not done" toggles work and are **saved to `localStorage` only** — verified live: marking a lesson complete updates its checkmark in the list, its skill card's count, and the daily-goal widget, all without a page reload.
-- **Practice log (tracked)** — the original, Prisma/SQLite-backed streak + public-entries section from the previous MVP pass is preserved on `/learning`, below the new lesson explorer, under its own heading ("Practice log (tracked)") with copy explicitly distinguishing it from the sample lesson exercises above. This is real, persisted data; the lesson-completion tracking above it is not.
-- **Portfolio/About** (`/about`) — restyled; content is still placeholder (see Known gaps).
-- **Projects** (`/projects`, `/projects/[slug]`) — restyled cards; `atlas` entry still placeholder.
-- **Accessibility** — visible focus rings (`:focus-visible`, accent-colored) on all interactive elements; `aria-current`, `aria-pressed`, `aria-selected` used on nav/theme/filter controls; `prefers-reduced-motion` disables transitions/animations globally; verified via a live keyboard-tab screenshot showing a clear focus outline.
-- **SEO/metadata, empty states, error states, 404** — unchanged from the previous pass, updated only where routes moved (`sitemap.ts` now points at `/blog/...`).
+### Studio (new this pass)
+
+- **Auth** — `/studio/**` is unreachable without the `STUDIO_PASSWORD`; verified live: a fresh
+  browser session hitting `/studio` was redirected to `/studio/login?from=%2Fstudio`, and after
+  submitting the correct password landed on `/studio` with a working session.
+- **Blog publish flow, verified end-to-end in a live browser session:**
+  1. Created a new post in the Studio editor (title, excerpt, Markdown content).
+  2. Clicked **Preview** — rendered through the same `Mdx`/`BlogCard` components the public
+     site uses (confirmed the heading `## The problem` rendered as a real `<h2>`, not raw text).
+  3. Clicked **Publish** — the editor correctly picked up the new post's real database id and
+     "published" status (this required a fix: a server action's `redirect()` doesn't reliably
+     trigger client navigation when the action is called as a plain function rather than a
+     native form submission — the editor now updates its own state/URL from the action's return
+     value instead of relying on `redirect()`).
+  4. Confirmed the post appeared on `/blog` and at `/blog/<slug>` (grepped the rendered HTML for
+     the post's title — found on both).
+  5. Clicked **Unpublish** in the Studio posts list — confirmed the post disappeared from
+     `/blog` (grepped again — zero matches).
+- **Lesson/attempt/progress flow, verified end-to-end in the same session:**
+  1. Created a new lesson (skill: writing, title, level, instructions, completion criteria).
+  2. Recorded an attempt against it with `reviewStatus: reviewed`.
+  3. Confirmed the attempt appears in the lesson's history in Studio.
+  4. Confirmed the skill's progress count updated from `0/2` to `1/3` (a new lesson was added
+     and immediately counted as complete, since it had a reviewed attempt) — checked both in
+     Studio (`/studio/learning`) and on the public `/learning` page.
+- **Mountain journey editor** (`/studio/journey`) — checkpoint label/title/optional editing,
+  "set as current" (verified it flips exactly one checkpoint's `isCurrent` flag via a database
+  transaction), and free-text evidence add/remove. Not part of the two named vertical slices,
+  built as a secondary feature — see "Known gaps," below, for what's scoped down here.
+- **Validation** — required fields (title/excerpt/slug/content for posts; skill/title/level/
+  instructions/completion-criteria for lessons) are enforced server-side and shown inline;
+  duplicate slugs (checked against both Studio posts and legacy `.mdx` articles) are rejected
+  with a specific error message.
+- **Save/error/unsaved-change states** — a dirty-check compares the current form state against
+  the last-saved snapshot ("Unsaved changes" indicator, screenshotted); a pending/saving
+  indicator during the save request; field errors render inline rather than failing silently.
+
+### Public site (carried over + updated)
+
+- **Blog** (`/blog`, `/blog/[slug]`) — now merges Studio-authored posts (database, published
+  only) with legacy hand-written `content/articles/*.mdx` files. Both render through the same
+  components.
+- **Learning** (`/learning`, `/learning/[lessonId]`) — mountain journey (now database-backed),
+  four skill cards with real progress, a filterable lesson list, and a **read-only** lesson
+  detail page (the old visitor-facing "Mark complete" button was removed — see
+  [DECISIONS.md](DECISIONS.md) for why). Below that, the original Prisma-backed practice-log
+  streak section is unchanged and kept visibly separate.
+- **Portfolio/About, Projects** — unchanged from the previous pass; still placeholder content
+  (see "Known gaps").
+- **Theme/accent switcher, accessibility (focus states, `prefers-reduced-motion`), SEO,
+  empty/error states, 404** — unchanged and still working; reused as-is by Studio.
 
 ## Checks actually performed (this pass)
 
 | Check | Result |
 |---|---|
-| `npm run build` | ✅ Passes. 17 routes compile, including 6 statically-generated lesson pages. |
-| `npm run lint` | ✅ "No issues found" (after fixing two `react-hooks/set-state-in-effect` errors by rewriting the theme/progress stores on `useSyncExternalStore` instead of effect+setState). |
-| Playwright pass, desktop (1280×900) and mobile (390×844), 8 routes (`/`, `/blog`, `/blog/welcome-to-this-site`, `/projects`, `/projects/atlas`, `/learning`, `/learning/speaking-interview-intro`, `/about`) | ✅ All HTTP 200, zero console/page errors. Visually reviewed the home page, `/learning`, and the About page on both viewports — no horizontal scroll on mobile, header nav wraps cleanly. |
-| Interaction check: dark-theme toggle | ✅ Screenshotted before/after — full palette swap confirmed live, including header, cards, and journey hero. |
-| Interaction check: accent-swatch change (teal) | ✅ Screenshotted — accent color propagated to active nav underline, active filter chips, progress bars, and the "Continue learning" button. |
-| Interaction check: skill-card filter | ✅ Clicking "Speaking" narrowed the lesson list from 6 to 2 items live; screenshotted. |
-| Interaction check: lesson completion | ✅ "Mark complete" on a lesson flipped its state and persisted (`localStorage`); screenshotted. |
-| Interaction check: keyboard focus | ✅ Tab-only navigation produces a visible accent-colored focus ring; screenshotted. |
-| Production `npm run start` | ❌ Not run this pass either — only `next dev` was exercised end-to-end (carried over from the previous pass's gap). |
+| `npm run build` | ✅ Passes. 20 routes, including all of `/studio/**`. |
+| `npm run lint` | ✅ "No issues found" (fixed one `react-hooks/set-state-in-effect` error along the way, in the Studio preview loader, by using `useTransition` instead of a manual loading-state setState in an effect). |
+| `npx prisma migrate dev` | ✅ New migration (`studio_posts_lessons_journey`) applied cleanly alongside the existing `LearningLog`/`InterviewRecord` tables. |
+| Seed script (`prisma/seed.mjs`) | ✅ Carried the original 6 sample lessons and 4 journey checkpoints from the deleted `src/data/lessons.ts`/`journey.ts` prototypes into the database, so nothing was lost. |
+| Live Playwright session: unauthenticated `/studio` access | ✅ Redirected to login, as expected. |
+| Live Playwright session: full blog vertical slice (draft → preview → publish → visible on `/blog` → unpublish → gone from `/blog`) | ✅ All steps verified against actual rendered HTML/URLs, not just that a request returned 200. Caught and fixed one real bug in the process (see above). |
+| Live Playwright session: full learning vertical slice (create lesson → record reviewed attempt → progress updates in Studio and publicly) | ✅ Verified with a before/after comparison of the skill's completed/total count. |
+| Live Playwright session, mobile viewport (390×844): login, posts list, post editor | ✅ No horizontal scroll, sidebar collapses to a wrapping top bar, editor stacks to one column. Zero console/page errors across every screenshot taken this pass. |
+| Test data cleanup | ✅ All Playwright-created posts/lessons were deleted from the database after verification — nothing test-only was left in `data/blog.db`. |
+| Production `npm run start` | ❌ Still not run — only `next dev` has been exercised end-to-end, in this pass and the previous one. |
 
 ## Known gaps / defects
 
-- **Placeholder content is still live** in About (`src/data/profile.ts`), the Atlas project, and the sample blog article — unchanged from the previous pass. The About page's placeholder name was updated to "Luân" to match the new header branding (previously said "Max Lie" from before this UI existed) — **this is a guess at the actual name and needs confirming**, since the earlier session inferred "Max Lie" from the `maxlie12` GitHub handle and this session's reference image says "Luân." Whichever is correct should be set once, in `src/data/profile.ts`.
-- **Lesson-completion tracking is per-browser only**, not synced across devices and not backed by any server — this is by design for a prototype (see `docs/DECISIONS.md`), but it means the "0/2" counts and daily-goal widget reset if `localStorage` is cleared or a different browser/device is used. A real backend (or reusing the existing Prisma database) would be needed to make this durable — tracked in `docs/ROADMAP.md`.
-- **The mountain-journey "you are here" position is manually edited**, not automatically kept in sync with anything — if lesson content changes significantly, a human needs to re-decide whether the milestone still applies.
-- **Not deployed**; same blockers as before (Vercel account, networked SQLite) — see `docs/OPERATIONS.md#deployment-vercel`.
+- **No image/file upload.** Cover images (posts) and evidence (journey) are pasted URLs only —
+  there's no upload endpoint or blob storage configured. This is a real, documented limitation,
+  not an oversight — see [ROADMAP.md](ROADMAP.md#phase-5--media-ergonomics-polish).
+- **Journey evidence is free-text, not a relational link** to an actual `Post`/`Lesson` row,
+  even though both exist as real records now. Deliberately scoped down this pass — see
+  [DECISIONS.md](DECISIONS.md).
+- **Studio auth is intentionally minimal**: one password, no rate limiting, no password reset,
+  no audit log of who published what (there's only one "who"). Documented as correct-for-now in
+  [ARCHITECTURE.md](ARCHITECTURE.md#studio-auth), not a gap to close casually — closing it
+  means real multi-user auth, which isn't needed yet.
+- **Placeholder content is still live**: About page bio (`src/data/profile.ts`, currently says
+  "Luân" — an unconfirmed guess, see below) and the Atlas project (`content/projects/atlas.mdx`).
+  Unchanged from the previous pass.
+- **The site owner's actual name is still unconfirmed.** The first build session guessed "Max
+  Lie" from the `maxlie12` GitHub handle; this session's reference image said "Luân," so
+  `src/data/profile.ts` now says "Luân" — but neither has been confirmed by the owner. Whoever
+  is right, this should be set once and not guessed a third time.
+- **Not deployed.** Same blockers as before, now with an added stake: a Vercel deploy pointed at
+  local SQLite would lose every Studio-published post/lesson/attempt on the next deploy, not
+  just miss learning-log entries. See [OPERATIONS.md](OPERATIONS.md#deployment-vercel).
 - **`npm run start` (production server) still not exercised**, only `next dev`.
-- **`npm audit` still reports the same 3 high-severity advisories** in Prisma CLI's build-time-only `deepmerge-ts` dependency (not runtime-reachable) — unchanged from the previous pass.
-- **Interview prep still has no UI** (schema only) — unchanged, tracked in `docs/ROADMAP.md`.
+- **`middleware.ts` triggers a Next.js 16 deprecation warning** (prefers `proxy.ts`) — cosmetic,
+  build still succeeds; the official codemod refused to run against this pass's uncommitted
+  changes, so it's deferred to a clean-tree moment (see [OPERATIONS.md](OPERATIONS.md)).
+- **`npm audit`** — same 3 high-severity advisories as the previous pass, all in Prisma CLI's
+  build-time `deepmerge-ts` dependency (not runtime-reachable). Unchanged, not re-triaged this
+  pass since nothing about the dependency changed.
+- **Interview prep still has no UI** (schema only) — unchanged, tracked in
+  [ROADMAP.md](ROADMAP.md).
 
 ## Next priority
 
-Same as before, now with one addition: **confirm the site owner's actual name** (Luân vs. Max Lie) alongside replacing the rest of the placeholder content in `src/data/profile.ts` and `content/projects/atlas.mdx`. The lesson/journey UI is a working prototype layer that can ship as-is (clearly labelled as self-tracked/placeholder), but publishing a guessed name would be worse than publishing no name.
+Two independent items, roughly equal priority:
+
+1. **Confirm the site owner's real name and replace remaining placeholder content**
+   (`src/data/profile.ts`, `content/projects/atlas.mdx`) — unchanged blocker from before, now
+   also relevant to Studio's "Related learning" and journey-evidence copy referencing "Luân."
+2. **Deploy, with the ephemeral-filesystem issue actually fixed first** — Studio makes this more
+   urgent than it was: the site is now a real (if minimal) authoring tool, and running it only
+   against a local SQLite file on one machine means Studio's value (publish from anywhere) isn't
+   realized yet. See [OPERATIONS.md](OPERATIONS.md#deployment-vercel) for the exact blocking
+   steps (Vercel account, Turso database) — both need the site owner's action, not more code.

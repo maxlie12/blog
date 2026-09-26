@@ -1,12 +1,29 @@
-"use client";
-
 import Link from "next/link";
-import type { Lesson } from "@/data/lessons";
-import { useProgress } from "@/lib/progress";
+import { SKILLS, type SkillId } from "@/lib/lessonsData";
 
-export function LessonDetailView({ lesson }: { lesson: Lesson }) {
-  const { isComplete, markComplete, markIncomplete } = useProgress();
-  const done = isComplete(lesson.id);
+interface AttemptView {
+  id: string;
+  date: string;
+  reviewStatus: string;
+}
+
+export function LessonDetailView({
+  lesson,
+  attempts,
+}: {
+  lesson: {
+    id: string;
+    skill: SkillId;
+    title: string;
+    level: string;
+    instructions: string;
+    material: string | null;
+    exercises: string | null;
+    completionCriteria: string;
+  };
+  attempts: AttemptView[];
+}) {
+  const reviewedCount = attempts.filter((a) => a.reviewStatus === "reviewed").length;
 
   return (
     <article className="lesson-detail">
@@ -16,47 +33,50 @@ export function LessonDetailView({ lesson }: { lesson: Lesson }) {
 
       <header className="lesson-detail__header">
         <div className="lesson-detail__meta">
-          <span className="tag">{lesson.skill}</span>
+          <span className="tag">{SKILLS.find((s) => s.id === lesson.skill)?.label}</span>
           <span className="tag tag--level">{lesson.level}</span>
-          <span>~{lesson.minutes} min</span>
         </div>
         <h1>{lesson.title}</h1>
-        <p className="lesson-detail__summary">{lesson.summary}</p>
+        <p className="lesson-detail__summary">{lesson.completionCriteria}</p>
       </header>
 
       <section className="lesson-detail__section">
-        <h2>Prompt</h2>
-        <p>{lesson.prompt}</p>
+        <h2>Instructions</h2>
+        <p>{lesson.instructions}</p>
       </section>
 
-      <section className="lesson-detail__section lesson-detail__sample">
-        <h2>Sample response</h2>
-        <p>{lesson.sample}</p>
-        <p className="lesson-detail__note">
-          This is one possible answer, not a scored model — compare it to your own attempt
-          rather than copying it.
-        </p>
-      </section>
+      {lesson.material && (
+        <section className="lesson-detail__section">
+          <h2>Material</h2>
+          <p>{lesson.material}</p>
+        </section>
+      )}
+
+      {lesson.exercises && (
+        <section className="lesson-detail__section lesson-detail__sample">
+          <h2>Exercise</h2>
+          <p>{lesson.exercises}</p>
+        </section>
+      )}
 
       <div className="lesson-detail__actions">
-        {done ? (
-          <>
-            <p className="lesson-detail__status" role="status">
-              ✓ Marked complete
-            </p>
-            <button type="button" className="button button--ghost" onClick={() => markIncomplete(lesson.id)}>
-              Mark as not done
-            </button>
-          </>
+        {reviewedCount > 0 ? (
+          <p className="lesson-detail__status" role="status">
+            ✓ Completed — {reviewedCount} reviewed attempt{reviewedCount === 1 ? "" : "s"}
+          </p>
+        ) : attempts.length > 0 ? (
+          <p className="lesson-detail__status lesson-detail__status--pending" role="status">
+            {attempts.length} attempt{attempts.length === 1 ? "" : "s"} logged, awaiting review
+          </p>
         ) : (
-          <button type="button" className="button button--primary" onClick={() => markComplete(lesson.id)}>
-            Mark complete
-          </button>
+          <p className="lesson-detail__status lesson-detail__status--pending" role="status">
+            No attempts yet
+          </p>
         )}
       </div>
       <p className="lesson-detail__disclaimer">
-        Completion is saved only in this browser (not synced across devices) and is
-        self-reported — it isn&apos;t a verified language assessment.
+        Attempts are recorded and reviewed privately in Studio — this page is read-only. This
+        reflects real, tracked practice, not a self-reported checkbox.
       </p>
     </article>
   );

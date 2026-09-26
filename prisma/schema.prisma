@@ -29,6 +29,82 @@ model LearningLog {
   @@index([area])
 }
 
+// Blog posts authored in the private Studio (src/app/studio). Hand-written .mdx files under
+// content/articles/ remain supported and are merged with these at read time — see
+// src/lib/posts.ts and docs/ARCHITECTURE.md#studio.
+model Post {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  excerpt     String
+  category    String?
+  tags        String // JSON-encoded string[] (SQLite has no native array column)
+  coverImage  String?
+  content     String // Markdown source, rendered with the same Mdx component as content/*.mdx
+  status      String    @default("draft") // "draft" | "published"
+  relatedLearning Boolean @default(false) // shows a "Linked to learning" note on the article
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// A lesson definition, authored in Studio. Skill progress on the public Learning page is
+// computed from Attempt rows against these lessons, not from any hardcoded count.
+model Lesson {
+  id                 String    @id @default(cuid())
+  skill              String // "writing" | "listening" | "speaking" | "reading"
+  title              String
+  level              String // CEFR-style label shown as a tag, e.g. "B1+" — cosmetic only
+  instructions       String
+  material           String? // source text, prompt material, or a URL
+  exercises          String? // the concrete exercise(s) the learner works through
+  completionCriteria String // what "done" means for this lesson
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  attempts           Attempt[]
+}
+
+// One attempt at a lesson, recorded separately from the lesson itself so history can be
+// inspected and corrected without losing the lesson definition. See docs/DECISIONS.md.
+model Attempt {
+  id           String   @id @default(cuid())
+  lessonId     String
+  lesson       Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  date         String // "YYYY-MM-DD"
+  response     String? // what the learner produced, or notes about the session
+  feedback     String?
+  reviewStatus String   @default("pending") // "pending" | "reviewed" | "needs-revision"
+  createdAt    DateTime @default(now())
+
+  @@index([lessonId])
+}
+
+// Mountain-journey checkpoints, editable in Studio. `isCurrent` is set by hand only — never
+// derived from lesson/attempt counts. See docs/DECISIONS.md.
+model JourneyCheckpoint {
+  id        String            @id @default(cuid())
+  label     String // CEFR-style label, e.g. "B1+"
+  title     String
+  order     Int
+  optional  Boolean           @default(false)
+  isCurrent Boolean           @default(false)
+  createdAt DateTime          @default(now())
+  evidence  JourneyEvidence[]
+}
+
+// Self-reported evidence attached to a checkpoint (a lesson, a post, or a free-text note).
+// This is explicitly NOT a CEFR assessment — see docs/DECISIONS.md.
+model JourneyEvidence {
+  id           String            @id @default(cuid())
+  checkpointId String
+  checkpoint   JourneyCheckpoint @relation(fields: [checkpointId], references: [id], onDelete: Cascade)
+  label        String // short description of the evidence
+  note         String?
+  createdAt    DateTime          @default(now())
+
+  @@index([checkpointId])
+}
+
 // Schema is defined now so the data model doesn't need to change later,
 // but there is no UI reading/writing this table yet — see docs/ROADMAP.md.
 // Third-party details (company, interviewer) are free-text specifically so

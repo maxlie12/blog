@@ -1,72 +1,75 @@
 # Roadmap
 
-Everything below is **planned, not built**. See [STATUS.md](STATUS.md) for what actually
-exists today.
+Everything below is **planned, not built**, unless marked "done." See [STATUS.md](STATUS.md)
+for the authoritative, currently-verified picture.
 
 ## Phase 2 — real content, deployed
 
-Conditions to start: MVP passes its own checks (build/lint clean, flows verified).
+Conditions to start: build/lint clean, flows verified (done as of 2026-09-26 — see
+[STATUS.md](STATUS.md)).
 
-- Replace placeholder profile (`src/data/profile.ts`), the Atlas project body, and the sample
-  article with real content.
+- Replace placeholder profile (`src/data/profile.ts`) and the Atlas project body with real
+  content, and confirm the site owner's actual name (see [STATUS.md](STATUS.md)).
 - Deploy to Vercel with a networked SQLite database (Turso or equivalent) — see
-  [OPERATIONS.md](OPERATIONS.md#deployment-vercel).
+  [OPERATIONS.md](OPERATIONS.md#deployment-vercel). **Higher priority now that Studio writes to
+  this database** — a Vercel deploy with the wrong `DATABASE_URL` would silently lose Studio's
+  posts/lessons/attempts on the next deploy.
 - Wire `--article=<slug>` into `scripts/log.mjs` so log entries can point at the article that
   discusses them (schema field `articleSlug` already exists).
 - Render `relatedLogAreas` on article pages (currently only stored, not displayed).
 
+## ~~Phase 4~~ — Studio for blog + learning: done, this pass (2026-09-26)
+
+What was planned as "give the lesson prototype a backend" grew into a full private Studio,
+covering both blog publishing and learning management. See
+[ARCHITECTURE.md](ARCHITECTURE.md#studio-auth) and [STATUS.md](STATUS.md) for what's real vs.
+still scoped down. Not carried forward as a future phase — what's left from the original scope
+is folded into the items below instead of kept as its own phase.
+
 ## Phase 3 — interview prep UI
 
-Conditions to start: Phase 2 deployed; owner has real interview records to enter.
+Conditions to start: Studio's auth pattern exists (it now does — reuse `requireStudioSession()`
+rather than inventing a second auth mechanism), and the owner has real interview records to
+enter.
 
-- A private read path for `InterviewRecord` (owner-only — needs an auth decision at that
-  point, e.g. a single shared secret via middleware, since there is exactly one writer).
+- A Studio page for `InterviewRecord`, following the same pattern as Posts/Lessons: a list +
+  editor, gated the same way.
 - A public, anonymization-enforced view for records marked `isPublic: true` — should refuse to
   render `companyLabel`/`questions`/`lessons` unless the owner has explicitly reviewed that
   record for identifying details. Anonymization is a manual editorial step, not code that can
-  detect what needs redacting; the UI's job is to default closed and never leak a
-  non-public record.
-- A CLI (mirroring `scripts/log.mjs`) or minimal form to add records without hand-writing SQL.
+  detect what needs redacting; the UI's job is to default closed and never leak a non-public
+  record.
 
-## Phase 4 — language exercises: give the prototype a backend
+## Phase 4 (renumbered) — deepen Studio's learning tools
 
-**Update (2026-09-26): a client-only prototype of this already exists** — `/learning` has a
-working skill-card + lesson-picker + lesson-detail flow (`src/data/lessons.ts`,
-`src/components/LearningExplorer.tsx`, `src/components/LessonDetailView.tsx`) with a "Mark
-complete" action. It's real UI, not a mockup — but completion state lives in `localStorage`
-only (see `docs/DECISIONS.md`), lesson content is a hardcoded data file, and there's no review
-scheduling. This phase is about giving that prototype a backend, not building the UI from
-scratch:
+Conditions to start: enough real lesson/attempt history exists to know what's actually missing.
 
-- A database table for lesson content and/or completion (evaluate whether lesson *content*
-  should move to the DB too, or stay in `src/data/lessons.ts` like articles/projects stay in
-  MDX — depends on whether the owner wants to add lessons without a deploy).
-- Move completion tracking server-side so it survives clearing browser storage and syncs
-  across devices.
-- Review scheduling (e.g. simple Leitner-style intervals) — no need for a full SRS algorithm
-  at single-user scale.
-- Link exercises to articles (`relatedProjects`-style soft reference) and to `LearningLog`
-  entries (an exercise session could also count as a practice day, once that relationship is
-  wanted — right now they're deliberately kept separate, see `docs/DECISIONS.md`).
+- Review scheduling (e.g. simple Leitner-style intervals) — no need for a full SRS algorithm at
+  single-user scale.
+- Turn journey evidence into a real relational link (pick an existing `Post` or `Lesson` rather
+  than typing a free-text label) — see [DECISIONS.md](DECISIONS.md) for why this was scoped
+  down initially.
+- Link a `LearningLog` entry to a specific `Lesson`/`Attempt` if the owner wants that connection
+  — currently deliberately separate systems (see [DECISIONS.md](DECISIONS.md)).
 
-## Phase 5 — streak visualization & content admin ergonomics
+## Phase 5 — media, ergonomics, polish
 
-Conditions to start: owner finds the CLI genuinely limiting (i.e. this is explicitly *not* a
-default assumption that a UI is needed).
-
+- **Image upload.** Cover images and journey evidence currently take a pasted URL only — no
+  blob storage is configured. Adding this needs a storage decision (Vercel Blob, S3, etc.) and
+  an upload endpoint gated the same way as other Studio writes.
 - Calendar heatmap of practice days on the Learning page.
-- A minimal authenticated write UI (single-owner auth, e.g. a signed cookie from a CLI-issued
-  token) for logging entries from a phone, if the CLI proves inconvenient while away from a
-  dev machine.
-- Markdown/MDX editor with live preview for articles, if editing raw files becomes friction
-  rather than a feature.
+- Rich-text (not just Markdown-with-toolbar) editing, if plain Markdown proves limiting.
+- Migrate `src/middleware.ts` to the `proxy.ts` convention Next.js 16 prefers (currently just a
+  deprecation warning, not a functional problem — see [OPERATIONS.md](OPERATIONS.md)).
 
 ## Explicitly deferred, no planned phase
 
-- Multi-user accounts, comments, or any visitor-generated content — this site has one writer
-  by design; adding visitor accounts would be a different product.
-- Japanese content — the content model already supports any language today (an article is
-  just an MDX file); this item is about deciding *when* to start writing in/about Japanese,
-  not a technical blocker.
-- A generic CMS admin panel — deliberately avoided; see
+- Multi-user accounts, comments, or any visitor-generated content — this site has one writer by
+  design; adding visitor accounts (or a second Studio user) would be a different product,
+  needing real accounts rather than a bigger shared password (see
+  [ARCHITECTURE.md](ARCHITECTURE.md#studio-auth)).
+- Japanese content — the content model already supports any language today; this item is about
+  deciding *when* to start writing in/about Japanese, not a technical blocker.
+- A generic, reusable CMS — Studio is deliberately specific to this site's content types
+  (Post/Lesson/Attempt/Journey), not a general-purpose admin panel; see
   [ARCHITECTURE.md](ARCHITECTURE.md#why-this-shape).

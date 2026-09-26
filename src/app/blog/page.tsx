@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { getAllArticles } from "@/lib/content";
+import { getPublicArticles } from "@/lib/posts";
 import { BlogCard } from "@/components/BlogCard";
 
 export const metadata: Metadata = { title: "Blog" };
+export const dynamic = "force-dynamic";
 
-export default function BlogPage() {
-  const articles = getAllArticles();
+export default async function BlogPage() {
+  const articles = await getPublicArticles();
 
   return (
     <div className="section-page">
@@ -14,9 +15,7 @@ export default function BlogPage() {
         <p>Thoughts at the intersection of code, language, and a wider world.</p>
       </header>
       {articles.length === 0 ? (
-        <p className="empty-state">
-          No articles yet. Add an .mdx file to <code>content/articles/</code>.
-        </p>
+        <p className="empty-state">No published posts yet.</p>
       ) : (
         <div className="blog-grid">
           {articles.map((a) => (

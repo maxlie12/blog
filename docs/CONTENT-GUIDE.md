@@ -1,6 +1,31 @@
 # Content Guide
 
-## Writing an article
+## Writing a blog post (Studio — recommended)
+
+1. Sign in at `/studio/login`, then `/studio/posts/new`.
+2. Fill in Title (slug auto-fills from it — edit the slug field directly if you want a
+   different one), Excerpt, Cover image (a URL — see "Cover images," below), Content
+   (Markdown, with a toolbar for bold/italic/links/lists/quotes/code/images), Category, Tags,
+   and the "Related learning" toggle if the post connects to something on `/learning`.
+3. **Save draft** any time — it's saved to the database immediately, visible only in Studio.
+4. **Preview** to see it rendered exactly as the public site would show it (same `BlogCard` and
+   article-page rendering, not an approximation).
+5. **Publish** when ready — it appears on `/blog` immediately (no rebuild/redeploy needed).
+   **Unpublish** takes it back to draft without deleting it; **Delete** removes it permanently.
+6. Required fields: title, excerpt, slug, content. The slug must be lowercase
+   letters/numbers/hyphens and unique across both Studio posts and `content/articles/*.mdx` —
+   Studio checks both and shows an inline error if it's taken.
+
+### Cover images
+
+There's no file upload yet (see [ROADMAP.md](ROADMAP.md)) — paste a URL to an already-hosted
+image (e.g. one you've uploaded elsewhere). This is a real limitation, not a placeholder: an
+image upload flow needs blob storage (Vercel Blob, S3, etc.), which hasn't been set up.
+
+## Writing an article (legacy path — hand-edited `.mdx` files)
+
+Still fully supported for articles you'd rather write in a text editor / commit via git; the
+public `/blog` page merges these with Studio posts.
 
 1. Create `content/articles/<slug>.mdx` (the filename becomes the URL: `/blog/<slug>`).
 2. Add frontmatter:
@@ -42,7 +67,10 @@
 
 ## Logging practice (streaks)
 
-Run, from the project root:
+This is the original hand-logged practice tracker — separate from Studio's Lesson/Attempt
+system above. Use it for practice that isn't tied to a specific Studio lesson (or keep using
+both; they track different things and are shown in different sections of `/learning`). Run,
+from the project root:
 
 ```bash
 npm run log -- --area=english --activity="Shadowing practice, HSK4 unit 3" --minutes=20
@@ -77,26 +105,36 @@ for why). In practice:
 If a slug is misspelled, the link silently doesn't render rather than breaking the build —
 double-check slugs against the actual filenames in `content/`.
 
-## Editing lesson exercises
+## Managing lessons and attempts (Studio)
 
-Lesson content lives in `src/data/lessons.ts` — a plain array, no CMS, no migration needed to
-add one. Each entry needs: `id` (used in the URL, `/learning/<id>`), `skill` (one of
-`writing`/`listening`/`speaking`/`reading`), `title`, `level` (a CEFR-style label shown as a
-tag — cosmetic only, not derived from anything), `minutes`, `summary`, `prompt` (the
-instruction shown to the learner), and `sample` (a model answer, not a scored one — label it
-clearly as "one possible answer" if you write your own, matching the existing entries).
+1. `/studio/learning` → **+ New lesson**. Fields: skill, title, target level (a CEFR-style
+   label — cosmetic, never derived from anything), instructions, source/material (optional),
+   exercise(s) (optional), and completion criteria (what "done" means for this lesson).
+2. Open a saved lesson to **record an attempt**: date, response/notes, feedback, and a review
+   status (`pending`, `reviewed`, `needs-revision`). A lesson counts toward its skill's public
+   progress bar once it has at least one `reviewed` attempt — see
+   [ARCHITECTURE.md](ARCHITECTURE.md#content-model).
+3. **Attempts are separate from the lesson** specifically so you can inspect and correct
+   history — click **Correct** on any past attempt to edit its date/response/feedback/status,
+   or **Delete** to remove it. Editing an attempt never touches the lesson definition.
+4. Deleting a lesson deletes all its attempts (confirmed before it happens).
 
-Lesson completion is tracked in the visitor's browser only (`localStorage`, via
-`src/lib/progress.tsx`) — there's nothing to seed or migrate; it starts empty for every new
-browser/device. See `docs/DECISIONS.md` for why this isn't backed by a database yet.
+## Editing the mountain-journey map (Studio)
 
-## Editing the mountain-journey map
+`/studio/journey` lists the checkpoints (B1+ → B2 → C1 → optional C2 by default). For each one
+you can edit its label/title/optional flag, and **set it as the current checkpoint by hand** —
+this is a deliberate click, never automatic. Nothing in the codebase derives "you are here"
+from lesson or attempt counts; see [DECISIONS.md](DECISIONS.md) for why that's a hard rule, not
+just a current gap.
 
-`src/data/journey.ts` holds the checkpoints (B1+ → B2 → C1 → optional C2) and
-`currentCheckpointId` — **set this by hand**, and only change it when you genuinely believe
-your level has moved, never automatically from lesson counts or streaks (see
-`docs/DECISIONS.md`). The `journeyDisclaimer` string is shown directly under the map; keep it
-if you keep the map, since it's what makes the map honest rather than a fake assessment.
+**Evidence** attached to a checkpoint (a completed lesson, a writing sample, a recording, a
+reflection) is a short free-text label + optional note — not a picker linking to an actual
+`Post`/`Lesson` row. This was scoped down deliberately (see [DECISIONS.md](DECISIONS.md)); name
+the thing you're pointing at in the label (e.g. "Attempt on 'Interview: Tell me about
+yourself', 2026-09-25") since there's no live link to click through yet.
+
+Add a new checkpoint (e.g. a personal milestone between B2 and C1) with the form at the bottom
+of the page — it's appended after the existing checkpoints.
 
 ## Theme and accent color
 

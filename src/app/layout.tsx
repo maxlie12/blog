@@ -2,9 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/theme";
-import { ProgressProvider } from "@/lib/progress";
-import { SiteHeader } from "@/components/SiteHeader";
-import { SiteFooter } from "@/components/SiteFooter";
+import { PublicChrome } from "@/components/PublicChrome";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -56,11 +54,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
-          <ProgressProvider>
-            <SiteHeader />
-            <main className="site-main">{children}</main>
-            <SiteFooter />
-          </ProgressProvider>
+          <PublicChrome>{children}</PublicChrome>
         </ThemeProvider>
       </body>
     </html>

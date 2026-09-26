@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getLessonById, lessons } from "@/data/lessons";
+import { getLessonWithAttempts } from "@/lib/lessonsData";
 import { LessonDetailView } from "@/components/LessonDetailView";
 
-export function generateStaticParams() {
-  return lessons.map((l) => ({ lessonId: l.id }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -13,7 +11,7 @@ export async function generateMetadata({
   params: Promise<{ lessonId: string }>;
 }): Promise<Metadata> {
   const { lessonId } = await params;
-  const lesson = getLessonById(lessonId);
+  const lesson = await getLessonWithAttempts(lessonId);
   return { title: lesson?.title ?? "Lesson" };
 }
 
@@ -23,8 +21,8 @@ export default async function LessonPage({
   params: Promise<{ lessonId: string }>;
 }) {
   const { lessonId } = await params;
-  const lesson = getLessonById(lessonId);
+  const lesson = await getLessonWithAttempts(lessonId);
   if (!lesson) notFound();
 
-  return <LessonDetailView lesson={lesson} />;
+  return <LessonDetailView lesson={lesson} attempts={lesson.attempts} />;
 }

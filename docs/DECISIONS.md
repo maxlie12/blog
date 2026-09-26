@@ -3,7 +3,71 @@
 Reverse-chronological log of decisions with material impact and their rationale. See linked
 docs for full detail; this file is the "why," not the "how."
 
-## 2026-09-26 — Lesson exercises shipped as a client-only prototype, not wired to a backend
+## 2026-09-26 — Studio auth: single password + signed cookie, not a real auth system
+
+**Decision:** `/studio` is gated by one `STUDIO_PASSWORD` env var and an HMAC-signed session
+cookie (`src/lib/auth.ts`, `src/middleware.ts`) — no user table, no OAuth provider, no roles.
+
+**Why:** there is exactly one writer. A real auth system (accounts, password hashing/reset,
+sessions table, roles) solves a multi-user problem this site doesn't have. The password lives
+in an env var (never committed); the session secret is rotatable to invalidate all sessions at
+once. This reverses the earlier "no auth in the MVP" decision, but only because Studio can now
+change public content — the underlying reasoning (avoid building for an audience of one) is the
+same, just applied to "smallest auth that's still real" instead of "no auth."
+
+**Revisit when:** a second person needs write access (a co-author, an editor) — at that point
+this needs actual accounts, not a bigger version of a shared password.
+
+## 2026-09-26 — Studio's lesson/attempt model replaces the localStorage lesson prototype
+
+**Decision:** the `Lesson`/`Attempt` Prisma models (and Studio's UI for them) replace
+`src/data/lessons.ts` and `src/lib/progress.tsx` (both deleted). Public skill progress is now
+computed from real `Attempt` rows, not a per-browser `localStorage` map.
+
+**Why:** the previous prototype let any visitor's browser mark a lesson "complete," which
+never represented anything real — a stranger completing Luân's English lesson isn't
+meaningful data, and `localStorage` isn't durable or cross-device besides. The task's own
+instruction not to treat `localStorage` as durable publishing storage matches what STATUS.md
+had already flagged as the prototype's biggest weakness. A lesson now counts as complete for
+public progress purposes only once the owner records a `reviewed` attempt against it in
+Studio — see [ARCHITECTURE.md](ARCHITECTURE.md#content-model).
+
+**Consequence:** the public lesson-detail page (`/learning/[lessonId]`) is now read-only — it
+shows instructions/material/exercise and whether attempts exist, but the "Mark complete"
+button is gone. This is intentional, not a regression: completion is now an owner-recorded
+fact, not a self-reported visitor checkbox.
+
+## 2026-09-26 — Mountain-journey evidence is a free-text label, not a relational link
+
+**Decision:** `JourneyEvidence.label`/`note` are plain strings. There's no picker to attach an
+actual `Post` or `Lesson` row as evidence, even though both now exist as real database records
+that could in principle be linked.
+
+**Why:** scope control. The task's two named vertical slices were the blog publish flow and the
+lesson/attempt/progress flow; journey checkpoint editing was requested but not one of the two
+flows to build first. A free-text evidence label is enough to make the feature usable now
+(describe what the evidence is) without building a cross-entity picker UI in the same pass.
+Tracked as a real gap, not hidden — see [ROADMAP.md](ROADMAP.md).
+
+## 2026-09-26 — `currentCheckpointId` remains hand-set only — now enforced by Studio's UI, not just convention
+
+**Decision:** `JourneyCheckpoint.isCurrent` is only ever changed by
+`setCurrentCheckpoint(id)`, a Server Action triggered by an explicit "Set as current" click in
+Studio. No code path — not lesson completion, not attempt counts, not the practice-log streak —
+ever calls it automatically.
+
+**Why:** explicit, repeated instruction across both the original build and this Studio
+extension: never award or imply a CEFR level from streaks or lesson counts. Making this a
+manual, single-purpose action (rather than, say, a side effect of some other save) keeps the
+rule enforceable by inspection — anyone auditing the codebase can grep for
+`setCurrentCheckpoint` and see every place "you are here" can change.
+
+## 2026-09-26 (earlier pass) — Lesson exercises shipped as a client-only prototype, not wired to a backend
+
+**Superseded the same day** by "Studio's lesson/attempt model replaces the localStorage lesson
+prototype," above — kept here for the historical reasoning, since the *why* (don't conflate
+practice-log entries with lesson-completion checkboxes) still holds even though the mechanism
+changed.
 
 **Decision:** the Writing/Listening/Speaking/Reading lesson browser and "Mark complete" action
 (`src/data/lessons.ts`, `src/lib/progress.tsx`) store completion state in `localStorage` only.
@@ -21,7 +85,12 @@ exercise" checkbox — so they're kept visibly separate on `/learning` instead (
 sync across devices — at that point it likely belongs in its own table, not bolted onto
 `LearningLog`.
 
-## 2026-09-26 — Mountain-journey position is a manually-edited constant, never computed
+## 2026-09-26 (earlier pass) — Mountain-journey position is a manually-edited constant, never computed
+
+**Superseded the same day** by "`currentCheckpointId` remains hand-set only," above — the data
+moved from a hardcoded file to a `JourneyCheckpoint.isCurrent` database column, but the rule
+itself (hand-set, never derived) is unchanged and is now enforced by Studio's UI having exactly
+one action that can flip it.
 
 **Decision:** `currentCheckpointId` in `src/data/journey.ts` is a hardcoded string the owner
 edits by hand. No code path derives it from lesson completion counts, the practice-log streak,

@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, type ReactNode } from "react";
-import type { SkillId } from "@/data/lessons";
+import type { SkillId } from "@/lib/lessonsData";
 
 type Filter = SkillId | "all";
 
