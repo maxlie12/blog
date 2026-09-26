@@ -126,6 +126,13 @@ bring it up to date.
 
 ## Troubleshooting
 
+- **`TypeError: Cannot read properties of undefined (reading 'findMany')`** (or similar, on
+  `prisma.<model>.something`): the generated Prisma Client is stale — it was generated before
+  that model existed in `prisma/schema.prisma`. Run `npx prisma generate` (this normally
+  happens automatically via the `postinstall` script after `npm install`, but a long-running
+  `next dev` process started before a schema/migration change won't pick up a client
+  regenerated in another terminal without a restart). Fix: `npx prisma generate`, then restart
+  `next dev`.
 - **`/studio/login` shows "Studio auth isn't configured":** `STUDIO_PASSWORD` or
   `STUDIO_SESSION_SECRET` isn't set in the current environment. Set both (see above) and
   restart the dev server / redeploy.
