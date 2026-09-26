@@ -2,7 +2,7 @@
 // This is the single source the About page renders from, so editing here
 // is enough; no other file needs to change. See docs/CONTENT-GUIDE.md.
 export const profile = {
-  name: "Max Lie",
+  name: "Luân",
   tagline: "PLACEHOLDER — one line describing what you do and care about.",
   bio: [
     "PLACEHOLDER paragraph 1. Replace with a real introduction: who you are, what you build, and why this site exists.",

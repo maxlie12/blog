@@ -8,30 +8,27 @@ export default function ProjectsPage() {
   const projects = getAllProjects();
 
   return (
-    <div>
-      <h1 className="mb-6 text-2xl font-bold tracking-tight">Projects</h1>
+    <div className="section-page">
+      <header className="section-page__header">
+        <h1>Projects</h1>
+        <p>What I&apos;ve built, what I&apos;m building, and what I learned along the way.</p>
+      </header>
       {projects.length === 0 ? (
-        <p className="text-sm text-neutral-500">
+        <p className="empty-state">
           No projects yet. Add an .mdx file to <code>content/projects/</code>.
         </p>
       ) : (
-        <ul className="space-y-6">
+        <ul className="project-list">
           {projects.map((p) => (
-            <li key={p.slug} className="border-b border-neutral-200 pb-6 dark:border-neutral-800">
-              <Link href={`/projects/${p.slug}`} className="group block">
-                <div className="flex items-center gap-2">
-                  <h2 className="font-medium group-hover:underline">{p.title}</h2>
-                  {p.sample && (
-                    <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
-                      sample
-                    </span>
-                  )}
-                  <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
-                    {p.status}
-                  </span>
+            <li key={p.slug}>
+              <Link href={`/projects/${p.slug}`} className="project-card">
+                <div className="project-card__header">
+                  <h2>{p.title}</h2>
+                  {p.sample && <span className="tag tag--sample">sample</span>}
+                  <span className="tag tag--status">{p.status}</span>
                 </div>
-                <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">{p.summary}</p>
-                <p className="mt-2 text-xs text-neutral-500">{p.tech.join(" · ")}</p>
+                <p className="project-card__summary">{p.summary}</p>
+                <p className="project-card__tech">{p.tech.join(" · ")}</p>
               </Link>
             </li>
           ))}

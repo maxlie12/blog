@@ -2,7 +2,7 @@
 
 ## Writing an article
 
-1. Create `content/articles/<slug>.mdx` (the filename becomes the URL: `/writing/<slug>`).
+1. Create `content/articles/<slug>.mdx` (the filename becomes the URL: `/blog/<slug>`).
 2. Add frontmatter:
 
    ```yaml
@@ -17,7 +17,7 @@
    ---
    ```
 3. Write the body in Markdown/MDX below the frontmatter.
-4. Run `npm run dev` and check `/writing/<slug>` renders as expected.
+4. Run `npm run dev` and check `/blog/<slug>` renders as expected.
 5. Set `draft: false` (or remove the field) and commit when ready to publish.
 
 ### What makes a good article here
@@ -76,6 +76,36 @@ for why). In practice:
 
 If a slug is misspelled, the link silently doesn't render rather than breaking the build —
 double-check slugs against the actual filenames in `content/`.
+
+## Editing lesson exercises
+
+Lesson content lives in `src/data/lessons.ts` — a plain array, no CMS, no migration needed to
+add one. Each entry needs: `id` (used in the URL, `/learning/<id>`), `skill` (one of
+`writing`/`listening`/`speaking`/`reading`), `title`, `level` (a CEFR-style label shown as a
+tag — cosmetic only, not derived from anything), `minutes`, `summary`, `prompt` (the
+instruction shown to the learner), and `sample` (a model answer, not a scored one — label it
+clearly as "one possible answer" if you write your own, matching the existing entries).
+
+Lesson completion is tracked in the visitor's browser only (`localStorage`, via
+`src/lib/progress.tsx`) — there's nothing to seed or migrate; it starts empty for every new
+browser/device. See `docs/DECISIONS.md` for why this isn't backed by a database yet.
+
+## Editing the mountain-journey map
+
+`src/data/journey.ts` holds the checkpoints (B1+ → B2 → C1 → optional C2) and
+`currentCheckpointId` — **set this by hand**, and only change it when you genuinely believe
+your level has moved, never automatically from lesson counts or streaks (see
+`docs/DECISIONS.md`). The `journeyDisclaimer` string is shown directly under the map; keep it
+if you keep the map, since it's what makes the map honest rather than a fake assessment.
+
+## Theme and accent color
+
+The moon/sun toggle and the four accent swatches in the header are visitor-facing preferences,
+persisted per-browser (`localStorage`, via `src/lib/theme.tsx`) — there's no "default theme"
+setting to configure beyond the CSS custom properties in `src/app/globals.css` (`:root` for
+light, `:root[data-theme="dark"]` for dark, `:root[data-accent="..."]` for each accent). To add
+a fifth accent color, add both a CSS variable and a matching entry in the `ACCENTS` array in
+`src/components/SiteHeader.tsx`.
 
 ## Interview prep notes (schema-only today)
 

@@ -5,31 +5,28 @@ export const metadata: Metadata = { title: "About" };
 
 export default function AboutPage() {
   return (
-    <div className="space-y-10">
-      <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-200">
+    <div className="about-page">
+      <div className="sample-banner">
         This page is placeholder content — edit <code>src/data/profile.ts</code> with real bio,
         skills, and experience before launch.
       </div>
 
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight">{profile.name}</h1>
-        <p className="mt-1 text-neutral-600 dark:text-neutral-400">{profile.tagline}</p>
+      <header className="about-page__header">
+        <h1>{profile.name}</h1>
+        <p>{profile.tagline}</p>
       </header>
 
-      <section className="space-y-3 text-neutral-700 dark:text-neutral-300">
+      <section className="about-page__bio">
         {profile.bio.map((para, i) => (
           <p key={i}>{para}</p>
         ))}
       </section>
 
       <section>
-        <h2 className="mb-3 text-lg font-semibold">Skills</h2>
-        <ul className="flex flex-wrap gap-2">
+        <h2>Skills</h2>
+        <ul className="pill-list">
           {profile.skills.map((skill) => (
-            <li
-              key={skill}
-              className="rounded-full border border-neutral-300 px-3 py-1 text-sm dark:border-neutral-700"
-            >
+            <li key={skill} className="pill">
               {skill}
             </li>
           ))}
@@ -37,15 +34,15 @@ export default function AboutPage() {
       </section>
 
       <section>
-        <h2 className="mb-3 text-lg font-semibold">Experience</h2>
-        <ol className="space-y-4">
+        <h2>Experience</h2>
+        <ol className="timeline">
           {profile.experience.map((job, i) => (
-            <li key={i} className="border-l-2 border-neutral-300 pl-4 dark:border-neutral-700">
-              <p className="font-medium">
+            <li key={i}>
+              <p className="timeline__role">
                 {job.role} · {job.org}
               </p>
-              <p className="text-xs text-neutral-500">{job.period}</p>
-              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">{job.summary}</p>
+              <p className="timeline__period">{job.period}</p>
+              <p className="timeline__summary">{job.summary}</p>
             </li>
           ))}
         </ol>

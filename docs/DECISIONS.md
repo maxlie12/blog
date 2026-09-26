@@ -3,6 +3,51 @@
 Reverse-chronological log of decisions with material impact and their rationale. See linked
 docs for full detail; this file is the "why," not the "how."
 
+## 2026-09-26 — Lesson exercises shipped as a client-only prototype, not wired to a backend
+
+**Decision:** the Writing/Listening/Speaking/Reading lesson browser and "Mark complete" action
+(`src/data/lessons.ts`, `src/lib/progress.tsx`) store completion state in `localStorage` only.
+No database table was added for it.
+
+**Why:** the request asked for a *usable* lesson detail screen with a completion action, but
+explicitly scoped a real backend as later work ("what needs a later backend" was asked for in
+the report, implying it's expected to be absent now). Reusing the existing `LearningLog` table
+would have conflated two different kinds of data — real, timestamped practice sessions the
+owner logs by hand (`docs/ARCHITECTURE.md#privacy-model`) vs. a UI-driven "did I do this canned
+exercise" checkbox — so they're kept visibly separate on `/learning` instead ("Practice log
+(tracked)" vs. the lesson explorer above it).
+
+**Revisit when:** the owner wants lesson completion to survive clearing browser storage or to
+sync across devices — at that point it likely belongs in its own table, not bolted onto
+`LearningLog`.
+
+## 2026-09-26 — Mountain-journey position is a manually-edited constant, never computed
+
+**Decision:** `currentCheckpointId` in `src/data/journey.ts` is a hardcoded string the owner
+edits by hand. No code path derives it from lesson completion counts, the practice-log streak,
+or any other activity metric.
+
+**Why:** explicit instruction — do not claim a CEFR level from streaks or lesson counts. Any
+automatic derivation (e.g. "5 completed lessons = B2") would be exactly that claim, dressed up
+as data-driven. A hand-set value with a visible disclaimer keeps the map honest: it shows what
+the owner believes about their own level, not what an activity count implies.
+
+## 2026-09-26 — Full visual redesign; nav route renamed `/writing` → `/blog`
+
+**Decision:** replaced the MVP's plain utility-class styling with an editorial design system
+(CSS custom properties for theme/accent, serif headings, textured surfaces) and renamed the
+"Writing" section to "Blog" (route, nav label, and internal links) to match the supplied
+reference design.
+
+**Why:** requested directly, with a reference image. The rename happened pre-launch (no
+indexed URLs, no real visitors yet), so there was no redirect cost to renaming now rather than
+carrying an inconsistent nav label indefinitely.
+
+**Follow-up:** the About page's placeholder name was changed from "Max Lie" (guessed from the
+`maxlie12` GitHub handle in the previous pass) to "Luân" (the name used in this pass's brand
+header, per the reference image). This is still a guess, now a different one — see
+`docs/STATUS.md` for the open question.
+
 ## 2026-09-25 — Prisma 6.19.3 over Prisma 7/8
 
 **Decision:** pinned `prisma` and `@prisma/client` to `6.19.3`, not the `7.10.0`/`8.0.0-rc`

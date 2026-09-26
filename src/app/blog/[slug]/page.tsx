@@ -32,30 +32,23 @@ export default async function ArticlePage({
     .filter((p): p is NonNullable<typeof p> => Boolean(p));
 
   return (
-    <article>
-      {article.sample && (
-        <div className="mb-6 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-200">
-          This is a sample article — see <code>content/articles/{article.slug}.mdx</code>.
-        </div>
-      )}
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">{article.title}</h1>
-        <p className="mt-2 text-xs text-neutral-500">
+    <article className="article-page">
+      {article.sample && <div className="sample-banner">This is a sample article — see <code>content/articles/{article.slug}.mdx</code>.</div>}
+      <header className="article-page__header">
+        <h1>{article.title}</h1>
+        <p className="article-page__meta">
           {article.date} · {article.readingMinutes} min read · {article.areas.join(", ")}
         </p>
       </header>
       <Mdx source={article.content} />
 
       {relatedProjects.length > 0 && (
-        <aside className="mt-10 border-t border-neutral-200 pt-6 dark:border-neutral-800">
-          <h2 className="mb-2 text-sm font-semibold text-neutral-500">Related projects</h2>
-          <ul className="flex flex-wrap gap-2">
+        <aside className="article-page__related">
+          <h2>Related projects</h2>
+          <ul>
             {relatedProjects.map((p) => (
               <li key={p.slug}>
-                <Link
-                  href={`/projects/${p.slug}`}
-                  className="rounded-full border border-neutral-300 px-3 py-1 text-sm dark:border-neutral-700"
-                >
+                <Link href={`/projects/${p.slug}`} className="pill">
                   {p.title}
                 </Link>
               </li>

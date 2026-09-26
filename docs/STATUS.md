@@ -1,76 +1,45 @@
 # Status
 
-Last verified: 2026-09-25.
+Last verified: 2026-09-26.
 
 ## What's implemented and working
 
-- **Portfolio/About** (`/about`) — renders from `src/data/profile.ts`. **Content is
-  placeholder** (clearly banner-labelled on the page) — real bio/skills/experience have not
-  been provided yet.
-- **Projects** (`/projects`, `/projects/[slug]`) — list + MDX detail pages, tech/status badges,
-  repo/live links. One entry (`atlas`) exists, marked `sample: true` — **placeholder content**,
-  banner-labelled, since no real Atlas details have been provided yet.
-- **Writing** (`/writing`, `/writing/[slug]`) — list + MDX detail pages, reading time, area
-  tags, related-projects box. One sample article ships (`welcome-to-this-site`, marked
-  `sample: true`) so the section isn't empty.
-- **Learning** (`/learning`) — current/longest streak computed from all `LearningLog` rows
-  (public and private); a list of the 30 most recent **public** entries only. Verified: a
-  private, backdated entry extends the streak count but does not appear in the entry list or
-  page HTML (grepped for the entry's text — zero matches).
-- **Content authoring** — adding an article/project is "add one `.mdx` file," documented in
-  `docs/CONTENT-GUIDE.md`. Verified by exercising it for both the sample article and Atlas.
-- **Practice logging** — `npm run log -- --area=... --activity=...` (see
-  `docs/OPERATIONS.md`), with `--private`, `--date`, `--minutes`, `--note` flags. Verified
-  working, including backdating and privacy filtering (see above).
-- **SEO/metadata** — per-page `<title>`, `sitemap.ts`, `robots.ts`.
-- **Empty states** — verified: Projects/Writing render a plain-text empty state when their
-  content directory has zero entries (checked by reading `src/app/projects/page.tsx` and
-  `src/app/writing/page.tsx`'s conditional branches; not screenshotted with content removed).
-- **Error state** — `/learning` catches a Prisma/database failure and renders a specific
-  "run migrations" message instead of a stack trace or blank page.
-- **404 page** — custom `not-found.tsx`.
+- **New editorial UI** (this pass) — full visual redesign matching the reference brief: charcoal/deep-teal + warm-ivory palette, serif headings (Fraunces), paper texture, soft-shadow cards, on every page. Nav renamed **Blog** (was "Writing" — route moved from `/writing` to `/blog`), **Projects**, **Learning**, **About**.
+- **Theme switcher** — moon/sun toggle (light ivory ↔ dark teal) plus 4 accent-color swatches (ivory/teal/deep-teal/amber). Both persist to `localStorage` (`site-theme`, `site-accent`) and apply before first paint via an inline script in `layout.tsx` (no flash of the wrong theme). Verified: toggling both in a live browser session actually recolors the whole UI, including the mountain-journey hero and all cards.
+- **Home (`/`)** — three-column layout: recent blog cards (left), the mountain-journey hero + 4 skill cards (center), lesson picker + daily-goal widget (right), matching the reference image's structure.
+- **Mountain journey** (`src/components/MountainJourney.tsx`, data in `src/data/journey.ts`) — B1+ → B2 → C1, with C2 marked "Optional". `currentCheckpointId` is a **hand-set value in a data file**, not derived from lesson completion or the practice-log streak. A visible caption states this explicitly. Verified: the caption renders on every page that shows the journey (`/`, `/learning`).
+- **Skill cards + lesson picker** (`/`, `/learning`) — four skill cards (Writing/Listening/Speaking/Reading) with a completed/total count and progress bar; clicking one filters the lesson list to that skill (verified live: clicking "Speaking" narrowed 6 lessons to 2, and re-clicking cleared the filter). Skill cards and the lesson list share filter state via `LessonFilterProvider` (React context) so they can live in separate layout regions.
+- **Lesson detail** (`/learning/[lessonId]`) — sample prompt + sample response for 6 placeholder lessons across all four skills (realistic frontend-dev/Atlas/interview-prep content, not real assessment material). "Mark complete" / "Mark as not done" toggles work and are **saved to `localStorage` only** — verified live: marking a lesson complete updates its checkmark in the list, its skill card's count, and the daily-goal widget, all without a page reload.
+- **Practice log (tracked)** — the original, Prisma/SQLite-backed streak + public-entries section from the previous MVP pass is preserved on `/learning`, below the new lesson explorer, under its own heading ("Practice log (tracked)") with copy explicitly distinguishing it from the sample lesson exercises above. This is real, persisted data; the lesson-completion tracking above it is not.
+- **Portfolio/About** (`/about`) — restyled; content is still placeholder (see Known gaps).
+- **Projects** (`/projects`, `/projects/[slug]`) — restyled cards; `atlas` entry still placeholder.
+- **Accessibility** — visible focus rings (`:focus-visible`, accent-colored) on all interactive elements; `aria-current`, `aria-pressed`, `aria-selected` used on nav/theme/filter controls; `prefers-reduced-motion` disables transitions/animations globally; verified via a live keyboard-tab screenshot showing a clear focus outline.
+- **SEO/metadata, empty states, error states, 404** — unchanged from the previous pass, updated only where routes moved (`sitemap.ts` now points at `/blog/...`).
 
-## Checks actually performed
+## Checks actually performed (this pass)
 
 | Check | Result |
 |---|---|
-| `npm run build` | ✅ Passes. All routes compile; static pages prerendered (`/`, `/about`, `/projects`, `/writing`, article/project detail pages); `/learning` correctly marked dynamic (`ƒ`). |
-| `npm run lint` | ✅ "No issues found." |
-| `npx prisma migrate dev` | ✅ Applied cleanly; `data/blog.db` created at the documented path. |
-| Dev server, all 7 MVP routes | ✅ All returned HTTP 200 (`curl` check against `/`, `/about`, `/projects`, `/projects/atlas`, `/writing`, `/writing/welcome-to-this-site`, `/learning`). |
-| Streak logic | ✅ Logged one entry → streak `1/1`. Logged a second, backdated, **private** entry for the prior day → streak became `2/2`, and the private entry's text did not appear anywhere in the rendered page. |
-| Playwright screenshot pass, desktop (1280×800) and mobile (390×844), all 7 routes | ✅ 14 screenshots captured, all HTTP 200, zero browser console/page errors across both viewports. Visually reviewed 3 of the 14 (`mobile /`, `mobile /learning`, `desktop /projects/atlas`): nav wraps correctly on mobile with no horizontal scroll, MDX (headings/blockquote/lists) renders correctly, placeholder banners are visible and legible. The remaining 11 screenshots were captured but not individually reviewed. |
-| Production `npm run start` against the built output | ❌ Not run — only `next dev` was exercised end-to-end. |
+| `npm run build` | ✅ Passes. 17 routes compile, including 6 statically-generated lesson pages. |
+| `npm run lint` | ✅ "No issues found" (after fixing two `react-hooks/set-state-in-effect` errors by rewriting the theme/progress stores on `useSyncExternalStore` instead of effect+setState). |
+| Playwright pass, desktop (1280×900) and mobile (390×844), 8 routes (`/`, `/blog`, `/blog/welcome-to-this-site`, `/projects`, `/projects/atlas`, `/learning`, `/learning/speaking-interview-intro`, `/about`) | ✅ All HTTP 200, zero console/page errors. Visually reviewed the home page, `/learning`, and the About page on both viewports — no horizontal scroll on mobile, header nav wraps cleanly. |
+| Interaction check: dark-theme toggle | ✅ Screenshotted before/after — full palette swap confirmed live, including header, cards, and journey hero. |
+| Interaction check: accent-swatch change (teal) | ✅ Screenshotted — accent color propagated to active nav underline, active filter chips, progress bars, and the "Continue learning" button. |
+| Interaction check: skill-card filter | ✅ Clicking "Speaking" narrowed the lesson list from 6 to 2 items live; screenshotted. |
+| Interaction check: lesson completion | ✅ "Mark complete" on a lesson flipped its state and persisted (`localStorage`); screenshotted. |
+| Interaction check: keyboard focus | ✅ Tab-only navigation produces a visible accent-colored focus ring; screenshotted. |
+| Production `npm run start` | ❌ Not run this pass either — only `next dev` was exercised end-to-end (carried over from the previous pass's gap). |
 
 ## Known gaps / defects
 
-- **Placeholder content is live in every content area** (About, Atlas project, one article).
-  This is intentional per `docs/DECISIONS.md` (fabricating a plausible-sounding bio would
-  violate the "never present fabricated content as real" constraint), but it means **the site
-  is not ready to show to a real visitor yet**. Highest-priority next step — see below.
-- **`npm run start` (production server) was not exercised**, only `next dev` — low risk given
-  `next build` succeeded and the Learning route's data logic is identical between dev/prod, but
-  unverified.
-- **Not deployed.** Blocked on: a Vercel account/login (owner-only credential) and a networked
-  SQLite-compatible database for production, since Vercel's filesystem is ephemeral — see
-  `docs/OPERATIONS.md#deployment-vercel`. Nothing else about deployment is blocked; the config
-  and steps are documented and ready to execute once those two things exist.
-- **`relatedLogAreas` frontmatter field is stored but not rendered** on article pages yet
-  (`src/lib/content.ts` parses it; no page reads it). Tracked in `docs/ROADMAP.md`.
-- **`npm audit` reports 3 high-severity advisories**, all the same root cause: `prisma`
-  CLI's own dependency `@prisma/config` → `deepmerge-ts` (stack exhaustion on recursive object
-  graphs, GHSA-ggr8-5vv4-36mx). This is the CLI's build-time config merging, not
-  `@prisma/client` (the runtime dependency the deployed app actually imports), so it isn't
-  reachable by a visitor. `npm audit fix --force` would downgrade to `prisma@6.12.0` as a
-  breaking change — not applied in this pass; re-check for a non-breaking patched release
-  before the next deploy.
-- **Interview prep and language exercises have no UI** — by design for this pass (see
-  `docs/DECISIONS.md`), tracked as Phase 3/4 in `docs/ROADMAP.md`. Not a defect.
+- **Placeholder content is still live** in About (`src/data/profile.ts`), the Atlas project, and the sample blog article — unchanged from the previous pass. The About page's placeholder name was updated to "Luân" to match the new header branding (previously said "Max Lie" from before this UI existed) — **this is a guess at the actual name and needs confirming**, since the earlier session inferred "Max Lie" from the `maxlie12` GitHub handle and this session's reference image says "Luân." Whichever is correct should be set once, in `src/data/profile.ts`.
+- **Lesson-completion tracking is per-browser only**, not synced across devices and not backed by any server — this is by design for a prototype (see `docs/DECISIONS.md`), but it means the "0/2" counts and daily-goal widget reset if `localStorage` is cleared or a different browser/device is used. A real backend (or reusing the existing Prisma database) would be needed to make this durable — tracked in `docs/ROADMAP.md`.
+- **The mountain-journey "you are here" position is manually edited**, not automatically kept in sync with anything — if lesson content changes significantly, a human needs to re-decide whether the milestone still applies.
+- **Not deployed**; same blockers as before (Vercel account, networked SQLite) — see `docs/OPERATIONS.md#deployment-vercel`.
+- **`npm run start` (production server) still not exercised**, only `next dev`.
+- **`npm audit` still reports the same 3 high-severity advisories** in Prisma CLI's build-time-only `deepmerge-ts` dependency (not runtime-reachable) — unchanged from the previous pass.
+- **Interview prep still has no UI** (schema only) — unchanged, tracked in `docs/ROADMAP.md`.
 
 ## Next priority
 
-**Replace placeholder content with real content** — specifically `src/data/profile.ts` (bio,
-skills, experience) and `content/projects/atlas.mdx` (what Atlas actually is). Everything else
-in the MVP is functionally complete and verified; the site cannot be deployed to a real
-audience honestly until this is done, since publishing invented biographical content would
-violate the site's own stated purpose.
+Same as before, now with one addition: **confirm the site owner's actual name** (Luân vs. Max Lie) alongside replacing the rest of the placeholder content in `src/data/profile.ts` and `content/projects/atlas.mdx`. The lesson/journey UI is a working prototype layer that can ship as-is (clearly labelled as self-tracked/placeholder), but publishing a guessed name would be worse than publishing no name.

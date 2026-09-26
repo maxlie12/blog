@@ -4,13 +4,13 @@ import { getAllArticles, getAllProjects } from "@/lib/content";
 const SITE_URL = process.env.SITE_URL || "http://localhost:3000";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const staticRoutes = ["", "/about", "/projects", "/writing", "/learning"].map((route) => ({
+  const staticRoutes = ["", "/about", "/projects", "/blog", "/learning"].map((route) => ({
     url: `${SITE_URL}${route}`,
     lastModified: new Date(),
   }));
 
   const articleRoutes = getAllArticles().map((a) => ({
-    url: `${SITE_URL}/writing/${a.slug}`,
+    url: `${SITE_URL}/blog/${a.slug}`,
     lastModified: new Date(a.updated || a.date),
   }));
 

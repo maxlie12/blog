@@ -28,17 +28,26 @@ Conditions to start: Phase 2 deployed; owner has real interview records to enter
   non-public record.
 - A CLI (mirroring `scripts/log.mjs`) or minimal form to add records without hand-writing SQL.
 
-## Phase 4 — language exercises
+## Phase 4 — language exercises: give the prototype a backend
 
-Conditions to start: enough real learning-log history exists to know what exercise shapes are
-actually useful (don't guess at the schema in advance).
+**Update (2026-09-26): a client-only prototype of this already exists** — `/learning` has a
+working skill-card + lesson-picker + lesson-detail flow (`src/data/lessons.ts`,
+`src/components/LearningExplorer.tsx`, `src/components/LessonDetailView.tsx`) with a "Mark
+complete" action. It's real UI, not a mockup — but completion state lives in `localStorage`
+only (see `docs/DECISIONS.md`), lesson content is a hardcoded data file, and there's no review
+scheduling. This phase is about giving that prototype a backend, not building the UI from
+scratch:
 
-- Exercise entity: goal, prompt, expected/self-assessed answer, feedback, next-review date
-  (spaced repetition).
-- Link exercises to articles (`relatedProjects`-style soft reference) and to `LearningLog`
-  entries (an exercise session is a practice day).
+- A database table for lesson content and/or completion (evaluate whether lesson *content*
+  should move to the DB too, or stay in `src/data/lessons.ts` like articles/projects stay in
+  MDX — depends on whether the owner wants to add lessons without a deploy).
+- Move completion tracking server-side so it survives clearing browser storage and syncs
+  across devices.
 - Review scheduling (e.g. simple Leitner-style intervals) — no need for a full SRS algorithm
   at single-user scale.
+- Link exercises to articles (`relatedProjects`-style soft reference) and to `LearningLog`
+  entries (an exercise session could also count as a practice day, once that relationship is
+  wanted — right now they're deliberately kept separate, see `docs/DECISIONS.md`).
 
 ## Phase 5 — streak visualization & content admin ergonomics
 

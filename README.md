@@ -1,11 +1,12 @@
 # blog
 
-Personal site: portfolio, writing, and a public learning log. Built with Next.js (App
+Personal site: portfolio, blog, and an English-learning space. Built with Next.js (App
 Router), MDX content files, and a SQLite database (via Prisma) for frequently-updated data.
 
-**Status: MVP built and passing its own checks locally; not yet deployed and still running
-placeholder content in every content area.** See [docs/STATUS.md](docs/STATUS.md) for the
-full, current picture — what works, what's placeholder, and what's next.
+**Status: MVP + editorial redesign built and passing checks locally; not yet deployed and
+still running placeholder content in every content area.** See
+[docs/STATUS.md](docs/STATUS.md) for the full, current picture — what works, what's
+placeholder, and what's next.
 
 ## Quick start
 
@@ -24,7 +25,7 @@ Open http://localhost:3000.
 - **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — system diagram, content model, data flows,
   decisions and tradeoffs behind the shape of the system.
 - **[docs/CONTENT-GUIDE.md](docs/CONTENT-GUIDE.md)** — how to write an article, add a project,
-  log practice, and link them together.
+  add a lesson, edit the journey map, and log practice.
 - **[docs/OPERATIONS.md](docs/OPERATIONS.md)** — environment variables, local setup, migrations,
   backup/restore, deployment, troubleshooting.
 - **[docs/STATUS.md](docs/STATUS.md)** — what's actually built and verified, known gaps, next
@@ -36,11 +37,16 @@ Open http://localhost:3000.
 ## Repository layout
 
 ```
-content/articles/*.mdx   Blog posts (frontmatter + Markdown/MDX body)
-content/projects/*.mdx   Portfolio project write-ups
-src/app/                 Routes (Next.js App Router)
-src/lib/                 Content loading (content.ts), DB client (db.ts), streak logic
-src/data/profile.ts      About-page data (currently placeholder — see STATUS.md)
-prisma/schema.prisma     LearningLog + InterviewRecord (SQLite)
-scripts/log.mjs          CLI to add a learning-log entry (`npm run log -- ...`)
+content/articles/*.mdx     Blog posts (frontmatter + Markdown/MDX body)
+content/projects/*.mdx     Portfolio project write-ups
+src/app/                   Routes (Next.js App Router): /, /blog, /projects, /learning, /about
+src/components/            UI: SiteHeader/Footer, BlogCard, MountainJourney, LearningExplorer,
+                            LessonDetailView, DailyGoalWidget, PracticeLogSection
+src/lib/                   Content loading, DB client, streak logic, theme + progress stores
+src/data/profile.ts        About-page data (currently placeholder — see STATUS.md)
+src/data/lessons.ts        Lesson exercise content (client-only prototype — see STATUS.md)
+src/data/journey.ts        Mountain-journey checkpoints; current position is hand-set, not
+                            computed — see DECISIONS.md
+prisma/schema.prisma       LearningLog + InterviewRecord (SQLite)
+scripts/log.mjs            CLI to add a learning-log entry (`npm run log -- ...`)
 ```

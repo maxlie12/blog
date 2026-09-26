@@ -1,92 +1,56 @@
-import Link from "next/link";
 import { getAllArticles, getAllProjects } from "@/lib/content";
+import { BlogCard } from "@/components/BlogCard";
+import { MountainJourney } from "@/components/MountainJourney";
+import { SkillCards, LessonPicker } from "@/components/LearningExplorer";
+import { DailyGoalWidget } from "@/components/DailyGoalWidget";
+import { LessonFilterProvider } from "@/lib/lessonFilter";
 
 export default function Home() {
   const latestArticles = getAllArticles().slice(0, 3);
-  const featuredProjects = getAllProjects().filter((p) => p.featured).slice(0, 3);
+  const featuredProjects = getAllProjects().filter((p) => p.featured).slice(0, 1);
 
   return (
-    <div className="space-y-14">
-      <section>
-        <h1 className="text-3xl font-bold tracking-tight">Max Lie</h1>
-        <p className="mt-3 max-w-xl text-neutral-600 dark:text-neutral-400">
-          This is a public record of what I&apos;m building, what I&apos;m learning, and what I
-          try and get wrong along the way. It covers software projects, English and Chinese
-          practice, and interview preparation.
-        </p>
-        <div className="mt-5 flex gap-3 text-sm">
-          <Link
-            href="/about"
-            className="rounded-md bg-neutral-900 px-4 py-2 text-white dark:bg-neutral-100 dark:text-neutral-900"
-          >
-            About me
-          </Link>
-          <Link
-            href="/projects"
-            className="rounded-md border border-neutral-300 px-4 py-2 dark:border-neutral-700"
-          >
-            See projects
-          </Link>
-        </div>
-      </section>
-
-      {featuredProjects.length > 0 && (
-        <section>
-          <div className="mb-4 flex items-baseline justify-between">
-            <h2 className="text-lg font-semibold">Featured projects</h2>
-            <Link href="/projects" className="text-sm text-neutral-500 hover:underline">
-              All projects →
-            </Link>
-          </div>
-          <ul className="space-y-4">
-            {featuredProjects.map((p) => (
-              <li key={p.slug}>
-                <Link href={`/projects/${p.slug}`} className="group block">
-                  <h3 className="font-medium group-hover:underline">
-                    {p.title}
-                    {p.sample && (
-                      <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-normal text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
-                        sample
-                      </span>
-                    )}
-                  </h3>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">{p.summary}</p>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <section>
-        <div className="mb-4 flex items-baseline justify-between">
-          <h2 className="text-lg font-semibold">Latest writing</h2>
-          <Link href="/writing" className="text-sm text-neutral-500 hover:underline">
-            All articles →
-          </Link>
-        </div>
+    <div className="home-grid">
+      <section className="home-grid__blog" aria-label="Recent blog posts">
+        <header className="section-page__header section-page__header--compact">
+          <h1>Blog</h1>
+          <p>Thoughts at the intersection of code, language, and a wider world.</p>
+        </header>
         {latestArticles.length === 0 ? (
-          <p className="text-sm text-neutral-500">No articles published yet.</p>
+          <p className="empty-state">
+            No articles yet. Add an .mdx file to <code>content/articles/</code>.
+          </p>
         ) : (
-          <ul className="space-y-4">
+          <div className="home-grid__blog-list">
             {latestArticles.map((a) => (
-              <li key={a.slug}>
-                <Link href={`/writing/${a.slug}`} className="group block">
-                  <h3 className="font-medium group-hover:underline">
-                    {a.title}
-                    {a.sample && (
-                      <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-normal text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
-                        sample
-                      </span>
-                    )}
-                  </h3>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">{a.summary}</p>
-                </Link>
-              </li>
+              <BlogCard key={a.slug} article={a} />
             ))}
-          </ul>
+          </div>
         )}
+        {featuredProjects.map((p) => (
+          <a key={p.slug} href={`/projects/${p.slug}`} className="featured-project-card">
+            <span className="featured-project-card__label">Featured project</span>
+            <h3>{p.title}</h3>
+            <p>{p.summary}</p>
+          </a>
+        ))}
       </section>
+
+      <LessonFilterProvider>
+        <section className="home-grid__journey" aria-label="Learning journey">
+          <div className="journey-hero">
+            <h2>The ascent to C1</h2>
+            <p>A long-term journey to clearer expression, deeper understanding, and a more open world.</p>
+            <MountainJourney />
+          </div>
+          <SkillCards />
+        </section>
+
+        <aside className="home-grid__lessons" aria-label="Lesson picker">
+          <LessonPicker />
+          <DailyGoalWidget />
+        </aside>
+      </LessonFilterProvider>
     </div>
   );
 }
