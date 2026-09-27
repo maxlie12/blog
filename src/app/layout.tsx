@@ -51,11 +51,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <Script
-          id="no-flash-theme"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }}
-        />
+        <Script id="no-flash-theme" strategy="beforeInteractive">
+          {NO_FLASH_SCRIPT}
+        </Script>
         <ThemeProvider>
           <PublicChrome>{children}</PublicChrome>
         </ThemeProvider>

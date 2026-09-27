@@ -103,13 +103,14 @@ export function LessonForm({ initial }: { initial: EditableLesson }) {
 
 export function DeleteLessonButton({ id }: { id: string }) {
   return (
-    <form
-      action={deleteLesson.bind(null, id)}
-      onSubmit={(e) => {
-        if (!confirm("Delete this lesson and all its attempts?")) e.preventDefault();
-      }}
-    >
-      <button type="submit" className="button button--ghost button--danger">
+    <form action={deleteLesson.bind(null, id)}>
+      <button
+        type="submit"
+        className="button button--ghost button--danger"
+        onClick={(e) => {
+          if (!confirm("Delete this lesson and all its attempts?")) e.preventDefault();
+        }}
+      >
         Delete lesson
       </button>
     </form>

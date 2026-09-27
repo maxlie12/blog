@@ -4,10 +4,10 @@ import {
   createCheckpoint,
   updateCheckpoint,
   setCurrentCheckpoint,
-  deleteCheckpoint,
   addEvidence,
   deleteEvidence,
 } from "./actions";
+import { DeleteCheckpointButton } from "@/components/studio/JourneyDeleteButton";
 
 export const metadata: Metadata = { title: "Mountain journey · Studio" };
 export const dynamic = "force-dynamic";
@@ -59,16 +59,7 @@ export default async function StudioJourneyPage() {
                   </button>
                 </form>
               )}
-              <form
-                action={deleteCheckpoint.bind(null, cp.id)}
-                onSubmit={(e) => {
-                  if (!confirm("Delete this checkpoint and its evidence?")) e.preventDefault();
-                }}
-              >
-                <button type="submit" className="button button--ghost button--sm button--danger">
-                  Delete
-                </button>
-              </form>
+              <DeleteCheckpointButton id={cp.id} />
             </div>
 
             <div className="journey-editor__evidence">

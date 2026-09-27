@@ -345,15 +345,16 @@ export function PostEditor({ initial }: { initial?: EditablePost }) {
             </div>
 
             {post.id && (
-              <form
-                action={deletePost.bind(null, post.id)}
-                onSubmit={(e) => {
-                  if (!confirm("Delete this post permanently? This cannot be undone.")) {
-                    e.preventDefault();
-                  }
-                }}
-              >
-                <button type="submit" className="button button--ghost button--danger post-editor__delete">
+              <form action={deletePost.bind(null, post.id)}>
+                <button
+                  type="submit"
+                  className="button button--ghost button--danger post-editor__delete"
+                  onClick={(e) => {
+                    if (!confirm("Delete this post permanently? This cannot be undone.")) {
+                      e.preventDefault();
+                    }
+                  }}
+                >
                   Delete post
                 </button>
               </form>
