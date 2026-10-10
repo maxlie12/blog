@@ -2,6 +2,22 @@
 
 Last verified: 2026-09-26 (lesson-attempt-submission pass).
 
+## 2026-10-10 — local hosting preparation
+
+Prepared in branch `content/smartosc-english-restart`; not pushed or deployed:
+
+- Shared Prisma/libSQL connection for local SQLite and hosted Turso; Vercel refuses to fall back to a local database. Timestamp format preserves existing Prisma numeric dates.
+- Additive language column (`en` default, `zh` supported), Studio language selector, lesson-picker language filter, and counters based on the selected language. The existing mountain remains an English CEFR journey.
+- Aggregate attempt counts for the picker rather than transferring each attempt status; still no catalog pagination.
+- SmartOSC draft and two new restart lessons, imported only if missing. No practice is marked completed by import.
+- Transactional/checksummed migration script recognizing existing Prisma migration history, deployment configuration and [deployment guide](VERCEL-TURSO.md).
+
+Checks performed: production build/TypeScript passed; migration re-run skipped applied migrations; an existing Prisma-history fixture preserved an old lesson/attempt and timestamp; Unicode Chinese answer persisted; pending/reviewed counts stayed independent across languages. Production HTTP checks returned 200 for public pages and signed owner-session Studio pages, with anonymous Studio access redirected to login. These owner-session checks used a generated valid test cookie; they did not exercise the login form or submit/publish buttons. No browser QA was possible because the installed Playwright browser executable is absent. No live Turso or deployed persistence check has run.
+
+Remaining blockers: active GitHub connection is `luanWeabu` with read-only access to `maxlie12/blog`; Vercel returned no usable team; no Turso connection/credentials are available. Owner-local database content is not in Git and has not been transferred. See the guide for preview/production database separation and import steps.
+
+The sections below record the previous September implementation checks, not a new hosted verification.
+
 ## What's implemented and working
 
 ### Lesson attempt submission (new this pass)

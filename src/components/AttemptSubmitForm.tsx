@@ -4,7 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { submitAttempt, type SubmitAttemptState } from "@/app/learning/attemptActions";
-import type { SkillId } from "@/lib/lessonsData";
+import type { SkillId } from "@/lib/lessonTypes";
 
 const initialState: SubmitAttemptState = {};
 

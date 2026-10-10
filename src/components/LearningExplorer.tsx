@@ -1,8 +1,9 @@
 "use client";
 
+import { LANGUAGES } from "@/lib/languages";
 import Link from "next/link";
 import { useMemo } from "react";
-import { SKILLS, type SkillId, type LessonSummary } from "@/lib/lessonsData";
+import { SKILLS, type SkillId, type LessonSummary } from "@/lib/lessonTypes";
 import { useLessonFilter } from "@/lib/lessonFilter";
 
 const SKILL_ICON: Record<SkillId, string> = {
@@ -17,16 +18,18 @@ const SKILL_ICON: Record<SkillId, string> = {
  * the homepage) while staying in sync. Lessons/progress come from the database via props,
  * not a static import — see src/lib/lessonsData.ts. */
 export function SkillCards({
-  progress,
+  lessons,
 }: {
-  progress: Record<SkillId, { completed: number; total: number }>;
+  lessons: LessonSummary[];
 }) {
-  const { filter, setFilter } = useLessonFilter();
+  const { filter, setFilter, language } = useLessonFilter();
 
   return (
     <div className="skill-cards" role="group" aria-label="Filter lessons by skill">
       {SKILLS.map((skill) => {
-        const { completed, total } = progress[skill.id];
+        const selected = lessons.filter((l) => l.language === language && l.skill === skill.id);
+        const total = selected.length;
+        const completed = selected.filter((l) => l.reviewedCount > 0).length;
         const active = filter === skill.id;
         return (
           <button
@@ -69,10 +72,10 @@ export function LessonPicker({
   lessons: LessonSummary[];
   compact?: boolean;
 }) {
-  const { filter, setFilter } = useLessonFilter();
+  const { filter, setFilter, language, setLanguage } = useLessonFilter();
   const visible = useMemo(
-    () => (filter === "all" ? lessons : lessons.filter((l) => l.skill === filter)),
-    [lessons, filter]
+    () => lessons.filter((l) => l.language === language && (filter === "all" || l.skill === filter)),
+    [lessons, filter, language]
   );
 
   return (
@@ -83,6 +86,13 @@ export function LessonPicker({
           <p>Practice with real-world content, step by step.</p>
         </div>
       )}
+
+      <label className="field">
+        <span>Language</span>
+        <select value={language} onChange={(e) => setLanguage(e.target.value as "en" | "zh")}>
+          {LANGUAGES.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
+        </select>
+      </label>
 
       <div className="lesson-picker__filters" role="tablist" aria-label="Filter by skill">
         <button

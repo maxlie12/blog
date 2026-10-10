@@ -2,9 +2,10 @@
 // One-time seed: carries the lessons/journey that used to live in the client-only
 // src/data/lessons.ts and src/data/journey.ts prototypes into the real database, so nothing
 // is lost when Studio becomes the source of truth. Safe to re-run (skips existing rows).
-import { PrismaClient } from "@prisma/client";
+import "../scripts/load-env.mjs";
+import { createDatabase } from "../scripts/database.mjs";
 
-const prisma = new PrismaClient();
+const prisma = createDatabase();
 
 const lessons = [
   {

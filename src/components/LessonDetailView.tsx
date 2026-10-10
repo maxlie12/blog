@@ -1,5 +1,6 @@
+import { LANGUAGES } from "@/lib/languages";
 import Link from "next/link";
-import { SKILLS, type SkillId } from "@/lib/lessonsData";
+import { SKILLS, type SkillId } from "@/lib/lessonTypes";
 import { AttemptSubmitForm } from "@/components/AttemptSubmitForm";
 
 interface AttemptView {
@@ -22,6 +23,7 @@ export function LessonDetailView({
   lesson: {
     id: string;
     skill: SkillId;
+    language: string;
     title: string;
     level: string;
     instructions: string;
@@ -42,6 +44,7 @@ export function LessonDetailView({
 
       <header className="lesson-detail__header">
         <div className="lesson-detail__meta">
+          <span className="tag">{LANGUAGES.find((l) => l.id === lesson.language)?.label ?? lesson.language}</span>
           <span className="tag">{SKILLS.find((s) => s.id === lesson.skill)?.label}</span>
           <span className="tag tag--level">{lesson.level}</span>
         </div>

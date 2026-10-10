@@ -24,6 +24,7 @@ export default async function EditLessonPage({ params }: { params: Promise<{ id:
   const initial: EditableLesson = {
     id: lesson.id,
     skill: lesson.skill,
+    language: lesson.language,
     title: lesson.title,
     level: lesson.level,
     instructions: lesson.instructions,

@@ -5,6 +5,7 @@ export const metadata: Metadata = { title: "New lesson · Studio" };
 
 const empty: EditableLesson = {
   skill: "",
+  language: "en",
   title: "",
   level: "",
   instructions: "",

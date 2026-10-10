@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireStudioSession } from "@/lib/studioSession";
+import { isValidLanguage } from "@/lib/languages";
 import { isValidSkill } from "@/lib/lessonsData";
 
 export interface LessonFormState {
@@ -13,6 +14,7 @@ export interface LessonFormState {
 function readLessonInput(formData: FormData) {
   return {
     skill: String(formData.get("skill") ?? ""),
+    language: String(formData.get("language") ?? "en"),
     title: String(formData.get("title") ?? "").trim(),
     level: String(formData.get("level") ?? "").trim(),
     instructions: String(formData.get("instructions") ?? "").trim(),
@@ -24,6 +26,7 @@ function readLessonInput(formData: FormData) {
 
 function validateLesson(input: ReturnType<typeof readLessonInput>): string[] {
   const errors: string[] = [];
+  if (!isValidLanguage(input.language)) errors.push("Choose English or Chinese.");
   if (!isValidSkill(input.skill)) errors.push("Choose a valid skill.");
   if (!input.title) errors.push("Title is required.");
   if (!input.level) errors.push("Target level is required.");

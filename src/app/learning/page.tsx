@@ -3,16 +3,15 @@ import { MountainJourney } from "@/components/MountainJourney";
 import { SkillCards, LessonPicker } from "@/components/LearningExplorer";
 import { PracticeLogSection } from "@/components/PracticeLogSection";
 import { LessonFilterProvider } from "@/lib/lessonFilter";
-import { getAllLessons, getSkillProgress } from "@/lib/lessonsData";
+import { getAllLessons } from "@/lib/lessonsData";
 import { getJourneyCheckpoints } from "@/lib/journeyData";
 
 export const metadata: Metadata = { title: "Learning" };
 export const dynamic = "force-dynamic";
 
 export default async function LearningPage() {
-  const [lessons, progress, checkpoints] = await Promise.all([
+  const [lessons, checkpoints] = await Promise.all([
     getAllLessons(),
-    getSkillProgress(),
     getJourneyCheckpoints(),
   ]);
 
@@ -20,7 +19,7 @@ export default async function LearningPage() {
     <div className="learning-page">
       <header className="section-page__header">
         <h1>Learning</h1>
-        <p>English practice exercises, and — further down — real, tracked practice data.</p>
+        <p>English and Chinese practice, with saved attempts and reviewed progress.</p>
       </header>
 
       <div className="journey-hero journey-hero--wide">
@@ -31,7 +30,7 @@ export default async function LearningPage() {
 
       <LessonFilterProvider>
         <div className="learning-board">
-          <SkillCards progress={progress} />
+          <SkillCards lessons={lessons} />
           <div className="learning-board__picker">
             <LessonPicker lessons={lessons} />
           </div>

@@ -24,6 +24,8 @@ a session secret).
 
 ## Documentation
 
+- **[docs/VERCEL-TURSO.md](docs/VERCEL-TURSO.md)** — prepared Vercel + Turso deployment, additive migrations, content import, English/Chinese lessons, and remaining account blockers. This preparation has not been pushed or deployed yet.
+
 - **[docs/PRODUCT.md](docs/PRODUCT.md)** — goals, users, scope, what's deliberately excluded.
 - **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — system diagram, content model, data flows,
   Studio's auth model, decisions and tradeoffs behind the shape of the system.

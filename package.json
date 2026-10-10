@@ -8,11 +8,17 @@
     "start": "next start",
     "lint": "eslint",
     "log": "node scripts/log.mjs",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:migrate": "node scripts/migrate-database.mjs",
+    "content:import": "node scripts/import-study-update.mjs",
+    "db:seed": "node prisma/seed.mjs"
   },
   "dependencies": {
+    "@libsql/client": "^0.18.0",
+    "@prisma/adapter-libsql": "^6.19.3",
     "@prisma/client": "^6.19.3",
     "date-fns": "^4.4.0",
+    "dotenv": "^18.0.7",
     "gray-matter": "^4.0.3",
     "next": "16.3.6",
     "next-mdx-remote-client": "^2.1.12",

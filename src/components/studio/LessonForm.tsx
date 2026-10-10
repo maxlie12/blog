@@ -1,12 +1,14 @@
 "use client";
 
+import { LANGUAGES } from "@/lib/languages";
 import { useActionState } from "react";
-import { SKILLS, type SkillId } from "@/lib/lessonsData";
+import { SKILLS, type SkillId } from "@/lib/lessonTypes";
 import { saveLesson, deleteLesson, type LessonFormState } from "@/app/studio/(dashboard)/learning/actions";
 
 export interface EditableLesson {
   id?: string;
   skill: SkillId | "";
+  language: string;
   title: string;
   level: string;
   instructions: string;
@@ -26,6 +28,13 @@ export function LessonForm({ initial }: { initial: EditableLesson }) {
   return (
     <form action={formAction} className="studio-form">
       {initial.id && <input type="hidden" name="id" value={initial.id} />}
+
+      <label className="field">
+        <span>Language <span className="field__required">*</span></span>
+        <select name="language" defaultValue={initial.language} required>
+          {LANGUAGES.map((language) => <option key={language.id} value={language.id}>{language.label}</option>)}
+        </select>
+      </label>
 
       <label className="field">
         <span>

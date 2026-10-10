@@ -7,7 +7,8 @@
  *
  * See docs/OPERATIONS.md for the full flag reference.
  */
-import { PrismaClient } from "@prisma/client";
+import "./load-env.mjs";
+import { createDatabase } from "./database.mjs";
 
 function parseArgs(argv) {
   const out = { isPublic: true };
@@ -41,7 +42,7 @@ async function main() {
     process.exit(1);
   }
 
-  const prisma = new PrismaClient();
+const prisma = createDatabase();
   try {
     const entry = await prisma.learningLog.create({
       data: {

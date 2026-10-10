@@ -1,6 +1,6 @@
 import { getAllProjects } from "@/lib/content";
 import { getPublicArticles } from "@/lib/posts";
-import { getAllLessons, getSkillProgress } from "@/lib/lessonsData";
+import { getAllLessons } from "@/lib/lessonsData";
 import { BlogCard } from "@/components/BlogCard";
 import { MountainJourney } from "@/components/MountainJourney";
 import { SkillCards, LessonPicker } from "@/components/LearningExplorer";
@@ -10,10 +10,9 @@ import { getJourneyCheckpoints } from "@/lib/journeyData";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [articles, lessons, progress, checkpoints] = await Promise.all([
+  const [articles, lessons, checkpoints] = await Promise.all([
     getPublicArticles(),
     getAllLessons(),
-    getSkillProgress(),
     getJourneyCheckpoints(),
   ]);
   const latestArticles = articles.slice(0, 3);
@@ -51,7 +50,7 @@ export default async function Home() {
             <p>A long-term journey to clearer expression, deeper understanding, and a more open world.</p>
             <MountainJourney checkpoints={checkpoints} />
           </div>
-          <SkillCards progress={progress} />
+          <SkillCards lessons={lessons} />
         </section>
 
         <aside className="home-grid__lessons" aria-label="Lesson picker">
