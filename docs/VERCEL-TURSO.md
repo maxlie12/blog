@@ -42,4 +42,4 @@ Audio recordings remain browser-local in this version. Persistent audio/image up
 
 ## Current execution status
 
-Code prepared in the local checkout; not deployed. The connected GitHub account `luanWeabu` has no write access to `maxlie12/blog`. No usable Vercel team or Turso credentials were available in this session. No production data has been changed.
+Source published to `maxlie12/blog` on `master` and `content/smartosc-english-restart` (commit `e254270`), with the GitHub account `maxlie12` and push permission verified. Not deployed: Vercel returned empty team/project lists and no Turso connection/credentials are available. The article/lesson payload has not been imported into a live database. No production database has been changed.

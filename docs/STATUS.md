@@ -2,9 +2,9 @@
 
 Last verified: 2026-09-26 (lesson-attempt-submission pass).
 
-## 2026-10-10 — local hosting preparation
+## 2026-10-10 — source published; hosting pending
 
-Prepared in branch `content/smartosc-english-restart`; not pushed or deployed:
+Published to `master` and `content/smartosc-english-restart` in commit `e254270`. Source is updated; the application is not deployed and the content payload has not been imported into a live database:
 
 - Shared Prisma/libSQL connection for local SQLite and hosted Turso; Vercel refuses to fall back to a local database. Timestamp format preserves existing Prisma numeric dates.
 - Additive language column (`en` default, `zh` supported), Studio language selector, lesson-picker language filter, and counters based on the selected language. The existing mountain remains an English CEFR journey.
@@ -14,7 +14,7 @@ Prepared in branch `content/smartosc-english-restart`; not pushed or deployed:
 
 Checks performed: production build/TypeScript passed; migration re-run skipped applied migrations; an existing Prisma-history fixture preserved an old lesson/attempt and timestamp; Unicode Chinese answer persisted; pending/reviewed counts stayed independent across languages. Production HTTP checks returned 200 for public pages and signed owner-session Studio pages, with anonymous Studio access redirected to login. These owner-session checks used a generated valid test cookie; they did not exercise the login form or submit/publish buttons. No browser QA was possible because the installed Playwright browser executable is absent. No live Turso or deployed persistence check has run.
 
-Remaining blockers: active GitHub connection is `luanWeabu` with read-only access to `maxlie12/blog`; Vercel returned no usable team; no Turso connection/credentials are available. Owner-local database content is not in Git and has not been transferred. See the guide for preview/production database separation and import steps.
+GitHub connection verified as `maxlie12` with push permission; the remote master ref and source tree were verified after publishing. Remaining blockers: Vercel returned empty team/project lists; no Turso connection/credentials are available. Owner-local database content is not in Git and has not been transferred. See the guide for preview/production database separation and import steps.
 
 The sections below record the previous September implementation checks, not a new hosted verification.
 
