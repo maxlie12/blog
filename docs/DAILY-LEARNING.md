@@ -1,0 +1,13 @@
+# Daily learning
+
+`/learning/daily` provides dated English/Chinese packets. Start with one five-minute task; all four English skills are available, with Chinese secondary. The default opens the oldest packet containing an English lesson without reviewed evidence. Dates do not advance proficiency. The archive allows explicit selection.
+
+Packets are versioned under `content/daily-lessons/YYYY-MM-DD.json`. They are validated by `src/lib/dailyLessons.ts`, merged into the existing lesson picker, and bundled for deployment. Lesson IDs must be globally unique and start with `daily-`. The first owner submission materializes its lesson in the database without overwriting Studio edits. Existing attempts are preserved. No schema migration is required for daily packets.
+
+Use the 2026-10-12 packet as the exact JSON contract: date, title, kind (`restart`, `practice`, `weekly-test`, `monthly-test`), note and lessons (id, language, skill, title, level, instructions, material, exercises, completionCriteria). Do not publish answer keys with questions. Cite source URLs without copying copyrighted scripts. Source-backed lessons retain the same IDs across days when reusing a lesson; reference that packet instead of duplicating IDs. For new dated packets use new IDs.
+
+The linked ChatGPT automation may add a packet through the authorized GitHub connector. It must inspect the latest master branch and use a lease for updates. Repository content is public: never commit learner answers, recordings, secrets or private feedback. Without access to saved attempts, it must not infer progress, mark completion or raise difficulty. Keep a restart task until evidence is supplied. Weekly/monthly tests remain assigned at the existing intervals, but can be split into short sessions.
+
+After each content update, a deployment is needed: commits are not a running website. Vercel currently has no connected project and production Turso credentials are unavailable. Daily publishing to GitHub is enabled separately from web deployment. Until hosting is connected, notify with a GitHub packet link and the chat exercise, not an invented live URL.
+
+Text submissions require owner Studio sign-in. They are stored pending; manual feedback and review are available in Studio. Attempt permalinks require authentication. Audio can be recorded, played and downloaded locally, but is not uploaded or automatically scored. Cross-device persistence requires the production database described in VERCEL-TURSO.md. No automatic CEFR assessment or AI feedback is implemented.

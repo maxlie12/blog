@@ -2019,3 +2019,7 @@ a.skill-card {
 .attempt-history a:hover {
   border-color: var(--accent);
 }
+/* Daily sessions reuse the established learning typography and palette. */
+.daily-lessons-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 1.25rem; }
+.daily-lessons-grid section { min-width: 0; }
+.daily-lessons-grid p { overflow-wrap: anywhere; }

@@ -63,7 +63,9 @@ export function LessonDetailView({
           {lesson.skill === "listening" && isAudioUrl(lesson.material) ? (
             <audio controls src={lesson.material} className="lesson-detail__audio" />
           ) : (
-            <p>{lesson.material}</p>
+            /^https?:\/\/\S+$/i.test(lesson.material) ?
+              <a href={lesson.material} target="_blank" rel="noopener noreferrer">Mở nguồn bài học ↗</a> :
+              <p style={{ whiteSpace: "pre-wrap" }}>{lesson.material}</p>
           )}
         </section>
       )}
@@ -71,7 +73,7 @@ export function LessonDetailView({
       {lesson.exercises && (
         <section className="lesson-detail__section lesson-detail__sample">
           <h2>Exercise</h2>
-          <p>{lesson.exercises}</p>
+          <p style={{ whiteSpace: "pre-wrap" }}>{lesson.exercises}</p>
         </section>
       )}
 

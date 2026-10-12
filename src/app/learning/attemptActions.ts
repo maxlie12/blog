@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { hasStudioSession } from "@/lib/studioSession";
 import { todayInTz } from "@/lib/streak";
+import { getDailyLesson } from "@/lib/dailyLessons";
 
 export interface SubmitAttemptState {
   error?: string;
@@ -34,7 +35,11 @@ export async function submitAttempt(
     return { error: "Write a real answer before submitting (at least a few words)." };
   }
 
-  const lesson = await prisma.lesson.findUnique({ where: { id: lessonId } });
+  let lesson = await prisma.lesson.findUnique({ where: { id: lessonId } });
+  if (!lesson) {
+    const daily = await getDailyLesson(lessonId);
+    if (daily) lesson = await prisma.lesson.upsert({ where: { id: lessonId }, create: daily, update: {} });
+  }
   if (!lesson) return { error: "This lesson no longer exists." };
 
   const attempt = await prisma.attempt.create({
@@ -48,6 +53,7 @@ export async function submitAttempt(
 
   revalidatePath(`/learning/${lessonId}`);
   revalidatePath("/learning");
+  revalidatePath("/learning/daily");
   revalidatePath("/");
   revalidatePath("/studio/learning");
   revalidatePath(`/studio/learning/lessons/${lessonId}`);

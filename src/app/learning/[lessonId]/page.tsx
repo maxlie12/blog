@@ -28,5 +28,5 @@ export default async function LessonPage({
   ]);
   if (!lesson) notFound();
 
-  return <LessonDetailView lesson={lesson} attempts={lesson.attempts} canSubmit={canSubmit} />;
+  return <LessonDetailView lesson={lesson} attempts={canSubmit ? lesson.attempts : []} canSubmit={canSubmit} />;
 }

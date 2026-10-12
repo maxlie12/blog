@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAttemptWithLesson, SKILLS } from "@/lib/lessonsData";
+import { requireStudioSession } from "@/lib/studioSession";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ attemptId: string }>;
 }): Promise<Metadata> {
+  await requireStudioSession();
   const { attemptId } = await params;
   const attempt = await getAttemptWithLesson(attemptId);
   return { title: attempt ? `Attempt: ${attempt.lesson.title}` : "Attempt" };
@@ -20,6 +22,7 @@ export default async function AttemptDetailPage({
 }: {
   params: Promise<{ lessonId: string; attemptId: string }>;
 }) {
+  await requireStudioSession();
   const { lessonId, attemptId } = await params;
   const attempt = await getAttemptWithLesson(attemptId);
   if (!attempt || attempt.lessonId !== lessonId) notFound();

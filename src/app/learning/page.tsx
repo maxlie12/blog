@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { MountainJourney } from "@/components/MountainJourney";
 import { SkillCards, LessonPicker } from "@/components/LearningExplorer";
 import { PracticeLogSection } from "@/components/PracticeLogSection";
@@ -20,6 +21,7 @@ export default async function LearningPage() {
       <header className="section-page__header">
         <h1>Learning</h1>
         <p>English and Chinese practice, with saved attempts and reviewed progress.</p>
+        <Link href="/learning/daily" className="button">Bài hôm nay · 5 phút →</Link>
       </header>
 
       <div className="journey-hero journey-hero--wide">

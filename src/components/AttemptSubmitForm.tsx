@@ -40,7 +40,7 @@ function SpeakingRecorder() {
       chunksRef.current = [];
       recorder.ondataavailable = (e) => chunksRef.current.push(e.data);
       recorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || chunksRef.current[0]?.type || "audio/webm" });
         setAudioUrl(URL.createObjectURL(blob));
         stream.getTracks().forEach((t) => t.stop());
       };
@@ -78,7 +78,7 @@ function SpeakingRecorder() {
             ● Record
           </button>
         )}
-        {audioUrl && <audio controls src={audioUrl} />}
+        {audioUrl && <><audio controls src={audioUrl} /><a href={audioUrl} download="speaking-recording">Download recording</a></>}
       </div>
       <p className="attempt-form__recorder-hint">
         This recording plays back locally, for your own self-check — it is <strong>not</strong>{" "}
