@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-10",
+  "title": "Khởi động lại — nghe và hiểu ý chính",
+  "kind": "restart",
+  "note": "Gói học bù lưu trong kho bài. Chọn Listening 5 phút trước; các phần còn lại tùy chọn. Chưa có bài làm được xác minh nên giữ mức B1+. Tất cả câu hỏi do trợ lý soạn, không phải đề chính thức.",
+  "lessons": [
+    {
+      "id": "daily-2026-10-10-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Digital detox — bắt ý chính",
+      "level": "B1+ practice / B2 material",
+      "instructions": "5 phút. Nguồn British Council miễn phí, có audio và transcript. Chỉ nghe 60–90 giây đầu, tối đa hai lần và chưa nhìn transcript.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Write 2–3 short notes: Who is speaking? What is the main topic? Why does Amanda spend time online? Ghi số lần nghe và chỗ chưa rõ.",
+      "completionCriteria": "Nộp các ý đã nghe cùng điều kiện làm. Chờ review; mở bài không tính hoàn thành."
+    },
+    {
+      "id": "daily-2026-10-10-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Digital detox — kiểm tra bằng transcript",
+      "level": "B1+ practice / B2 material",
+      "instructions": "5 phút tùy chọn, làm sau Listening. Đọc phần transcript tương ứng rồi đóng lại; không sao chép nguyên văn.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Explain in your own words how Amanda's work and personal online life overlap. Add one detail you missed while listening.",
+      "completionCriteria": "Nộp hai câu bằng lời của mình. Chờ review."
+    },
+    {
+      "id": "daily-2026-10-10-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Kể lại nội dung bằng ba câu",
+      "level": "B1+ practice",
+      "instructions": "5 phút tùy chọn. Nhìn ba từ khóa của bạn, không đọc transcript. Chuẩn bị 30 giây rồi nói 30–45 giây.",
+      "material": null,
+      "exercises": "Sentence 1: The podcast is about…\nSentence 2: Amanda needs to be online because…\nSentence 3: In my case…",
+      "completionCriteria": "Nộp audio hoặc transcript thật đã nói và điều kiện làm. Chờ review."
+    },
+    {
+      "id": "daily-2026-10-10-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Phản hồi ngắn về thói quen online",
+      "level": "B1+ practice",
+      "instructions": "5 phút tùy chọn. Viết trước khi dùng từ điển hoặc AI sửa. Bài do trợ lý tự soạn.",
+      "material": null,
+      "exercises": "Write 3–4 sentences: When do you use your phone most? Is it necessary? What small change could you test?",
+      "completionCriteria": "Nộp bản đầu tiên. Chờ review trước khi ghi hoàn thành."
+    },
+    {
+      "id": "daily-2026-10-10-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tiếng Trung phụ — gọi một đồ uống",
+      "level": "Beginner",
+      "instructions": "2–5 phút. HelloChinese có nội dung miễn phí và phần trả phí; ưu tiên nghe audio người bản ngữ trong bài gọi món. Mẫu dưới đây do trợ lý soạn.",
+      "material": "https://www.hellochinese.cc/",
+      "exercises": "我要一杯茶。Wǒ yào yì bēi chá. — Tôi muốn một cốc trà.\n请问，多少钱？Qǐngwèn, duōshao qián? — Xin hỏi, bao nhiêu tiền?\nNghe, nhại lại rồi đổi 茶 thành 咖啡 (kāfēi).",
+      "completionCriteria": "Nộp câu đã nói hoặc audio; đánh giá phát âm cần audio thực tế."
+    }
+  ]
+}

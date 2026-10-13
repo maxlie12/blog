@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-11",
+  "title": "Khởi động lại — shadowing rồi mở rộng ý",
+  "kind": "restart",
+  "note": "Gói học bù thứ hai lưu trong kho bài. Chọn Speaking 5 phút trước; các phần khác tùy chọn. Không tự suy ra tiến bộ hay tăng độ khó khi chưa có bài nộp. Tất cả nhiệm vụ do trợ lý soạn.",
+  "lessons": [
+    {
+      "id": "daily-2026-10-11-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Shadowing và mở rộng ý kiến",
+      "level": "B1+ practice / B2 material",
+      "instructions": "5–10 phút. Mở bài British Council, chọn một đoạn 20–30 giây trong phần Amanda nói. Nghe một câu, dừng, nhại theo nhịp và ngữ điệu 3 lần; sau đó đóng transcript.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Retell the idea in your own words, then add: I agree/disagree because… and one example from your work or daily life. Nói 45–60 giây.",
+      "completionCriteria": "Nộp audio hoặc transcript thật đã nói, đoạn đã shadow và số lượt. Chờ review."
+    },
+    {
+      "id": "daily-2026-10-11-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Nghe nhịp và từ được nhấn",
+      "level": "B1+ practice / B2 material",
+      "instructions": "5 phút tùy chọn. Nghe lại đúng đoạn 20–30 giây, lần đầu không nhìn chữ, lần hai được kiểm tra transcript.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Write down 3–5 stressed words you hear. What is the speaker's main point in one sentence?",
+      "completionCriteria": "Nộp từ nghe được, ý chính và điều kiện làm. Chờ review."
+    },
+    {
+      "id": "daily-2026-10-11-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tìm cách diễn đạt hữu ích",
+      "level": "B1+ practice / B2 material",
+      "instructions": "5 phút tùy chọn. Đọc đúng đoạn vừa nghe; chọn một cụm hữu ích, không chép cả đoạn.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Paraphrase the selected phrase in simple English, then use it in one new sentence about your own routine.",
+      "completionCriteria": "Nộp cụm đã chọn, cách diễn đạt lại và câu mới. Chờ review."
+    },
+    {
+      "id": "daily-2026-10-11-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Mở rộng quan điểm trong bốn câu",
+      "level": "B1+ practice",
+      "instructions": "5 phút tùy chọn. Viết sau phần nói, không dùng AI sửa trước. Bài trợ lý tự soạn.",
+      "material": null,
+      "exercises": "Write four sentences: your opinion, one reason, one real example, and one possible drawback.",
+      "completionCriteria": "Nộp bản đầu tiên và cho biết có dùng hỗ trợ không. Chờ review."
+    },
+    {
+      "id": "daily-2026-10-11-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tiếng Trung phụ — đổi món và yêu cầu",
+      "level": "Beginner",
+      "instructions": "2–5 phút. Dùng audio người bản ngữ trong HelloChinese nếu mở được; ứng dụng có phần miễn phí và phần trả phí. Mẫu dưới đây do trợ lý soạn.",
+      "material": "https://www.hellochinese.cc/",
+      "exercises": "我要一碗面。Wǒ yào yì wǎn miàn. — Tôi muốn một bát mì.\n不要辣。Bú yào là. — Không cay.\nNhại lại rồi đổi 面 thành 米饭 (mǐfàn — cơm).",
+      "completionCriteria": "Nộp câu đã nói hoặc audio và chỗ phát âm khó. Chờ review."
+    }
+  ]
+}
