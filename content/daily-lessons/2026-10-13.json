@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-13",
+  "title": "Giữ tập trung khi làm việc",
+  "kind": "restart",
+  "note": "Chưa có bài làm được xác minh. Chọn Speaking 5 phút trước; các phần khác tùy chọn. Cùng chủ đề digital detox, không tự chuyển chu kỳ hoặc tăng độ khó. Không cần học bù để khôi phục streak. Tất cả câu hỏi do trợ lý soạn, không phải đề chính thức.",
+  "lessons": [
+    {
+      "id": "daily-2026-10-13-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "5 phút — giải thích một lựa chọn",
+      "level": "B1+ practice",
+      "instructions": "Chuẩn bị 30 giây, nói 30–45 giây không viết script trước. Tình huống tự soạn: bạn cần tập trung làm việc nhưng vẫn muốn nhận tin nhắn quan trọng.",
+      "material": null,
+      "exercises": "Which notifications would you keep, and which would you turn off? Explain your choice in three sentences. Có thể mở đầu: I would keep… / I would turn off… / This would help me…",
+      "completionCriteria": "Nộp câu trả lời và điều kiện làm. Chờ phản hồi/review; mở bài không tính hoàn thành."
+    },
+    {
+      "id": "daily-2026-10-13-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "5 phút — viết ba câu",
+      "level": "B1+ practice",
+      "instructions": "Viết sau khi nói nếu đã làm Speaking. Không dùng dịch hoặc AI sửa trước. Bài trợ lý tự soạn.",
+      "material": null,
+      "exercises": "Write three sentences about one distraction, a change you could try, and how you would check whether it helps.",
+      "completionCriteria": "Nộp câu trả lời và điều kiện làm. Chờ phản hồi/review; mở bài không tính hoàn thành."
+    },
+    {
+      "id": "daily-2026-10-13-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "5–10 phút — nhận ra lời khuyên",
+      "level": "B1+ practice",
+      "instructions": "British Council miễn phí; audio và transcript. Nghe phần Amanda giải thích thay đổi thói quen, tối đa hai lần, chưa nhìn chữ. Nếu chưa nghe bài, bắt đầu phần đầu. Không ép hoàn thành.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "What change does Amanda describe? What question does she suggest asking yourself? Trả lời ngắn và ghi số lần nghe, có nhìn script không.",
+      "completionCriteria": "Nộp câu trả lời và điều kiện làm. Chờ phản hồi/review; mở bài không tính hoàn thành."
+    },
+    {
+      "id": "daily-2026-10-13-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "5 phút — đọc và diễn đạt lại",
+      "level": "B1+ practice",
+      "instructions": "Tùy chọn sau nghe. Đọc đoạn transcript tương ứng, không sao chép. Nguồn miễn phí; câu hỏi trợ lý tự soạn.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Explain how checking a phone can become automatic. Write one sentence about a situation where this could happen to you.",
+      "completionCriteria": "Nộp câu trả lời và điều kiện làm. Chờ phản hồi/review; mở bài không tính hoàn thành."
+    },
+    {
+      "id": "daily-2026-10-13-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tiếng Trung phụ — gọi trà và đổi lựa chọn",
+      "level": "Beginner",
+      "instructions": "5 phút tùy chọn. HelloChinese có phần miễn phí và mua thêm; dùng audio người bản ngữ trong bài gọi món đang mở được. Mẫu dưới đây do trợ lý soạn.",
+      "material": "https://www.hellochinese.cc/",
+      "exercises": "我要一杯茶。Wǒ yào yì bēi chá. — Tôi muốn một cốc trà.\n不要糖。Bú yào táng. — Không đường.\nNghe mẫu, nói lại, che chữ rồi đổi 茶 thành 咖啡 (kāfēi). Ghi âm hoặc ghi lại câu đã nói và chỗ khó.",
+      "completionCriteria": "Nộp câu trả lời và điều kiện làm. Chờ phản hồi/review; mở bài không tính hoàn thành."
+    }
+  ]
+}
