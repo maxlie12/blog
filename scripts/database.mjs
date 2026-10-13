@@ -1,8 +1,19 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaLibSQL } from '@prisma/adapter-libsql';
 import { resolve } from 'node:path';
+import { copyFileSync, existsSync, mkdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 
 export function databaseConfig(env = process.env) {
+  if (env.BLOG_READ_ONLY_PREVIEW === '1') {
+    // The bundled database contains schema only, never learner records.
+    const source = resolve(process.cwd(), 'data/preview.db');
+    mkdirSync(resolve(process.cwd(), 'data'), { recursive: true });
+    if (!existsSync(source)) return { url: `file:${source}` }; // first preview build migration
+    const temporary = resolve(tmpdir(), 'maxlie-blog-read-only-preview.db');
+    if (!existsSync(temporary)) copyFileSync(source, temporary);
+    return { url: `file:${temporary}` };
+  }
   const url = env.TURSO_DATABASE_URL;
   if (url) {
     if (!/^libsql:\/\//.test(url)) throw new Error('TURSO_DATABASE_URL must use libsql://.');

@@ -2,5 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "npm ci",
-  "buildCommand": "npm run build"
+  "buildCommand": "if [ \"$BLOG_READ_ONLY_PREVIEW\" = \"1\" ]; then npm run db:migrate; fi && npm run build"
 }

@@ -9,6 +9,17 @@ const AREA_LABELS: Record<string, string> = {
 };
 
 export async function PracticeLogSection() {
+  if (process.env.BLOG_READ_ONLY_PREVIEW === "1") {
+    return <section className="practice-log">
+      <h2>Streak · số ngày học liên tiếp</h2>
+      <p>Bản xem thử chưa ghi nhận ngày học. Khi kết nối lưu trữ, ngày có nhật ký luyện tập sẽ được tính một lần theo giờ Việt Nam; nhiều bài trong cùng ngày vẫn tính một ngày.</p>
+      <div className="practice-log__stats">
+        <div className="stat-tile"><p className="stat-tile__value">—</p><p className="stat-tile__label">Current streak · chưa ghi nhận</p></div>
+        <div className="stat-tile"><p className="stat-tile__value">—</p><p className="stat-tile__label">Longest streak · chưa ghi nhận</p></div>
+      </div>
+      <p>Học bù giúp hoàn thành bài cũ. Hãy ghi nhận ngày học thực tế; các ngày bỏ lỡ không tự được cộng lại.</p>
+    </section>;
+  }
   let allDates: { date: string }[] = [];
   let publicEntries: Awaited<ReturnType<typeof prisma.learningLog.findMany>> = [];
   let dbError: string | null = null;

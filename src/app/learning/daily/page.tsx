@@ -28,7 +28,9 @@ export default async function DailyPage({ searchParams }: {
       <p>Học lúc rảnh. Bắt đầu một phiên 5 phút, rồi quay lại bước tiếp theo.</p>
       <p>Nghe · Nói · Đọc · Viết — tiếng Anh chính, tiếng Trung phụ.</p>
     </header>
-    {!signedIn && <p><Link href="/studio/login">Đăng nhập</Link> để nộp bài và xem tiến độ của bạn.</p>}
+    {!signedIn && (process.env.BLOG_READ_ONLY_PREVIEW === "1"
+      ? <p>Mở một bài bên dưới, làm trong 5 phút rồi gửi câu trả lời hoặc audio về ChatGPT. Bản xem thử chưa lưu bài làm.</p>
+      : <p><Link href="/studio/login">Đăng nhập</Link> để nộp bài và xem tiến độ của bạn.</p>)}
     {selected ? <>
       <section className="lesson-detail__section">
         <span className="tag">{selected.date}</span><h2>{selected.title}</h2>

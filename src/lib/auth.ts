@@ -52,6 +52,7 @@ function timingSafeEqualStrings(a: string, b: string): boolean {
 }
 
 export function checkPassword(candidate: string): boolean {
+  if (process.env.BLOG_READ_ONLY_PREVIEW === '1') return false;
   const expected = process.env.STUDIO_PASSWORD;
   if (!expected) return false;
   return timingSafeEqualStrings(candidate, expected);
@@ -65,6 +66,7 @@ export async function createSessionToken(): Promise<{ token: string; maxAge: num
 }
 
 export async function isValidSessionToken(token: string | undefined): Promise<boolean> {
+  if (process.env.BLOG_READ_ONLY_PREVIEW === '1') return false;
   if (!token) return false;
   const [payload, signature] = token.split(".");
   if (!payload || !signature) return false;
