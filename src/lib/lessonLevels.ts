@@ -3,7 +3,8 @@ export const ENGLISH_LEVELS = ["A1", "A2", "B1", "B1+", "B2", "B2+", "C1", "C2",
 export const CHINESE_LEVELS = ["Beginner", "Elementary", "Other"];
 export function lessonLevel(level: string, language: string): string {
   if (language === "zh") return /beginner/i.test(level) ? "Beginner" : /elementary/i.test(level) ? "Elementary" : "Other";
-  return level.toUpperCase().match(/\b(?:A[12]|B[12]|C[12])\+?/)?.[0] ?? "Other";
+  const label = level.toUpperCase();
+  return label.match(/\b((?:A[12]|B[12]|C[12])\+?)\s+PRACTICE/)?.[1] ?? label.match(/\b(?:A[12]|B[12]|C[12])\+?/)?.[0] ?? "Other";
 }
 export function levelRank(level: string, language: string): number {
   const index = (language === "zh" ? CHINESE_LEVELS : ENGLISH_LEVELS).indexOf(lessonLevel(level, language));
