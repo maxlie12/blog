@@ -2,6 +2,7 @@ import { LANGUAGES } from "@/lib/languages";
 import Link from "next/link";
 import { SKILLS, type SkillId } from "@/lib/lessonTypes";
 import { AttemptSubmitForm } from "@/components/AttemptSubmitForm";
+import { PracticeCoach } from "@/components/PracticeCoach";
 
 interface AttemptView {
   id: string;
@@ -93,6 +94,8 @@ export function LessonDetailView({
         )}
       </div>
 
+      {!canSubmit && <PracticeCoach key={lesson.id} lessonId={lesson.id} skill={lesson.skill} language={lesson.language} />}
+
       {canSubmit ? (
         <section className="lesson-detail__section lesson-detail__submit">
           <h2>Submit an attempt</h2>
@@ -100,7 +103,7 @@ export function LessonDetailView({
         </section>
       ) : (
         <p className="lesson-detail__disclaimer">
-          <Link href="/studio/login">Sign in</Link> to submit an attempt at this lesson.
+          Muốn lưu server cần đăng nhập Studio và kết nối database. Bản xem thử dùng ô luyện tập trên thiết bị ở trên.
         </p>
       )}
 

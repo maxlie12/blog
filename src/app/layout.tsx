@@ -58,7 +58,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <PublicChrome>
             {process.env.BLOG_READ_ONLY_PREVIEW === "1" && <aside className="error-banner" role="status" style={{ margin: "1rem", padding: "1rem" }}>
               <strong>Bản xem thử · mở bài và luyện tập</strong>
-              <p>Bài 10–13/10 đã có trong Learning → Bài học mỗi ngày. Bản này chưa lưu bài làm hay streak. Gửi câu trả lời hoặc audio về ChatGPT để nhận phản hồi.</p>
+              <p>Mở kho bài tại Learning → Bài học mỗi ngày. Bản này có thể lưu câu trả lời trên trình duyệt, chưa đồng bộ server và chưa tính streak. Gửi câu trả lời hoặc audio về ChatGPT để nhận phản hồi.</p>
             </aside>}
             {children}
           </PublicChrome>
