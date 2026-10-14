@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-14",
+  "title": "Một thay đổi nhỏ để tập trung",
+  "kind": "restart",
+  "note": "Chưa có bài làm được gửi để đánh giá. Bắt đầu Speaking 5 phút; các phần khác tùy chọn, giữ mức B1+ tự báo. Dùng lại Digital detox, không tự chuyển chu kỳ. Câu hỏi do trợ lý soạn, không phải bài chính thức. Học bất kỳ lúc rảnh.",
+  "lessons": [
+    {
+      "id": "daily-2026-10-14-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Khởi động 5 phút — bảo vệ thời gian tập trung",
+      "level": "B1+ practice",
+      "instructions": "Tình huống trợ lý tự soạn: bạn có 30 phút để xử lý một lỗi giao diện, nhưng điện thoại liên tục báo tin nhắn. Chuẩn bị 30 giây; nói 30–45 giây hoặc trả lời ba câu ngay trong ChatGPT. Không cần hoàn thành các bài khác hôm nay.",
+      "material": null,
+      "exercises": "What would you change to stay focused, and how would you stay available for urgent messages?\nGợi ý cấu trúc: I would… / However, I would… / I would check…\nĐầu ra: 3 câu của bạn, không dùng AI sửa trước.",
+      "completionCriteria": "Nộp câu trả lời/audio và điều kiện làm qua ChatGPT; chờ review. Bản web xem thử chưa lưu bài làm hoặc streak."
+    },
+    {
+      "id": "daily-2026-10-14-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Tùy chọn 5–10 phút — nghe một thay đổi thói quen",
+      "level": "B1+ practice / B2 source",
+      "instructions": "British Council miễn phí; có audio, transcript và bài tập. Nghe đoạn Amanda bắt đầu giải thích thay đổi thói quen, tối đa hai lượt trước khi đọc. Nếu chưa nghe lần nào, bắt đầu 60–90 giây đầu.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "What is the main idea of the part you listened to? Note one supporting detail and one unclear phrase. Ghi số lần nghe và có nhìn transcript không.",
+      "completionCriteria": "Nộp câu trả lời/audio và điều kiện làm qua ChatGPT; chờ review. Bản web xem thử chưa lưu bài làm hoặc streak."
+    },
+    {
+      "id": "daily-2026-10-14-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — đọc để tự kiểm tra",
+      "level": "B1+ practice / B2 source",
+      "instructions": "Đọc đúng đoạn transcript vừa nghe; đối chiếu với ghi chú rồi đóng chữ. Không sao chép transcript.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "What did you understand differently after reading? Explain in two short sentences using your own words.",
+      "completionCriteria": "Nộp câu trả lời/audio và điều kiện làm qua ChatGPT; chờ review. Bản web xem thử chưa lưu bài làm hoặc streak."
+    },
+    {
+      "id": "daily-2026-10-14-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5 phút — thử một cách mới",
+      "level": "B1+ practice",
+      "instructions": "Viết 40–60 từ về một thay đổi nhỏ bạn có thể thử trong một phiên làm việc. Bài do trợ lý soạn. Nộp bản đầu tiên trước khi sửa bằng công cụ.",
+      "material": null,
+      "exercises": "Describe the distraction, your planned change, and how you would check whether it helps. Include one possible drawback.",
+      "completionCriteria": "Nộp câu trả lời/audio và điều kiện làm qua ChatGPT; chờ review. Bản web xem thử chưa lưu bài làm hoặc streak."
+    },
+    {
+      "id": "daily-2026-10-14-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tiếng Trung phụ 5 phút — gọi món và đổi số lượng",
+      "level": "Beginner",
+      "instructions": "HelloChinese có phần miễn phí và phần Premium trả phí. Dùng audio/video người bản ngữ của bài gọi món đang mở được; không cần mua gói cho phiên này. Mẫu do trợ lý soạn. Nếu không có bài phù hợp, ôn bài gọi món đã mở được thay vì cố đọc mẫu không có audio.",
+      "material": "https://www.hellochinese.cc/",
+      "exercises": "我要一杯茶。Wǒ yào yì bēi chá. — Tôi muốn một cốc trà.\n我要两杯茶。Wǒ yào liǎng bēi chá. — Tôi muốn hai cốc trà.\nNghe mẫu, nhại hai lượt, che chữ rồi đổi 茶 thành 咖啡 (kāfēi). Đầu ra: nói hai câu đổi món/số lượng hoặc gửi audio 15–20 giây.",
+      "completionCriteria": "Nộp câu trả lời/audio và điều kiện làm qua ChatGPT; chờ review. Bản web xem thử chưa lưu bài làm hoặc streak."
+    }
+  ]
+}
