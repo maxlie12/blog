@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { hasStudioSession } from "@/lib/studioSession";
 import { todayInTz } from "@/lib/streak";
 import { getDailyLesson } from "@/lib/dailyLessons";
+import { getLevelLesson } from "@/lib/levelLessons";
 
 export interface SubmitAttemptState {
   error?: string;
@@ -37,7 +38,7 @@ export async function submitAttempt(
 
   let lesson = await prisma.lesson.findUnique({ where: { id: lessonId } });
   if (!lesson) {
-    const daily = await getDailyLesson(lessonId);
+    const daily = await getDailyLesson(lessonId) ?? getLevelLesson(lessonId);
     if (daily) lesson = await prisma.lesson.upsert({ where: { id: lessonId }, create: daily, update: {} });
   }
   if (!lesson) return { error: "This lesson no longer exists." };

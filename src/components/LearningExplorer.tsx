@@ -4,7 +4,8 @@ import { LANGUAGES } from "@/lib/languages";
 import Link from "next/link";
 import { useMemo } from "react";
 import { SKILLS, type SkillId, type LessonSummary } from "@/lib/lessonTypes";
-import { useLessonFilter } from "@/lib/lessonFilter";
+import { useLessonFilter, type ReviewFilter } from "@/lib/lessonFilter";
+import { lessonLevel, levelRank, lessonRank, ENGLISH_LEVELS, CHINESE_LEVELS } from "@/lib/lessonLevels";
 
 const SKILL_ICON: Record<SkillId, string> = {
   writing: "✎",
@@ -22,12 +23,12 @@ export function SkillCards({
 }: {
   lessons: LessonSummary[];
 }) {
-  const { filter, setFilter, language } = useLessonFilter();
+  const { filter, setFilter, language, level } = useLessonFilter();
 
   return (
     <div className="skill-cards" role="group" aria-label="Filter lessons by skill">
       {SKILLS.map((skill) => {
-        const selected = lessons.filter((l) => l.language === language && l.skill === skill.id);
+        const selected = lessons.filter((l) => l.language === language && l.skill === skill.id && (level === "all" || lessonLevel(l.level, l.language) === level));
         const total = selected.length;
         const completed = selected.filter((l) => l.reviewedCount > 0).length;
         const active = filter === skill.id;
@@ -72,10 +73,10 @@ export function LessonPicker({
   lessons: LessonSummary[];
   compact?: boolean;
 }) {
-  const { filter, setFilter, language, setLanguage } = useLessonFilter();
+  const { filter, setFilter, language, setLanguage, level, setLevel, query, setQuery, review, setReview } = useLessonFilter();
   const visible = useMemo(
-    () => lessons.filter((l) => l.language === language && (filter === "all" || l.skill === filter)),
-    [lessons, filter, language]
+    () => lessons.filter((l) => l.language === language && (filter === "all" || l.skill === filter) && (level === "all" || lessonLevel(l.level, l.language) === level) && (review === "all" || (review === "reviewed" ? l.reviewedCount > 0 : review === "pending" ? l.attemptCount > 0 && l.reviewedCount === 0 : l.reviewedCount === 0)) && (l.title + " " + l.instructions).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())).sort((a, b) => levelRank(a.level, a.language) - levelRank(b.level, b.language) || lessonRank(a.skill) - lessonRank(b.skill)),
+    [lessons, filter, language, level, query, review]
   );
 
   return (
@@ -88,17 +89,31 @@ export function LessonPicker({
       )}
 
       <label className="field">
-        <span>Language</span>
+        <span>Ngôn ngữ</span>
         <select value={language} onChange={(e) => setLanguage(e.target.value as "en" | "zh")}>
           {LANGUAGES.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
         </select>
       </label>
 
-      <div className="lesson-picker__filters" role="tablist" aria-label="Filter by skill">
+      <label className="field"><span>Cấp độ bài học</span>
+        <select value={level} onChange={e => setLevel(e.target.value)}>
+          <option value="all">Tất cả cấp độ</option>
+          {(language === "zh" ? CHINESE_LEVELS : ENGLISH_LEVELS).filter(v => lessons.some(l => l.language === language && lessonLevel(l.level, l.language) === v)).map(v => <option key={v} value={v}>{v}</option>)}
+        </select>
+      </label>
+      <label className="field"><span>Tìm bài</span><input type="search" placeholder="Chủ đề hoặc tên bài…" value={query} onChange={e => setQuery(e.target.value)} /></label>
+      <label className="field"><span>Trạng thái review trên server</span>
+        <select value={review} onChange={e => setReview(e.target.value as ReviewFilter)}>
+          <option value="all">Tất cả</option><option value="unreviewed">Chưa được review</option><option value="pending">Đã nộp, chưa review</option><option value="reviewed">Đã review</option>
+        </select>
+      </label>
+      <p>Cấp độ là độ khó của nhiệm vụ; nguồn nghe có thể ở mức khác, ghi trong nhãn bài. Bài tự soạn không phải đề đánh giá CEFR. Bản lưu trên thiết bị chưa nằm trong bộ lọc review.</p>
+      <p role="status">{visible.length} bài phù hợp · xếp cấp độ từ dễ đến khó, rồi Nghe → Đọc → Nói → Viết.</p>
+      <button type="button" className="button button--ghost" onClick={() => { setLevel("all"); setFilter("all"); setQuery(""); setReview("all"); }}>Xóa bộ lọc</button>
+      <div className="lesson-picker__filters" role="group" aria-label="Filter by skill">
         <button
           type="button"
-          role="tab"
-          aria-selected={filter === "all"}
+                    aria-pressed={filter === "all"}
           data-active={filter === "all" || undefined}
           onClick={() => setFilter("all")}
         >
@@ -108,8 +123,7 @@ export function LessonPicker({
           <button
             key={skill.id}
             type="button"
-            role="tab"
-            aria-selected={filter === skill.id}
+                        aria-pressed={filter === skill.id}
             data-active={filter === skill.id || undefined}
             onClick={() => setFilter(skill.id)}
           >
@@ -152,7 +166,7 @@ export function LessonPicker({
           </li>
         ))}
         {visible.length === 0 && (
-          <li className="lesson-picker__empty">No lessons in this skill yet.</li>
+          <li className="lesson-picker__empty">Không có bài khớp bộ lọc. Thử bỏ cấp độ, từ khóa hoặc trạng thái review.</li>
         )}
       </ul>
     </div>

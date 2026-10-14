@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { getDailyPackets, getDailyLesson } from "@/lib/dailyLessons";
+import { LEVEL_LESSONS, getLevelLesson } from "@/lib/levelLessons";
 
 import { SKILLS, type SkillId, type LessonSummary } from "@/lib/lessonTypes";
 export { SKILLS, type SkillId, type LessonSummary, type AttemptRecord } from "@/lib/lessonTypes";
@@ -19,7 +20,7 @@ export async function getAllLessons(): Promise<LessonSummary[]> {
   }
   const storedIds = new Set(lessons.map((l) => l.id));
   const daily = (await getDailyPackets()).flatMap((p) => p.lessons).filter((l) => !storedIds.has(l.id));
-  return [...lessons, ...daily].map((l) => ({
+  return [...lessons, ...daily, ...LEVEL_LESSONS.filter(l => !storedIds.has(l.id))].map((l) => ({
     id: l.id,
     skill: l.skill as SkillId,
     language: l.language,
@@ -40,7 +41,7 @@ export async function getLessonWithAttempts(id: string) {
     include: { attempts: { orderBy: { date: "desc" } } },
   });
   if (!lesson) {
-    const daily = await getDailyLesson(id);
+    const daily = await getDailyLesson(id) ?? getLevelLesson(id);
     return daily ? { ...daily, attempts: [] } : null;
   }
   return {
