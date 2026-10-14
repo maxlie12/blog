@@ -26,6 +26,7 @@ export default async function DailyPage({ searchParams }: {
     <Link href="/learning">← Kho bài · lọc theo cấp độ / kỹ năng</Link>
     <header className="lesson-detail__header">
       <h1>Bài học mỗi ngày</h1>
+      <Link className="button" href="/learning/session">Buổi học 5–10 phút có hướng dẫn →</Link>
       <p>Học lúc rảnh. Bắt đầu một phiên 5 phút, rồi quay lại bước tiếp theo.</p>
       <p>Tiếng Anh: Nghe → Đọc kiểm tra → Nói → Viết. Sau đó tiếng Trung 5 phút.</p>
     </header>

@@ -21,7 +21,8 @@ export default async function LearningPage() {
       <header className="section-page__header">
         <h1>Learning</h1>
         <p>Chọn ngôn ngữ, cấp độ và kỹ năng. Mỗi bài làm trong 5–10 phút; cấp độ bài không phải kết quả đánh giá trình độ của bạn.</p>
-        <Link href="/learning/daily" className="button">Bài hôm nay · 5 phút →</Link>
+        <Link href="/learning/session" className="button">Bắt đầu / tiếp tục buổi học →</Link>{" "}
+        <Link href="/learning/daily" className="button button--ghost">Kho bài theo ngày →</Link>
       </header>
 
       <div className="journey-hero journey-hero--wide">
