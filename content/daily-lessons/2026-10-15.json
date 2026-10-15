@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-15",
+  "title": "Ôn tuần 1 — kiểm tra điều mình thực sự làm được",
+  "kind": "weekly-test",
+  "note": "Ngày ôn tuần đầu, không thêm chủ đề Anh mới và không tăng độ khó. Chỉ cần phiên nghe khởi động 5 phút; đọc, nói, viết và tiếng Trung là tùy chọn cho các lúc rảnh khác. Chưa có bài làm được cung cấp nên đây là mốc ban đầu nếu bạn chưa học, không tự suy ra đã nhớ, tiến bộ hoặc điểm CEFR. Dùng lại Digital detox; sau khi có bài làm mới chọn bước luyện tiếp. Không cần học bù dồn hay hoàn thành ngay khi nhận thông báo.",
+  "lessons": [
+    {
+      "id": "daily-2026-10-15-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — nghe và ghi nhớ",
+      "level": "B1+ practice / B2 source",
+      "instructions": "Mini-test do trợ lý soạn, không phải đề British Council chính thức. Nguồn miễn phí có audio và transcript. Nếu đã học, nhớ lại 30 giây trước khi nghe; nếu chưa học, bỏ bước nhớ lại. Nghe 60–90 giây đầu tối đa hai lượt, chưa mở transcript.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Write three short notes in English: (1) the topic, (2) one detail you heard, (3) one point you are unsure about. Report how many times you listened. Có thể gửi ngay ba dòng này trong ChatGPT; không cần làm hết các phần hôm nay.",
+      "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có đọc transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ nêu điểm đúng, sửa một lỗi ưu tiên, giải thích và giao một bài luyện lại 2 phút. Bản nháp trên trình duyệt không phải kết quả đã review hay streak."
+    },
+    {
+      "id": "daily-2026-10-15-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — tìm bằng chứng trong chữ",
+      "level": "B1+ practice / B2 source",
+      "instructions": "Bài kiểm tra do trợ lý soạn. Sau khi lưu ghi chú nghe, mở transcript của chính đoạn vừa nghe, không đọc toàn bài để tìm đáp án trước.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Find one detail that confirms or corrects your listening notes. Paraphrase it in two English sentences. State whether your original note was supported, contradicted or not mentioned in this section. Không sao chép nguyên transcript.",
+      "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có đọc transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ nêu điểm đúng, sửa một lỗi ưu tiên, giải thích và giao một bài luyện lại 2 phút. Bản nháp trên trình duyệt không phải kết quả đã review hay streak."
+    },
+    {
+      "id": "daily-2026-10-15-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — nhớ lại và áp dụng",
+      "level": "B1+ practice",
+      "instructions": "Bài do trợ lý soạn. Đóng nguồn; chuẩn bị 30 giây rồi nói 30–45 giây. Nếu chưa nghe/đọc, chỉ trả lời phần trải nghiệm cá nhân và ghi rõ chưa dùng nguồn.",
+      "material": null,
+      "exercises": "If you used the source, retell one point in your own words. Then explain one distraction during coding or studying, one change you would try, and one possible disadvantage. Gửi audio nếu có; nếu chỉ gửi bản chép lời thì chưa đánh giá được phát âm.",
+      "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có đọc transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ nêu điểm đúng, sửa một lỗi ưu tiên, giải thích và giao một bài luyện lại 2 phút. Bản nháp trên trình duyệt không phải kết quả đã review hay streak."
+    },
+    {
+      "id": "daily-2026-10-15-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5–10 phút — lập luận ngắn",
+      "level": "B1+ practice",
+      "instructions": "Tình huống trợ lý tự soạn, không phải câu hỏi phỏng vấn thật. Viết 40–60 từ, không dùng AI sửa trước; tránh tên khách hàng và thông tin dự án riêng.",
+      "material": null,
+      "exercises": "Your teammate suggests switching off every notification during a 30-minute task. Write a reply: give your view, one reason, one risk, and a practical alternative. Cuối bài ghi số phút thực tế. Sau feedback, viết lại hai câu rồi đổi tình huống sang học ở quán cà phê.",
+      "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có đọc transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ nêu điểm đúng, sửa một lỗi ưu tiên, giải thích và giao một bài luyện lại 2 phút. Bản nháp trên trình duyệt không phải kết quả đã review hay streak."
+    },
+    {
+      "id": "daily-2026-10-15-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tiếng Trung phụ 5 phút — nhớ mẫu, đổi món",
+      "level": "Beginner",
+      "instructions": "Bài ôn do trợ lý soạn. HelloChinese có phần miễn phí và Premium trả phí; ưu tiên audio/video người bản ngữ của bài giới thiệu/gọi món đang mở được. Không cần mua gói. Nếu chưa học, nghe và nhại trước, không gọi đây là điểm ôn đã nhớ.",
+      "material": "https://www.hellochinese.cc/",
+      "exercises": "Che mẫu và nói lời chào + tên, rồi gọi một cốc trà. Mở mẫu để tự đối chiếu: 你好，我叫……。Nǐ hǎo, wǒ jiào… / 我要一杯茶。Wǒ yào yì bēi chá. Sau đó che chữ, đổi sang hai cốc cà phê. Gửi audio 15–20 giây hoặc hai câu/pinyin; ghi rõ có nhìn mẫu không. Đây là mẫu ngôn ngữ để luyện, không phải đáp án bài Anh.",
+      "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có đọc transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ nêu điểm đúng, sửa một lỗi ưu tiên, giải thích và giao một bài luyện lại 2 phút. Bản nháp trên trình duyệt không phải kết quả đã review hay streak."
+    }
+  ]
+}
