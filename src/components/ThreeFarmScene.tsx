@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { SkillId } from "@/lib/lessonTypes";
 
 export type WorldZone = SkillId | "zh";
@@ -23,6 +23,7 @@ export default function ThreeFarmScene({
   const mountRef = useRef<HTMLDivElement>(null);
   const selectedRef = useRef(selected);
   const onSelectRef = useRef(onSelect);
+  const [webglUnavailable, setWebglUnavailable] = useState(false);
 
   useEffect(() => { selectedRef.current = selected; }, [selected]);
   useEffect(() => { onSelectRef.current = onSelect; }, [onSelect]);
@@ -30,6 +31,12 @@ export default function ThreeFarmScene({
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
+    const probe = document.createElement("canvas");
+    const context = probe.getContext("webgl2") ?? probe.getContext("webgl");
+    if (!context) {
+      const frame = window.requestAnimationFrame(() => setWebglUnavailable(true));
+      return () => window.cancelAnimationFrame(frame);
+    }
     let cancelled = false;
     let cleanup = () => {};
 
@@ -247,6 +254,24 @@ export default function ThreeFarmScene({
 
     return () => { cancelled = true; cleanup(); };
   }, []);
+
+  if (webglUnavailable) {
+    return <div className="farm-scene farm-scene--fallback" data-selected={selected} role="img" aria-label="Nông trại học ngôn ngữ dạng nhẹ vì thiết bị không hỗ trợ WebGL">
+      <span className="farm-fallback__sun" />
+      <span className="farm-fallback__cloud farm-fallback__cloud--one" />
+      <span className="farm-fallback__cloud farm-fallback__cloud--two" />
+      <span className="farm-fallback__mountain farm-fallback__mountain--one" />
+      <span className="farm-fallback__mountain farm-fallback__mountain--two" />
+      <span className="farm-fallback__river" />
+      <span className="farm-fallback__plot farm-fallback__plot--listening">◐</span>
+      <span className="farm-fallback__plot farm-fallback__plot--reading">▤</span>
+      <span className="farm-fallback__plot farm-fallback__plot--speaking">◔</span>
+      <span className="farm-fallback__plot farm-fallback__plot--writing">✎</span>
+      <span className="farm-fallback__village">茶</span>
+      <span className="farm-fallback__hiker" aria-hidden="true"><i /></span>
+      <small>Chế độ nông trại nhẹ · chọn khu vực bằng các nút bên dưới</small>
+    </div>;
+  }
 
   return <div ref={mountRef} className="farm-scene" />;
 }

@@ -2180,6 +2180,29 @@ body { line-height: 1.65; }
 .farm-scene { width: 100%; height: 100%; min-height: 34rem; }
 .farm-scene canvas { display: block; width: 100%; height: 100%; cursor: pointer; touch-action: manipulation; }
 .farm-scene--loading { display: grid; place-items: center; color: #24583e; background: linear-gradient(160deg, #dfeecf, #f2e7ae); font-family: var(--font-mono), monospace; letter-spacing: .08em; }
+.farm-scene--fallback { position: relative; overflow: hidden; background: linear-gradient(#cde7db 0 48%, #8fb370 48%); color: #214c36; }
+.farm-scene--fallback > small { position: absolute; z-index: 8; left: 1rem; top: 1rem; padding: .35rem .65rem; background: #fffdf0cc; border-radius: 999px; font-size: .66rem; backdrop-filter: blur(7px); }
+.farm-fallback__sun { position: absolute; left: 11%; top: 14%; width: 4.5rem; height: 4.5rem; background: #f2d76d; border-radius: 50%; box-shadow: 0 0 0 15px #f2d76d26; animation: world-float 5s ease-in-out infinite; }
+.farm-fallback__cloud { position: absolute; width: 5rem; height: 1.4rem; background: #fffdf0cc; border-radius: 999px; animation: farm-cloud 18s linear infinite; }
+.farm-fallback__cloud::before, .farm-fallback__cloud::after { content: ""; position: absolute; bottom: 0; width: 2.2rem; height: 2.2rem; background: inherit; border-radius: 50%; }
+.farm-fallback__cloud::before { left: .8rem; }.farm-fallback__cloud::after { right: .6rem; }
+.farm-fallback__cloud--one { top: 16%; left: 36%; }.farm-fallback__cloud--two { top: 28%; left: 70%; animation-delay: -9s; transform: scale(.72); }
+.farm-fallback__mountain { position: absolute; bottom: 46%; width: 0; height: 0; border-left: 9rem solid transparent; border-right: 9rem solid transparent; border-bottom: 13rem solid #5c805f; }
+.farm-fallback__mountain--one { right: -4%; }.farm-fallback__mountain--two { right: 27%; transform: scale(.72); transform-origin: bottom; border-bottom-color: #7d9978; }
+.farm-fallback__river { position: absolute; z-index: 2; width: 42%; height: 75%; right: 18%; bottom: -45%; background: #73c6bd; border: 7px solid #bde8d9; border-radius: 50% 50% 0 0; transform: rotate(14deg); animation: world-water 3s ease-in-out infinite; }
+.farm-fallback__plot, .farm-fallback__village { position: absolute; z-index: 4; width: 4.7rem; height: 3.2rem; display: grid; place-items: center; border: 4px solid #b78a54; background: #74533b; color: #f5da79; border-radius: 12px; box-shadow: 0 10px 18px #214c3633; font-size: 1.4rem; }
+.farm-fallback__plot::before { content: ""; position: absolute; inset: .35rem; background: repeating-linear-gradient(90deg, transparent 0 12px, #87bd6d 12px 18px); opacity: .75; }
+.farm-fallback__plot > *, .farm-fallback__plot { isolation: isolate; }
+.farm-fallback__plot--listening { left: 10%; bottom: 20%; }.farm-fallback__plot--reading { left: 30%; bottom: 34%; }.farm-fallback__plot--speaking { left: 18%; bottom: 51%; }.farm-fallback__plot--writing { right: 18%; bottom: 16%; }
+.farm-fallback__village { right: 7%; bottom: 42%; height: 4.2rem; background: #f0cf8c; color: #7f3e32; border-color: #b9503f; clip-path: polygon(50% 0, 100% 35%, 92% 35%, 92% 100%, 8% 100%, 8% 35%, 0 35%); }
+.farm-fallback__hiker { --hiker-x: 14%; --hiker-y: 13%; position: absolute; z-index: 7; left: var(--hiker-x); bottom: var(--hiker-y); width: 1.45rem; height: 2.2rem; background: #efc75e; border-radius: 45% 45% 25% 25%; box-shadow: .55rem .45rem 0 -.08rem #25583e; transition: left .8s ease, bottom .8s ease; animation: world-breathe 1.8s ease-in-out infinite; }
+.farm-fallback__hiker::before { content: ""; position: absolute; width: 1rem; height: 1rem; left: .22rem; top: -.72rem; background: #efc39b; border-radius: 50%; box-shadow: inset 0 .28rem 0 #5b4232; }
+.farm-fallback__hiker i::before, .farm-fallback__hiker i::after { content: ""; position: absolute; bottom: -.55rem; width: .38rem; height: .75rem; background: #285c42; border-radius: 0 0 5px 5px; }.farm-fallback__hiker i::before { left: .18rem; }.farm-fallback__hiker i::after { right: .18rem; }
+.farm-scene--fallback[data-selected="listening"] .farm-fallback__hiker { --hiker-x: 14%; --hiker-y: 15%; }
+.farm-scene--fallback[data-selected="reading"] .farm-fallback__hiker { --hiker-x: 34%; --hiker-y: 30%; }
+.farm-scene--fallback[data-selected="speaking"] .farm-fallback__hiker { --hiker-x: 22%; --hiker-y: 47%; }
+.farm-scene--fallback[data-selected="writing"] .farm-fallback__hiker { --hiker-x: 76%; --hiker-y: 13%; }
+.farm-scene--fallback[data-selected="zh"] .farm-fallback__hiker { --hiker-x: 85%; --hiker-y: 38%; }
 .world-play__legend { position: absolute; left: 1rem; right: 1rem; bottom: 1rem; display: flex; flex-wrap: wrap; gap: .45rem; pointer-events: none; }
 .world-play__legend span { padding: .35rem .65rem; color: #fff9df; background: #173f30cf; border: 1px solid #fff9df33; border-radius: 999px; font-size: .68rem; backdrop-filter: blur(8px); }
 .world-quest { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: clamp(1.3rem, 3vw, 2.2rem); border-left: 1px solid var(--border); background: var(--paper); }
@@ -2223,6 +2246,7 @@ body { line-height: 1.65; }
 @keyframes world-blink { 0%,45%,48%,100% { transform: scaleY(1); } 46%,47% { transform: scaleY(.08); } }
 @keyframes world-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
 @keyframes world-water { 0%,100% { transform: rotate(-7deg) translateY(0); } 50% { transform: rotate(-7deg) translateY(5px); } }
+@keyframes farm-cloud { from { translate: -7rem 0; } to { translate: 11rem 0; } }
 
 @media (max-width: 900px) {
   .world-gate, .world-play { grid-template-columns: 1fr; }
@@ -2252,7 +2276,7 @@ body { line-height: 1.65; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .world-mascot, .world-mascot b::before, .world-mascot b::after, .world-gate__sun, .world-gate__river { animation: none; }
+  .world-mascot, .world-mascot b::before, .world-mascot b::after, .world-gate__sun, .world-gate__river, .farm-fallback__sun, .farm-fallback__cloud, .farm-fallback__river, .farm-fallback__hiker { animation: none; }
 }
 .article-page .prose-content pre { max-width: 100%; overflow-x: auto; }
 .article-page .prose-content img { max-width: 100%; height: auto; border-radius: 12px; }
