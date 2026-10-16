@@ -41,7 +41,7 @@ Generated GLB models can replace the built-in chicken, duck, sheep, cow and truc
 3. The script shrinks each model with `npx @gltf-transform/cli optimize` (meshopt geometry, 512 px WebP textures) and writes `public/models/<name>.glb` plus an entry in `public/models/manifest.json` (`url`, `height` in scene metres, `rotationY` to fix facing).
 4. Commit the GLB files and manifest (not `public/models/raw/`) and redeploy.
 
-The scene loads the manifest at runtime; anything missing, broken or slow simply keeps the built-in model. Check Meshy's licence terms for your plan before publishing generated assets.
+The scene loads the manifest at runtime; anything missing, broken or slow simply keeps the built-in model. The committed set (chicken, duck, sheep, cow, truck) is about 440 KB in total; Meshy does not guarantee which way a model faces, so check each new one and correct `rotationY` (the current cow uses π/2 and the truck π). Check Meshy's licence terms for your plan before publishing generated assets.
 
 ## Where things live
 

@@ -40,7 +40,8 @@ const ASSETS = {
   duck: { height: 0.8, rotationY: 0, prompt: `white farm duck with orange bill and orange feet, standing, ${STYLE}` },
   sheep: { height: 0.85, rotationY: 0, prompt: `fluffy white sheep with black face and black legs, standing on four legs, ${STYLE}` },
   cow: { height: 1.15, rotationY: 0, prompt: `black and white dairy cow with small horns, standing on four legs, ${STYLE}` },
-  // The game drives the truck along +X; Meshy models usually face +Z, hence a quarter turn.
+  // The game drives the truck along +X. Meshy does not guarantee a facing direction, so check every
+  // new model and fix rotationY in the manifest (the committed truck needed Math.PI, the cow Math.PI / 2).
   truck: { height: 1.1, rotationY: Math.PI / 2, prompt: `small red farm pickup truck with a wooden cargo bed, ${STYLE}` },
 };
 
