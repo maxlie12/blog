@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-16",
+  "title": "Giữ nhịp 5 phút — nghe để bắt từ khóa",
+  "kind": "restart",
+  "note": "Chưa có bài làm mới nên hôm nay giữ mức B1+ tự báo, không chuyển sang giai đoạn khó hơn và không suy ra tiến bộ. Chỉ cần làm bài nghe khởi động 5 phút; đọc, nói, viết và tiếng Trung là tùy chọn ở các phiên rảnh khác. Dùng lại nguồn Digital detox để giảm tải và tạo cơ hội nhớ lại. Không cần học bù dồn hoặc hoàn thành ngay.",
+  "lessons": [
+    {
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — nghe để bắt từ khóa",
+      "level": "B1+ practice / B2 source",
+      "instructions": "Bài do trợ lý soạn, không phải bài kiểm tra British Council chính thức. Nguồn miễn phí có audio và transcript. Nghe 60 giây đầu một lượt, không nhìn chữ; nếu quá khó, nghe lượt hai rồi dừng.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Write only three items in English: one repeated word or phrase, one person or role mentioned, and your best guess of the topic. Add: listened 1× or 2×. Không cần viết câu hoàn chỉnh và không cần làm phần còn lại hôm nay.",
+      "id": "daily-2026-10-16-en-listening",
+      "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có mở transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ chỉ ra điểm đúng, sửa một lỗi ưu tiên và giao một bài luyện lại 2 phút. Bản nháp trên trình duyệt chưa phải bài đã review, tiến bộ hay streak."
+    },
+    {
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — kiểm tra phỏng đoán",
+      "level": "B1+ practice / B2 source",
+      "instructions": "Chỉ làm sau khi đã lưu ba ghi chú nghe. Mở phần transcript tương ứng, đọc tối đa 90 giây rồi đóng nguồn. Không sao chép câu dài.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Write two sentences: My guess was right/wrong because…; One detail I missed was… Use your own words.",
+      "id": "daily-2026-10-16-en-reading",
+      "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có mở transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ chỉ ra điểm đúng, sửa một lỗi ưu tiên và giao một bài luyện lại 2 phút. Bản nháp trên trình duyệt chưa phải bài đã review, tiến bộ hay streak."
+    },
+    {
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — kể lại không nhìn chữ",
+      "level": "B1+ practice",
+      "instructions": "Bài do trợ lý soạn. Đóng nguồn, chuẩn bị 20 giây rồi nói 30–45 giây. Nếu chưa nghe/đọc, nói về trải nghiệm của bạn và ghi rõ chưa dùng nguồn.",
+      "material": null,
+      "exercises": "Retell the topic in one sentence, then answer: During an Angular task, which notification would you silence, which one would you keep, and why? Gửi audio để được nhận xét độ rõ, nhịp và phát âm; bản chép lời chỉ đủ sửa nội dung/ngữ pháp.",
+      "id": "daily-2026-10-16-en-speaking",
+      "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có mở transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ chỉ ra điểm đúng, sửa một lỗi ưu tiên và giao một bài luyện lại 2 phút. Bản nháp trên trình duyệt chưa phải bài đã review, tiến bộ hay streak."
+    },
+    {
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5–10 phút — nhắn kế hoạch tập trung",
+      "level": "B1+ practice",
+      "instructions": "Tình huống trợ lý tự soạn, không phải câu hỏi phỏng vấn thật. Viết 40–60 từ, không dùng AI sửa trước và không nêu thông tin dự án riêng.",
+      "material": null,
+      "exercises": "Write a message to a teammate: say you need 30 focused minutes, explain which notifications stay on, ask how to reach you urgently, and mention when you will check messages again.",
+      "id": "daily-2026-10-16-en-writing",
+      "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có mở transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ chỉ ra điểm đúng, sửa một lỗi ưu tiên và giao một bài luyện lại 2 phút. Bản nháp trên trình duyệt chưa phải bài đã review, tiến bộ hay streak."
+    },
+    {
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tiếng Trung phụ 5 phút — gọi đồ uống, bỏ đường",
+      "level": "Beginner",
+      "instructions": "Bài do trợ lý soạn. HelloChinese có phần miễn phí và Premium; dùng audio/video người bản ngữ của bài gọi món nếu đang mở được, không cần mua gói. Nghe và nhại hai lượt trước khi che chữ.",
+      "material": "https://www.hellochinese.cc/",
+      "exercises": "Mẫu: 我要一杯咖啡，不要糖。Wǒ yào yì bēi kāfēi, bú yào táng. (Tôi muốn một cốc cà phê, không đường.) Che chữ rồi đổi 咖啡 thành 茶; sau đó đổi 一杯 thành 两杯. Gửi audio 15–20 giây hoặc hai câu/pinyin và ghi rõ có nhìn mẫu không.",
+      "id": "daily-2026-10-16-zh-speaking",
+      "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có mở transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ chỉ ra điểm đúng, sửa một lỗi ưu tiên và giao một bài luyện lại 2 phút. Bản nháp trên trình duyệt chưa phải bài đã review, tiến bộ hay streak."
+    }
+  ]
+}
