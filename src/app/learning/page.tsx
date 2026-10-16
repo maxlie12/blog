@@ -27,8 +27,8 @@ export default async function LearningPage() {
       </header>
 
       <section className="learning-world-teaser">
-        <div><p className="eyebrow">NEW · PLAY TO LEARN</p><h2>Nông trại dưới chân núi</h2><p>Chọn khu vực, nhận nhiệm vụ tiếng Anh ngay trong gameplay và dùng bài làm thật để phát triển thế giới. Tiếng Trung là tuyến làng nhỏ bên cạnh.</p></div>
-        <Link href="/learning/world" className="field-link">Khám phá thế giới học tập ↗</Link>
+        <div><p className="eyebrow">NEW · PLAY TO LEARN</p><h2>Nông trại dưới chân núi</h2><p>Trồng rau, nuôi cá, bán ở chợ và mở rộng nông trại. Lưu một bài luyện 5 phút mỗi ngày để nhận thêm quà trong game.</p></div>
+        <Link href="/learning/world" className="field-link">Vào nông trại & ao cá ↗</Link>
       </section>
 
       <div className="journey-hero journey-hero--wide">

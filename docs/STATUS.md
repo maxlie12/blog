@@ -2,6 +2,10 @@
 
 Last verified: 2026-09-26 (lesson-attempt-submission pass).
 
+## 2026-10-16 — Learning Farm game
+
+`/learning/world` now contains a playable farm + fishpond game (fields, crop care, pond, market, barn, levels, daily and study gifts) that replaces the earlier decorative zone scene. State is per-browser localStorage only; no schema or deployment change. Checked in a local harness (React 19 + three r180 bundled with Bun, Chromium with SwiftShader): type check with `noUnusedLocals`, desktop and phone-size play-throughs (sow, offline growth, harvest, sell, gifts, fry, a simulated day away, netting fish, litter, 2D board) and the no-WebGL fallback, with no console errors. `npm run lint` and `next build` were not run in that environment because the npm registry was unreachable. See [LEARNING-FARM.md](LEARNING-FARM.md).
+
 ## 2026-10-10 — source published; hosting pending
 
 Published to `master` and `content/smartosc-english-restart` in commit `e254270`. Source is updated; the application is not deployed and the content payload has not been imported into a live database:

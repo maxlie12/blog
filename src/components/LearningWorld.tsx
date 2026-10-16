@@ -4,11 +4,13 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { SkillId } from "@/lib/lessonTypes";
-import type { WorldZone } from "@/components/ThreeFarmScene";
 
-const ThreeFarmScene = dynamic(() => import("@/components/ThreeFarmScene"), {
+type WorldZone = SkillId | "zh";
+
+// The game (and three.js, which it imports on demand) only downloads after "Vào nông trại".
+const FarmGame = dynamic(() => import("@/components/farm/FarmGame"), {
   ssr: false,
-  loading: () => <div className="farm-scene farm-scene--loading"><span>Đang dựng nông trại…</span></div>,
+  loading: () => <section className="fg"><div className="fg-stage fg-stage--loading"><span>Đang dựng nông trại…</span></div></section>,
 });
 
 export interface WorldQuest {
@@ -27,11 +29,11 @@ export interface WorldQuest {
 type ActivityDay = { date: string; intensity: 0 | 1 | 2 };
 
 const ZONES: { id: WorldZone; label: string; icon: string; note: string }[] = [
-  { id: "listening", label: "Hồ Listening", icon: "◐", note: "Nghe để nhận chỉ dẫn" },
-  { id: "reading", label: "Vườn Reading", icon: "▤", note: "Đọc để tìm manh mối" },
-  { id: "speaking", label: "Đồi Speaking", icon: "◔", note: "Nói để trao đổi với NPC" },
-  { id: "writing", label: "Nhà Writing", icon: "✎", note: "Viết nhật ký và kế hoạch" },
-  { id: "zh", label: "Làng 中文", icon: "茶", note: "Nhiệm vụ phụ 3–5 phút" },
+  { id: "listening", label: "Listening", icon: "◐", note: "Nghe để bắt từ khóa" },
+  { id: "reading", label: "Reading", icon: "▤", note: "Đọc để tìm manh mối" },
+  { id: "speaking", label: "Speaking", icon: "◔", note: "Nói lại không nhìn chữ" },
+  { id: "writing", label: "Writing", icon: "✎", note: "Viết kế hoạch ngắn" },
+  { id: "zh", label: "中文", icon: "茶", note: "Nhiệm vụ phụ 3–5 phút" },
 ];
 
 const DATE_FORMAT = new Intl.DateTimeFormat("en-CA", {
@@ -114,12 +116,12 @@ export function LearningWorld({
 
   return (
     <main className="learning-world">
-      <div className="world-breadcrumb"><Link href="/learning">← Kho bài</Link><span>Learning Farm · MVP</span></div>
+      <div className="world-breadcrumb"><Link href="/learning">← Kho bài</Link><span>Learning Farm · nông trại & ao cá</span></div>
       <header className="world-hero">
         <div>
-          <p className="eyebrow">YOUR LIVING LANGUAGE WORLD</p>
-          <h1>Học trong thế giới của bạn.</h1>
-          <p>Mỗi khu vực mở một nhiệm vụ ngôn ngữ thật. Nông trại lớn lên từ bài đã lưu hoặc được review; mở trang không tự tạo streak hay nâng trình độ.</p>
+          <p className="eyebrow">LEARNING FARM · NÔNG TRẠI & AO CÁ</p>
+          <h1>Trồng rau, nuôi cá, giữ nhịp học.</h1>
+          <p>Một nông trại nhỏ chạy theo thời gian thật: gieo hạt, tưới cây, bắt sâu, nuôi cá rồi bán ở chợ để mở thêm đất. Lưu một bài luyện 5 phút mỗi ngày để nhận thêm quà. Game chỉ là động lực — không tự tạo streak hay nâng trình độ.</p>
         </div>
         <div className="world-hero__status" aria-label="Trạng thái hành trình">
           <span className="world-mascot" aria-hidden="true"><i /><b /></span>
@@ -132,36 +134,38 @@ export function LearningWorld({
         <section className="world-gate">
           <div className="world-gate__landscape" aria-hidden="true"><span className="world-gate__sun" /><span className="world-gate__mountain world-gate__mountain--back" /><span className="world-gate__mountain" /><span className="world-gate__river" /><span className="world-gate__cabin">⌂</span></div>
           <div className="world-gate__copy">
-            <p className="eyebrow">BASE CAMP · B1+</p>
-            <h2>Nông trại dưới chân núi</h2>
-            <p>Vào thế giới 3D để chọn hồ nghe, vườn đọc, đồi nói, nhà viết hoặc làng tiếng Trung. Three.js chỉ tải khi bạn vào khu vực này.</p>
-            <button className="button button--primary" type="button" onClick={() => setEntered(true)}>Vào nông trại 3D →</button>
-            <p className="world-gate__hint">Có thể dùng các nút khu vực thay cho thao tác trực tiếp trên cảnh 3D.</p>
+            <p className="eyebrow">NÔNG TRẠI DƯỚI CHÂN NÚI</p>
+            <h2>Ruộng, ao cá và chợ làng</h2>
+            <p>12 ô ruộng, 9 loại cây, 6 loại cá. Tiến độ lưu trên trình duyệt này và cây, cá vẫn lớn khi bạn đóng trang. Bản 3D chỉ tải khi bạn bấm vào.</p>
+            <button className="button button--primary" type="button" onClick={() => setEntered(true)}>Vào nông trại →</button>
+            <p className="world-gate__hint">Không dùng được 3D? Game tự chuyển sang bản 2D nhẹ, vẫn chơi đủ tính năng.</p>
           </div>
         </section>
       ) : (
-        <section className="world-play" aria-label="Nông trại học ngôn ngữ">
-          <div className="world-play__scene">
-            <ThreeFarmScene selected={selected} onSelect={setSelected} />
-            <div className="world-play__legend"><span>🌲 Rừng B1+</span><span>≈ Suối checkpoint</span><span>▲ Núi B2</span></div>
-          </div>
-          <aside className="world-quest" aria-live="polite">
-            <p className="eyebrow">NHIỆM VỤ ĐANG CHỌN</p>
-            <h2>{currentQuest?.title ?? "Chưa có nhiệm vụ"}</h2>
-            {currentQuest ? <>
-              <div className="world-quest__meta"><span>{currentQuest.language === "zh" ? "中文 · Phụ" : `English · ${currentQuest.skill}`}</span><span>{currentQuest.level}</span>{currentQuest.date ? <span>{currentQuest.date}</span> : null}</div>
-              <p>{currentQuest.instructions}</p>
-              <div className="world-quest__criterion"><strong>Đầu ra cần có</strong><span>{currentQuest.completionCriteria}</span></div>
-              <p className="world-quest__truth">{currentQuest.reviewedCount > 0 ? "✓ Đã có bài được review trên server." : currentQuest.attemptCount > 0 ? "Đã có bài nộp, đang chờ review." : "Chưa có bài được xác minh. Bắt đầu bằng bản đầu 5 phút."}</p>
-              <Link href={`/learning/${currentQuest.id}`} className="button button--primary">Nhận nhiệm vụ 5 phút ↗</Link>
-            </> : <p>Kho bài chưa có nhiệm vụ phù hợp cho khu vực này.</p>}
-          </aside>
-        </section>
+        <FarmGame practiceDays={activity} />
       )}
 
-      <nav className="world-zones" aria-label="Chọn khu vực học">
-        {ZONES.map((zone) => <button key={zone.id} type="button" aria-pressed={selected === zone.id} data-active={selected === zone.id || undefined} onClick={() => { setSelected(zone.id); setEntered(true); }}><span aria-hidden="true">{zone.icon}</span><strong>{zone.label}</strong><small>{zone.note}</small></button>)}
-      </nav>
+      <section className="world-learn" aria-labelledby="world-learn-title">
+        <div className="world-learn__intro">
+          <p className="eyebrow">NHIỆM VỤ HỌC HÔM NAY</p>
+          <h2 id="world-learn-title">Học 5 phút, nhận quà cho nông trại</h2>
+          <p>Lưu một bài luyện trên thiết bị này để mở quà học tập 🎁 trong game. Tiến độ học thật vẫn chỉ tính từ bài đã được review.</p>
+        </div>
+        <nav className="world-zones" aria-label="Chọn kỹ năng">
+          {ZONES.map((zone) => <button key={zone.id} type="button" aria-pressed={selected === zone.id} data-active={selected === zone.id || undefined} onClick={() => setSelected(zone.id)}><span aria-hidden="true">{zone.icon}</span><strong>{zone.label}</strong><small>{zone.note}</small></button>)}
+        </nav>
+        <article className="world-quest" aria-live="polite">
+          <p className="eyebrow">NHIỆM VỤ ĐANG CHỌN</p>
+          <h2>{currentQuest?.title ?? "Chưa có nhiệm vụ"}</h2>
+          {currentQuest ? <>
+            <div className="world-quest__meta"><span>{currentQuest.language === "zh" ? "中文 · Phụ" : `English · ${currentQuest.skill}`}</span><span>{currentQuest.level}</span>{currentQuest.date ? <span>{currentQuest.date}</span> : null}</div>
+            <p>{currentQuest.instructions}</p>
+            <div className="world-quest__criterion"><strong>Đầu ra cần có</strong><span>{currentQuest.completionCriteria}</span></div>
+            <p className="world-quest__truth">{currentQuest.reviewedCount > 0 ? "✓ Đã có bài được review trên server." : currentQuest.attemptCount > 0 ? "Đã có bài nộp, đang chờ review." : "Chưa có bài được xác minh. Bắt đầu bằng bản đầu 5 phút."}</p>
+            <Link href={`/learning/${currentQuest.id}`} className="button button--primary">Nhận nhiệm vụ 5 phút ↗</Link>
+          </> : <p>Kho bài chưa có nhiệm vụ phù hợp cho kỹ năng này.</p>}
+        </article>
+      </section>
 
       <section className="world-dashboard">
         <div className="world-heatmap">
@@ -182,9 +186,9 @@ export function LearningWorld({
       </section>
 
       <section className="world-rules">
-        <div><span>1</span><h3>Làm nhiệm vụ</h3><p>Nghe, đọc, nói hoặc viết ngay từ tình huống trong thế giới.</p></div>
-        <div><span>2</span><h3>Lưu bằng chứng</h3><p>Bản đầu làm cây nảy mầm; luyện lại giúp cây ra hoa.</p></div>
-        <div><span>3</span><h3>Vượt checkpoint</h3><p>Bài mới hoàn toàn quyết định lúc băng rừng, qua suối và lên núi.</p></div>
+        <div><span>1</span><h3>Trồng & nuôi</h3><p>Gieo hạt, chăm cây, cho cá ăn. Mọi thứ lớn theo thời gian thật, kể cả khi bạn đóng trang.</p></div>
+        <div><span>2</span><h3>Bán & mở rộng</h3><p>Bán nông sản và cá trong kho, mua hạt mới, mở thêm đất và mở rộng ao khi lên cấp.</p></div>
+        <div><span>3</span><h3>Học để nhận quà</h3><p>Bài luyện lưu hôm nay đổi được xu và phân bón. Game không đánh dấu bài đã xong hay nâng trình độ.</p></div>
       </section>
     </main>
   );
