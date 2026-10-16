@@ -28,7 +28,7 @@ export default async function Home() {
           <p>Notes on code, language, and the things worth learning along the way.</p>
         </div>
         <div className="field-intro__actions">
-          <Link href="/learning/session" className="button button--primary">Start a 5-minute session ↗</Link>
+          <Link href="/learning/world" className="button button--primary">Enter the Learning Farm ↗</Link>
           <Link href="/blog" className="field-link">Explore the journal →</Link>
         </div>
       </section>

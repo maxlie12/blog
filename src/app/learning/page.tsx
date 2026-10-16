@@ -21,9 +21,15 @@ export default async function LearningPage() {
       <header className="section-page__header">
         <h1>Learning</h1>
         <p>Chọn ngôn ngữ, cấp độ và kỹ năng. Mỗi bài làm trong 5–10 phút; cấp độ bài không phải kết quả đánh giá trình độ của bạn.</p>
-        <Link href="/learning/session" className="button">Bắt đầu / tiếp tục buổi học →</Link>{" "}
+        <Link href="/learning/world" className="button">Vào Learning Farm 3D →</Link>{" "}
+        <Link href="/learning/session" className="button button--ghost">Buổi học có hướng dẫn →</Link>{" "}
         <Link href="/learning/daily" className="button button--ghost">Kho bài theo ngày →</Link>
       </header>
+
+      <section className="learning-world-teaser">
+        <div><p className="eyebrow">NEW · PLAY TO LEARN</p><h2>Nông trại dưới chân núi</h2><p>Chọn khu vực, nhận nhiệm vụ tiếng Anh ngay trong gameplay và dùng bài làm thật để phát triển thế giới. Tiếng Trung là tuyến làng nhỏ bên cạnh.</p></div>
+        <Link href="/learning/world" className="field-link">Khám phá thế giới học tập ↗</Link>
+      </section>
 
       <div className="journey-hero journey-hero--wide">
         <h2>The ascent to C1</h2>
