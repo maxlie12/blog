@@ -5,17 +5,17 @@ import { usePathname } from "next/navigation";
 import { useTheme, type AccentId } from "@/lib/theme";
 
 const NAV_LINKS = [
-  { href: "/", label: "Blog" },
+  { href: "/blog", label: "Blog" },
   { href: "/projects", label: "Projects" },
   { href: "/learning", label: "Learning" },
   { href: "/about", label: "About" },
 ];
 
 const ACCENTS: { id: AccentId; label: string }[] = [
-  { id: "ivory", label: "Ivory accent" },
-  { id: "teal", label: "Teal accent" },
-  { id: "deep-teal", label: "Deep teal accent" },
-  { id: "amber", label: "Amber accent" },
+  { id: "ivory", label: "Sage accent" },
+  { id: "teal", label: "Leaf green accent" },
+  { id: "deep-teal", label: "Forest green accent" },
+  { id: "amber", label: "Butter yellow accent" },
 ];
 
 function isActive(pathname: string, href: string) {

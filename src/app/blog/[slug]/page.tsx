@@ -32,6 +32,7 @@ export default async function ArticlePage({
 
   return (
     <article className="article-page">
+      <Link href="/blog" className="field-link article-page__back">← Back to the journal</Link>
       {article.sample && (
         <div className="sample-banner">
           This is a sample article — see <code>content/articles/{article.slug}.mdx</code>.

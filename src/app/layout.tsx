@@ -37,7 +37,7 @@ const NO_FLASH_SCRIPT = `
     var theme = localStorage.getItem("site-theme");
     if (!theme) theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     document.documentElement.setAttribute("data-theme", theme);
-    var accent = localStorage.getItem("site-accent") || "amber";
+    var accent = localStorage.getItem("site-accent") || "teal";
     document.documentElement.setAttribute("data-accent", accent);
   } catch (e) {}
 })();
@@ -56,7 +56,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </Script>
         <ThemeProvider>
           <PublicChrome>
-            {process.env.BLOG_READ_ONLY_PREVIEW === "1" && <aside className="error-banner" role="status" style={{ margin: "1rem", padding: "1rem" }}>
+            {process.env.BLOG_READ_ONLY_PREVIEW === "1" && <aside className="preview-note" role="status">
               <strong>Bản xem thử · mở bài và luyện tập</strong>
               <p>Mở kho bài tại Learning → Bài học mỗi ngày. Bản này có thể lưu câu trả lời trên trình duyệt, chưa đồng bộ server và chưa tính streak. Gửi câu trả lời hoặc audio về ChatGPT để nhận phản hồi.</p>
             </aside>}

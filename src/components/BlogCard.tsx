@@ -17,7 +17,11 @@ export function BlogCard({ article }: { article: Article }) {
         // eslint-disable-next-line @next/next/no-img-element
         <img src={article.coverImage} alt="" className="blog-card__thumb blog-card__thumb--image" />
       ) : (
-        <div className="blog-card__thumb" aria-hidden="true" data-area={article.areas[0]} />
+        <div className="blog-card__thumb blog-card__thumb--editorial" aria-hidden="true" data-area={article.areas[0]}>
+          <span className="blog-card__cover-label">FIELD NOTES / {category}</span>
+          <span className="blog-card__cover-mark">{article.areas[0] === "dev" ? "{ }" : article.areas[0] === "learning" ? "Aa" : "↗"}</span>
+          <span className="blog-card__cover-line" />
+        </div>
       )}
       <div className="blog-card__body">
         <div className="blog-card__meta">

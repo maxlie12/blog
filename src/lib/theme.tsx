@@ -38,7 +38,7 @@ function readAccent(): AccentId {
   } catch {
     // ignore
   }
-  return "amber";
+  return "teal";
 }
 
 function getModeSnapshot(): ThemeMode {
@@ -46,7 +46,7 @@ function getModeSnapshot(): ThemeMode {
 }
 
 function getAccentSnapshot(): AccentId {
-  return (document.documentElement.getAttribute("data-accent") as AccentId) || "amber";
+  return (document.documentElement.getAttribute("data-accent") as AccentId) || "teal";
 }
 
 function getServerModeSnapshot(): ThemeMode {
@@ -54,7 +54,7 @@ function getServerModeSnapshot(): ThemeMode {
 }
 
 function getServerAccentSnapshot(): AccentId {
-  return "amber";
+  return "teal";
 }
 
 function setMode(mode: ThemeMode) {

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getAllProjects } from "@/lib/content";
 import { getPublicArticles } from "@/lib/posts";
 import { getAllLessons } from "@/lib/lessonsData";
@@ -20,9 +21,21 @@ export default async function Home() {
 
   return (
     <div className="home-grid">
+      <section className="field-intro" aria-label="Welcome to Field Notes">
+        <div>
+          <p className="eyebrow">A PERSONAL NOTEBOOK · LUÂN</p>
+          <h1>Build with purpose.<br /><em>Grow a little every day.</em></h1>
+          <p>Notes on code, language, and the things worth learning along the way.</p>
+        </div>
+        <div className="field-intro__actions">
+          <Link href="/learning/session" className="button button--primary">Start a 5-minute session ↗</Link>
+          <Link href="/blog" className="field-link">Explore the journal →</Link>
+        </div>
+      </section>
       <section className="home-grid__blog" aria-label="Recent blog posts">
         <header className="section-page__header section-page__header--compact">
-          <h1>Blog</h1>
+          <p className="eyebrow">THE JOURNAL</p>
+          <h2>Recent field notes</h2>
           <p>Thoughts at the intersection of code, language, and a wider world.</p>
         </header>
         {latestArticles.length === 0 ? (
