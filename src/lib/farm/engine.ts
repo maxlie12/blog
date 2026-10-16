@@ -65,12 +65,96 @@ export const FISHES: FishDef[] = [
   { id: "sturgeon", name: "Cá tầm", emoji: "🦈", level: 8, fryPrice: 250, growSeconds: 7200, sellPrice: 620, xp: 68, color: "#5b6a7e", accent: "#cdd5de" },
 ];
 
+export type AnimalId = "chicken" | "duck" | "sheep" | "cow";
+export type ProductId = "egg" | "duckEgg" | "wool" | "milk";
+export type WorkshopId = "saltery" | "bakery" | "loom" | "dairy";
+export type GoodId = "saltedEgg" | "cake" | "scarf" | "cheese";
+
+export interface AnimalDef {
+  id: AnimalId;
+  name: string;
+  emoji: string;
+  level: number;
+  price: number;
+  product: ProductId;
+  cycleSeconds: number;
+  xp: number;
+  color: string;
+  accent: string;
+}
+
+export interface ProductDef {
+  id: ProductId | GoodId;
+  name: string;
+  emoji: string;
+  sellPrice: number;
+}
+
+export interface WorkshopDef {
+  id: WorkshopId;
+  name: string;
+  level: number;
+  buildCost: number;
+  inputs: { products?: Partial<Record<ProductId, number>>; crops?: Partial<Record<CropId, number>> };
+  output: GoodId;
+  seconds: number;
+  xp: number;
+  roof: string;
+}
+
+export const ANIMALS: AnimalDef[] = [
+  { id: "chicken", name: "Gà", emoji: "🐔", level: 1, price: 60, product: "egg", cycleSeconds: 90, xp: 2, color: "#fbf6ec", accent: "#d8432f" },
+  { id: "duck", name: "Vịt", emoji: "🦆", level: 2, price: 90, product: "duckEgg", cycleSeconds: 150, xp: 3, color: "#f6f1e3", accent: "#f0a030" },
+  { id: "sheep", name: "Cừu", emoji: "🐑", level: 4, price: 220, product: "wool", cycleSeconds: 360, xp: 6, color: "#f4f1ea", accent: "#3d3a36" },
+  { id: "cow", name: "Bò", emoji: "🐄", level: 5, price: 320, product: "milk", cycleSeconds: 480, xp: 8, color: "#fbfaf6", accent: "#2f2b28" },
+];
+
+export const PRODUCTS: (ProductDef & { id: ProductId })[] = [
+  { id: "egg", name: "Trứng gà", emoji: "🥚", sellPrice: 6 },
+  { id: "duckEgg", name: "Trứng vịt", emoji: "🥚", sellPrice: 9 },
+  { id: "wool", name: "Len cừu", emoji: "🧶", sellPrice: 22 },
+  { id: "milk", name: "Sữa bò", emoji: "🥛", sellPrice: 30 },
+];
+
+export const GOODS: (ProductDef & { id: GoodId })[] = [
+  { id: "saltedEgg", name: "Hũ trứng muối", emoji: "🏺", sellPrice: 42 },
+  { id: "cake", name: "Bánh bông lan", emoji: "🍰", sellPrice: 40 },
+  { id: "scarf", name: "Khăn len", emoji: "🧣", sellPrice: 70 },
+  { id: "cheese", name: "Phô mai", emoji: "🧀", sellPrice: 85 },
+];
+
+export const WORKSHOPS: WorkshopDef[] = [
+  { id: "saltery", name: "Lò trứng muối", level: 3, buildCost: 150, inputs: { products: { duckEgg: 3 } }, output: "saltedEgg", seconds: 150, xp: 8, roof: "#5d8a9b" },
+  { id: "bakery", name: "Lò bánh", level: 4, buildCost: 200, inputs: { products: { egg: 2 }, crops: { rice: 1 } }, output: "cake", seconds: 120, xp: 7, roof: "#d9774a" },
+  { id: "loom", name: "Xưởng dệt", level: 5, buildCost: 280, inputs: { products: { wool: 2 } }, output: "scarf", seconds: 200, xp: 10, roof: "#8a6bb5" },
+  { id: "dairy", name: "Xưởng phô mai", level: 6, buildCost: 350, inputs: { products: { milk: 2 } }, output: "cheese", seconds: 240, xp: 12, roof: "#e3b53c" },
+];
+
+/** Feed bags the mill makes from one unit of each crop. Grains make the most. */
+export const MILL_YIELD: Record<CropId, number> = {
+  cabbage: 1,
+  carrot: 1,
+  tomato: 1,
+  corn: 3,
+  rice: 3,
+  strawberry: 1,
+  pumpkin: 4,
+  sunflower: 3,
+  watermelon: 4,
+};
+
+export const ANIMAL_MAP = Object.fromEntries(ANIMALS.map((item) => [item.id, item])) as Record<AnimalId, AnimalDef>;
+export const PRODUCT_MAP = Object.fromEntries(PRODUCTS.map((item) => [item.id, item])) as Record<ProductId, ProductDef>;
+export const GOOD_MAP = Object.fromEntries(GOODS.map((item) => [item.id, item])) as Record<GoodId, ProductDef>;
+export const WORKSHOP_MAP = Object.fromEntries(WORKSHOPS.map((item) => [item.id, item])) as Record<WorkshopId, WorkshopDef>;
+
 export const CROP_MAP = Object.fromEntries(CROPS.map((crop) => [crop.id, crop])) as Record<CropId, CropDef>;
 export const FISH_MAP = Object.fromEntries(FISHES.map((fish) => [fish.id, fish])) as Record<FishId, FishDef>;
 
 export const ITEMS = {
   fertilizer: { name: "Phân bón", emoji: "✨", price: 25, note: "Rút ngắn 30% thời gian còn lại của một vụ (mỗi vụ một lần)." },
   fishFood: { name: "Cám cá", emoji: "🍞", price: 8, note: "Một lần cho ăn giữ cả ao no trong 20 phút." },
+  feed: { name: "Thức ăn gia súc", emoji: "🥣", price: 3, note: "Vật nuôi tự ăn từ máng: mỗi phần đổi lấy một lượt ra sản phẩm. Xay từ nông sản thì rẻ hơn." },
 } as const;
 export type ItemId = keyof typeof ITEMS;
 
@@ -94,6 +178,16 @@ export const POND_UPGRADES = [
   { cost: 450, level: 6 },
   { cost: 700, level: 8 },
 ];
+
+export const RANCH_CAPACITIES = [4, 6, 8, 10];
+/** Cost and level to move the pasture from capacity index i to i + 1. */
+export const RANCH_UPGRADES = [
+  { cost: 150, level: 3 },
+  { cost: 300, level: 5 },
+  { cost: 500, level: 7 },
+];
+export const MAX_DROPS = 24;
+export const TRUCK = { capacity: 20, tripSeconds: 90, bonus: 1.2 };
 
 export const FEED_DURATION_MS = 20 * 60 * 1000;
 export const HUNGRY_GROWTH = 0.35;
@@ -130,6 +224,37 @@ export interface PondTrash {
   z: number;
 }
 
+export interface RanchAnimal {
+  id: string;
+  species: AnimalId;
+  /** Seconds into the current production cycle; only advances while `fed`. */
+  progress: number;
+  fed: boolean;
+}
+
+export interface RanchDrop {
+  id: string;
+  product: ProductId;
+  /** Position inside the pasture, both in -1..1. */
+  x: number;
+  z: number;
+}
+
+export interface WorkshopState {
+  /** Seconds into the running batch, or null when idle. */
+  progress: number | null;
+  ready: number;
+}
+
+export interface TruckTrip {
+  departAt: number;
+  returnAt: number;
+  value: number;
+  items: number;
+}
+
+export type GoodsKind = "crop" | "fish" | "product" | "good";
+
 export interface GameState {
   version: 1;
   createdAt: number;
@@ -143,11 +268,20 @@ export interface GameState {
     fish: PondFish[];
     trash: PondTrash[];
   };
+  ranch: {
+    capacityLevel: number;
+    animals: RanchAnimal[];
+    drops: RanchDrop[];
+    workshops: Partial<Record<WorkshopId, WorkshopState>>;
+    truck: TruckTrip | null;
+  };
   seeds: Partial<Record<CropId, number>>;
   items: Record<ItemId, number>;
   barn: {
     crops: Partial<Record<CropId, number>>;
     fish: Partial<Record<FishId, number>>;
+    products: Partial<Record<ProductId, number>>;
+    goods: Partial<Record<GoodId, number>>;
   };
   lastDailyBonus: string | null;
   lastStudyReward: string | null;
@@ -293,6 +427,67 @@ export function fishSellPrice(fish: FishId, dateKey: string): number {
   return featuredToday(dateKey).fish === fish ? Math.round(base * FEATURED_BONUS) : base;
 }
 
+export function ranchCapacity(game: GameState): number {
+  return RANCH_CAPACITIES[Math.min(game.ranch.capacityLevel, RANCH_CAPACITIES.length - 1)];
+}
+
+export function nextRanchUpgrade(game: GameState) {
+  return RANCH_UPGRADES[game.ranch.capacityLevel] ?? null;
+}
+
+/** Wall-clock seconds until this animal's next product, or null if it is waiting for feed. */
+export function animalSecondsLeft(game: GameState, animal: RanchAnimal): number | null {
+  if (!animal.fed && (game.items.feed < 1 || game.ranch.drops.length >= MAX_DROPS)) return null;
+  return Math.max(0, ANIMAL_MAP[animal.species].cycleSeconds - animal.progress);
+}
+
+export function unitPrice(kind: GoodsKind, id: string, dateKey: string): number {
+  if (kind === "crop") return cropSellPrice(id as CropId, dateKey);
+  if (kind === "fish") return fishSellPrice(id as FishId, dateKey);
+  if (kind === "product") return PRODUCT_MAP[id as ProductId].sellPrice;
+  return GOOD_MAP[id as GoodId].sellPrice;
+}
+
+export interface StockEntry {
+  key: string;
+  kind: GoodsKind;
+  id: string;
+  name: string;
+  emoji: string;
+  owned: number;
+  price: number;
+  featured: boolean;
+}
+
+/** Everything in the barn, in display order, with today's on-the-spot price. */
+export function barnEntries(game: GameState, dateKey: string): StockEntry[] {
+  const featured = featuredToday(dateKey);
+  const entries: StockEntry[] = [];
+  const push = (kind: GoodsKind, id: string, name: string, emoji: string, owned: number | undefined, isFeatured = false) => {
+    if (!owned || owned < 1) return;
+    entries.push({ key: `${kind}:${id}`, kind, id, name, emoji, owned, price: unitPrice(kind, id, dateKey), featured: isFeatured });
+  };
+  for (const good of GOODS) push("good", good.id, good.name, good.emoji, game.barn.goods[good.id]);
+  for (const product of PRODUCTS) push("product", product.id, product.name, product.emoji, game.barn.products[product.id]);
+  for (const fish of FISHES) push("fish", fish.id, fish.name, fish.emoji, game.barn.fish[fish.id], featured.fish === fish.id);
+  for (const crop of CROPS) push("crop", crop.id, crop.name, crop.emoji, game.barn.crops[crop.id], featured.crop === crop.id);
+  return entries;
+}
+
+function barnBucket(kind: GoodsKind): keyof GameState["barn"] {
+  return kind === "crop" ? "crops" : kind === "fish" ? "fish" : kind === "product" ? "products" : "goods";
+}
+
+function barnCount(game: GameState, kind: GoodsKind, id: string): number {
+  return (game.barn[barnBucket(kind)] as Record<string, number | undefined>)[id] ?? 0;
+}
+
+function changeBarn(game: GameState, kind: GoodsKind, id: string, delta: number): GameState {
+  const bucket = barnBucket(kind);
+  const current = game.barn[bucket] as Record<string, number | undefined>;
+  return { ...game, barn: { ...game.barn, [bucket]: { ...current, [id]: Math.max(0, (current[id] ?? 0) + delta) } } };
+}
+
 export function formatDuration(seconds: number): string {
   const total = Math.max(0, Math.ceil(seconds));
   if (total < 60) return `${total} giây`;
@@ -356,13 +551,24 @@ export function createGame(now: number): GameState {
       fish: [{ id: "f1", species: "tilapia", growth: 0 }],
       trash: [],
     },
+    ranch: createRanch(),
     seeds: { cabbage: 4, carrot: 2 },
-    items: { fertilizer: 1, fishFood: 3 },
-    barn: { crops: {}, fish: {} },
+    items: { fertilizer: 1, fishFood: 3, feed: 6 },
+    barn: { crops: {}, fish: {}, products: {}, goods: {} },
     lastDailyBonus: null,
     lastStudyReward: null,
     stats: { harvested: 0, fishCaught: 0, earned: 0 },
     nextId: 2,
+  };
+}
+
+function createRanch(): GameState["ranch"] {
+  return {
+    capacityLevel: 0,
+    animals: [{ id: "a1", species: "chicken", progress: 0, fed: false }],
+    drops: [],
+    workshops: {},
+    truck: null,
   };
 }
 
@@ -378,6 +584,14 @@ export function advance(game: GameState, now: number, seed: number): GameState {
   const plots = game.plots.map((plot) => ({ ...plot }));
   const fish = game.pond.fish.map((item) => ({ ...item }));
   const trash = game.pond.trash.slice();
+  const animals = game.ranch.animals.map((item) => ({ ...item }));
+  const drops = game.ranch.drops.slice();
+  const workshops: GameState["ranch"]["workshops"] = {};
+  for (const id of Object.keys(game.ranch.workshops) as WorkshopId[]) {
+    const state = game.ranch.workshops[id];
+    if (state) workshops[id] = { ...state };
+  }
+  let feed = game.items.feed;
   let nextId = game.nextId;
   let clock = now - elapsed;
   let remaining = elapsed / 1000;
@@ -418,10 +632,61 @@ export function advance(game: GameState, now: number, seed: number): GameState {
         nextId += 1;
       }
     }
+    for (const animal of animals) {
+      const def = ANIMAL_MAP[animal.species];
+      let left = step;
+      while (left > 0) {
+        if (!animal.fed) {
+          if (feed < 1 || drops.length >= MAX_DROPS) break;
+          feed -= 1;
+          animal.fed = true;
+        }
+        const need = def.cycleSeconds - animal.progress;
+        if (left < need) {
+          animal.progress += left;
+          left = 0;
+        } else {
+          left -= need;
+          animal.progress = 0;
+          animal.fed = false;
+          drops.push({ id: `d${nextId}`, product: def.product, x: random() * 1.7 - 0.85, z: random() * 1.5 - 0.75 });
+          nextId += 1;
+        }
+      }
+    }
+
+    for (const id of Object.keys(workshops) as WorkshopId[]) {
+      const state = workshops[id];
+      if (!state || state.progress === null) continue;
+      state.progress += step;
+      if (state.progress >= WORKSHOP_MAP[id].seconds) {
+        state.progress = null;
+        state.ready += 1;
+      }
+    }
     clock += step * 1000;
   }
 
-  return { ...game, plots, pond: { ...game.pond, fish, trash }, nextId, lastTick: now };
+  let coins = game.coins;
+  let stats = game.stats;
+  let truck = game.ranch.truck;
+  if (truck && now >= truck.returnAt) {
+    coins += truck.value;
+    stats = { ...stats, earned: stats.earned + truck.value };
+    truck = null;
+  }
+
+  return {
+    ...game,
+    coins,
+    stats,
+    plots,
+    pond: { ...game.pond, fish, trash },
+    ranch: { ...game.ranch, animals, drops, workshops, truck },
+    items: { ...game.items, feed },
+    nextId,
+    lastTick: now,
+  };
 }
 
 /* ───────────────────────── farm actions ───────────────────────── */
@@ -650,54 +915,23 @@ export function buyItem(game: GameState, item: ItemId, quantity: number): Action
   };
 }
 
-export function sellGoods(
-  game: GameState,
-  kind: "crop" | "fish",
-  id: CropId | FishId,
-  quantity: number,
-  dateKey: string,
-): ActionResult {
-  if (kind === "crop") {
-    const crop = id as CropId;
-    const owned = game.barn.crops[crop] ?? 0;
-    const qty = Math.min(owned, Math.max(1, Math.floor(quantity)));
-    if (!CROP_MAP[crop] || qty < 1) return fail(game, "Kho không còn hàng này.", "info");
-    const earned = cropSellPrice(crop, dateKey) * qty;
-    return {
-      game: {
-        ...game,
-        coins: game.coins + earned,
-        barn: { ...game.barn, crops: { ...game.barn.crops, [crop]: owned - qty } },
-        stats: { ...game.stats, earned: game.stats.earned + earned },
-      },
-      ok: true,
-      message: `💰 Bán ${qty} ${CROP_MAP[crop].emoji} · +${earned} xu.`,
-      tone: "good",
-    };
-  }
-  const fish = id as FishId;
-  const owned = game.barn.fish[fish] ?? 0;
+export function sellGoods(game: GameState, kind: GoodsKind, id: string, quantity: number, dateKey: string): ActionResult {
+  const owned = barnCount(game, kind, id);
   const qty = Math.min(owned, Math.max(1, Math.floor(quantity)));
-  if (!FISH_MAP[fish] || qty < 1) return fail(game, "Kho không còn hàng này.", "info");
-  const earned = fishSellPrice(fish, dateKey) * qty;
+  if (qty < 1) return fail(game, "Kho không còn hàng này.", "info");
+  const earned = unitPrice(kind, id, dateKey) * qty;
+  const entry = barnEntries(game, dateKey).find((item) => item.key === `${kind}:${id}`);
+  const next = changeBarn(game, kind, id, -qty);
   return {
-    game: {
-      ...game,
-      coins: game.coins + earned,
-      barn: { ...game.barn, fish: { ...game.barn.fish, [fish]: owned - qty } },
-      stats: { ...game.stats, earned: game.stats.earned + earned },
-    },
+    game: { ...next, coins: next.coins + earned, stats: { ...next.stats, earned: next.stats.earned + earned } },
     ok: true,
-    message: `💰 Bán ${qty} ${FISH_MAP[fish].emoji} · +${earned} xu.`,
+    message: `💰 Bán ${qty} ${entry?.emoji ?? ""} ${entry?.name ?? ""} · +${earned} xu.`,
     tone: "good",
   };
 }
 
 export function barnValue(game: GameState, dateKey: string): number {
-  let total = 0;
-  for (const crop of CROPS) total += (game.barn.crops[crop.id] ?? 0) * cropSellPrice(crop.id, dateKey);
-  for (const fish of FISHES) total += (game.barn.fish[fish.id] ?? 0) * fishSellPrice(fish.id, dateKey);
-  return total;
+  return barnEntries(game, dateKey).reduce((sum, entry) => sum + entry.owned * entry.price, 0);
 }
 
 export function sellAll(game: GameState, dateKey: string): ActionResult {
@@ -707,11 +941,160 @@ export function sellAll(game: GameState, dateKey: string): ActionResult {
     game: {
       ...game,
       coins: game.coins + earned,
-      barn: { crops: {}, fish: {} },
+      barn: { crops: {}, fish: {}, products: {}, goods: {} },
       stats: { ...game.stats, earned: game.stats.earned + earned },
     },
     ok: true,
     message: `💰 Bán hết hàng trong kho · +${earned} xu.`,
+    tone: "good",
+  };
+}
+
+/* ───────────────────────── ranch ───────────────────────── */
+
+export function buyAnimal(game: GameState, species: AnimalId): ActionResult {
+  const def = ANIMAL_MAP[species];
+  if (!def) return fail(game, "Không có loại vật nuôi này.");
+  if (levelFromXp(game.xp) < def.level) return fail(game, `${def.name} mở ở cấp ${def.level}.`);
+  if (game.ranch.animals.length >= ranchCapacity(game)) return fail(game, "Chuồng đã đầy. Mở rộng trang trại ở chợ.");
+  if (game.coins < def.price) return fail(game, `Cần ${def.price} xu để mua ${def.name.toLowerCase()}.`);
+  const animal: RanchAnimal = { id: `a${game.nextId}`, species, progress: 0, fed: false };
+  const next = gainXp(
+    { ...game, coins: game.coins - def.price, nextId: game.nextId + 1, ranch: { ...game.ranch, animals: [...game.ranch.animals, animal] } },
+    2,
+  );
+  const hint = game.items.feed < 1 ? " Máng đang trống — xay hoặc mua thức ăn nhé." : "";
+  return { game: next.game, ok: true, message: `${def.emoji} Đã thả ${def.name.toLowerCase()} vào trang trại.${hint}${next.suffix}`, tone: "good" };
+}
+
+export function collectDrop(game: GameState, id: string): ActionResult {
+  const drop = game.ranch.drops.find((item) => item.id === id);
+  if (!drop) return fail(game, "Đã nhặt rồi.", "info");
+  const def = PRODUCT_MAP[drop.product];
+  const stored = changeBarn({ ...game, ranch: { ...game.ranch, drops: game.ranch.drops.filter((item) => item.id !== id) } }, "product", drop.product, 1);
+  const next = gainXp(stored, 1);
+  return { game: next.game, ok: true, message: `${def.emoji} +1 ${def.name} · +1 XP.${next.suffix}`, tone: "good" };
+}
+
+export function collectAllDrops(game: GameState): ActionResult {
+  const drops = game.ranch.drops;
+  if (drops.length === 0) return fail(game, "Chưa có gì để nhặt.", "info");
+  let next: GameState = { ...game, ranch: { ...game.ranch, drops: [] } };
+  for (const drop of drops) next = changeBarn(next, "product", drop.product, 1);
+  const result = gainXp(next, drops.length);
+  return { game: result.game, ok: true, message: `🧺 Nhặt ${drops.length} sản phẩm vào kho · +${drops.length} XP.${result.suffix}`, tone: "good" };
+}
+
+export function millCrop(game: GameState, crop: CropId, quantity: number): ActionResult {
+  const def = CROP_MAP[crop];
+  const owned = game.barn.crops[crop] ?? 0;
+  const qty = Math.min(owned, Math.max(1, Math.floor(quantity)));
+  if (!def || qty < 1) return fail(game, "Kho không còn nông sản này.", "info");
+  const bags = MILL_YIELD[crop] * qty;
+  const next = changeBarn({ ...game, items: { ...game.items, feed: game.items.feed + bags } }, "crop", crop, -qty);
+  return { game: next, ok: true, message: `⚙️ Xay ${qty} ${def.emoji} → +${bags} 🥣 thức ăn.`, tone: "good" };
+}
+
+export function upgradeRanch(game: GameState): ActionResult {
+  const upgrade = nextRanchUpgrade(game);
+  if (!upgrade) return fail(game, "Trang trại đã rộng nhất rồi.", "info");
+  if (levelFromXp(game.xp) < upgrade.level) return fail(game, `Cần cấp ${upgrade.level} để mở rộng chuồng.`);
+  if (game.coins < upgrade.cost) return fail(game, `Cần ${upgrade.cost} xu để mở rộng chuồng.`);
+  const capacityLevel = game.ranch.capacityLevel + 1;
+  return {
+    game: { ...game, coins: game.coins - upgrade.cost, ranch: { ...game.ranch, capacityLevel } },
+    ok: true,
+    message: `🏡 Chuồng rộng hơn · nuôi được ${RANCH_CAPACITIES[capacityLevel]} con.`,
+    tone: "good",
+  };
+}
+
+export function workshopInputsText(def: WorkshopDef): string {
+  const parts: string[] = [];
+  for (const [id, qty] of Object.entries(def.inputs.products ?? {})) parts.push(`${qty} ${PRODUCT_MAP[id as ProductId].name.toLowerCase()}`);
+  for (const [id, qty] of Object.entries(def.inputs.crops ?? {})) parts.push(`${qty} ${CROP_MAP[id as CropId].name.toLowerCase()}`);
+  return parts.join(" + ");
+}
+
+export function canStartWorkshop(game: GameState, id: WorkshopId): boolean {
+  const def = WORKSHOP_MAP[id];
+  const state = game.ranch.workshops[id];
+  if (!state || state.progress !== null) return false;
+  for (const [product, qty] of Object.entries(def.inputs.products ?? {})) if (barnCount(game, "product", product) < (qty ?? 0)) return false;
+  for (const [crop, qty] of Object.entries(def.inputs.crops ?? {})) if (barnCount(game, "crop", crop) < (qty ?? 0)) return false;
+  return true;
+}
+
+export function buildWorkshop(game: GameState, id: WorkshopId): ActionResult {
+  const def = WORKSHOP_MAP[id];
+  if (!def) return fail(game, "Không có xưởng này.");
+  if (game.ranch.workshops[id]) return fail(game, `${def.name} đã xây rồi.`, "info");
+  if (levelFromXp(game.xp) < def.level) return fail(game, `${def.name} mở ở cấp ${def.level}.`);
+  if (game.coins < def.buildCost) return fail(game, `Cần ${def.buildCost} xu để xây ${def.name.toLowerCase()}.`);
+  const next = gainXp(
+    { ...game, coins: game.coins - def.buildCost, ranch: { ...game.ranch, workshops: { ...game.ranch.workshops, [id]: { progress: null, ready: 0 } } } },
+    5,
+  );
+  return { game: next.game, ok: true, message: `🔨 Đã xây ${def.name.toLowerCase()} · +5 XP.${next.suffix}`, tone: "good" };
+}
+
+export function startWorkshop(game: GameState, id: WorkshopId): ActionResult {
+  const def = WORKSHOP_MAP[id];
+  const state = game.ranch.workshops[id];
+  if (!def || !state) return fail(game, "Xây xưởng trước đã.", "info");
+  if (state.progress !== null) return fail(game, `${def.name} đang chạy.`, "info");
+  if (!canStartWorkshop(game, id)) return fail(game, `Cần ${workshopInputsText(def)} trong kho.`);
+  let next = game;
+  for (const [product, qty] of Object.entries(def.inputs.products ?? {})) next = changeBarn(next, "product", product, -(qty ?? 0));
+  for (const [crop, qty] of Object.entries(def.inputs.crops ?? {})) next = changeBarn(next, "crop", crop, -(qty ?? 0));
+  next = { ...next, ranch: { ...next.ranch, workshops: { ...next.ranch.workshops, [id]: { ...state, progress: 0 } } } };
+  const good = GOOD_MAP[def.output];
+  return { game: next, ok: true, message: `🏭 ${def.name} bắt đầu làm ${good.emoji} ${good.name.toLowerCase()} · xong sau ${formatDuration(def.seconds)}.`, tone: "good" };
+}
+
+export function collectWorkshop(game: GameState, id: WorkshopId): ActionResult {
+  const def = WORKSHOP_MAP[id];
+  const state = game.ranch.workshops[id];
+  if (!def || !state || state.ready < 1) return fail(game, "Chưa có thành phẩm.", "info");
+  const good = GOOD_MAP[def.output];
+  const stored = changeBarn(
+    { ...game, ranch: { ...game.ranch, workshops: { ...game.ranch.workshops, [id]: { ...state, ready: 0 } } } },
+    "good",
+    def.output,
+    state.ready,
+  );
+  const next = gainXp(stored, def.xp * state.ready);
+  return { game: next.game, ok: true, message: `${good.emoji} +${state.ready} ${good.name} vào kho · +${def.xp * state.ready} XP.${next.suffix}`, tone: "good" };
+}
+
+/** Truck price for a cart: on-the-spot price plus the city bonus. */
+export function truckValue(game: GameState, cart: Record<string, number>, dateKey: string): { value: number; items: number } {
+  let value = 0;
+  let items = 0;
+  for (const entry of barnEntries(game, dateKey)) {
+    const qty = Math.min(entry.owned, Math.max(0, Math.floor(cart[entry.key] ?? 0)));
+    value += qty * entry.price;
+    items += qty;
+  }
+  return { value: Math.round(value * TRUCK.bonus), items };
+}
+
+export function sendTruck(game: GameState, cart: Record<string, number>, now: number, dateKey: string): ActionResult {
+  if (game.ranch.truck) return fail(game, "Xe tải đang chạy, chờ xe về đã.", "info");
+  const { value, items } = truckValue(game, cart, dateKey);
+  if (items < 1) return fail(game, "Chất ít nhất một món lên xe.", "info");
+  if (items > TRUCK.capacity) return fail(game, `Xe chỉ chở được ${TRUCK.capacity} món mỗi chuyến.`);
+  let next = game;
+  for (const entry of barnEntries(game, dateKey)) {
+    const qty = Math.min(entry.owned, Math.max(0, Math.floor(cart[entry.key] ?? 0)));
+    if (qty > 0) next = changeBarn(next, entry.kind, entry.id, -qty);
+  }
+  next = { ...next, ranch: { ...next.ranch, truck: { departAt: now, returnAt: now + TRUCK.tripSeconds * 1000, value, items } } };
+  const result = gainXp(next, Math.ceil(items / 2));
+  return {
+    game: result.game,
+    ok: true,
+    message: `🚚 Xe chở ${items} món lên phố · về sau ${formatDuration(TRUCK.tripSeconds)} với ${value} xu.${result.suffix}`,
     tone: "good",
   };
 }
@@ -767,6 +1150,52 @@ export const SAVE_KEY = "learning-farm-game-v1";
 
 const PLOT_STATUSES: PlotStatus[] = ["locked", "wild", "tilled", "growing", "withered"];
 const TRASH_KINDS: TrashKind[] = ["leaf", "bottle", "can"];
+const ANIMAL_IDS = ANIMALS.map((item) => item.id);
+const PRODUCT_IDS = PRODUCTS.map((item) => item.id);
+const GOOD_IDS = GOODS.map((item) => item.id);
+const WORKSHOP_IDS = WORKSHOPS.map((item) => item.id);
+
+function parseRanch(value: unknown, now: number): GameState["ranch"] {
+  if (!value || typeof value !== "object") return createRanch();
+  const source = value as Record<string, unknown>;
+  const capacityLevel = Math.floor(num(source.capacityLevel, 0, 0, RANCH_CAPACITIES.length - 1));
+  const animals = (Array.isArray(source.animals) ? source.animals : [])
+    .filter((item): item is Record<string, unknown> => !!item && typeof item === "object")
+    .filter((item) => typeof item.id === "string" && ANIMAL_IDS.includes(item.species as AnimalId))
+    .slice(0, RANCH_CAPACITIES[capacityLevel])
+    .map((item) => ({
+      id: item.id as string,
+      species: item.species as AnimalId,
+      progress: num(item.progress, 0, 0, ANIMAL_MAP[item.species as AnimalId].cycleSeconds),
+      fed: item.fed === true,
+    }));
+  const drops = (Array.isArray(source.drops) ? source.drops : [])
+    .filter((item): item is Record<string, unknown> => !!item && typeof item === "object")
+    .filter((item) => typeof item.id === "string" && PRODUCT_IDS.includes(item.product as ProductId))
+    .slice(0, MAX_DROPS)
+    .map((item) => ({ id: item.id as string, product: item.product as ProductId, x: num(item.x, 0, -1, 1), z: num(item.z, 0, -1, 1) }));
+  const workshops: GameState["ranch"]["workshops"] = {};
+  const workshopSource = (source.workshops && typeof source.workshops === "object" ? source.workshops : {}) as Record<string, unknown>;
+  for (const id of WORKSHOP_IDS) {
+    const item = workshopSource[id] as Record<string, unknown> | undefined;
+    if (!item || typeof item !== "object") continue;
+    workshops[id] = {
+      progress: typeof item.progress === "number" && Number.isFinite(item.progress) ? num(item.progress, 0, 0, WORKSHOP_MAP[id].seconds) : null,
+      ready: Math.floor(num(item.ready, 0, 0, 99)),
+    };
+  }
+  const truckSource = source.truck as Record<string, unknown> | null | undefined;
+  const truck =
+    truckSource && typeof truckSource === "object" && typeof truckSource.returnAt === "number"
+      ? {
+          departAt: num(truckSource.departAt, now),
+          returnAt: num(truckSource.returnAt, now),
+          value: Math.floor(num(truckSource.value, 0, 0, 1_000_000)),
+          items: Math.floor(num(truckSource.items, 0, 0, TRUCK.capacity)),
+        }
+      : null;
+  return { capacityLevel, animals, drops, workshops, truck };
+}
 
 function num(value: unknown, fallback: number, min = 0, max = Number.MAX_SAFE_INTEGER): number {
   return typeof value === "number" && Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
@@ -846,9 +1275,20 @@ export function parseSave(raw: string | null, now: number): GameState | null {
     xp: Math.floor(num(value.xp, 0)),
     plots,
     pond: { capacityLevel, fedUntil: num(pondSource.fedUntil, 0), fish, trash },
+    ranch: parseRanch(value.ranch, now),
     seeds: counts(value.seeds, cropIds),
-    items: { fertilizer: Math.floor(num(items.fertilizer, 0)), fishFood: Math.floor(num(items.fishFood, 0)) },
-    barn: { crops: counts(barn.crops, cropIds), fish: counts(barn.fish, fishIds) },
+    items: {
+      fertilizer: Math.floor(num(items.fertilizer, 0)),
+      fishFood: Math.floor(num(items.fishFood, 0)),
+      // Saves from before the ranch existed get the same starter feed as a new farm.
+      feed: Math.floor(num(items.feed, value.ranch ? 0 : 6)),
+    },
+    barn: {
+      crops: counts(barn.crops, cropIds),
+      fish: counts(barn.fish, fishIds),
+      products: counts(barn.products, PRODUCT_IDS),
+      goods: counts(barn.goods, GOOD_IDS),
+    },
     lastDailyBonus: typeof value.lastDailyBonus === "string" ? value.lastDailyBonus : null,
     lastStudyReward: typeof value.lastStudyReward === "string" ? value.lastStudyReward : null,
     stats: {
@@ -872,5 +1312,12 @@ export function describeAway(before: GameState, after: GameState): string | null
   const problems = after.plots.filter((plot) => plot.thirsty || plot.weeds > 0 || plot.bugs > 0).length;
   if (problems > 0) parts.push(`${problems} ô cần chăm`);
   if (after.pond.trash.length > before.pond.trash.length) parts.push(`ao có ${after.pond.trash.length} mẩu rác`);
+  const newDrops = after.ranch.drops.length - before.ranch.drops.length;
+  if (newDrops > 0) parts.push(`${newDrops} sản phẩm chờ nhặt ở trang trại`);
+  const readyGoods = Object.values(after.ranch.workshops).reduce((sum, item) => sum + (item?.ready ?? 0), 0);
+  const readyBefore = Object.values(before.ranch.workshops).reduce((sum, item) => sum + (item?.ready ?? 0), 0);
+  if (readyGoods > readyBefore) parts.push(`xưởng có ${readyGoods} thành phẩm`);
+  if (before.ranch.truck && !after.ranch.truck) parts.push(`xe tải đã về với ${before.ranch.truck.value} xu`);
+  if (after.ranch.animals.length > 0 && after.items.feed < 1 && after.ranch.animals.every((item) => !item.fed)) parts.push("máng ăn đã hết");
   return parts.length ? `Chào mừng trở lại! ${parts.join(" · ")}.` : null;
 }

@@ -26,7 +26,7 @@ a session secret).
 
 - **[docs/VERCEL-TURSO.md](docs/VERCEL-TURSO.md)** — prepared Vercel + Turso deployment, additive migrations, content import, English/Chinese lessons, and remaining account blockers. This preparation has not been pushed or deployed yet.
 
-- **[docs/LEARNING-FARM.md](docs/LEARNING-FARM.md)** — the farm-and-fishpond game at `/learning/world`: rules, files, local-only storage and limits.
+- **[docs/LEARNING-FARM.md](docs/LEARNING-FARM.md)** — the farm, fishpond and ranch game at `/learning/world`: rules, graphics presets and performance, optional Meshy models, local-only storage.
 - **[docs/PRODUCT.md](docs/PRODUCT.md)** — goals, users, scope, what's deliberately excluded.
 - **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — system diagram, content model, data flows,
   Studio's auth model, decisions and tradeoffs behind the shape of the system.

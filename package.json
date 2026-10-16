@@ -11,7 +11,8 @@
     "postinstall": "prisma generate",
     "db:migrate": "node scripts/migrate-database.mjs",
     "content:import": "node scripts/import-study-update.mjs",
-    "db:seed": "node prisma/seed.mjs"
+    "db:seed": "node prisma/seed.mjs",
+    "models:meshy": "node scripts/meshy-models.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",

@@ -45,3 +45,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Meshy model generation (scripts/meshy-models.mjs): raw downloads and resumable task ids
+/public/models/raw/
+/scripts/.meshy-tasks.json

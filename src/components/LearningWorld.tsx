@@ -119,9 +119,9 @@ export function LearningWorld({
       <div className="world-breadcrumb"><Link href="/learning">← Kho bài</Link><span>Learning Farm · nông trại & ao cá</span></div>
       <header className="world-hero">
         <div>
-          <p className="eyebrow">LEARNING FARM · NÔNG TRẠI & AO CÁ</p>
+          <p className="eyebrow">LEARNING FARM · RUỘNG, AO CÁ & TRANG TRẠI</p>
           <h1>Trồng rau, nuôi cá, giữ nhịp học.</h1>
-          <p>Một nông trại nhỏ chạy theo thời gian thật: gieo hạt, tưới cây, bắt sâu, nuôi cá rồi bán ở chợ để mở thêm đất. Lưu một bài luyện 5 phút mỗi ngày để nhận thêm quà. Game chỉ là động lực — không tự tạo streak hay nâng trình độ.</p>
+          <p>Một nông trại nhỏ chạy theo thời gian thật: gieo hạt, nuôi cá, chăn gà vịt cừu bò, chế biến ở xưởng rồi chở hàng lên phố bán. Lưu một bài luyện 5 phút mỗi ngày để nhận thêm quà. Game chỉ là động lực — không tự tạo streak hay nâng trình độ.</p>
         </div>
         <div className="world-hero__status" aria-label="Trạng thái hành trình">
           <span className="world-mascot" aria-hidden="true"><i /><b /></span>
@@ -135,10 +135,10 @@ export function LearningWorld({
           <div className="world-gate__landscape" aria-hidden="true"><span className="world-gate__sun" /><span className="world-gate__mountain world-gate__mountain--back" /><span className="world-gate__mountain" /><span className="world-gate__river" /><span className="world-gate__cabin">⌂</span></div>
           <div className="world-gate__copy">
             <p className="eyebrow">NÔNG TRẠI DƯỚI CHÂN NÚI</p>
-            <h2>Ruộng, ao cá và chợ làng</h2>
-            <p>12 ô ruộng, 9 loại cây, 6 loại cá. Tiến độ lưu trên trình duyệt này và cây, cá vẫn lớn khi bạn đóng trang. Bản 3D chỉ tải khi bạn bấm vào.</p>
+            <h2>Ruộng, ao cá và trang trại</h2>
+            <p>12 ô ruộng, 9 loại cây, 6 loại cá, 4 loại vật nuôi, 4 xưởng chế biến và xe tải lên phố. Tiến độ lưu trên trình duyệt này và mọi thứ vẫn chạy khi bạn đóng trang. Bản 3D chỉ tải khi bạn bấm vào.</p>
             <button className="button button--primary" type="button" onClick={() => setEntered(true)}>Vào nông trại →</button>
-            <p className="world-gate__hint">Không dùng được 3D? Game tự chuyển sang bản 2D nhẹ, vẫn chơi đủ tính năng.</p>
+            <p className="world-gate__hint">Máy yếu? Game tự chọn mức đồ họa phù hợp, hoặc chọn bản 2D tiết kiệm pin ở cuối khung game.</p>
           </div>
         </section>
       ) : (
@@ -187,7 +187,7 @@ export function LearningWorld({
 
       <section className="world-rules">
         <div><span>1</span><h3>Trồng & nuôi</h3><p>Gieo hạt, chăm cây, cho cá ăn. Mọi thứ lớn theo thời gian thật, kể cả khi bạn đóng trang.</p></div>
-        <div><span>2</span><h3>Bán & mở rộng</h3><p>Bán nông sản và cá trong kho, mua hạt mới, mở thêm đất và mở rộng ao khi lên cấp.</p></div>
+        <div><span>2</span><h3>Chế biến & bán</h3><p>Trứng, sữa, len vào xưởng thành hàng giá cao; bán tại kho hoặc chở xe tải lên phố để được giá tốt hơn.</p></div>
         <div><span>3</span><h3>Học để nhận quà</h3><p>Bài luyện lưu hôm nay đổi được xu và phân bón. Game không đánh dấu bài đã xong hay nâng trình độ.</p></div>
       </section>
     </main>

@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "note": "Optional GLB models for the Learning Farm. Generate with `npm run models:meshy` (see docs/LEARNING-FARM.md). Empty means the built-in low-poly models are used.",
+  "models": {}
+}
