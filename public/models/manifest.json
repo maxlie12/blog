@@ -1,5 +1,27 @@
 {
   "version": 1,
   "note": "Optional GLB models for the Learning Farm. Generate with `npm run models:meshy` (see docs/LEARNING-FARM.md). Empty means the built-in low-poly models are used.",
-  "models": {}
+  "models": {
+    "chicken": {
+      "url": "/models/chicken.glb",
+      "height": 0.6,
+      "rotationY": 0,
+      "source": "Meshy",
+      "task": "01a1447b-cfd3-77e5-9831-027b8a6a285e"
+    },
+    "duck": {
+      "url": "/models/duck.glb",
+      "height": 0.6,
+      "rotationY": 0,
+      "source": "Meshy",
+      "task": "01a1447e-56b0-7436-8c23-e79314007eec"
+    },
+    "sheep": {
+      "url": "/models/sheep.glb",
+      "height": 0.85,
+      "rotationY": 0,
+      "source": "Meshy",
+      "task": "01a1447f-8922-748b-93c5-5327741a0266"
+    }
+  }
 }

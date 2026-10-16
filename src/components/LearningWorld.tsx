@@ -116,7 +116,7 @@ export function LearningWorld({
 
   return (
     <main className="learning-world">
-      <div className="world-breadcrumb"><Link href="/learning">← Kho bài</Link><span>Learning Farm · nông trại & ao cá</span></div>
+      <div className="world-breadcrumb"><Link href="/learning">← Kho bài</Link><span>Learning Farm · ruộng, ao cá & trang trại</span></div>
       <header className="world-hero">
         <div>
           <p className="eyebrow">LEARNING FARM · RUỘNG, AO CÁ & TRANG TRẠI</p>

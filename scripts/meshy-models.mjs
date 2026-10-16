@@ -36,8 +36,8 @@ const API = process.env.MESHY_API_BASE ?? "https://api.meshy.ai/openapi/v2/text-
 const STYLE = "cute stylized low poly game asset, full body, simple flat colors, clean shapes, no base, no ground";
 /** height = metres in the scene; rotationY turns the model so it faces the game's forward axis. */
 const ASSETS = {
-  chicken: { height: 0.6, rotationY: 0, prompt: `white hen with red comb and orange beak, standing, ${STYLE}` },
-  duck: { height: 0.6, rotationY: 0, prompt: `white farm duck with orange bill and orange feet, standing, ${STYLE}` },
+  chicken: { height: 0.85, rotationY: 0, prompt: `white hen with red comb and orange beak, standing, ${STYLE}` },
+  duck: { height: 0.8, rotationY: 0, prompt: `white farm duck with orange bill and orange feet, standing, ${STYLE}` },
   sheep: { height: 0.85, rotationY: 0, prompt: `fluffy white sheep with black face and black legs, standing on four legs, ${STYLE}` },
   cow: { height: 1.15, rotationY: 0, prompt: `black and white dairy cow with small horns, standing on four legs, ${STYLE}` },
   // The game drives the truck along +X; Meshy models usually face +Z, hence a quarter turn.
