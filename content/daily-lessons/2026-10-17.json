@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-17",
+  "title": "Mini-test tuần 1 — kiểm tra lạnh, không học bù dồn",
+  "kind": "weekly-test",
+  "note": "Mini-test ôn cách quãng bị lùi một ngày so với mốc 7 ngày tính từ 09/10. Chưa có bài làm được gửi nên giữ mức B1+ tự báo, không suy ra tiến bộ và không nâng độ khó. Bắt buộc duy nhất là phiên nghe 5 phút; ba kỹ năng Anh còn lại và tiếng Trung có thể tách ra làm ở bất kỳ lúc rảnh nào. Bài do trợ lý soạn, không phải bài thi British Council/IELTS/TOEIC chính thức; không có đáp án kèm đề.",
+  "lessons": [
+    {
+      "id": "daily-2026-10-17-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Mini-test 5 phút — nghe lạnh 60 giây",
+      "level": "B1+ practice / B2 source",
+      "instructions": "Bài do trợ lý soạn. Nguồn British Council miễn phí, có audio và transcript. Mở A digital detox podcast; không nhìn transcript, nghe đoạn khoảng phút 1:00–2:00 đúng một lượt. Nếu thao tác tua khó, nghe từ đầu nhưng dừng sau tối đa hai phút.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Không nghe lại: viết 3 ý bằng tiếng Anh — (1) một vấn đề/khó khăn, (2) một hành động hoặc lời khuyên, (3) mức chắc chắn 0–100%. Sau đó ghi số phút thực tế. Không cần câu hoàn chỉnh.",
+      "completionCriteria": "Gửi ba ý, % chắc chắn và số phút về ChatGPT. Chưa mở transcript/tra từ trước khi gửi. Trợ lý sẽ đối chiếu, sửa một lỗi ưu tiên và giao một lần nghe lại 2 phút; chỉ khi có bài làm mới ghi nhận review hay streak."
+    },
+    {
+      "id": "daily-2026-10-17-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Mini-test 5 phút — đọc để kiểm chứng",
+      "level": "B1+ practice / B2 source",
+      "instructions": "Chỉ làm sau phần nghe. Mở transcript của cùng nguồn, đọc đúng phần tương ứng tối đa 90 giây rồi đóng trang. Không sao chép câu dài.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Viết hai câu bằng lời của bạn: I understood that…; I missed/misunderstood… . Gạch dưới tối đa hai cụm từ giúp bạn sửa phỏng đoán.",
+      "completionCriteria": "Gửi hai câu và hai cụm từ (nếu có), kèm số phút. Đây là tự kiểm tra, chưa phải đánh giá CEFR."
+    },
+    {
+      "id": "daily-2026-10-17-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Mini-test 5 phút — kể lại và mở rộng",
+      "level": "B1+ practice",
+      "instructions": "Bài do trợ lý soạn. Đóng transcript, chuẩn bị 20 giây rồi thu âm 45–60 giây; không viết script hoàn chỉnh.",
+      "material": null,
+      "exercises": "Phần 1: retell one useful idea from the podcast. Phần 2: mở rộng: In an Angular project, when should a developer stay reachable and when should notifications be muted? Give one reason and one trade-off.",
+      "completionCriteria": "Gửi audio hoặc transcript nguyên bản và ghi rõ có nhìn ghi chú hay không. Audio mới đủ để nhận xét phát âm/nhịp; transcript chỉ dùng sửa nội dung và ngữ pháp."
+    },
+    {
+      "id": "daily-2026-10-17-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Mini-test 5–10 phút — quyết định có đánh đổi",
+      "level": "B1+ practice",
+      "instructions": "Tình huống trợ lý tự soạn, không phải câu hỏi thật từ SmartOSC. Viết lạnh 60–80 từ, không dùng AI sửa trước và không nêu dữ liệu dự án nhạy cảm.",
+      "material": null,
+      "exercises": "A release is due today, but constant messages are slowing you down. Write to your teammate: state the problem, propose a 30-minute focus block, keep one emergency channel open, explain the trade-off, and say when you will reply.",
+      "completionCriteria": "Gửi bản đầu cùng số phút và công cụ hỗ trợ đã dùng. Trợ lý sẽ chấm theo rõ ý, liên kết, độ chính xác và phù hợp tình huống; chưa tự quy đổi CEFR."
+    },
+    {
+      "id": "daily-2026-10-17-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tiếng Trung phụ 5 phút — đổi món, đổi số lượng",
+      "level": "Beginner",
+      "instructions": "Bài do trợ lý soạn. HelloChinese có bài ngắn, nhận diện giọng nói và video người bản ngữ; phần miễn phí có thể dùng, một số nội dung nâng cao cần Premium. Nếu mở được bài gọi món, nghe mẫu người bản ngữ hai lượt trước khi nói.",
+      "material": "https://www.hellochinese.cc/",
+      "exercises": "Không nhìn mẫu, nói 3 câu: 我要一杯咖啡，不要糖。→ đổi 咖啡 thành 茶 → đổi 一杯 thành 两杯. Sau đó tự tạo một câu hỏi với 吗 để xác nhận đồ uống. Có thể gửi audio 15–25 giây hoặc chữ Hán+pinyin.",
+      "completionCriteria": "Gửi bản đầu và ghi rõ có nhìn mẫu hay không. Chưa có đáp án trước khi làm; phản hồi sẽ ưu tiên một lỗi thanh điệu hoặc trật tự từ."
+    }
+  ]
+}
