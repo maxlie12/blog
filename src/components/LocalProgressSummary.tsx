@@ -7,6 +7,7 @@ import {
   getLocalLanguageActivity,
   getLocalLanguageSummary,
   importLocalProgressBackup,
+  syncLocalProgress,
   type LocalActivityDay,
   type LocalProgressSummary,
 } from "@/lib/localLearningProgress";
@@ -59,9 +60,36 @@ function readDashboard(): DashboardState {
 export function LocalProgressSummary() {
   const [progress, setProgress] = useState<DashboardState | null>(null);
   const [message, setMessage] = useState("");
+  const [syncState, setSyncState] = useState<"idle" | "syncing" | "synced" | "offline">("idle");
   const fileInput = useRef<HTMLInputElement>(null);
 
-  useEffect(() => setProgress(readDashboard()), []);
+  useEffect(() => {
+    const refresh = () => setProgress(readDashboard());
+    refresh();
+    window.addEventListener("learning-progress-changed", refresh);
+    setSyncState("syncing");
+    void syncLocalProgress().then((result) => {
+      refresh();
+      setSyncState("synced");
+      if (result.addedFromServer > 0) setMessage(`Đã lấy thêm ${result.addedFromServer} bài từ bản đồng bộ.`);
+    }).catch(() => setSyncState("offline"));
+    return () => window.removeEventListener("learning-progress-changed", refresh);
+  }, []);
+
+  async function syncNow() {
+    setSyncState("syncing");
+    try {
+      const result = await syncLocalProgress();
+      setProgress(readDashboard());
+      setSyncState("synced");
+      setMessage(result.addedFromServer > 0
+        ? `Đã đồng bộ và lấy thêm ${result.addedFromServer} bài.`
+        : "Đã đồng bộ tiến độ mới nhất.");
+    } catch {
+      setSyncState("offline");
+      setMessage("Chưa kết nối được máy chủ; Done trên thiết bị vẫn được giữ và có thể thử lại.");
+    }
+  }
 
   function downloadBackup() {
     const blob = new Blob([exportLocalProgressBackup()], { type: "application/json" });
@@ -82,8 +110,9 @@ export function LocalProgressSummary() {
       const result = importLocalProgressBackup(await file.text());
       setProgress(readDashboard());
       setMessage(result.added > 0
-        ? `Đã khôi phục ${result.added} bài; bỏ qua ${result.skipped} bài đã có.`
+        ? `Đã khôi phục ${result.added} bài; bỏ qua ${result.skipped} bài đã có.${result.syncProfileImported ? " Hồ sơ đồng bộ cũng đã được nối lại." : ""}`
         : "Không có bài mới để khôi phục; tiến độ hiện tại được giữ nguyên.");
+      void syncNow();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Không thể đọc file sao lưu.");
     }
@@ -91,7 +120,7 @@ export function LocalProgressSummary() {
 
   return <section className={styles.summary} aria-labelledby="local-progress-title">
     <div>
-      <p className="eyebrow">TIẾN ĐỘ TRÊN THIẾT BỊ NÀY</p>
+      <p className="eyebrow">TIẾN ĐỘ CÁ NHÂN</p>
       <h2 id="local-progress-title">Done và streak cá nhân</h2>
       <p>Học bù vẫn ghi vào ngày bạn thực sự hoàn thành. Nhiều bài trong một ngày chỉ kéo dài streak một ngày.</p>
     </div>
@@ -112,9 +141,17 @@ export function LocalProgressSummary() {
       <Link href="/learning/session" className="button">Tiếp tục một buổi học →</Link>
       <button type="button" className="button button--ghost" onClick={downloadBackup}>Xuất bản sao</button>
       <button type="button" className="button button--ghost" onClick={() => fileInput.current?.click()}>Nhập bản sao</button>
+      <button type="button" className="button button--ghost" disabled={syncState === "syncing"} onClick={syncNow}>
+        {syncState === "syncing" ? "Đang đồng bộ…" : "Đồng bộ ngay"}
+      </button>
       <input ref={fileInput} className={styles.fileInput} type="file" accept="application/json,.json" onChange={restoreBackup} />
     </div>
-    {message && <p className={styles.message} role="status" aria-live="polite">{message}</p>}
-    <p className={styles.note}>Chưa đồng bộ tự động qua thiết bị. File sao lưu chứa ngày học và mã bài; hãy giữ riêng. Done/streak không phải điểm CEFR hoặc xác nhận của giáo viên.</p>
+    <div className={styles.liveStatus} role="status" aria-live="polite" aria-atomic="true">
+      <p className={styles.syncStatus} data-state={syncState}>
+        <span aria-hidden="true" />{syncState === "synced" ? "Đã đồng bộ với máy chủ" : syncState === "syncing" ? "Đang đồng bộ tiến độ" : syncState === "offline" ? "Đang dùng bản lưu trên thiết bị" : "Sẵn sàng đồng bộ"}
+      </p>
+      {message && <p className={styles.message}>{message}</p>}
+    </div>
+    <p className={styles.note}>Máy chủ chỉ lưu mã bài, kỹ năng, ngày và số phút; không lưu câu trả lời hay audio. File sao lưu có khóa đồng bộ nên hãy giữ riêng. Done/streak không phải điểm CEFR hoặc xác nhận của giáo viên.</p>
   </section>;
 }

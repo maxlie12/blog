@@ -3,6 +3,23 @@
 Reverse-chronological log of decisions with material impact and their rationale. See linked
 docs for full detail; this file is the "why," not the "how."
 
+## 2026-10-19 — Habit sync is local-first and stores metadata only
+
+**Decision:** keep `localStorage` as the immediate source of the Done UX and add a narrowly
+scoped Neon endpoint that merge-syncs completion metadata under the SHA-256 hash of a random
+256-bit browser token. The raw token is kept in the browser and its explicit JSON backup. The
+endpoint validates request size and fields, uses idempotent IDs, and caps stored rows. If the
+network or database fails, Done remains recorded locally and the UI offers retry.
+
+**Why:** the learner needs a professional acknowledgement loop and durable history without
+making a five-minute session depend on login or network availability. Reusing the existing
+SQLite/Prisma publishing database would expand a risky serverless migration; keeping one
+isolated Neon table leaves the blog and Studio data path unchanged.
+
+**Boundary:** the server does not receive practice answers, audio, feedback, or claimed CEFR.
+The sync token is effectively a recovery key, so exports must be kept private. Done and streak
+remain habit evidence; only reviewed attempts can support proficiency claims.
+
 ## 2026-10-19 — Browser Done powers habit streaks; reviewed attempts power proficiency
 
 **Decision:** public lesson and guided-practice pages have an explicit Done action. It stores a
@@ -15,11 +32,10 @@ learner to report everything back through ChatGPT. The local action makes the co
 without login or a production database. It does not restore the old claim that a browser
 checkbox equals verified progress.
 
-**Boundary:** local Done is habit evidence only. It is browser-local and can disappear when site
-storage is cleared. A validated JSON export/import can move the history manually and merges by
-completion ID without overwriting existing records, but it is not automatic cross-device sync.
-Done never changes CEFR, reviewed-attempt status, or public skill progress; those still require
-an actual `Attempt` and review. Future server sync must preserve the same semantic boundary.
+**Boundary:** Done is habit evidence only. The browser copy can disappear when site storage is
+cleared; Neon sync and the validated JSON export reduce that risk but do not turn Done into an
+assessment. Done never changes CEFR, reviewed-attempt status, or public skill progress; those
+still require an actual `Attempt` and review.
 
 ## 2026-09-26 — Attempt submission requires the Studio session, on the public lesson page
 

@@ -21,6 +21,7 @@ type LocalProgressStore = {
 type LocalProgressBackup = LocalProgressStore & {
   format: "maxlie-learning-progress";
   exportedAt: string;
+  syncToken?: string;
 };
 
 export type LocalProgressSummary = {
@@ -47,9 +48,17 @@ export type ImportProgressResult = {
   added: number;
   skipped: number;
   total: number;
+  syncProfileImported: boolean;
+};
+
+export type SyncProgressResult = {
+  addedFromServer: number;
+  total: number;
+  syncedAt: string;
 };
 
 const STORAGE_KEY = "learning-completions-v1";
+const SYNC_TOKEN_KEY = "learning-sync-token-v1";
 const BACKUP_FORMAT = "maxlie-learning-progress";
 const TIME_ZONE = "Asia/Ho_Chi_Minh";
 const MAX_COMPLETIONS = 10_000;
@@ -90,6 +99,10 @@ function isCompletion(value: unknown): value is LocalCompletion {
     item.minutes >= 1 && item.minutes <= 60;
 }
 
+function isSyncToken(value: unknown): value is string {
+  return typeof value === "string" && /^[a-f0-9]{64}$/.test(value);
+}
+
 function readStore(): LocalProgressStore {
   try {
     const parsed: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
@@ -106,6 +119,16 @@ function readStore(): LocalProgressStore {
 
 function writeStore(store: LocalProgressStore): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("learning-progress-changed"));
+}
+
+function getOrCreateSyncToken(): string {
+  const stored = localStorage.getItem(SYNC_TOKEN_KEY);
+  if (isSyncToken(stored)) return stored;
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  const token = Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("");
+  localStorage.setItem(SYNC_TOKEN_KEY, token);
+  return token;
 }
 
 export function getLocalLanguageSummary(language: string): LocalProgressSummary {
@@ -164,6 +187,7 @@ export function exportLocalProgressBackup(): string {
   const backup: LocalProgressBackup = {
     format: BACKUP_FORMAT,
     exportedAt: new Date().toISOString(),
+    syncToken: getOrCreateSyncToken(),
     ...readStore(),
   };
   return JSON.stringify(backup, null, 2);
@@ -189,6 +213,14 @@ export function importLocalProgressBackup(raw: string): ImportProgressResult {
   }
 
   const store = readStore();
+  let syncProfileImported = false;
+  if (backup.syncToken !== undefined) {
+    if (!isSyncToken(backup.syncToken)) throw new Error("Khóa đồng bộ trong bản sao không hợp lệ.");
+    if (localStorage.getItem(SYNC_TOKEN_KEY) !== backup.syncToken) {
+      localStorage.setItem(SYNC_TOKEN_KEY, backup.syncToken);
+      syncProfileImported = true;
+    }
+  }
   const existingIds = new Set(store.completions.map((item) => item.id));
   let added = 0;
   for (const completion of backup.completions) {
@@ -198,5 +230,42 @@ export function importLocalProgressBackup(raw: string): ImportProgressResult {
     added += 1;
   }
   writeStore(store);
-  return { added, skipped: backup.completions.length - added, total: store.completions.length };
+  return { added, skipped: backup.completions.length - added, total: store.completions.length, syncProfileImported };
+}
+
+let syncInFlight: Promise<SyncProgressResult> | null = null;
+
+export function syncLocalProgress(): Promise<SyncProgressResult> {
+  if (syncInFlight) return syncInFlight;
+  syncInFlight = (async () => {
+    const before = readStore();
+    const response = await fetch("/api/learning/progress", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      cache: "no-store",
+      body: JSON.stringify({ token: getOrCreateSyncToken(), completions: before.completions }),
+    });
+    if (!response.ok) throw new Error("Không thể đồng bộ lúc này.");
+    const payload: unknown = await response.json();
+    if (!payload || typeof payload !== "object") throw new Error("Phản hồi đồng bộ không hợp lệ.");
+    const remote = (payload as { completions?: unknown }).completions;
+    if (!Array.isArray(remote) || remote.length > MAX_COMPLETIONS || !remote.every(isCompletion)) {
+      throw new Error("Dữ liệu đồng bộ không hợp lệ.");
+    }
+
+    const latest = readStore();
+    const ids = new Set(latest.completions.map((item) => item.id));
+    let addedFromServer = 0;
+    for (const completion of remote) {
+      if (ids.has(completion.id)) continue;
+      latest.completions.push(completion);
+      ids.add(completion.id);
+      addedFromServer += 1;
+    }
+    if (addedFromServer > 0) writeStore(latest);
+    return { addedFromServer, total: latest.completions.length, syncedAt: new Date().toISOString() };
+  })().finally(() => {
+    syncInFlight = null;
+  });
+  return syncInFlight;
 }

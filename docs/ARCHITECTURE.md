@@ -53,10 +53,11 @@ separate auth provider.
   up, sufficient for single-operator write volume. The ephemeral-filesystem caveat on
   serverless hosts (see "Deployment implications") applies more now, since Studio's writes are
   exactly the kind of thing that must survive a redeploy.
-- **Two meanings of completion stay separate.** A browser-local Done action records the
-  learner's self-reported habit and powers a device-specific streak. It is intentionally easy
-  and useful without login, but it is not durable across devices and never changes public skill
-  progress or CEFR claims. Studio's `Attempt` model remains the reviewed evidence layer:
+- **Two meanings of completion stay separate.** A local-first Done action records the
+  learner's self-reported habit and powers a streak. The browser writes immediately; when Neon
+  is configured it also syncs only completion metadata under a hashed random profile token.
+  It remains intentionally easy and never changes public skill progress or CEFR claims.
+  Studio's `Attempt` model remains the reviewed evidence layer:
   attempts are recorded by the owner in the database, and only reviewed attempts affect the
   public skill-progress numbers.
 
@@ -146,12 +147,14 @@ number anywhere that could drift from the underlying attempts.
   `requireStudioSession()`, since a public page must still render for signed-out visitors) and
   always creates the attempt with `reviewStatus: "pending"` — only Studio's own attempt editor
   can mark one `"reviewed"`. See [DECISIONS.md](DECISIONS.md).
-- **Write (browser-local practice):** `PracticeCoach` and `GuidedPractice` save drafts and
+- **Write (local-first practice):** `PracticeCoach` and `GuidedPractice` save drafts and
   explicit Done records in versioned `localStorage`. A lesson/session ID is idempotent, and a
-  calendar day can extend each language streak only once using the Asia/Ho_Chi_Minh date. The
-  dashboard can export and merge-import a validated JSON backup so the owner can move this habit
-  history manually without overwriting records already present on the target browser. This data
-  never feeds reviewed attempts or CEFR progress.
+  calendar day can extend each language streak only once using the Asia/Ho_Chi_Minh date. With
+  `NEON_DATABASE_URL`, `/api/learning/progress` hashes a browser-generated 256-bit token and
+  merge-syncs only lesson ID, language, skill, minutes and timestamps. Answers and audio never
+  leave the browser through this path. A validated JSON export includes the private sync token,
+  allowing a second device to import it once and continue the same history. This data never
+  feeds reviewed attempts or CEFR progress.
 - **Write (articles/projects, learning-log CLI):** unchanged from before — file edits + git
   commit, and `npm run log`, respectively.
 

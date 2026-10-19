@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getLocalCompletionSummary, recordLocalCompletion, type LocalCompletionSummary } from "@/lib/localLearningProgress";
+import { getLocalCompletionSummary, recordLocalCompletion, syncLocalProgress, type LocalCompletionSummary } from "@/lib/localLearningProgress";
 
 type Language = "en" | "zh";
 type Gap = "understanding" | "reasoning" | "language" | "pronunciation";
@@ -67,7 +67,10 @@ export function GuidedPractice() {
     try {
       const result = recordLocalCompletion({ id: completionId, lessonId: "guided-practice", language: draft.language, skill: "mixed", minutes: draft.actualMinutes });
       setCompletion(result);
-      setNotice(result.newlyCompleted ? "Đã hoàn thành và ghi streak trên thiết bị này." : "Bài này đã được ghi hoàn thành trước đó; streak không bị cộng trùng.");
+      setNotice(result.newlyCompleted ? "Đã hoàn thành và ghi streak; đang đồng bộ…" : "Bài này đã được ghi hoàn thành trước đó; streak không bị cộng trùng.");
+      if (result.newlyCompleted) void syncLocalProgress()
+        .then(() => setNotice("Đã hoàn thành, ghi streak và đồng bộ với máy chủ."))
+        .catch(() => setNotice("Đã hoàn thành trên thiết bị; máy chủ chưa kết nối, có thể đồng bộ lại sau."));
     } catch {
       setNotice("Không ghi được tiến độ trên thiết bị. Bài làm vẫn còn trong bản nháp hiện tại.");
     }
@@ -99,7 +102,7 @@ export function GuidedPractice() {
     <Link href="/learning">← Kho bài và bộ lọc</Link>
     <header className="lesson-detail__header"><h1>Buổi học có hướng dẫn</h1><p>Một mục tiêu, một nhiệm vụ ở mỗi bước. Học lúc rảnh; có thể dừng rồi tiếp tục trên cùng trình duyệt.</p></header>
     <p className="tag">{english ? "English · B1+ tự báo" : "中文 · Beginner"} · {draft?.budget ?? budget} phút dự kiến</p>
-    <p>Bài tập do trợ lý soạn. Bản viết và trạng thái hoàn thành được lưu trên thiết bị này; audio chưa được lưu và chưa có đồng bộ server.</p>
+    <p>Bài tập do trợ lý soạn. Bản viết chỉ lưu trên thiết bị; máy chủ chỉ đồng bộ metadata Done/streak, không lưu câu trả lời hoặc audio.</p>
     <ol aria-label="Các bước buổi học">{STAGES.map((name,index) => <li key={name} aria-current={step === index ? "step" : undefined}>{step === index ? "→ " : ""}{name}</li>)}</ol>
     {step === 0 ? <section className="lesson-detail__section">
       <h2>Bắt đầu hoặc tiếp tục</h2>

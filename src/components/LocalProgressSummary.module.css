@@ -67,6 +67,14 @@
 .fileInput { display: none; }
 .message { margin: 0; font-weight: 700; color: var(--forest) !important; }
 .note { margin: 0; }
+.liveStatus { display: grid; gap: .35rem; }
+.syncStatus { display: flex; align-items: center; gap: .5rem; margin: 0; font-weight: 700; }
+.syncStatus > span { width: .65rem; height: .65rem; border-radius: 50%; background: var(--text-muted); }
+.syncStatus[data-state="synced"] > span { background: var(--forest); box-shadow: 0 0 0 4px color-mix(in srgb, var(--forest) 14%, transparent); }
+.syncStatus[data-state="syncing"] > span { background: var(--sunset); animation: syncPulse 1.1s ease-in-out infinite; }
+.syncStatus[data-state="offline"] > span { background: #b16a3b; }
+
+@keyframes syncPulse { 50% { transform: scale(.65); opacity: .55; } }
 
 @media (max-width: 600px) {
   .row { align-items: flex-start; flex-direction: column; }
@@ -78,4 +86,5 @@
 
 @media (prefers-reduced-motion: reduce) {
   .actions :global(.button) { transition: none; }
+  .syncStatus[data-state="syncing"] > span { animation: none; }
 }

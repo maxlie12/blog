@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import type { SkillId } from "@/lib/lessonTypes";
-import { getLocalCompletionSummary, recordLocalCompletion, type LocalCompletionSummary } from "@/lib/localLearningProgress";
+import { getLocalCompletionSummary, recordLocalCompletion, syncLocalProgress, type LocalCompletionSummary } from "@/lib/localLearningProgress";
 
 type Gap = "meaning" | "reasoning" | "language" | "delivery";
 type Saved = { version: 1; lessonId: string; response: string; minutes: number; support: string; focus: string; gap: Gap; revision: string; savedAt: string };
@@ -48,7 +48,10 @@ export function PracticeCoach({ lessonId, skill, language }: { lessonId: string;
     try {
       const result = recordLocalCompletion({ id: completionId, lessonId, language, skill, minutes });
       setCompletion(result);
-      setMessage(result.newlyCompleted ? "Đã hoàn thành và ghi streak trên thiết bị này." : "Bài này đã hoàn thành trước đó; streak không bị cộng trùng.");
+      setMessage(result.newlyCompleted ? "Đã hoàn thành và ghi streak; đang đồng bộ…" : "Bài này đã hoàn thành trước đó; streak không bị cộng trùng.");
+      if (result.newlyCompleted) void syncLocalProgress()
+        .then(() => setMessage("Đã hoàn thành, ghi streak và đồng bộ với máy chủ."))
+        .catch(() => setMessage("Đã hoàn thành trên thiết bị; máy chủ chưa kết nối, có thể đồng bộ lại sau."));
     } catch {
       setMessage("Không ghi được tiến độ trên thiết bị. Bài viết vẫn có thể được lưu riêng.");
     }
@@ -66,7 +69,7 @@ export function PracticeCoach({ lessonId, skill, language }: { lessonId: string;
   const exportText = attempt ? "Bài: " + lessonId + "\nThời gian: " + attempt.minutes + " phút\nHỗ trợ: " + attempt.support + "\nTập trung tự báo: " + attempt.focus + "\nBản đầu:\n" + attempt.response + "\nĐiểm muốn sửa: " + gap + "\nBản làm lại:\n" + revision : "";
   return <section className="lesson-detail__section">
     <h2>Làm trước → tự kiểm tra → luyện lại</h2>
-    <p>Bài tập và hướng dẫn do trợ lý soạn. Bản viết, trạng thái Done và streak được lưu trên trình duyệt này; chưa đồng bộ thiết bị hoặc chấm điểm. Không nhập thông tin công việc nhạy cảm.</p>
+    <p>Bài tập và hướng dẫn do trợ lý soạn. Bản viết chỉ lưu trên trình duyệt; máy chủ chỉ đồng bộ metadata Done/streak, không lưu nội dung bài hoặc chấm điểm. Không nhập thông tin công việc nhạy cảm.</p>
     <button type="button" className="button button--ghost" onClick={restore}>Mở bài đã lưu trên thiết bị</button>
     <form onSubmit={save}>
       <p><label htmlFor={lessonId + "-response"}>Câu trả lời đầu tiên{skill === "speaking" ? " / transcript thật đã nói" : ""}</label></p>

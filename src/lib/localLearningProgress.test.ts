@@ -39,8 +39,22 @@ test("backup import merges by completion id without duplicating progress", () =>
 
   const result = importLocalProgressBackup(JSON.stringify(backup));
 
-  assert.deepEqual(result, { added: 1, skipped: 1, total: 2 });
+  assert.deepEqual(result, { added: 1, skipped: 1, total: 2, syncProfileImported: false });
   assert.equal(getLocalLanguageSummary("en").totalCompleted, 2);
+});
+
+test("backup carries the private sync profile to a fresh browser", () => {
+  storage.setItem("learning-completions-v1", JSON.stringify({ version: 1, completions: [completion] }));
+  const backup = exportLocalProgressBackup();
+  const expectedToken = JSON.parse(backup).syncToken;
+  assert.match(expectedToken, /^[a-f0-9]{64}$/);
+
+  storage.clear();
+  const result = importLocalProgressBackup(backup);
+
+  assert.equal(result.syncProfileImported, true);
+  assert.equal(storage.getItem("learning-sync-token-v1"), expectedToken);
+  assert.equal(getLocalLanguageSummary("en").totalCompleted, 1);
 });
 
 test("invalid backup is rejected and leaves existing progress untouched", () => {

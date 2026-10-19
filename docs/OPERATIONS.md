@@ -5,6 +5,7 @@
 | Variable | Required | Purpose | Example |
 |---|---|---|---|
 | `DATABASE_URL` | Yes | Prisma/SQLite connection string | `file:./data/blog.db` |
+| `NEON_DATABASE_URL` | No | Server-only Neon URL for Done/streak metadata sync | supplied by Vercel Neon |
 | `SITE_TIMEZONE` | No (defaults `UTC`) | IANA timezone used to compute "today" for streaks/log dates | `Asia/Shanghai` |
 | `SITE_URL` | No (defaults `http://localhost:3000`) | Absolute base URL used in `sitemap.ts`/`robots.ts` | `https://maxlie.dev` |
 | `STUDIO_PASSWORD` | Yes, to use `/studio` | The single owner password checked on `/studio/login` | a long random string |
@@ -93,6 +94,10 @@ anything reading the database (`/`, `/blog`, `/learning`, and all of `/studio`) 
   storage, a second machine). Back this up **more frequently now than before Studio existed** —
   it's the only copy of anything published through Studio; there is no git history for it the
   way there is for `.mdx` files.
+- **Done/streak metadata:** the learning dashboard syncs it to the isolated Neon
+  `habit_completion` table when `NEON_DATABASE_URL` is set. The dashboard's JSON export remains
+  the portable recovery copy and contains a private sync token; keep it out of git and do not
+  share it publicly. Practice answers and audio are not stored in Neon.
 
 ## Restore
 
@@ -105,11 +110,11 @@ bring it up to date.
 
 ## Deployment (Vercel)
 
-**Status: not yet deployed — blocked on account access.** To deploy:
+**Status:** the public read-only preview is deployed at `https://maxlie-blog.vercel.app` and the
+GitHub `master` branch is connected to Vercel. For future deployments:
 
-1. `npx vercel login` (needs the site owner's Vercel account — not something this assistant
-   can create or authenticate on your behalf).
-2. `npx vercel link` to connect this repo to a Vercel project.
+1. Confirm the repository and Vercel project are still connected.
+2. Confirm the Neon integration exposes `NEON_DATABASE_URL` to Production and Preview.
 3. Set `DATABASE_URL`, `SITE_TIMEZONE`, `SITE_URL`, `STUDIO_PASSWORD`, `STUDIO_SESSION_SECRET`
    in the Vercel project's environment variables. **Generate a fresh, production-only
    `STUDIO_SESSION_SECRET`** — don't reuse the local-dev one.
@@ -119,7 +124,7 @@ bring it up to date.
    `DATABASE_URL` at a networked SQLite-compatible database (e.g. Turso/libSQL) — see
    [ARCHITECTURE.md](ARCHITECTURE.md#deployment-implications). This requires creating a Turso
    account/database, which also needs the site owner's action.
-5. `git push` to the connected branch (or `npx vercel --prod`) to deploy.
+5. Push to the connected `master` branch (or use an authenticated production deploy).
 6. Verify: load the deployed URL, check `/`, `/blog`, `/projects`, `/learning` all render; sign
    in at `/studio/login`; confirm a test post publish appears on `/blog` and an unpublish
    removes it.
@@ -143,6 +148,10 @@ bring it up to date.
 - **Learning page shows a database setup error:** `DATABASE_URL` isn't set or migrations
   haven't run. Run `npx prisma migrate dev` locally, or `npx prisma migrate deploy` in
   production.
+- **Learning dashboard says it is using the device copy:** verify `NEON_DATABASE_URL` exists
+  for the deployment environment and inspect the `/api/learning/progress` function log. The
+  endpoint creates its isolated table/index on first successful request. Local Done records are
+  retained and will merge on retry.
 - **A Studio-published post/lesson doesn't show up publicly:** confirm its status is
   "published" (posts) — lessons and attempts are always visible once saved, only posts have a
   draft/published gate. If it should show and doesn't, check the server logs for a
