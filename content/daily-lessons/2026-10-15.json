@@ -13,7 +13,7 @@
       "instructions": "Mini-test do trợ lý soạn, không phải đề British Council chính thức. Nguồn miễn phí có audio và transcript. Nếu đã học, nhớ lại 30 giây trước khi nghe; nếu chưa học, bỏ bước nhớ lại. Nghe 60–90 giây đầu tối đa hai lượt, chưa mở transcript.",
       "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
       "exercises": "Write three short notes in English: (1) the topic, (2) one detail you heard, (3) one point you are unsure about. Report how many times you listened. Có thể gửi ngay ba dòng này trong ChatGPT; không cần làm hết các phần hôm nay.",
-      "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có đọc transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ nêu điểm đúng, sửa một lỗi ưu tiên, giải thích và giao một bài luyện lại 2 phút. Bản nháp trên trình duyệt không phải kết quả đã review hay streak."
+      "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có đọc transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ nêu điểm đúng, sửa một lỗi ưu tiên, giải thích và giao một bài luyện lại 2 phút. Bản nháp chưa tính; sau khi luyện lại, bấm Done để ghi streak trên thiết bị. Đây chưa phải kết quả đã review."
     },
     {
       "id": "daily-2026-10-15-en-reading",
@@ -24,7 +24,7 @@
       "instructions": "Bài kiểm tra do trợ lý soạn. Sau khi lưu ghi chú nghe, mở transcript của chính đoạn vừa nghe, không đọc toàn bài để tìm đáp án trước.",
       "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
       "exercises": "Find one detail that confirms or corrects your listening notes. Paraphrase it in two English sentences. State whether your original note was supported, contradicted or not mentioned in this section. Không sao chép nguyên transcript.",
-      "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có đọc transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ nêu điểm đúng, sửa một lỗi ưu tiên, giải thích và giao một bài luyện lại 2 phút. Bản nháp trên trình duyệt không phải kết quả đã review hay streak."
+      "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có đọc transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ nêu điểm đúng, sửa một lỗi ưu tiên, giải thích và giao một bài luyện lại 2 phút. Bản nháp chưa tính; sau khi luyện lại, bấm Done để ghi streak trên thiết bị. Đây chưa phải kết quả đã review."
     },
     {
       "id": "daily-2026-10-15-en-speaking",
@@ -35,7 +35,7 @@
       "instructions": "Bài do trợ lý soạn. Đóng nguồn; chuẩn bị 30 giây rồi nói 30–45 giây. Nếu chưa nghe/đọc, chỉ trả lời phần trải nghiệm cá nhân và ghi rõ chưa dùng nguồn.",
       "material": null,
       "exercises": "If you used the source, retell one point in your own words. Then explain one distraction during coding or studying, one change you would try, and one possible disadvantage. Gửi audio nếu có; nếu chỉ gửi bản chép lời thì chưa đánh giá được phát âm.",
-      "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có đọc transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ nêu điểm đúng, sửa một lỗi ưu tiên, giải thích và giao một bài luyện lại 2 phút. Bản nháp trên trình duyệt không phải kết quả đã review hay streak."
+      "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có đọc transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ nêu điểm đúng, sửa một lỗi ưu tiên, giải thích và giao một bài luyện lại 2 phút. Bản nháp chưa tính; sau khi luyện lại, bấm Done để ghi streak trên thiết bị. Đây chưa phải kết quả đã review."
     },
     {
       "id": "daily-2026-10-15-en-writing",
@@ -46,7 +46,7 @@
       "instructions": "Tình huống trợ lý tự soạn, không phải câu hỏi phỏng vấn thật. Viết 40–60 từ, không dùng AI sửa trước; tránh tên khách hàng và thông tin dự án riêng.",
       "material": null,
       "exercises": "Your teammate suggests switching off every notification during a 30-minute task. Write a reply: give your view, one reason, one risk, and a practical alternative. Cuối bài ghi số phút thực tế. Sau feedback, viết lại hai câu rồi đổi tình huống sang học ở quán cà phê.",
-      "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có đọc transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ nêu điểm đúng, sửa một lỗi ưu tiên, giải thích và giao một bài luyện lại 2 phút. Bản nháp trên trình duyệt không phải kết quả đã review hay streak."
+      "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có đọc transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ nêu điểm đúng, sửa một lỗi ưu tiên, giải thích và giao một bài luyện lại 2 phút. Bản nháp chưa tính; sau khi luyện lại, bấm Done để ghi streak trên thiết bị. Đây chưa phải kết quả đã review."
     },
     {
       "id": "daily-2026-10-15-zh-speaking",
@@ -57,7 +57,7 @@
       "instructions": "Bài ôn do trợ lý soạn. HelloChinese có phần miễn phí và Premium trả phí; ưu tiên audio/video người bản ngữ của bài giới thiệu/gọi món đang mở được. Không cần mua gói. Nếu chưa học, nghe và nhại trước, không gọi đây là điểm ôn đã nhớ.",
       "material": "https://www.hellochinese.cc/",
       "exercises": "Che mẫu và nói lời chào + tên, rồi gọi một cốc trà. Mở mẫu để tự đối chiếu: 你好，我叫……。Nǐ hǎo, wǒ jiào… / 我要一杯茶。Wǒ yào yì bēi chá. Sau đó che chữ, đổi sang hai cốc cà phê. Gửi audio 15–20 giây hoặc hai câu/pinyin; ghi rõ có nhìn mẫu không. Đây là mẫu ngôn ngữ để luyện, không phải đáp án bài Anh.",
-      "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có đọc transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ nêu điểm đúng, sửa một lỗi ưu tiên, giải thích và giao một bài luyện lại 2 phút. Bản nháp trên trình duyệt không phải kết quả đã review hay streak."
+      "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có đọc transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ nêu điểm đúng, sửa một lỗi ưu tiên, giải thích và giao một bài luyện lại 2 phút. Bản nháp chưa tính; sau khi luyện lại, bấm Done để ghi streak trên thiết bị. Đây chưa phải kết quả đã review."
     }
   ]
 }

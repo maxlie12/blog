@@ -13,7 +13,7 @@
       "instructions": "Bài do trợ lý soạn. Nguồn British Council miễn phí, có audio và transcript. Mở A digital detox podcast; không nhìn transcript, nghe đoạn khoảng phút 1:00–2:00 đúng một lượt. Nếu thao tác tua khó, nghe từ đầu nhưng dừng sau tối đa hai phút.",
       "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
       "exercises": "Không nghe lại: viết 3 ý bằng tiếng Anh — (1) một vấn đề/khó khăn, (2) một hành động hoặc lời khuyên, (3) mức chắc chắn 0–100%. Sau đó ghi số phút thực tế. Không cần câu hoàn chỉnh.",
-      "completionCriteria": "Gửi ba ý, % chắc chắn và số phút về ChatGPT. Chưa mở transcript/tra từ trước khi gửi. Trợ lý sẽ đối chiếu, sửa một lỗi ưu tiên và giao một lần nghe lại 2 phút; chỉ khi có bài làm mới ghi nhận review hay streak."
+      "completionCriteria": "Gửi ba ý, % chắc chắn và số phút về ChatGPT. Chưa mở transcript/tra từ trước khi gửi. Trợ lý sẽ đối chiếu, sửa một lỗi ưu tiên và giao một lần nghe lại 2 phút; sau khi luyện lại có thể bấm Done để ghi streak; review vẫn cần gửi bài."
     },
     {
       "id": "daily-2026-10-17-en-reading",
