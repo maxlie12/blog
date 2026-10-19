@@ -89,7 +89,7 @@ export function LessonDetailView({
           </p>
         ) : (
           <p className="lesson-detail__status lesson-detail__status--pending" role="status">
-            No attempts yet
+            Chưa có bài nộp lên server; tiến độ tự học trên thiết bị hiển thị bên dưới
           </p>
         )}
       </div>
@@ -103,7 +103,7 @@ export function LessonDetailView({
         </section>
       ) : (
         <p className="lesson-detail__disclaimer">
-          Muốn lưu server cần đăng nhập Studio và kết nối database. Bản xem thử dùng ô luyện tập trên thiết bị ở trên.
+          Bản xem thử lưu bài và streak ngay trên trình duyệt này. Đăng nhập Studio và database chỉ cần khi muốn đồng bộ qua nhiều thiết bị.
         </p>
       )}
 
@@ -126,9 +126,8 @@ export function LessonDetailView({
       )}
 
       <p className="lesson-detail__disclaimer">
-        Submitting an attempt does not by itself mark this lesson complete — completion is
-        recorded once the attempt has been reviewed. This reflects real, tracked practice, not a
-        self-reported checkbox.
+        Nút Done ghi nhận thói quen tự học và streak trên thiết bị; mỗi bài chỉ được ghi một lần.
+        Điểm CEFR hoặc trạng thái reviewed vẫn cần bài làm thực tế và phản hồi riêng.
       </p>
     </article>
   );

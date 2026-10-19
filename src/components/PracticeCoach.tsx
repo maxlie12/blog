@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type { SkillId } from "@/lib/lessonTypes";
+import { getLocalCompletionSummary, recordLocalCompletion, type LocalCompletionSummary } from "@/lib/localLearningProgress";
 
 type Gap = "meaning" | "reasoning" | "language" | "delivery";
 type Saved = { version: 1; lessonId: string; response: string; minutes: number; support: string; focus: string; gap: Gap; revision: string; savedAt: string };
@@ -27,7 +28,12 @@ export function PracticeCoach({ lessonId, skill, language }: { lessonId: string;
   const [revision, setRevision] = useState("");
   const [attempt, setAttempt] = useState<Saved | null>(null);
   const [message, setMessage] = useState("");
+  const [completion, setCompletion] = useState<LocalCompletionSummary | null>(null);
   const storageKey = "learning-practice-v1:" + lessonId;
+  const completionId = "lesson:" + lessonId;
+  useEffect(() => {
+    setCompletion(getLocalCompletionSummary(completionId, language));
+  }, [completionId, language]);
   function save(event?: FormEvent) {
     event?.preventDefault();
     if (!response.trim()) return;
@@ -35,6 +41,17 @@ export function PracticeCoach({ lessonId, skill, language }: { lessonId: string;
     setAttempt(value);
     try { localStorage.setItem(storageKey, JSON.stringify(value)); setMessage("Đã lưu trên trình duyệt này; chưa được chấm và chưa tính streak."); }
     catch { setMessage("Trình duyệt không cho lưu. Hãy sao chép bài bên dưới để giữ lại."); }
+  }
+  function finishLesson() {
+    if (!attempt || !revision.trim()) { setMessage("Hãy lưu bản đầu và viết bản luyện lại trước khi hoàn thành."); return; }
+    save();
+    try {
+      const result = recordLocalCompletion({ id: completionId, lessonId, language, skill, minutes });
+      setCompletion(result);
+      setMessage(result.newlyCompleted ? "Đã hoàn thành và ghi streak trên thiết bị này." : "Bài này đã hoàn thành trước đó; streak không bị cộng trùng.");
+    } catch {
+      setMessage("Không ghi được tiến độ trên thiết bị. Bài viết vẫn có thể được lưu riêng.");
+    }
   }
   function restore() {
     try {
@@ -49,7 +66,7 @@ export function PracticeCoach({ lessonId, skill, language }: { lessonId: string;
   const exportText = attempt ? "Bài: " + lessonId + "\nThời gian: " + attempt.minutes + " phút\nHỗ trợ: " + attempt.support + "\nTập trung tự báo: " + attempt.focus + "\nBản đầu:\n" + attempt.response + "\nĐiểm muốn sửa: " + gap + "\nBản làm lại:\n" + revision : "";
   return <section className="lesson-detail__section">
     <h2>Làm trước → tự kiểm tra → luyện lại</h2>
-    <p>Bài tập và hướng dẫn do trợ lý soạn. Bản viết hoặc transcript lưu riêng trên trình duyệt; chưa đồng bộ thiết bị, chưa chấm điểm và chưa tính streak. Không nhập thông tin công việc nhạy cảm.</p>
+    <p>Bài tập và hướng dẫn do trợ lý soạn. Bản viết, trạng thái Done và streak được lưu trên trình duyệt này; chưa đồng bộ thiết bị hoặc chấm điểm. Không nhập thông tin công việc nhạy cảm.</p>
     <button type="button" className="button button--ghost" onClick={restore}>Mở bài đã lưu trên thiết bị</button>
     <form onSubmit={save}>
       <p><label htmlFor={lessonId + "-response"}>Câu trả lời đầu tiên{skill === "speaking" ? " / transcript thật đã nói" : ""}</label></p>
@@ -68,9 +85,11 @@ export function PracticeCoach({ lessonId, skill, language }: { lessonId: string;
       <p>{language === "zh" ? "2–3 phút: giữ mẫu của bài đang học, đổi đúng một chi tiết như đồ uống hoặc số lượng. Nghe audio, che chữ và nói hai câu mới. Gửi audio nếu muốn sửa thanh điệu." : drills[gap]}</p>
       <label htmlFor={lessonId + "-revision"}>Bản luyện lại / điều m đã đổi</label>
       <textarea id={lessonId + "-revision"} rows={4} maxLength={10000} value={revision} onChange={e => setRevision(e.target.value)} style={{ width: "100%" }} />
-      <p><button type="button" className="button button--ghost" onClick={() => save()}>Lưu bản luyện lại</button></p>
+      <p><button type="button" className="button button--ghost" onClick={() => save()}>Lưu bản luyện lại</button>{" "}<button type="button" className="button" disabled={Boolean(completion?.completed) || !revision.trim()} onClick={finishLesson}>{completion?.completed ? "✓ Đã hoàn thành · streak đã ghi" : "Hoàn thành bài & ghi streak"}</button></p>
+      {completion && <p role="status"><strong>Chuỗi {language === "zh" ? "中文" : "English"}: {completion.currentStreak} ngày</strong> · dài nhất {completion.longestStreak} ngày · {completion.totalCompleted} bài đã hoàn thành trên thiết bị này.</p>}
+      {!revision.trim() && <p><small>Viết ít nhất một thay đổi ở “Bản luyện lại” để mở nút hoàn thành.</small></p>}
       <p>Ngày mai: che bài và nhớ lại 60 giây; sau 3 và 7 ngày đổi tình huống. Mốc này là lịch thử, sẽ điều chỉnh theo bài làm. Nếu khó, giảm đoạn nguồn thay vì tăng thời gian.</p>
-      <h3>Gửi về ChatGPT để được sửa cá nhân</h3>
+      <h3>Tùy chọn · gửi về ChatGPT để được sửa cá nhân</h3>
       <textarea aria-label="Bài làm để sao chép gửi về ChatGPT" readOnly rows={8} value={exportText} style={{ width: "100%" }} />
       <p><button type="button" className="button" onClick={async () => { try { await navigator.clipboard.writeText(exportText); setMessage("Đã sao chép. Dán vào cuộc trò chuyện ChatGPT để nhận phản hồi."); } catch { setMessage("Hãy chọn và sao chép nội dung trong ô trên."); } }}>Sao chép bài để gửi ChatGPT</button></p>
     </div>}

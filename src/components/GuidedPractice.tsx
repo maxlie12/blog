@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getLocalCompletionSummary, recordLocalCompletion, type LocalCompletionSummary } from "@/lib/localLearningProgress";
 
 type Language = "en" | "zh";
 type Gap = "understanding" | "reasoning" | "language" | "pronunciation";
@@ -38,6 +39,13 @@ export function GuidedPractice() {
   const [notice, setNotice] = useState("");
   const [speechNotice, setSpeechNotice] = useState("");
   const [showText, setShowText] = useState(false);
+  const [completion, setCompletion] = useState<LocalCompletionSummary | null>(null);
+  const activeLanguage = draft?.language ?? language;
+  const completionId = draft ? "guided:" + draft.language + ":" + draft.startedAt : "";
+  useEffect(() => {
+    if (!completionId) { setCompletion(null); return; }
+    setCompletion(getLocalCompletionSummary(completionId, activeLanguage));
+  }, [completionId, activeLanguage]);
   function persist(next: Draft) {
     setDraft(next);
     try { localStorage.setItem("guided-practice-v1:" + next.language, JSON.stringify(next)); setNotice("Đã lưu bước hiện tại trên trình duyệt này."); }
@@ -54,6 +62,16 @@ export function GuidedPractice() {
     } catch { setNotice("Không đọc được bản lưu. Có thể bắt đầu phiên mới; dữ liệu không được gửi lên server."); }
   }
   function go(step: number) { if (draft) { update({ step }); setShowText(false); if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel(); } }
+  function finishLesson() {
+    if (!draft || draft.step !== 6 || !completionId) return;
+    try {
+      const result = recordLocalCompletion({ id: completionId, lessonId: "guided-practice", language: draft.language, skill: "mixed", minutes: draft.actualMinutes });
+      setCompletion(result);
+      setNotice(result.newlyCompleted ? "Đã hoàn thành và ghi streak trên thiết bị này." : "Bài này đã được ghi hoàn thành trước đó; streak không bị cộng trùng.");
+    } catch {
+      setNotice("Không ghi được tiến độ trên thiết bị. Bài làm vẫn còn trong bản nháp hiện tại.");
+    }
+  }
   function speakChinese() {
     if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) { setSpeechNotice("Thiết bị không hỗ trợ giọng máy; mở nguồn người bản ngữ hoặc chọn đọc thay."); return; }
     window.speechSynthesis.cancel();
@@ -62,7 +80,7 @@ export function GuidedPractice() {
     utterance.onerror = () => setSpeechNotice("Không phát được giọng máy. Dùng nguồn HelloChinese hoặc chọn đọc thay.");
     window.speechSynthesis.speak(utterance); setSpeechNotice("Đang dùng giọng máy của thiết bị; đây không phải audio người bản ngữ.");
   }
-  const english = (draft?.language ?? language) === "en";
+  const english = activeLanguage === "en";
   const step = draft?.step ?? 0;
   const summary = draft ? [
     "Phiên hướng dẫn — " + (english ? "English B1+ practice / B2 source" : "Chinese Beginner"),
@@ -75,13 +93,13 @@ export function GuidedPractice() {
     "Phản hồi đã nhận (nếu có): " + draft.feedback,
     "Bản luyện lại: " + draft.revision,
     "Điều tự rút ra: " + draft.takeaway,
-    "Trạng thái: tự làm, chưa được chấm; không tính streak hoặc CEFR.",
+    "Trạng thái: " + (completion?.completed ? "đã tự hoàn thành và ghi streak trên thiết bị; chưa được chấm." : "tự làm, chưa bấm hoàn thành; chưa được chấm.") + " Không suy ra CEFR.",
   ].join("\n\n") : "";
   return <article className="lesson-detail">
     <Link href="/learning">← Kho bài và bộ lọc</Link>
     <header className="lesson-detail__header"><h1>Buổi học có hướng dẫn</h1><p>Một mục tiêu, một nhiệm vụ ở mỗi bước. Học lúc rảnh; có thể dừng rồi tiếp tục trên cùng trình duyệt.</p></header>
     <p className="tag">{english ? "English · B1+ tự báo" : "中文 · Beginner"} · {draft?.budget ?? budget} phút dự kiến</p>
-    <p>Bài tập do trợ lý soạn. Bản viết lưu trên thiết bị; audio của bạn chưa được lưu ở màn này. Chưa có chấm AI hoặc đồng bộ server.</p>
+    <p>Bài tập do trợ lý soạn. Bản viết và trạng thái hoàn thành được lưu trên thiết bị này; audio chưa được lưu và chưa có đồng bộ server.</p>
     <ol aria-label="Các bước buổi học">{STAGES.map((name,index) => <li key={name} aria-current={step === index ? "step" : undefined}>{step === index ? "→ " : ""}{name}</li>)}</ol>
     {step === 0 ? <section className="lesson-detail__section">
       <h2>Bắt đầu hoặc tiếp tục</h2>
@@ -131,10 +149,12 @@ export function GuidedPractice() {
           <label htmlFor="guided-takeaway">Một điều bạn tự rút ra · tùy chọn</label><textarea id="guided-takeaway" rows={2} maxLength={2000} value={draft.takeaway} onChange={e => update({takeaway:e.target.value})} style={{width:"100%"}} />
         </>}
         {step === 6 && <>
-          <h3>Đã kết thúc phiên tự làm · chờ review</h3><p>{draft.actualMinutes} phút tự báo · {draft.spoke ? "có bước nói tự báo" : "chưa xác nhận bước nói"} · {draft.inputMode === "reading" ? "đọc thay, chưa có bằng chứng luyện nghe" : "điều kiện nghe cần ghi rõ khi gửi bài"}.</p>
+          <h3>Tổng kết · sẵn sàng ghi nhận</h3><p>{draft.actualMinutes} phút tự báo · {draft.spoke ? "có bước nói tự báo" : "chưa xác nhận bước nói"} · {draft.inputMode === "reading" ? "đọc thay, chưa có bằng chứng luyện nghe" : "đã ghi điều kiện đầu vào"}.</p>
           <p>Điều tự rút ra: {draft.takeaway || "Chưa ghi; xem bản đầu và bản luyện lại bên dưới."}</p>
-          <p>Gợi ý ôn {nextDay()}: che bài và nhớ lại một ý trong 60 giây. Nếu vẫn khó, ôn lại đúng điểm đã chọn. Sau 3 và 7 ngày, đổi tình huống. Mốc ôn này là gợi ý, chưa có thông báo tự động.</p>
-          <p>Chưa có điểm CEFR hoặc streak từ phiên này. Bản tự làm không đồng nghĩa đã được review.</p>
+          <p>Gợi ý ôn {nextDay()}: che bài và nhớ lại một ý trong 60 giây. Nếu vẫn khó, ôn lại đúng điểm đã chọn. Sau 3 và 7 ngày, đổi tình huống.</p>
+          <p><button type="button" className="button" disabled={Boolean(completion?.completed)} onClick={finishLesson}>{completion?.completed ? "✓ Đã hoàn thành · streak đã ghi" : "Hoàn thành bài & ghi streak"}</button></p>
+          {completion && <p role="status"><strong>Chuỗi {english ? "English" : "中文"}: {completion.currentStreak} ngày</strong> · dài nhất {completion.longestStreak} ngày · {completion.totalCompleted} bài đã hoàn thành trên thiết bị này.</p>}
+          <p>Done chỉ xác nhận bạn đã làm đủ quy trình và dùng để tính streak; không tự suy ra điểm CEFR hay trạng thái đã được giáo viên review.</p>
         </>}
       </section>
       <nav aria-label="Điều hướng buổi học">
@@ -142,7 +162,7 @@ export function GuidedPractice() {
         {step < 6 && <button className="button" disabled={(step === 2 && !draft.comprehension.trim()) || (step === 3 && !draft.response.trim()) || (step === 5 && (!draft.revision.trim() || draft.actualMinutes < 1 || draft.actualMinutes > 60))} onClick={() => go(step+1)}>{step === 5 ? "Kết thúc và xem tổng kết" : "Bước tiếp →"}</button>}{" "}
         <button className="button button--ghost" onClick={() => { setDraft(null); setNotice("Đã tạm dừng. Bấm Tiếp tục phiên đã lưu để quay lại."); }}>Tạm dừng</button>
       </nav>
-      {step >= 4 && <section className="lesson-detail__section"><h2>Gửi bài để được sửa</h2><textarea aria-label="Nội dung phiên để gửi ChatGPT" readOnly rows={8} value={summary} style={{width:"100%"}} /><button className="button" onClick={async () => { try { await navigator.clipboard.writeText(summary); setNotice("Đã sao chép. Dán vào ChatGPT; chưa tự gửi đi."); } catch { setNotice("Không sao chép tự động được. Hãy chọn nội dung trong ô trên."); } }}>Sao chép gửi ChatGPT</button></section>}
+      {step >= 4 && <section className="lesson-detail__section"><h2>Tùy chọn · gửi bài để được sửa sâu</h2><textarea aria-label="Nội dung phiên để gửi ChatGPT" readOnly rows={8} value={summary} style={{width:"100%"}} /><button className="button" onClick={async () => { try { await navigator.clipboard.writeText(summary); setNotice("Đã sao chép. Dán vào ChatGPT; chưa tự gửi đi."); } catch { setNotice("Không sao chép tự động được. Hãy chọn nội dung trong ô trên."); } }}>Sao chép gửi ChatGPT</button></section>}
     </>}
     <p role="status">{notice}</p>
   </article>;
