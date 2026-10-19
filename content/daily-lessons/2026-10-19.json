@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-19",
+  "title": "Giữ nhịp 5 phút — nghe rồi nêu hệ quả",
+  "kind": "restart",
+  "note": "Chưa có bài làm được gửi nên tiếp tục giữ mức B1+ tự báo, không suy ra tiến bộ và không nâng độ khó. Không cần làm bù toàn bộ lịch sử: chỉ bắt đầu bằng phiên bắt buộc 5 phút hôm nay; các phần còn lại là tùy chọn, có thể tách sang những lúc rảnh khác. Bài do trợ lý soạn, không phải bài thi British Council/IELTS/TOEIC chính thức; không kèm đáp án. Chỉ ghi nhận hoàn thành, review hoặc streak khi có bài làm làm bằng chứng.",
+  "lessons": [
+    {
+      "id": "daily-2026-10-19-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Bắt buộc 5 phút — một sự việc, một hệ quả",
+      "level": "B1+ practice / B2 source",
+      "instructions": "Bài do trợ lý soạn. Nguồn British Council miễn phí, có audio, transcript và bài tập. Không nhìn transcript; nghe A digital detox podcast từ đầu trong tối đa 90 giây, đúng một lượt.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Viết bằng tiếng Anh: (1) ba từ/cụm từ bạn nghe chắc nhất; (2) một câu theo mẫu Because…, … . để nêu nguyên nhân và hệ quả bạn hiểu được. Thêm mức chắc chắn 0–100% và tổng số phút. Không tra từ hoặc nghe lại trước khi gửi.",
+      "completionCriteria": "Gửi ba từ/cụm, một câu Because, % chắc chắn và số phút về ChatGPT. Trợ lý sẽ xác nhận ý đúng, sửa một lỗi ưu tiên và giao bước sửa nhỏ; chưa tự quy đổi CEFR."
+    },
+    {
+      "id": "daily-2026-10-19-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — tìm bằng chứng ngắn",
+      "level": "B1+ practice / B2 source",
+      "instructions": "Chỉ làm sau phần nghe. Mở transcript cùng nguồn và đọc đoạn tương ứng tối đa 90 giây; không sao chép câu dài.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Chọn tối đa hai cụm ngắn giúp kiểm chứng câu Because của bạn. Sau đó viết lại câu đó bằng lời riêng, rõ nguyên nhân và hệ quả hơn.",
+      "completionCriteria": "Gửi hai cụm ngắn, câu đã sửa và số phút. Đây là tự kiểm chứng, không phải kết quả CEFR."
+    },
+    {
+      "id": "daily-2026-10-19-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — nói quan điểm có đánh đổi",
+      "level": "B1+ practice",
+      "instructions": "Bài do trợ lý soạn. Chuẩn bị 20 giây rồi thu âm 45–60 giây; không viết script hoàn chỉnh.",
+      "material": null,
+      "exercises": "Retell one point from the podcast. Then answer: Should a developer mute all notifications during a difficult Angular task? Give one benefit, one risk and your decision.",
+      "completionCriteria": "Gửi audio hoặc transcript nguyên bản và nói rõ có nhìn ghi chú không. Audio mới dùng để nhận xét phát âm/nhịp; transcript dùng để sửa lập luận và ngữ pháp."
+    },
+    {
+      "id": "daily-2026-10-19-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5–10 phút — giải thích lựa chọn",
+      "level": "B1+ practice",
+      "instructions": "Tình huống do trợ lý tự soạn, không phải câu hỏi thật của SmartOSC. Viết bản đầu 55–70 từ, không dùng AI sửa trước và không nêu dữ liệu dự án nhạy cảm.",
+      "material": null,
+      "exercises": "Your teammate asks why you missed a message during a focus block. Explain what happened, acknowledge the risk, describe the emergency channel you kept open, and suggest one improvement.",
+      "completionCriteria": "Gửi bản đầu, số phút và công cụ đã dùng. Trợ lý sẽ phản hồi theo rõ ý, liên kết, độ chính xác và tính phù hợp; không tự nâng cấp độ."
+    },
+    {
+      "id": "daily-2026-10-19-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tiếng Trung phụ 5 phút — hỏi rồi gọi món",
+      "level": "Beginner",
+      "instructions": "Bài do trợ lý soạn. HelloChinese có bài ngắn, nhận diện giọng nói và video người bản ngữ; có nội dung miễn phí, một số phần trong app cần Premium. Nếu dùng app, nghe mẫu người bản ngữ hai lượt.",
+      "material": "https://www.hellochinese.cc/",
+      "exercises": "Nói liền: 你要茶吗？我要一杯茶，不要糖，谢谢。Sau đó thay 茶 bằng 咖啡 và 一杯 bằng 两杯. Có thể gửi audio 15–25 giây hoặc chữ Hán+pinyin.",
+      "completionCriteria": "Gửi bản đầu và nói rõ có nhìn mẫu hay không. Phản hồi sẽ ưu tiên một lỗi thanh điệu hoặc trật tự từ; không đưa đáp án trước khi bạn làm."
+    }
+  ]
+}
