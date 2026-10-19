@@ -1007,6 +1007,7 @@ a {
 }
 .lesson-detail__actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
 }
@@ -2450,4 +2451,148 @@ body { line-height: 1.65; }
   .lesson-detail__meta, .lesson-detail__actions { flex-wrap: wrap; }
   .article-page { border-radius: 14px; }
   .journal-header { border-radius: 18px; }
+}
+
+
+/* ---------- Local lesson completion ---------- */
+
+.lesson-completion,
+.local-progress {
+  border: 1px solid color-mix(in srgb, var(--forest) 25%, var(--border));
+  border-radius: 16px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--sage) 78%, var(--surface)), var(--surface));
+  padding: 1rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.lesson-completion[data-complete="true"] {
+  border-color: color-mix(in srgb, var(--forest) 48%, var(--border));
+  box-shadow: 0 10px 28px -22px color-mix(in srgb, var(--forest) 70%, transparent);
+}
+
+.lesson-completion__label {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--forest);
+  margin: 0;
+}
+
+.lesson-completion__button {
+  width: fit-content;
+  background: var(--forest);
+  color: #fff;
+  border-color: transparent;
+}
+
+.lesson-completion__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.lesson-completion__stats > div {
+  min-width: 0;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  padding: 0.7rem;
+}
+
+.lesson-completion__stats strong {
+  display: block;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 1.45rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.lesson-completion__stats span,
+.lesson-completion__note,
+.local-progress__note,
+.local-progress__row span,
+.local-progress > div > p:last-child {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.lesson-completion__note,
+.local-progress__note {
+  margin: 0;
+}
+
+.local-progress {
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+}
+
+.local-progress h2 {
+  margin: 0.2rem 0 0.3rem;
+}
+
+.local-progress__list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.local-progress__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  border-top: 1px solid color-mix(in srgb, var(--forest) 16%, var(--border));
+  padding-top: 0.65rem;
+}
+
+.local-progress__row > div:first-child,
+.local-progress__numbers span {
+  display: grid;
+}
+
+.local-progress__numbers {
+  display: flex;
+  gap: 1rem;
+  text-align: right;
+}
+
+.local-progress__numbers strong {
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.local-progress .button {
+  width: fit-content;
+}
+
+.button {
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+@media (max-width: 520px) {
+  .lesson-completion__stats {
+    grid-template-columns: 1fr;
+  }
+
+  .lesson-completion__button,
+  .local-progress .button {
+    width: 100%;
+  }
+
+  .local-progress__row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .local-progress__numbers {
+    width: 100%;
+    justify-content: space-between;
+    text-align: left;
+  }
 }

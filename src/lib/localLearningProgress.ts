@@ -1,3 +1,5 @@
+import { computeStreaks } from "@/lib/streak";
+
 export type LocalCompletionInput = {
   id: string;
   lessonId: string;
@@ -16,12 +18,15 @@ type LocalProgressStore = {
   completions: LocalCompletion[];
 };
 
-export type LocalCompletionSummary = {
-  completed: boolean;
-  completedOn: string | null;
+export type LocalProgressSummary = {
   currentStreak: number;
   longestStreak: number;
   totalCompleted: number;
+};
+
+export type LocalCompletionSummary = LocalProgressSummary & {
+  completed: boolean;
+  completedOn: string | null;
 };
 
 export type RecordCompletionResult = LocalCompletionSummary & {
@@ -40,13 +45,6 @@ function dateInLearningTimezone(value = new Date()): string {
   }).formatToParts(value);
   const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return values.year + "-" + values.month + "-" + values.day;
-}
-
-function addDays(dateString: string, amount: number): string {
-  const [year, month, day] = dateString.split("-").map(Number);
-  const value = new Date(Date.UTC(year, month - 1, day));
-  value.setUTCDate(value.getUTCDate() + amount);
-  return value.toISOString().slice(0, 10);
 }
 
 function isCompletion(value: unknown): value is LocalCompletion {
@@ -76,41 +74,23 @@ function readStore(): LocalProgressStore {
   }
 }
 
-function streaks(completions: LocalCompletion[]): { current: number; longest: number } {
-  const dates = Array.from(new Set(completions.map((item) => item.date))).sort();
-  if (!dates.length) return { current: 0, longest: 0 };
-
-  let longest = 1;
-  let run = 1;
-  for (let index = 1; index < dates.length; index += 1) {
-    run = addDays(dates[index - 1], 1) === dates[index] ? run + 1 : 1;
-    longest = Math.max(longest, run);
-  }
-
-  const last = dates[dates.length - 1];
-  const today = dateInLearningTimezone();
-  let current = 0;
-  if (last === today || last === addDays(today, -1)) {
-    current = 1;
-    for (let index = dates.length - 1; index > 0; index -= 1) {
-      if (addDays(dates[index - 1], 1) !== dates[index]) break;
-      current += 1;
-    }
-  }
-  return { current, longest };
+export function getLocalLanguageSummary(language: string): LocalProgressSummary {
+  const languageCompletions = readStore().completions.filter((item) => item.language === language);
+  const streak = computeStreaks(languageCompletions.map((item) => item.date), dateInLearningTimezone());
+  return {
+    currentStreak: streak.current,
+    longestStreak: streak.longest,
+    totalCompleted: languageCompletions.length,
+  };
 }
 
 export function getLocalCompletionSummary(id: string, language: string): LocalCompletionSummary {
   const completions = readStore().completions;
-  const languageCompletions = completions.filter((item) => item.language === language);
   const match = completions.find((item) => item.id === id);
-  const streak = streaks(languageCompletions);
   return {
+    ...getLocalLanguageSummary(language),
     completed: Boolean(match),
     completedOn: match?.date ?? null,
-    currentStreak: streak.current,
-    longestStreak: streak.longest,
-    totalCompleted: languageCompletions.length,
   };
 }
 

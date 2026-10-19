@@ -53,12 +53,12 @@ separate auth provider.
   up, sufficient for single-operator write volume. The ephemeral-filesystem caveat on
   serverless hosts (see "Deployment implications") applies more now, since Studio's writes are
   exactly the kind of thing that must survive a redeploy.
-- **Why Studio's lesson-completion tracking replaced the old localStorage prototype.** An
-  earlier pass let *any visitor's browser* mark a lesson "complete" via `localStorage` — that
-  was flagged in `docs/STATUS.md` as not durable and, on reflection, not even meaningful: a
-  stranger's browser completing Luân's English lesson never represented anything real. Studio's
-  `Attempt` model fixes both problems — attempts are recorded once, by the owner, in the
-  database, and are what the public Learning page's progress numbers actually reflect.
+- **Two meanings of completion stay separate.** A browser-local Done action records the
+  learner's self-reported habit and powers a device-specific streak. It is intentionally easy
+  and useful without login, but it is not durable across devices and never changes public skill
+  progress or CEFR claims. Studio's `Attempt` model remains the reviewed evidence layer:
+  attempts are recorded by the owner in the database, and only reviewed attempts affect the
+  public skill-progress numbers.
 
 ## Studio auth
 
@@ -146,6 +146,10 @@ number anywhere that could drift from the underlying attempts.
   `requireStudioSession()`, since a public page must still render for signed-out visitors) and
   always creates the attempt with `reviewStatus: "pending"` — only Studio's own attempt editor
   can mark one `"reviewed"`. See [DECISIONS.md](DECISIONS.md).
+- **Write (browser-local practice):** `PracticeCoach` and `GuidedPractice` save drafts and
+  explicit Done records in versioned `localStorage`. A lesson/session ID is idempotent, and a
+  calendar day can extend each language streak only once using the Asia/Ho_Chi_Minh date. This
+  data never feeds reviewed attempts or CEFR progress.
 - **Write (articles/projects, learning-log CLI):** unchanged from before — file edits + git
   commit, and `npm run log`, respectively.
 

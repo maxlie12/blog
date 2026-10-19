@@ -3,7 +3,7 @@
  * LearningLog row, public or private. Publishing status never affects
  * whether a day counts — see docs/ARCHITECTURE.md#streaks.
  */
-export function computeStreaks(dates: string[]): { current: number; longest: number } {
+export function computeStreaks(dates: string[], referenceDay = todayInTz()): { current: number; longest: number } {
   const uniqueSorted = Array.from(new Set(dates)).sort();
   if (uniqueSorted.length === 0) return { current: 0, longest: 0 };
 
@@ -18,7 +18,7 @@ export function computeStreaks(dates: string[]): { current: number; longest: num
     longest = Math.max(longest, run);
   }
 
-  const today = todayInTz();
+  const today = referenceDay;
   const yesterday = addDays(today, -1);
   const last = uniqueSorted[uniqueSorted.length - 1];
 

@@ -3,6 +3,23 @@
 Reverse-chronological log of decisions with material impact and their rationale. See linked
 docs for full detail; this file is the "why," not the "how."
 
+## 2026-10-19 — Browser Done powers habit streaks; reviewed attempts power proficiency
+
+**Decision:** public lesson and guided-practice pages have an explicit Done action. It stores a
+versioned, idempotent completion record in the current browser and computes separate English
+and Chinese streaks from the real Asia/Ho_Chi_Minh completion date. Completing old content
+counts today; multiple lessons on one day still extend the streak by one day.
+
+**Why:** a learning page that can save text but cannot acknowledge completion forces the
+learner to report everything back through ChatGPT. The local action makes the core loop usable
+without login or a production database. It does not restore the old claim that a browser
+checkbox equals verified progress.
+
+**Boundary:** local Done is habit evidence only. It is device-specific, can disappear when site
+storage is cleared, and never changes CEFR, reviewed-attempt status, or public skill progress.
+Those still require an actual `Attempt` and review. Cross-device streak sync should reuse the
+same semantic boundary when production storage is added.
+
 ## 2026-09-26 — Attempt submission requires the Studio session, on the public lesson page
 
 **Decision:** `/learning/[lessonId]` now shows a real answer form and Submit action, but only

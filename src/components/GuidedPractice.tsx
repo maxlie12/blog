@@ -152,9 +152,16 @@ export function GuidedPractice() {
           <h3>Tổng kết · sẵn sàng ghi nhận</h3><p>{draft.actualMinutes} phút tự báo · {draft.spoke ? "có bước nói tự báo" : "chưa xác nhận bước nói"} · {draft.inputMode === "reading" ? "đọc thay, chưa có bằng chứng luyện nghe" : "đã ghi điều kiện đầu vào"}.</p>
           <p>Điều tự rút ra: {draft.takeaway || "Chưa ghi; xem bản đầu và bản luyện lại bên dưới."}</p>
           <p>Gợi ý ôn {nextDay()}: che bài và nhớ lại một ý trong 60 giây. Nếu vẫn khó, ôn lại đúng điểm đã chọn. Sau 3 và 7 ngày, đổi tình huống.</p>
-          <p><button type="button" className="button" disabled={Boolean(completion?.completed)} onClick={finishLesson}>{completion?.completed ? "✓ Đã hoàn thành · streak đã ghi" : "Hoàn thành bài & ghi streak"}</button></p>
-          {completion && <p role="status"><strong>Chuỗi {english ? "English" : "中文"}: {completion.currentStreak} ngày</strong> · dài nhất {completion.longestStreak} ngày · {completion.totalCompleted} bài đã hoàn thành trên thiết bị này.</p>}
-          <p>Done chỉ xác nhận bạn đã làm đủ quy trình và dùng để tính streak; không tự suy ra điểm CEFR hay trạng thái đã được giáo viên review.</p>
+          <div className="lesson-completion" data-complete={completion?.completed ? "true" : "false"}>
+            <p className="lesson-completion__label">{completion?.completed ? "ĐÃ GHI NHẬN" : "BƯỚC CUỐI"}</p>
+            <button type="button" className="button lesson-completion__button" disabled={Boolean(completion?.completed)} onClick={finishLesson}>{completion?.completed ? "Đã hoàn thành · streak đã ghi" : "Hoàn thành bài & ghi streak"}</button>
+            {completion && <div className="lesson-completion__stats" aria-live="polite">
+              <div><strong>{completion.currentStreak}</strong><span>Chuỗi {english ? "English" : "中文"}</span></div>
+              <div><strong>{completion.longestStreak}</strong><span>Dài nhất</span></div>
+              <div><strong>{completion.totalCompleted}</strong><span>Bài đã Done</span></div>
+            </div>}
+            <p className="lesson-completion__note">Done ghi nhận thói quen trên thiết bị này; không tự suy ra CEFR hoặc trạng thái đã review.</p>
+          </div>
         </>}
       </section>
       <nav aria-label="Điều hướng buổi học">

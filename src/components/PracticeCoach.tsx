@@ -85,9 +85,18 @@ export function PracticeCoach({ lessonId, skill, language }: { lessonId: string;
       <p>{language === "zh" ? "2–3 phút: giữ mẫu của bài đang học, đổi đúng một chi tiết như đồ uống hoặc số lượng. Nghe audio, che chữ và nói hai câu mới. Gửi audio nếu muốn sửa thanh điệu." : drills[gap]}</p>
       <label htmlFor={lessonId + "-revision"}>Bản luyện lại / điều m đã đổi</label>
       <textarea id={lessonId + "-revision"} rows={4} maxLength={10000} value={revision} onChange={e => setRevision(e.target.value)} style={{ width: "100%" }} />
-      <p><button type="button" className="button button--ghost" onClick={() => save()}>Lưu bản luyện lại</button>{" "}<button type="button" className="button" disabled={Boolean(completion?.completed) || !revision.trim()} onClick={finishLesson}>{completion?.completed ? "✓ Đã hoàn thành · streak đã ghi" : "Hoàn thành bài & ghi streak"}</button></p>
-      {completion && <p role="status"><strong>Chuỗi {language === "zh" ? "中文" : "English"}: {completion.currentStreak} ngày</strong> · dài nhất {completion.longestStreak} ngày · {completion.totalCompleted} bài đã hoàn thành trên thiết bị này.</p>}
-      {!revision.trim() && <p><small>Viết ít nhất một thay đổi ở “Bản luyện lại” để mở nút hoàn thành.</small></p>}
+      <p><button type="button" className="button button--ghost" onClick={() => save()}>Lưu bản luyện lại</button></p>
+      <div className="lesson-completion" data-complete={completion?.completed ? "true" : "false"}>
+        <p className="lesson-completion__label">{completion?.completed ? "ĐÃ GHI NHẬN" : "BƯỚC CUỐI"}</p>
+        <button type="button" className="button lesson-completion__button" disabled={Boolean(completion?.completed) || !revision.trim()} onClick={finishLesson}>{completion?.completed ? "Đã hoàn thành · streak đã ghi" : "Hoàn thành bài & ghi streak"}</button>
+        {completion && <div className="lesson-completion__stats" aria-live="polite">
+          <div><strong>{completion.currentStreak}</strong><span>Chuỗi {language === "zh" ? "中文" : "English"}</span></div>
+          <div><strong>{completion.longestStreak}</strong><span>Dài nhất</span></div>
+          <div><strong>{completion.totalCompleted}</strong><span>Bài đã Done</span></div>
+        </div>}
+        {!revision.trim() && <p className="lesson-completion__note">Viết ít nhất một thay đổi ở “Bản luyện lại” để mở nút hoàn thành.</p>}
+        <p className="lesson-completion__note">Dữ liệu Done nằm trên trình duyệt này; điểm CEFR và review vẫn là luồng riêng.</p>
+      </div>
       <p>Ngày mai: che bài và nhớ lại 60 giây; sau 3 và 7 ngày đổi tình huống. Mốc này là lịch thử, sẽ điều chỉnh theo bài làm. Nếu khó, giảm đoạn nguồn thay vì tăng thời gian.</p>
       <h3>Tùy chọn · gửi về ChatGPT để được sửa cá nhân</h3>
       <textarea aria-label="Bài làm để sao chép gửi về ChatGPT" readOnly rows={8} value={exportText} style={{ width: "100%" }} />
