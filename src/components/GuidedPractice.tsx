@@ -43,8 +43,12 @@ export function GuidedPractice() {
   const activeLanguage = draft?.language ?? language;
   const completionId = draft ? "guided:" + draft.language + ":" + draft.startedAt : "";
   useEffect(() => {
-    if (!completionId) { setCompletion(null); return; }
-    setCompletion(getLocalCompletionSummary(completionId, activeLanguage));
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setCompletion(completionId ? getLocalCompletionSummary(completionId, activeLanguage) : null);
+    });
+    return () => { cancelled = true; };
   }, [completionId, activeLanguage]);
   function persist(next: Draft) {
     setDraft(next);

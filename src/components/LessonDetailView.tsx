@@ -103,7 +103,7 @@ export function LessonDetailView({
         </section>
       ) : (
         <p className="lesson-detail__disclaimer">
-          Bản xem thử lưu bài và streak ngay trên trình duyệt này. Đăng nhập Studio và database chỉ cần khi muốn đồng bộ qua nhiều thiết bị.
+          Bản viết chỉ lưu trên trình duyệt. Metadata Done và streak được đồng bộ khi máy chủ sẵn sàng; review và điểm CEFR vẫn là luồng riêng.
         </p>
       )}
 

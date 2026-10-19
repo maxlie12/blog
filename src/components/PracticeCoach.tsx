@@ -32,7 +32,11 @@ export function PracticeCoach({ lessonId, skill, language }: { lessonId: string;
   const storageKey = "learning-practice-v1:" + lessonId;
   const completionId = "lesson:" + lessonId;
   useEffect(() => {
-    setCompletion(getLocalCompletionSummary(completionId, language));
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setCompletion(getLocalCompletionSummary(completionId, language));
+    });
+    return () => { cancelled = true; };
   }, [completionId, language]);
   function save(event?: FormEvent) {
     event?.preventDefault();
@@ -98,7 +102,7 @@ export function PracticeCoach({ lessonId, skill, language }: { lessonId: string;
           <div><strong>{completion.totalCompleted}</strong><span>Bài đã Done</span></div>
         </div>}
         {!revision.trim() && <p className="lesson-completion__note">Viết ít nhất một thay đổi ở “Bản luyện lại” để mở nút hoàn thành.</p>}
-        <p className="lesson-completion__note">Dữ liệu Done nằm trên trình duyệt này; điểm CEFR và review vẫn là luồng riêng.</p>
+        <p className="lesson-completion__note">Done được ghi trên thiết bị trước rồi đồng bộ metadata khi có mạng; điểm CEFR và review vẫn là luồng riêng.</p>
       </div>
       <p>Ngày mai: che bài và nhớ lại 60 giây; sau 3 và 7 ngày đổi tình huống. Mốc này là lịch thử, sẽ điều chỉnh theo bài làm. Nếu khó, giảm đoạn nguồn thay vì tăng thời gian.</p>
       <h3>Tùy chọn · gửi về ChatGPT để được sửa cá nhân</h3>

@@ -31,7 +31,7 @@ export default async function DailyPage({ searchParams }: {
       <p>Tiếng Anh: Nghe → Đọc kiểm tra → Nói → Viết. Sau đó tiếng Trung 5 phút.</p>
     </header>
     {!signedIn && (process.env.BLOG_READ_ONLY_PREVIEW === "1"
-      ? <p>Mở một bài bên dưới, làm trong 5 phút rồi gửi câu trả lời hoặc audio về ChatGPT. Có thể lưu bản viết trên trình duyệt và mở key tự kiểm tra; chưa đồng bộ server hoặc tính streak.</p>
+      ? <p>Mở một bài bên dưới và làm trong 5 phút. Bản viết lưu trên trình duyệt; sau khi tự kiểm tra và luyện lại, bấm Done để ghi streak và đồng bộ metadata. Chỉ gửi câu trả lời hoặc audio về ChatGPT khi muốn nhận phản hồi.</p>
       : <p><Link href="/studio/login">Đăng nhập</Link> để nộp bài và xem tiến độ của bạn.</p>)}
     {selected ? <>
       <section className="lesson-detail__section">

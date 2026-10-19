@@ -60,20 +60,24 @@ function readDashboard(): DashboardState {
 export function LocalProgressSummary() {
   const [progress, setProgress] = useState<DashboardState | null>(null);
   const [message, setMessage] = useState("");
-  const [syncState, setSyncState] = useState<"idle" | "syncing" | "synced" | "offline">("idle");
+  const [syncState, setSyncState] = useState<"idle" | "syncing" | "synced" | "offline">("syncing");
   const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    let cancelled = false;
     const refresh = () => setProgress(readDashboard());
-    refresh();
+    queueMicrotask(() => { if (!cancelled) refresh(); });
     window.addEventListener("learning-progress-changed", refresh);
-    setSyncState("syncing");
     void syncLocalProgress().then((result) => {
+      if (cancelled) return;
       refresh();
       setSyncState("synced");
       if (result.addedFromServer > 0) setMessage(`Đã lấy thêm ${result.addedFromServer} bài từ bản đồng bộ.`);
-    }).catch(() => setSyncState("offline"));
-    return () => window.removeEventListener("learning-progress-changed", refresh);
+    }).catch(() => { if (!cancelled) setSyncState("offline"); });
+    return () => {
+      cancelled = true;
+      window.removeEventListener("learning-progress-changed", refresh);
+    };
   }, []);
 
   async function syncNow() {
