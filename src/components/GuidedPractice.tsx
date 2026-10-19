@@ -100,8 +100,15 @@ export function GuidedPractice() {
           {english ? <><audio aria-label="Audio British Council — Digital detox" controls preload="none" src={AUDIO} style={{width:"100%"}} /><p><a href={SOURCE} target="_blank" rel="noopener noreferrer">Nguồn British Council · miễn phí, audio và transcript ↗</a></p></> :
             <><a href="https://www.hellochinese.cc/" target="_blank" rel="noopener noreferrer">HelloChinese · audio/video bản ngữ, miễn phí giới hạn và Premium ↗</a><p><button type="button" className="button button--ghost" onClick={speakChinese}>Nghe mẫu tự soạn bằng giọng máy</button></p><p role="status">{speechNotice}</p></>}
           <label>Đầu vào thực tế <select value={draft.inputMode} onChange={e => update({inputMode:e.target.value})}><option value="listening">Đã nghe</option><option value="reading">Đọc thay · chưa luyện nghe</option><option value="synthetic">Giọng máy · không phải bản ngữ</option></select></label>
-          <p><button className="button button--ghost" onClick={() => setShowText(!showText)}>{showText ? "Ẩn chữ" : "Cần đọc thay / mở nguồn transcript"}</button></p>
-          {showText && (english ? <p>Transcript nằm ở nguồn British Council bên trên. Đánh dấu “Đọc thay” nếu chưa nghe; câu trả lời sẽ được xem theo điều kiện thực tế.</p> : <p>你好，我叫小林。我想要一杯茶，不要糖。<br/>Nǐ hǎo, wǒ jiào Xiǎolín. Wǒ xiǎng yào yì bēi chá, bú yào táng.<br/>Đoạn này do trợ lý tự soạn.</p>)}
+          <p className="lesson-detail__actions">
+            <button type="button" className="button button--ghost" aria-expanded={showText} onClick={() => setShowText(!showText)}>{showText ? "Ẩn script luyện đọc" : "Hiện script luyện đọc"}</button>{" "}
+            {english && <a className="button button--ghost" href={SOURCE} target="_blank" rel="noopener noreferrer">Mở transcript chính thức ↗</a>}
+          </p>
+          {showText && (english ? <div>
+            <p><strong>Script luyện đọc · bản tóm lược do trợ lý soạn</strong></p>
+            <p>People spend much of the day looking at screens for work and personal communication. The guest works online for a fashion magazine, uses websites and social media, and also keeps in touch with friends and family. Because work and personal life overlap, being online can feel continuous. She began thinking about a digital detox after reading advice about changing digital habits.</p>
+            <p><small>Đây không phải transcript nguyên văn. Dùng bản này để đọc hiểu hoặc luyện nói lại. Nếu muốn shadowing khớp chính xác với audio, mở transcript chính thức ở British Council và cuộn tới mục Transcript.</small></p>
+          </div> : <p><strong>Script luyện đọc · do trợ lý soạn</strong><br/>你好，我叫小林。我想要一杯茶，不要糖。<br/>Nǐ hǎo, wǒ jiào Xiǎolín. Wǒ xiǎng yào yì bēi chá, bú yào táng.</p>)}
         </>}
         {step === 2 && <><p>{english ? "Bài nói về chủ đề gì? Ghi một chi tiết nghe được và đánh dấu điều chưa chắc. Nếu dùng đọc thay, ghi ý đã đọc." : "Bạn nghe/đọc được tên, đồ uống hoặc yêu cầu gì? Ghi đúng điều nguồn bạn dùng có nói; chưa rõ thì đánh dấu."}</p><label htmlFor="guided-understanding">Ý hiểu được bằng lời của bạn</label><textarea id="guided-understanding" rows={4} maxLength={5000} value={draft.comprehension} onChange={e => update({comprehension:e.target.value})} style={{width:"100%"}} /></>}
         {step === 3 && <>
