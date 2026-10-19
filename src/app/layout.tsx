@@ -58,7 +58,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <PublicChrome>
             {process.env.BLOG_READ_ONLY_PREVIEW === "1" && <aside className="preview-note" role="status">
               <strong>Bản xem thử · mở bài và luyện tập</strong>
-              <p>Mở kho bài tại Learning → Bài học mỗi ngày. Bản này có thể lưu câu trả lời trên trình duyệt, chưa đồng bộ server và chưa tính streak. Gửi câu trả lời hoặc audio về ChatGPT để nhận phản hồi.</p>
+              <p>Mở kho bài tại Learning → Bài học mỗi ngày. Bản này lưu câu trả lời, trạng thái Done và streak trên trình duyệt hiện tại; chưa đồng bộ qua thiết bị. Gửi bài hoặc audio về ChatGPT chỉ khi muốn nhận phản hồi sâu.</p>
             </aside>}
             {children}
           </PublicChrome>
