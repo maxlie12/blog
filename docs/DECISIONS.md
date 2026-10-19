@@ -15,10 +15,11 @@ learner to report everything back through ChatGPT. The local action makes the co
 without login or a production database. It does not restore the old claim that a browser
 checkbox equals verified progress.
 
-**Boundary:** local Done is habit evidence only. It is device-specific, can disappear when site
-storage is cleared, and never changes CEFR, reviewed-attempt status, or public skill progress.
-Those still require an actual `Attempt` and review. Cross-device streak sync should reuse the
-same semantic boundary when production storage is added.
+**Boundary:** local Done is habit evidence only. It is browser-local and can disappear when site
+storage is cleared. A validated JSON export/import can move the history manually and merges by
+completion ID without overwriting existing records, but it is not automatic cross-device sync.
+Done never changes CEFR, reviewed-attempt status, or public skill progress; those still require
+an actual `Attempt` and review. Future server sync must preserve the same semantic boundary.
 
 ## 2026-09-26 — Attempt submission requires the Studio session, on the public lesson page
 

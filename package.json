@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "node --experimental-strip-types --test src/lib/localLearningProgress.test.ts",
     "log": "node scripts/log.mjs",
     "postinstall": "prisma generate",
     "db:migrate": "node scripts/migrate-database.mjs",

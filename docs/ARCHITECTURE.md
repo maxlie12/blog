@@ -148,8 +148,10 @@ number anywhere that could drift from the underlying attempts.
   can mark one `"reviewed"`. See [DECISIONS.md](DECISIONS.md).
 - **Write (browser-local practice):** `PracticeCoach` and `GuidedPractice` save drafts and
   explicit Done records in versioned `localStorage`. A lesson/session ID is idempotent, and a
-  calendar day can extend each language streak only once using the Asia/Ho_Chi_Minh date. This
-  data never feeds reviewed attempts or CEFR progress.
+  calendar day can extend each language streak only once using the Asia/Ho_Chi_Minh date. The
+  dashboard can export and merge-import a validated JSON backup so the owner can move this habit
+  history manually without overwriting records already present on the target browser. This data
+  never feeds reviewed attempts or CEFR progress.
 - **Write (articles/projects, learning-log CLI):** unchanged from before — file edits + git
   commit, and `npm run log`, respectively.
 
