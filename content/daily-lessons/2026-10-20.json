@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-20",
+  "title": "Giữ nhịp 5 phút — nghe một ý đối lập",
+  "kind": "restart",
+  "note": "Chưa có bài làm mới được gửi nên tiếp tục giữ mức B1+ tự báo, không suy ra tiến bộ và không nâng độ khó. Không cần làm bù toàn bộ lịch sử: chỉ chọn nhiệm vụ bắt buộc 5 phút hôm nay; các phần còn lại là tùy chọn và có thể làm ở những lúc rảnh khác. Bài do trợ lý soạn, không phải đề thi British Council/IELTS/TOEIC chính thức; không kèm đáp án. Chỉ ghi nhận hoàn thành, review hoặc streak khi có bài làm làm bằng chứng.",
+  "lessons": [
+    {
+      "id": "daily-2026-10-20-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Bắt buộc 5 phút — nghe một ý đối lập",
+      "level": "B1+ practice / B2 source",
+      "instructions": "Bài do trợ lý soạn. British Council là nguồn công khai miễn phí, có audio, transcript và bài tập. Không mở transcript; nghe 60–90 giây đầu của A digital detox podcast đúng một lượt.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Ghi bằng tiếng Anh: (1) ba từ/cụm bạn nghe chắc nhất; (2) một câu theo mẫu The speaker says …, but … để nêu hai ý có quan hệ đối lập hoặc bổ sung. Ghi mức chắc chắn 0–100% và tổng số phút. Không nghe lại hoặc tra từ trước khi gửi.",
+      "completionCriteria": "Gửi ba từ/cụm, một câu có but, % chắc chắn và số phút. Trợ lý sẽ xác nhận phần hiểu đúng, sửa một lỗi ưu tiên và giao một bước luyện lại 2 phút; chưa tự quy đổi CEFR."
+    },
+    {
+      "id": "daily-2026-10-20-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — kiểm chứng bằng transcript",
+      "level": "B1+ practice / B2 source",
+      "instructions": "Chỉ làm sau phần nghe. Mở transcript chính thức trong cùng nguồn, đọc đúng đoạn đã nghe tối đa 90 giây; không sao chép câu dài.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Tìm tối đa hai cụm ngắn giúp kiểm chứng câu có but của bạn. Viết lại câu đó bằng lời riêng, rồi thêm một câu nêu điều bạn đã nghe sai hoặc bỏ sót.",
+      "completionCriteria": "Gửi hai cụm ngắn, câu đã sửa, điều bỏ sót và số phút. Đây là tự kiểm chứng, không phải kết quả CEFR."
+    },
+    {
+      "id": "daily-2026-10-20-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — kể lại rồi liên hệ Angular",
+      "level": "B1+ practice",
+      "instructions": "Bài do trợ lý soạn. Chuẩn bị 20 giây, sau đó nói 45–60 giây; không viết script đầy đủ.",
+      "material": null,
+      "exercises": "Dùng khung: The main point is … / One example is … / In my work, I would … . Kể lại một ý từ đoạn nghe rồi liên hệ lúc bạn cần tập trung xử lý một bug Angular nhưng vẫn phải nhận thông báo khẩn.",
+      "completionCriteria": "Gửi audio hoặc transcript thật đã nói và ghi rõ có nhìn ghi chú không. Audio mới đủ để nhận xét phát âm/nhịp; transcript chỉ dùng sửa nội dung, lập luận và ngữ pháp."
+    },
+    {
+      "id": "daily-2026-10-20-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5–10 phút — đề xuất focus block",
+      "level": "B1+ practice",
+      "instructions": "Tình huống do trợ lý tự soạn, không phải câu hỏi thật của SmartOSC. Viết bản đầu 55–70 từ, không dùng AI sửa trước và không đưa dữ liệu dự án nhạy cảm.",
+      "material": null,
+      "exercises": "Write a short message to your team proposing a 30-minute focus block. Explain the benefit, one possible risk, the emergency channel you will keep open, and how you will check whether the change works.",
+      "completionCriteria": "Gửi bản đầu, số phút và công cụ đã dùng. Trợ lý sẽ phản hồi theo mục đích, liên kết, độ chính xác và tính phù hợp; không tự nâng cấp độ."
+    },
+    {
+      "id": "daily-2026-10-20-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tiếng Trung phụ 5 phút — hỏi giá và gọi đồ uống",
+      "level": "Beginner",
+      "instructions": "Bài do trợ lý soạn. HelloChinese có video người bản ngữ và nhận diện giọng nói; app tải miễn phí nhưng quyền truy cập đầy đủ có thể cần Premium. Nếu có bài nhà hàng/gọi món, nghe mẫu người bản ngữ hai lượt.",
+      "material": "https://www.hellochinese.cc/vi",
+      "exercises": "Nói: 请问，这个多少钱？我要一杯茶，少糖，谢谢。Qǐngwèn, zhège duōshao qián? Wǒ yào yì bēi chá, shǎo táng, xièxie. Sau đó thay 茶 bằng 咖啡 và 一杯 bằng 两杯.",
+      "completionCriteria": "Gửi audio 15–25 giây hoặc chữ Hán+pinyin và nói rõ có nhìn mẫu không. Phản hồi sẽ ưu tiên một lỗi thanh điệu hoặc trật tự từ; không đưa đáp án trước khi bạn làm."
+    }
+  ]
+}
