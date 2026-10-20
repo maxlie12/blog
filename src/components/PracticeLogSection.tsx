@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { computeStreaks } from "@/lib/streak";
-import { LocalProgressSummary } from "@/components/LocalProgressSummary";
+import { LocalProgressSummary, type TestPacket } from "@/components/LocalProgressSummary";
+import { getDailyPackets } from "@/lib/dailyLessons";
 
 const AREA_LABELS: Record<string, string> = {
   english: "English",
@@ -10,9 +11,15 @@ const AREA_LABELS: Record<string, string> = {
 };
 
 export async function PracticeLogSection() {
+  const testPacketsPromise: Promise<TestPacket[]> = getDailyPackets().then((packets) => packets.flatMap((packet) =>
+    packet.kind === "weekly-test" || packet.kind === "monthly-test"
+      ? [{ date: packet.date, title: packet.title, kind: packet.kind }]
+      : []
+  ));
   if (process.env.BLOG_READ_ONLY_PREVIEW === "1") {
+    const testPackets = await testPacketsPromise;
     return <>
-      <LocalProgressSummary />
+      <LocalProgressSummary testPackets={testPackets} />
       <section className="practice-log">
         <h2>Tiến độ đã review · chưa kết nối</h2>
         <p>Done/streak cá nhân ở trên dùng được ngay trên thiết bị. Khi database production được kết nối, khu vực này mới hiển thị bài đã review và bằng chứng tiến bộ đồng bộ qua thiết bị.</p>
@@ -22,22 +29,25 @@ export async function PracticeLogSection() {
   let allDates: { date: string }[] = [];
   let publicEntries: Awaited<ReturnType<typeof prisma.learningLog.findMany>> = [];
   let dbError: string | null = null;
+  let testPackets: TestPacket[] = [];
 
   try {
-    [allDates, publicEntries] = await Promise.all([
+    [allDates, publicEntries, testPackets] = await Promise.all([
       prisma.learningLog.findMany({ select: { date: true } }),
       prisma.learningLog.findMany({
         where: { isPublic: true },
         orderBy: { date: "desc" },
         take: 30,
       }),
+      testPacketsPromise,
     ]);
   } catch (err) {
     dbError = err instanceof Error ? err.message : "Unknown database error";
   }
 
   if (dbError) {
-    return (
+    return (<>
+      <LocalProgressSummary testPackets={testPackets} />
       <section className="practice-log">
         <h2>Practice log (tracked)</h2>
         <div className="error-banner">
@@ -50,12 +60,13 @@ export async function PracticeLogSection() {
           </p>
         </div>
       </section>
-    );
+    </>);
   }
 
   const { current, longest } = computeStreaks(allDates.map((d) => d.date));
 
-  return (
+  return (<>
+    <LocalProgressSummary testPackets={testPackets} />
     <section className="practice-log">
       <div className="practice-log__intro">
         <h2>Practice log (tracked)</h2>
@@ -101,5 +112,5 @@ export async function PracticeLogSection() {
         )}
       </div>
     </section>
-  );
+  </>);
 }

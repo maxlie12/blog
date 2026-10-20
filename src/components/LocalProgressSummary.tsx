@@ -20,6 +20,38 @@ type DashboardState = {
   zhDays: LocalActivityDay[];
 };
 
+export type TestPacket = { date: string; title: string; kind: "weekly-test" | "monthly-test" };
+
+const TEST_MILESTONES = [
+  { days: 7, title: "Mini-test 1", note: "Nghe + một đầu ra ngắn" },
+  { days: 14, title: "Mini-test 2", note: "Đổi tình huống, không nhìn bài cũ" },
+  { days: 21, title: "Mini-test 3", note: "Lập luận và độ chính xác" },
+  { days: 28, title: "Đánh giá chặng", note: "Bốn kỹ năng, nội dung chưa luyện" },
+];
+
+function TestRoadmap({ streak, packets }: { streak: number; packets: TestPacket[] }) {
+  const published = [...packets].sort((a, b) => a.date.localeCompare(b.date));
+  const nextIndex = TEST_MILESTONES.findIndex((item) => streak < item.days);
+  const nextMilestone = nextIndex >= 0 ? TEST_MILESTONES[nextIndex] : null;
+
+  return <div className={styles.roadmap}>
+    <div><strong>Mốc kiểm tra nhìn thấy trước</strong><span>Tiến độ dựa trên streak English hiện tại; bài test không tự nâng CEFR.</span></div>
+    <ol className={styles.milestones}>
+      {TEST_MILESTONES.map((item, index) => {
+        const reached = streak >= item.days;
+        const isNext = index === nextIndex;
+        return <li key={item.days} data-state={reached ? "reached" : isNext ? "next" : "locked"}>
+          <span className={styles.marker}>{reached ? "✓" : item.days}</span>
+          <strong>{item.title}</strong><small>{item.note}</small>
+          <span>{reached ? "Đã mở mốc" : `Cần streak ${item.days} ngày`}</span>
+        </li>;
+      })}
+    </ol>
+    <p>{nextMilestone ? <>Chuỗi hiện tại: {streak} ngày · còn {nextMilestone.days - streak} ngày tới {nextMilestone.title}.</> : <>Đã đạt mốc 28 ngày; dùng bài đánh giá chặng để quyết định bước tiếp theo.</>} Nếu đứt streak, bài đã Done vẫn còn trong lịch sử; chỉ chuỗi liên tục bắt đầu lại.</p>
+    {published.length > 0 ? <div className={styles.testArchive}><strong>Bài test đã phát hành</strong>{published.map((packet) => <Link key={packet.date + packet.title} href={`/learning/daily?date=${packet.date}`}>{packet.date} · {packet.title} →</Link>)}</div> : null}
+  </div>;
+}
+
 function ProgressRow({ label, value }: { label: string; value: LocalProgressSummary }) {
   return <div className={styles.row}>
     <div><strong>{label}</strong><span>{value.totalCompleted} bài đã Done</span></div>
@@ -57,7 +89,7 @@ function readDashboard(): DashboardState {
   };
 }
 
-export function LocalProgressSummary() {
+export function LocalProgressSummary({ testPackets = [] }: { testPackets?: TestPacket[] }) {
   const [progress, setProgress] = useState<DashboardState | null>(null);
   const [message, setMessage] = useState("");
   const [syncState, setSyncState] = useState<"idle" | "syncing" | "synced" | "offline">("syncing");
@@ -122,7 +154,7 @@ export function LocalProgressSummary() {
     }
   }
 
-  return <section className={styles.summary} aria-labelledby="local-progress-title">
+  return <section id="streak-checkpoints" className={styles.summary} aria-labelledby="local-progress-title">
     <div>
       <p className="eyebrow">TIẾN ĐỘ CÁ NHÂN</p>
       <h2 id="local-progress-title">Done và streak cá nhân</h2>
@@ -139,6 +171,8 @@ export function LocalProgressSummary() {
         <ActivityRow label="English" days={progress.enDays} />
         <ActivityRow label="中文" days={progress.zhDays} />
       </div>
+      <TestRoadmap streak={progress.en.currentStreak} packets={testPackets} />
+      <p className={styles.chineseCheckpoint}><strong>中文:</strong> {progress.zh.currentStreak}/7 ngày liên tục tới mini-test hội thoại ngắn. Mốc Trung tách khỏi English để không biến phần phụ thành áp lực.</p>
     </> : <p>Đang đọc tiến độ trên trình duyệt…</p>}
 
     <div className={styles.actions}>

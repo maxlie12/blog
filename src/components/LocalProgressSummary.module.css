@@ -88,3 +88,35 @@
   .actions :global(.button) { transition: none; }
   .syncStatus[data-state="syncing"] > span { animation: none; }
 }
+
+.roadmap {
+  display: grid;
+  gap: .85rem;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--sunset) 30%, var(--border));
+  border-radius: 14px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--butter) 52%, var(--surface)), var(--surface));
+}
+.roadmap > div:first-child { display: grid; gap: .2rem; }
+.roadmap > div:first-child span,
+.roadmap p,
+.milestones small,
+.milestones li > span:last-child { color: var(--text-muted); font-size: .78rem; }
+.milestones { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .6rem; margin: 0; padding: 0; list-style: none; }
+.milestones li { display: grid; align-content: start; gap: .3rem; min-height: 9rem; padding: .75rem; border: 1px solid var(--border); border-radius: 12px; background: color-mix(in srgb, var(--surface) 92%, transparent); }
+.milestones li[data-state="next"] { border-color: var(--sunset); box-shadow: 0 0 0 3px color-mix(in srgb, var(--butter) 55%, transparent); }
+.milestones li[data-state="reached"] { border-color: var(--forest); background: color-mix(in srgb, var(--sage) 52%, var(--surface)); }
+.marker { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; background: var(--butter); color: var(--forest); font-weight: 800; }
+.milestones li[data-state="reached"] .marker { background: var(--forest); color: white; }
+.testArchive { display: grid; gap: .25rem; padding-top: .6rem; border-top: 1px solid color-mix(in srgb, var(--sunset) 20%, var(--border)); }
+.testArchive a { font-size: .82rem; font-weight: 750; }
+.chineseCheckpoint { margin: 0; padding: .7rem .85rem; border-left: 3px solid var(--sunset); background: color-mix(in srgb, var(--butter) 30%, transparent); }
+
+@media (max-width: 720px) {
+  .milestones { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 420px) {
+  .milestones { grid-template-columns: 1fr; }
+  .milestones li { min-height: auto; }
+}
