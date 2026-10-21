@@ -1,6 +1,6 @@
 # Daily learning
 
-`/learning/daily` provides dated English/Chinese packets. Start with one five-minute task; all four English skills are available, with Chinese secondary. The default opens the oldest packet containing an English lesson without reviewed evidence. Dates do not advance proficiency. The archive allows explicit selection.
+`/learning/daily` provides dated language packets. The schema accepts the configured English, Chinese and Japanese language IDs. Start with one five-minute task; English remains the current primary path, with Chinese and Japanese optional. The default opens the oldest packet containing an English lesson without reviewed evidence. Dates do not advance proficiency. The archive allows explicit selection.
 
 Packets are versioned under `content/daily-lessons/YYYY-MM-DD.json`. They are validated by `src/lib/dailyLessons.ts`, merged into the existing lesson picker, and bundled for deployment. Lesson IDs must be globally unique and start with `daily-`. The first owner submission materializes its lesson in the database without overwriting Studio edits. Existing attempts are preserved. No schema migration is required for daily packets.
 

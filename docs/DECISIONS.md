@@ -3,6 +3,23 @@
 Reverse-chronological log of decisions with material impact and their rationale. See linked
 docs for full detail; this file is the "why," not the "how."
 
+## 2026-10-21 — Shared language packs before named learner accounts
+
+**Decision:** add Japanese through the same language configuration, lesson engine, filters and
+local Done/streak path used by English and Chinese. Keep Studio as the only privileged account.
+Luân and Phi use separate browser profiles or separate exported sync tokens, which already
+isolate anonymous habit metadata on the server.
+
+**Why:** the immediate need is two people learning different languages, not shared authoring,
+email recovery or social features. Adding Supabase/Auth.js now would duplicate the existing
+signed Studio session and random-token progress system. The smaller change makes Japanese
+usable without another dependency, service, migration or secret.
+
+**Boundary:** reviewed Attempts remain owner-only and global; only local Done/streak metadata is
+learner-isolated. Add real learner accounts when named sign-in, account recovery, per-user
+reviewed attempts or same-device profile switching is required. At that point migrate the
+token records deliberately instead of keeping two progress identities.
+
 ## 2026-10-19 — Habit sync is local-first and stores metadata only
 
 **Decision:** keep `localStorage` as the immediate source of the Done UX and add a narrowly

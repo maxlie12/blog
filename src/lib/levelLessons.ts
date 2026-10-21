@@ -264,6 +264,50 @@ export const LEVEL_LESSONS: LevelLesson[] = [
     "material": null,
     "exercises": "Viết đơn gọi đồ uống hai câu với số lượng và một yêu cầu; đổi ít nhất một chi tiết so với đoạn đọc. Pinyin được chấp nhận.",
     "completionCriteria": "Làm trong 5–10 phút; lưu bản đầu, mở key tự kiểm tra và sửa một điểm. Gửi bài hoặc audio về ChatGPT để được review. Cấp độ nhiệm vụ do trợ lý thiết kế, không chứng nhận trình độ."
+  },
+  {
+    "id": "level-ja-starter-listening",
+    "language": "ja",
+    "skill": "listening",
+    "title": "Starter · Chào hỏi và tự giới thiệu · listening",
+    "level": "Starter / A1",
+    "instructions": "5 phút. Bài do trợ lý soạn theo mục tiêu Can-do Starter của Japan Foundation; không phải đề JLPT. Irodori là nguồn công khai có audio người bản ngữ. Không chép transcript của nguồn vào đây.",
+    "material": "https://www.irodori.jpf.go.jp/en/starter/audio/lesson01.html",
+    "exercises": "Mở một audio chào hỏi trong Lesson 1. Nghe tối đa hai lượt, chưa nhìn chữ. Ghi lời chào nghe được, thời điểm hoặc tình huống bạn đoán, rồi đánh dấu điều chưa chắc.",
+    "completionCriteria": "Nghe một mẫu, lưu điều nghe chắc và chưa chắc, rồi bấm Done. Đây là luyện tập Starter/A1, không chứng nhận JLPT hoặc JF Standard."
+  },
+  {
+    "id": "level-ja-starter-reading",
+    "language": "ja",
+    "skill": "reading",
+    "title": "Starter · Chào hỏi và tự giới thiệu · reading",
+    "level": "Starter / A1",
+    "instructions": "5 phút. Bài và đoạn đọc ngắn do trợ lý soạn theo mục tiêu Can-do Starter của Japan Foundation; không phải nội dung sao chép từ giáo trình hay đề JLPT.",
+    "material": "はじめまして。フィーです。ベトナムから来ました。よろしくお願いします。\nHajimemashite. Fii desu. Betonamu kara kimashita. Yoroshiku onegaishimasu.",
+    "exercises": "Xác định tên và quốc gia. Sau đó che romaji, đọc phần kana một lượt; nếu chưa học kana, đánh dấu đọc bằng romaji thay vì tự nhận đã đọc chữ Nhật.",
+    "completionCriteria": "Trả lời được hai ý và đọc lại một lượt bằng hệ chữ thực tế đã dùng. Done không tự chứng minh A1/N5."
+  },
+  {
+    "id": "level-ja-starter-speaking",
+    "language": "ja",
+    "skill": "speaking",
+    "title": "Starter · Chào hỏi và tự giới thiệu · speaking",
+    "level": "Starter / A1",
+    "instructions": "5 phút. Tình huống do trợ lý soạn theo Can-do giao tiếp đầu vào. Dùng audio Irodori để đối chiếu nhịp và âm; văn bản không đủ để chấm phát âm.",
+    "material": "https://www.irodori.jpf.go.jp/en/starter/audio/lesson01.html",
+    "exercises": "Nói lời chào, tên và quốc gia trong 15–20 giây. Lượt một được nhìn mẫu; lượt hai che chữ và đổi tên thành tên của bạn. Ghi rõ lượt nào không nhìn mẫu.",
+    "completionCriteria": "Nói hai lượt, trong đó có một lượt đổi thông tin cá nhân. Muốn sửa phát âm cần gửi audio; Done chỉ ghi nhận luyện tập."
+  },
+  {
+    "id": "level-ja-starter-writing",
+    "language": "ja",
+    "skill": "writing",
+    "title": "Starter · Chào hỏi và tự giới thiệu · writing",
+    "level": "Starter / A1",
+    "instructions": "5 phút. Bài do trợ lý soạn. Có thể dùng kana kèm romaji khi mới bắt đầu; hãy ghi rõ hệ chữ đã dùng để lần ôn sau so sánh đúng năng lực.",
+    "material": null,
+    "exercises": "Viết 2–3 câu: lời chào, tên và nơi đến. Sau đó đổi đúng một chi tiết để tạo bản thứ hai. Không dùng AI sửa bản đầu.",
+    "completionCriteria": "Có bản đầu và một biến thể đổi thông tin; giữ lại đúng một mẫu câu muốn ôn sau 1–3–7 ngày. Không tự quy đổi sang JLPT."
   }
 ];
 export function getLevelLesson(id: string): LevelLesson | null { return LEVEL_LESSONS.find(l => l.id === id) ?? null; }

@@ -54,7 +54,7 @@ model Post {
 model Lesson {
   id                 String    @id @default(cuid())
   skill              String // "writing" | "listening" | "speaking" | "reading"
-  language           String    @default("en") // "en" | "zh"
+  language           String    @default("en") // configured language ID, currently "en" | "zh" | "ja"
   title              String
   level              String // CEFR-style label shown as a tag, e.g. "B1+" — cosmetic only
   instructions       String

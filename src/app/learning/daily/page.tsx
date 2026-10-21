@@ -5,6 +5,7 @@ import { getDailyPackets } from "@/lib/dailyLessons";
 import { getAllLessons, SKILLS } from "@/lib/lessonsData";
 import { todayInTz } from "@/lib/streak";
 import { hasStudioSession } from "@/lib/studioSession";
+import { getLanguageLabel } from "@/lib/languages";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Daily practice" };
@@ -45,7 +46,7 @@ export default async function DailyPage({ searchParams }: {
         {orderPractice(selected.lessons).map((l, index) => {
           const progress = byId.get(l.id);
           return <section key={l.id} className="lesson-detail__section">
-            <span className="tag">{l.language === "en" ? "English" : "中文"} · {SKILLS.find((s) => s.id === l.skill)?.label}</span>
+            <span className="tag">{getLanguageLabel(l.language, true)} · {SKILLS.find((s) => s.id === l.skill)?.label}</span>
             <h2>{index + 1}. {l.title}</h2><p>{l.instructions}</p>
             {signedIn && <p>{progress?.reviewedCount ? "Đã review" : progress?.attemptCount ? "Đã nộp · chờ review" : "Chưa nộp"}</p>}
             <Link className="button button--ghost" href={`/learning/${l.id}`}>Mở và làm bài →</Link>

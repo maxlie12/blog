@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { LANGUAGES, type LanguageId } from "@/lib/languages";
 import {
   exportLocalProgressBackup,
   getLocalLanguageActivity,
@@ -13,12 +14,10 @@ import {
 } from "@/lib/localLearningProgress";
 import styles from "./LocalProgressSummary.module.css";
 
-type DashboardState = {
-  en: LocalProgressSummary;
-  zh: LocalProgressSummary;
-  enDays: LocalActivityDay[];
-  zhDays: LocalActivityDay[];
-};
+type DashboardState = Record<LanguageId, {
+  summary: LocalProgressSummary;
+  days: LocalActivityDay[];
+}>;
 
 export type TestPacket = { date: string; title: string; kind: "weekly-test" | "monthly-test" };
 
@@ -81,12 +80,10 @@ function ActivityRow({ label, days }: { label: string; days: LocalActivityDay[] 
 }
 
 function readDashboard(): DashboardState {
-  return {
-    en: getLocalLanguageSummary("en"),
-    zh: getLocalLanguageSummary("zh"),
-    enDays: getLocalLanguageActivity("en"),
-    zhDays: getLocalLanguageActivity("zh"),
-  };
+  return Object.fromEntries(LANGUAGES.map((language) => [language.id, {
+    summary: getLocalLanguageSummary(language.id),
+    days: getLocalLanguageActivity(language.id),
+  }])) as DashboardState;
 }
 
 export function LocalProgressSummary({ testPackets = [] }: { testPackets?: TestPacket[] }) {
@@ -158,21 +155,21 @@ export function LocalProgressSummary({ testPackets = [] }: { testPackets?: TestP
     <div>
       <p className="eyebrow">TIẾN ĐỘ CÁ NHÂN</p>
       <h2 id="local-progress-title">Done và streak cá nhân</h2>
-      <p>Học bù vẫn ghi vào ngày bạn thực sự hoàn thành. Nhiều bài trong một ngày chỉ kéo dài streak một ngày.</p>
+      <p>Học bù vẫn ghi vào ngày bạn thực sự hoàn thành. Nhiều bài trong một ngày chỉ kéo dài streak một ngày. Mỗi browser profile có khóa đồng bộ riêng, nên không dùng chung file sao lưu giữa hai người.</p>
     </div>
 
     {progress ? <>
       <div className={styles.list}>
-        <ProgressRow label="English" value={progress.en} />
-        <ProgressRow label="中文" value={progress.zh} />
+        {LANGUAGES.map((language) => <ProgressRow key={language.id} label={language.shortLabel} value={progress[language.id].summary} />)}
       </div>
       <div className={styles.activity}>
         <div><strong>Lịch học 28 ngày</strong><span>Ô có chấm là ngày đã Done ít nhất một bài.</span></div>
-        <ActivityRow label="English" days={progress.enDays} />
-        <ActivityRow label="中文" days={progress.zhDays} />
+        {LANGUAGES.map((language) => <ActivityRow key={language.id} label={language.shortLabel} days={progress[language.id].days} />)}
       </div>
-      <TestRoadmap streak={progress.en.currentStreak} packets={testPackets} />
-      <p className={styles.chineseCheckpoint}><strong>中文:</strong> {progress.zh.currentStreak}/7 ngày liên tục tới mini-test hội thoại ngắn. Mốc Trung tách khỏi English để không biến phần phụ thành áp lực.</p>
+      <TestRoadmap streak={progress.en.summary.currentStreak} packets={testPackets} />
+      {LANGUAGES.filter((language) => language.id !== "en").map((language) => <p key={language.id} className={styles.chineseCheckpoint}>
+        <strong>{language.shortLabel}:</strong> {progress[language.id].summary.currentStreak}/7 ngày liên tục tới mini-test: {language.checkpoint.toLocaleLowerCase()}. Mốc này tách khỏi English.
+      </p>)}
     </> : <p>Đang đọc tiến độ trên trình duyệt…</p>}
 
     <div className={styles.actions}>

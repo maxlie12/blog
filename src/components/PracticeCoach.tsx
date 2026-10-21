@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import type { SkillId } from "@/lib/lessonTypes";
+import { getLanguageLabel } from "@/lib/languages";
 import { getLocalCompletionSummary, recordLocalCompletion, syncLocalProgress, type LocalCompletionSummary } from "@/lib/localLearningProgress";
 
 type Gap = "meaning" | "reasoning" | "language" | "delivery";
@@ -29,6 +30,14 @@ const keys: Record<SkillId, string[]> = {
   reading: ["Evidence — chi tiết trong nguồn", "Paraphrase — diễn đạt bằng lời mình", "Correction — đối chiếu điều đã nghe với điều đọc được"],
   speaking: ["Choice — lựa chọn rõ", "Reason — lý do hoặc ví dụ", "Trade-off — bất tiện có thể có", "Verification — cách kiểm tra kết quả"],
   writing: ["Purpose — mục đích", "Context — bối cảnh đủ hiểu", "Reason/example — lý do hoặc ví dụ", "Next step — hành động hoặc cách kiểm tra"],
+};
+const languageChecks: Partial<Record<string, string[]>> = {
+  zh: ["Mẫu câu — đúng đồ vật và số lượng", "Thanh điệu — đối chiếu audio bản ngữ", "Đổi tình huống — nói lại khi che chữ"],
+  ja: ["Can-do — hoàn thành đúng việc giao tiếp", "Âm và nhịp — đối chiếu audio bản ngữ", "Kana/romaji — ghi đúng hệ chữ thực tế đã dùng", "Đổi tình huống — thay một chi tiết khi che mẫu"],
+};
+const languageDrill: Partial<Record<string, string>> = {
+  zh: "2–3 phút: giữ mẫu của bài đang học, đổi đúng một chi tiết như đồ uống hoặc số lượng. Nghe audio, che chữ và nói hai câu mới. Gửi audio nếu muốn sửa thanh điệu.",
+  ja: "2–3 phút: giữ mẫu chào hỏi/tự giới thiệu, đổi tên hoặc quốc gia. Nghe audio, nhại hai lượt, che chữ rồi nói lại. Ghi rõ dùng kana hay romaji; gửi audio nếu muốn sửa phát âm.",
 };
 
 export function PracticeCoach({ lessonId, skill, language }: { lessonId: string; skill: SkillId; language: string }) {
@@ -103,9 +112,9 @@ export function PracticeCoach({ lessonId, skill, language }: { lessonId: string;
     {attempt && <div>
       <h3>Key để tự kiểm tra · chưa phải feedback cá nhân</h3>
       <p>Đối chiếu từng mục với bản đầu. Chỉ tick khi bạn chỉ được đúng phần tương ứng trong câu của mình; đây là tiêu chí, không phải đáp án mẫu.</p>
-      <div className="self-check-grid">{(language === "zh" ? ["Mẫu câu — đúng đồ vật và số lượng", "Thanh điệu — đối chiếu audio bản ngữ", "Đổi tình huống — nói lại khi che chữ"] : keys[skill]).map(k => <label key={k}><input type="checkbox" /> {k}</label>)}</div>
+      <div className="self-check-grid">{(languageChecks[language] ?? keys[skill]).map(k => <label key={k}><input type="checkbox" /> {k}</label>)}</div>
       <p><label>Chọn điểm m muốn sửa <select value={gap} onChange={e => setGap(e.target.value as Gap)}><option value="meaning">Chưa hiểu / chưa nhớ ý</option><option value="reasoning">Lập luận chưa rõ</option><option value="language">Từ vựng / cấu trúc</option><option value="delivery">Nói / phát âm</option></select></label></p>
-      <p>{language === "zh" ? "2–3 phút: giữ mẫu của bài đang học, đổi đúng một chi tiết như đồ uống hoặc số lượng. Nghe audio, che chữ và nói hai câu mới. Gửi audio nếu muốn sửa thanh điệu." : drills[gap]}</p>
+      <p>{languageDrill[language] ?? drills[gap]}</p>
       <p><strong>Cách luyện lại:</strong> sửa đúng một điểm trong bản đầu, rồi dùng cùng cấu trúc cho một câu mới ở bối cảnh khác.</p>
       <label htmlFor={lessonId + "-revision"}>Fixed: câu đã sửa · Transfer: câu mới</label>
       <textarea id={lessonId + "-revision"} rows={4} maxLength={10000} value={revision} onChange={e => setRevision(e.target.value)} style={{ width: "100%" }} />
@@ -114,7 +123,7 @@ export function PracticeCoach({ lessonId, skill, language }: { lessonId: string;
         <p className="lesson-completion__label">{completion?.completed ? "ĐÃ GHI NHẬN" : "BƯỚC CUỐI"}</p>
         <button type="button" className="button lesson-completion__button" disabled={Boolean(completion?.completed) || !revision.trim()} onClick={finishLesson}>{completion?.completed ? "Đã hoàn thành · streak đã ghi" : "Hoàn thành bài & ghi streak"}</button>
         {completion && <div className="lesson-completion__stats" aria-live="polite">
-          <div><strong>{completion.currentStreak}</strong><span>Chuỗi {language === "zh" ? "中文" : "English"}</span></div>
+          <div><strong>{completion.currentStreak}</strong><span>Chuỗi {getLanguageLabel(language, true)}</span></div>
           <div><strong>{completion.longestStreak}</strong><span>Dài nhất</span></div>
           <div><strong>{completion.totalCompleted}</strong><span>Bài đã Done</span></div>
         </div>}

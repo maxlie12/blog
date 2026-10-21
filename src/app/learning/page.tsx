@@ -20,7 +20,7 @@ export default async function LearningPage() {
     <div className="learning-page">
       <header className="section-page__header">
         <h1>Learning</h1>
-        <p>Chọn ngôn ngữ, cấp độ và kỹ năng. Mỗi bài làm trong 5–10 phút; cấp độ bài không phải kết quả đánh giá trình độ của bạn.</p>
+        <p>Chọn English, 中文 hoặc 日本語, rồi lọc cấp độ và kỹ năng. Mỗi bài làm trong 5–10 phút; cấp độ bài không phải kết quả đánh giá trình độ của bạn.</p>
         <Link href="/learning/world" className="button">Vào Learning Farm →</Link>{" "}
         <Link href="/learning/session" className="button button--ghost">Buổi học có hướng dẫn →</Link>{" "}
         <Link href="/learning/daily" className="button button--ghost">Kho bài theo ngày →</Link>
@@ -37,7 +37,7 @@ export default async function LearningPage() {
         <MountainJourney checkpoints={checkpoints} />
       </div>
 
-      <section className="lesson-detail__section"><h2>Bài học theo cấp độ</h2><p>Tiếng Anh: A2 để ôn nền, B1 kể chuyện, B1+ luyện hiện tại, B2 lập luận và C1 sắc thái. Tiếng Trung: Beginner → Elementary, là nhóm sơ cấp nội bộ. Bắt đầu B1+ nếu chưa có đánh giá khác; có thể xem thử mức cao hơn mà không tự ghi nhận lên trình độ.</p></section>
+      <section className="lesson-detail__section"><h2>Bài học theo cấp độ</h2><p>Tiếng Anh: A2 → C1 theo độ khó nhiệm vụ. Tiếng Trung: Beginner → Elementary. Tiếng Nhật: Starter → A1/N5, bắt đầu bằng Can-do giao tiếp và không coi A1 tương đương JLPT N5. Luân và Phi có tiến độ riêng khi dùng browser profile hoặc khóa đồng bộ riêng.</p></section>
       <LessonFilterProvider>
         <div className="learning-board">
           <SkillCards lessons={lessons} />

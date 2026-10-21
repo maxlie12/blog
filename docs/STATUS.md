@@ -1,6 +1,22 @@
 # Status
 
-Last verified: 2026-09-26 (lesson-attempt-submission pass).
+Last verified: 2026-10-21 (shared language-pack foundation).
+
+## 2026-10-21 — English, Chinese and Japanese share one lesson engine
+
+- `src/lib/languages.ts` is now the source of truth for language labels, level groups, ordering
+  and seven-day review prompts. Filters, Studio validation, dated-packet validation, lesson
+  order and the Done/streak dashboard consume the same configuration.
+- Japanese is available in the lesson filter and Studio. A four-skill Starter/A1 set links to
+  Japan Foundation Irodori native audio and uses original Can-do micro-tasks; it does not copy
+  source transcripts or present Starter/A1 as a JLPT result.
+- Anonymous learner progress remains separated by each browser's private random sync token.
+  Studio is still the only admin account. Named/email learner accounts and per-user reviewed
+  Attempts are not built in this phase.
+- Checks: 7 focused Node tests passed, ESLint passed, Next.js 16 production build and TypeScript
+  passed. A local production server returned HTTP 200 for `/learning` and the Japanese Starter
+  lesson; SSR output contained the Japanese filter, Starter lessons and dynamic streak row.
+  Visual Playwright QA was not run because the browser executable is not installed.
 
 ## 2026-10-16 (evening) — Meshy models generated; lint verified
 

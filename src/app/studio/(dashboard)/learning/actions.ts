@@ -26,7 +26,7 @@ function readLessonInput(formData: FormData) {
 
 function validateLesson(input: ReturnType<typeof readLessonInput>): string[] {
   const errors: string[] = [];
-  if (!isValidLanguage(input.language)) errors.push("Choose English or Chinese.");
+  if (!isValidLanguage(input.language)) errors.push("Choose a supported language.");
   if (!isValidSkill(input.skill)) errors.push("Choose a valid skill.");
   if (!input.title) errors.push("Title is required.");
   if (!input.level) errors.push("Target level is required.");

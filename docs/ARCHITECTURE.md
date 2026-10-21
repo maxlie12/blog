@@ -32,9 +32,13 @@
 One Next.js app, deployed as a single unit. No separate CMS, no separate API service, no
 separate auth provider.
 
+Language-specific labels, level groups and review checkpoints live in
+`src/lib/languages.ts`. Lesson rendering, filters and local habit progress consume that shared
+configuration, so English, Chinese and Japanese do not require separate page implementations.
+
 ## Why this shape
 
-- **One person operates this, and is also the only one who can write.** That hasn't changed
+- **One person operates Studio, and is also the only privileged writer.** That hasn't changed
   with Studio — Studio is that same one person's authoring tool, not a multi-user CMS. It gets
   a password gate because it can now change what the public site shows, not because there are
   multiple roles to manage. See "Studio auth," below, and [DECISIONS.md](DECISIONS.md).
@@ -60,6 +64,19 @@ separate auth provider.
   Studio's `Attempt` model remains the reviewed evidence layer:
   attempts are recorded by the owner in the database, and only reviewed attempts affect the
   public skill-progress numbers.
+
+## Learner profiles and permissions
+
+- Public lessons are shared read-only content.
+- Studio remains the single-owner admin surface, protected by its signed session cookie.
+- A learner's Done/streak history is isolated by the browser's random 256-bit sync token. Two
+  people using different browser profiles receive different server-side progress records; no
+  name, email, answer or audio is stored by this habit-sync path.
+- This is anonymous profile isolation, not email authentication. A learner can move the same
+  profile to another device only by importing the private backup containing its sync token.
+- Real learner accounts are deferred until email sign-in or account recovery is a demonstrated
+  need. They must replace or deliberately migrate the token model rather than run beside it as
+  a second source of truth.
 
 ## Studio auth
 

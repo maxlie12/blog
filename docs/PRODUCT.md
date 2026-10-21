@@ -5,7 +5,7 @@
 A single public site that is a genuine record of growth, not a highlight reel:
 
 - Show what has been built (portfolio/projects).
-- Show what is being learned and how (English, Chinese, software), including setbacks.
+- Show what is being learned and how (English, Chinese, Japanese, software), including setbacks.
 - Provide a space to practice explaining technical topics clearly.
 - Track daily practice as a streak that reflects real activity, not public performance.
 - Support interview preparation notes with strict privacy defaults.
@@ -22,6 +22,9 @@ A single public site that is a genuine record of growth, not a highlight reel:
 - **Secondary: visitors** — recruiters/hiring managers evaluating the portfolio, and readers of
   the blog (peers, other learners). Visitors only ever see public data; they cannot reach
   `/studio` at all without the owner's password.
+- **Learners:** use public lessons and keep anonymous Done/streak metadata under a random sync
+  profile. Separate browser profiles remain separate learners; this does not grant Studio
+  access and is not an email account.
 
 ## Core flows
 

@@ -1,11 +1,11 @@
 "use client";
 
-import { LANGUAGES } from "@/lib/languages";
+import { LANGUAGES, getLanguageLevels, type LanguageId } from "@/lib/languages";
 import Link from "next/link";
 import { useMemo } from "react";
 import { SKILLS, type SkillId, type LessonSummary } from "@/lib/lessonTypes";
 import { useLessonFilter, type ReviewFilter } from "@/lib/lessonFilter";
-import { lessonLevel, levelRank, lessonRank, ENGLISH_LEVELS, CHINESE_LEVELS } from "@/lib/lessonLevels";
+import { lessonLevel, levelRank, lessonRank } from "@/lib/lessonLevels";
 
 const SKILL_ICON: Record<SkillId, string> = {
   writing: "✎",
@@ -90,7 +90,7 @@ export function LessonPicker({
 
       <label className="field">
         <span>Ngôn ngữ</span>
-        <select value={language} onChange={(e) => setLanguage(e.target.value as "en" | "zh")}>
+        <select value={language} onChange={(e) => setLanguage(e.target.value as LanguageId)}>
           {LANGUAGES.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
         </select>
       </label>
@@ -98,7 +98,7 @@ export function LessonPicker({
       <label className="field"><span>Cấp độ bài học</span>
         <select value={level} onChange={e => setLevel(e.target.value)}>
           <option value="all">Tất cả cấp độ</option>
-          {(language === "zh" ? CHINESE_LEVELS : ENGLISH_LEVELS).filter(v => lessons.some(l => l.language === language && lessonLevel(l.level, l.language) === v)).map(v => <option key={v} value={v}>{v}</option>)}
+          {getLanguageLevels(language).filter(v => lessons.some(l => l.language === language && lessonLevel(l.level, l.language) === v)).map(v => <option key={v} value={v}>{v}</option>)}
         </select>
       </label>
       <label className="field"><span>Tìm bài</span><input type="search" placeholder="Chủ đề hoặc tên bài…" value={query} onChange={e => setQuery(e.target.value)} /></label>

@@ -67,12 +67,12 @@ Conditions to start: enough real lesson/attempt history exists to know what's ac
 
 ## Explicitly deferred, no planned phase
 
-- Multi-user accounts, comments, or any visitor-generated content — this site has one writer by
-  design; adding visitor accounts (or a second Studio user) would be a different product,
-  needing real accounts rather than a bigger shared password (see
-  [ARCHITECTURE.md](ARCHITECTURE.md#studio-auth)).
-- Japanese content — the content model already supports any language today; this item is about
-  deciding *when* to start writing in/about Japanese, not a technical blocker.
+- Multi-user email accounts, comments, or public visitor-generated content — Studio still has
+  one writer. Anonymous learner progress is isolated by sync token; add real accounts only when
+  sign-in, recovery or named cross-device profiles are required.
+- Deeper Japanese content beyond the Starter pack — the shared language configuration and four
+  Starter skills are in place; expand from observed learner attempts rather than guessing a
+  full N5 curriculum upfront.
 - A generic, reusable CMS — Studio is deliberately specific to this site's content types
   (Post/Lesson/Attempt/Journey), not a general-purpose admin panel; see
   [ARCHITECTURE.md](ARCHITECTURE.md#why-this-shape).
