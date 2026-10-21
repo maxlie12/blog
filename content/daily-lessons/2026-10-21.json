@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-21",
+  "title": "Giữ nhịp 5 phút — nghe chắc một ý",
+  "kind": "restart",
+  "note": "Chưa có bài làm mới được gửi nên tiếp tục giữ mức B1+ tự báo, không suy ra tiến bộ và không nâng độ khó. Hôm nay chỉ có một nhiệm vụ tiếng Anh bắt buộc 5 phút và một hoạt động tiếng Trung phụ; không cần làm bù toàn bộ bài cũ. Bài do trợ lý soạn, không phải đề thi British Council/IELTS/TOEIC chính thức; không kèm đáp án. Done/streak là tự xác nhận thói quen, không phải bằng chứng CEFR.",
+  "lessons": [
+    {
+      "id": "daily-2026-10-21-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Bắt buộc 5 phút — một ý chắc, một chỗ chưa chắc",
+      "level": "B1+ practice / B2 source",
+      "instructions": "Bài do trợ lý soạn. British Council là nguồn công khai miễn phí, có audio, transcript và bài tập. Không mở transcript; nghe 60–90 giây đầu của A digital detox podcast đúng một lượt.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Không cần viết đoạn dài. Ghi bằng tiếng Anh: I clearly heard … / I am not sure whether … . Thêm đúng một từ hoặc cụm bạn muốn nhớ, mức chắc chắn 0–100% và số phút thực học. Không tra từ hoặc nghe lại trước bản đầu.",
+      "completionCriteria": "Bấm Done sau khi đã nghe. Nếu muốn nhận phản hồi, gửi hai câu, một từ/cụm, % chắc chắn và số phút; trợ lý chỉ sửa một lỗi ưu tiên và chưa tự quy đổi CEFR."
+    },
+    {
+      "id": "daily-2026-10-21-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tiếng Trung phụ 5 phút — giới thiệu rồi gọi trà",
+      "level": "Beginner",
+      "instructions": "Bài do trợ lý soạn. HelloChinese có audio/video người bản ngữ và bài luyện nói; tải miễn phí, một số nội dung đầy đủ cần Premium. Nếu mở app, nghe mẫu giới thiệu hoặc gọi món hai lượt.",
+      "material": "https://www.hellochinese.cc/vi",
+      "exercises": "Nói: 你好，我叫小林。我要一杯茶，谢谢。Nǐ hǎo, wǒ jiào Xiǎolín. Wǒ yào yì bēi chá, xièxie. Sau đó thay 茶 bằng 咖啡 hoặc đổi tên thành tên của bạn.",
+      "completionCriteria": "Bấm Done sau khi đã nói ít nhất hai lượt. Nếu muốn sửa phát âm, gửi audio 15–20 giây và nói rõ có nhìn mẫu không; văn bản không đủ để chấm thanh điệu."
+    }
+  ]
+}
