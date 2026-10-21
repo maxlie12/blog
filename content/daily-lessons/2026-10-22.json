@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-22",
+  "title": "Giữ nhịp 5 phút — nghe rồi dừng đúng lúc",
+  "kind": "restart",
+  "note": "Chưa có bài làm mới được gửi nên tiếp tục giữ mức B1+ tự báo, không suy ra tiến bộ và không nâng độ khó. Chỉ bài nghe đầu tiên là nhiệm vụ bắt buộc 5 phút; đọc, nói, viết và tiếng Trung đều là tùy chọn để quay lại khi có thêm thời gian. Không cần làm bù toàn bộ bài cũ. Tất cả nhiệm vụ là bài do trợ lý soạn, không phải đề thi British Council/IELTS/TOEIC chính thức; không kèm đáp án. Done/streak chỉ ghi nhận thói quen, không phải bằng chứng CEFR.",
+  "lessons": [
+    {
+      "id": "daily-2026-10-22-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Bắt buộc 5 phút — nghe một thay đổi cụ thể",
+      "level": "B1+ practice / B2 source",
+      "instructions": "Bài do trợ lý soạn. British Council là nguồn công khai miễn phí, có audio, transcript và bài tập. Không mở transcript; nghe 60–90 giây đầu của A digital detox podcast đúng một lượt.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Ghi bằng tiếng Anh đúng hai dòng: The speaker used to … / Now the speaker … . Nếu chưa chắc, dùng I think thay vì nghe lại ngay. Thêm mức chắc chắn 0–100% và số phút thực học.",
+      "completionCriteria": "Bấm Done sau khi đã nghe và viết hai dòng. Nếu muốn nhận phản hồi, gửi nguyên bản đầu, % chắc chắn và số phút; trợ lý chỉ sửa một lỗi ưu tiên và chưa tự quy đổi CEFR."
+    },
+    {
+      "id": "daily-2026-10-22-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — dùng transcript để kiểm chứng",
+      "level": "B1+ practice / B2 source",
+      "instructions": "Bài do trợ lý soạn. Chỉ làm sau bản nghe đầu. Mở transcript của cùng bài British Council, đọc đúng phần đã nghe và tìm bằng chứng cho hai dòng của bạn.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Chép tối đa hai cụm ngắn làm bằng chứng, rồi sửa một trong hai dòng bằng lời của bạn. Không sao chép cả câu hoặc đoạn transcript.",
+      "completionCriteria": "Bấm Done khi đã xác định một ý đúng hoặc sửa một ý sai; đây là tự kiểm chứng, không phải kết quả CEFR."
+    },
+    {
+      "id": "daily-2026-10-22-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — kể lại và liên hệ bản thân",
+      "level": "B1+ practice",
+      "instructions": "Bài do trợ lý soạn. Không nhìn transcript. Dùng ý vừa kiểm chứng để nói 30–45 giây.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Nói theo khung: The speaker changed … / This mattered because … / In my case, I would … . Thêm một bất tiện thực tế thay vì cố nói dài.",
+      "completionCriteria": "Bấm Done sau một lượt nói thật. Muốn nhận xét phát âm/nhịp, gửi audio và nói rõ có nhìn ghi chú không; transcript chỉ dùng sửa nội dung và ngữ pháp."
+    },
+    {
+      "id": "daily-2026-10-22-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5–10 phút — biến ý nói thành đoạn ngắn",
+      "level": "B1+ practice",
+      "instructions": "Bài do trợ lý soạn. Viết sau khi đã nói; không dùng AI sửa bản đầu.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
+      "exercises": "Viết 40–60 từ theo cấu trúc: lựa chọn → lý do → bất tiện → cách kiểm tra sau ba ngày. Dùng ít nhất một từ nối because, but hoặc so.",
+      "completionCriteria": "Bấm Done khi đã lưu bản đầu. Nếu gửi về ChatGPT, kèm số phút và công cụ đã dùng; trợ lý sẽ sửa một lỗi ưu tiên rồi giao một lần viết lại 2 phút."
+    },
+    {
+      "id": "daily-2026-10-22-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tiếng Trung phụ 5 phút — gọi đồ uống và đổi số lượng",
+      "level": "Beginner",
+      "instructions": "Bài do trợ lý soạn. HelloChinese tải miễn phí, có audio/video người bản ngữ và luyện nói; một số nội dung đầy đủ cần Premium. Nếu mở app, nghe mẫu gọi món hai lượt.",
+      "material": "https://www.hellochinese.cc/vi",
+      "exercises": "Nói: 我要一杯茶，谢谢。Wǒ yào yì bēi chá, xièxie. Sau đó đổi 茶 thành 咖啡, rồi đổi 一杯 thành 两杯: 我要两杯咖啡，谢谢。",
+      "completionCriteria": "Bấm Done sau khi nói ba biến thể. Muốn sửa thanh điệu, gửi audio 15–20 giây và nói rõ có nhìn mẫu không; văn bản không đủ để chấm phát âm."
+    }
+  ]
+}
