@@ -4,6 +4,8 @@ import { useEffect, useState, type FormEvent } from "react";
 import type { SkillId } from "@/lib/lessonTypes";
 import { getLanguageLabel } from "@/lib/languages";
 import { getLocalCompletionSummary, recordLocalCompletion, syncLocalProgress, type LocalCompletionSummary } from "@/lib/localLearningProgress";
+import { readProfileStorage, writeProfileStorage } from "@/lib/learnerProfiles";
+import { useLearnerProfile } from "@/lib/useLearnerProfile";
 
 type Gap = "meaning" | "reasoning" | "language" | "delivery";
 type Saved = { version: 1; lessonId: string; response: string; minutes: number; support: string; focus: string; gap: Gap; revision: string; sourceResult?: string; savedAt: string };
@@ -52,6 +54,7 @@ export function PracticeCoach({ lessonId, skill, language }: { lessonId: string;
   const [message, setMessage] = useState("");
   const [completion, setCompletion] = useState<LocalCompletionSummary | null>(null);
   const storageKey = "learning-practice-v1:" + lessonId;
+  const learner = useLearnerProfile();
   const completionId = "lesson:" + lessonId;
   useEffect(() => {
     let cancelled = false;
@@ -65,7 +68,7 @@ export function PracticeCoach({ lessonId, skill, language }: { lessonId: string;
     if (!response.trim()) return;
     const value: Saved = { version: 1, lessonId, response: response.trim(), minutes, support, focus, gap, revision, sourceResult, savedAt: new Date().toISOString() };
     setAttempt(value);
-    try { localStorage.setItem(storageKey, JSON.stringify(value)); setMessage("Đã lưu trên trình duyệt này; chưa được chấm và chưa tính streak."); }
+    try { writeProfileStorage(storageKey, JSON.stringify(value)); setMessage(`Đã lưu cho ${learner.name}; chưa được chấm và chưa tính streak.`); }
     catch { setMessage("Trình duyệt không cho lưu. Hãy sao chép bài bên dưới để giữ lại."); }
   }
   function finishLesson() {
@@ -84,7 +87,7 @@ export function PracticeCoach({ lessonId, skill, language }: { lessonId: string;
   }
   function restore() {
     try {
-      const raw = localStorage.getItem(storageKey);
+      const raw = readProfileStorage(storageKey);
       if (!raw) { setMessage("Chưa có bài lưu trên trình duyệt này."); return; }
       const value = JSON.parse(raw) as Saved;
       if (value.version !== 1 || value.lessonId !== lessonId || typeof value.response !== "string" || !value.response.trim() || !Number.isFinite(value.minutes) || !(value.gap in drills)) throw new Error("Invalid saved practice");
@@ -95,7 +98,7 @@ export function PracticeCoach({ lessonId, skill, language }: { lessonId: string;
   const exportText = attempt ? "Bài: " + lessonId + "\nThời gian: " + attempt.minutes + " phút\nHỗ trợ: " + attempt.support + "\nTập trung tự báo: " + attempt.focus + "\nBản đầu:\n" + attempt.response + "\nKết quả bài ở nguồn (tự báo): " + (sourceResult || "chưa ghi") + "\nĐiểm muốn sửa: " + gap + "\nBản làm lại:\n" + revision : "";
   return <section className="lesson-detail__section">
     <h2>Làm trước → tự kiểm tra → luyện lại</h2>
-    <p>Bài tập và hướng dẫn do trợ lý soạn. Bản viết chỉ lưu trên trình duyệt; máy chủ chỉ đồng bộ metadata Done/streak, không lưu nội dung bài hoặc chấm điểm. Không nhập thông tin công việc nhạy cảm.</p>
+    <p><strong>Đang học: {learner.name}.</strong> Bài tập và hướng dẫn do trợ lý soạn. Bản viết chỉ lưu trong profile này; máy chủ chỉ đồng bộ metadata Done/streak, không lưu nội dung bài hoặc chấm điểm. Không nhập thông tin công việc nhạy cảm.</p>
     <button type="button" className="button button--ghost" onClick={restore}>Mở bài đã lưu trên thiết bị</button>
     <div className="learning-transfer"><h3>Trước khi làm: bài này dùng để làm gì?</h3><p>{purpose[skill]}</p><p><strong>Khung đầu ra:</strong> {frames[skill]}. Khung là bản đồ để bạn tự tạo câu, không phải đoạn mẫu để chép.</p></div>
     <form onSubmit={save}>

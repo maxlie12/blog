@@ -1,6 +1,18 @@
 # Status
 
-Last verified: 2026-10-21 (shared language-pack foundation).
+Last verified: 2026-10-21 (learner-profile separation, Stage 2A).
+
+## 2026-10-21 — Stage 2A separates Luân and Phi on one browser
+
+- `/learning` now starts with an explicit Luân/Phi switcher. Each local profile has independent
+  lesson drafts, Guided Practice, Done/streak, 28-day activity, sync token and Farm state.
+- Old unscoped browser data is copied to Luân on first access. New backups record their learner
+  profile and cannot be imported into the other profile by mistake.
+- The UI states the security boundary: this is data separation, not login. Anyone using the same
+  browser can switch profiles. Real sign-in, recovery and per-user reviewed attempts are Stage 2B.
+- Checks: 10 focused Node tests, ESLint and the Next.js 16 production build passed. Local
+  browser preview could not start because the managed preview wrapper passes an unsupported
+  `--host` option to Next.js; production browser verification is still required after deploy.
 
 ## 2026-10-21 — English, Chinese and Japanese share one lesson engine
 

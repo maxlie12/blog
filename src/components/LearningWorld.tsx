@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { SkillId } from "@/lib/lessonTypes";
+import { getActiveLearnerProfileId, profileStoragePrefix } from "@/lib/learnerProfiles";
 
 type WorldZone = SkillId | "zh";
 
@@ -49,10 +50,12 @@ function vietnamDate(value: Date) {
 
 function readLocalActivity(): ActivityDay[] {
   const byDate = new Map<string, 1 | 2>();
+  const profileId = getActiveLearnerProfileId();
+  const practicePrefix = profileStoragePrefix("learning-practice-v1:");
   try {
     for (let index = 0; index < localStorage.length; index += 1) {
       const key = localStorage.key(index);
-      if (!key?.startsWith("learning-practice-v1:")) continue;
+      if (!key || (!key.startsWith(practicePrefix) && !(profileId === "luan" && key.startsWith("learning-practice-v1:")))) continue;
       const raw = localStorage.getItem(key);
       if (!raw) continue;
       const value = JSON.parse(raw) as { savedAt?: unknown; response?: unknown; revision?: unknown };

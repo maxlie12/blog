@@ -5,7 +5,9 @@ import {
   getLocalLanguageActivity,
   getLocalLanguageSummary,
   importLocalProgressBackup,
+  recordLocalCompletion,
 } from "./localLearningProgress.ts";
+import { profileStorageKey, setActiveLearnerProfile } from "./learnerProfiles.ts";
 
 class MemoryStorage {
   private values = new Map<string, string>();
@@ -30,7 +32,10 @@ const completion = {
   completedAt: "2026-10-18T01:00:00.000Z",
 };
 
-test.beforeEach(() => storage.clear());
+test.beforeEach(() => {
+  storage.clear();
+  setActiveLearnerProfile("luan");
+});
 
 test("backup import merges by completion id without duplicating progress", () => {
   storage.setItem("learning-completions-v1", JSON.stringify({ version: 1, completions: [completion] }));
@@ -53,7 +58,7 @@ test("backup carries the private sync profile to a fresh browser", () => {
   const result = importLocalProgressBackup(backup);
 
   assert.equal(result.syncProfileImported, true);
-  assert.equal(storage.getItem("learning-sync-token-v1"), expectedToken);
+  assert.equal(storage.getItem(profileStorageKey("learning-sync-token-v1", "luan")), expectedToken);
   assert.equal(getLocalLanguageSummary("en").totalCompleted, 1);
 });
 
@@ -72,4 +77,30 @@ test("activity calendar uses real completion dates and separates languages", () 
 
   const days = getLocalLanguageActivity("en", 2, new Date("2026-10-19T12:00:00.000Z"));
   assert.deepEqual(days, [{ date: "2026-10-18", count: 1 }, { date: "2026-10-19", count: 0 }]);
+});
+
+test("Luân and Phi keep independent completions on the same browser", () => {
+  recordLocalCompletion({ id: "shared-lesson", lessonId: "lesson-en", language: "en", skill: "listening", minutes: 5 });
+  assert.equal(getLocalLanguageSummary("en").totalCompleted, 1);
+
+  setActiveLearnerProfile("phi");
+  assert.equal(getLocalLanguageSummary("en").totalCompleted, 0);
+  recordLocalCompletion({ id: "shared-lesson", lessonId: "lesson-ja", language: "ja", skill: "listening", minutes: 5 });
+  assert.equal(getLocalLanguageSummary("ja").totalCompleted, 1);
+
+  setActiveLearnerProfile("luan");
+  assert.equal(getLocalLanguageSummary("en").totalCompleted, 1);
+  assert.equal(getLocalLanguageSummary("ja").totalCompleted, 0);
+});
+
+test("backup cannot be imported into a different learner profile", () => {
+  const backup = exportLocalProgressBackup();
+  setActiveLearnerProfile("phi");
+  assert.throws(() => importLocalProgressBackup(backup), /thuộc hồ sơ Luân/);
+});
+
+test("backup rejects an unknown learner profile", () => {
+  const backup = JSON.parse(exportLocalProgressBackup());
+  backup.learnerProfile = { id: "attacker", name: "Unknown" };
+  assert.throws(() => importLocalProgressBackup(JSON.stringify(backup)), /không hợp lệ/);
 });

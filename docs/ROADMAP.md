@@ -3,6 +3,24 @@
 Everything below is **planned, not built**, unless marked "done." See [STATUS.md](STATUS.md)
 for the authoritative, currently-verified picture.
 
+## Learning rollout — Stage 2: learner separation
+
+### 2A — local learner profiles: done 2026-10-21
+
+- Luân and Phi can be selected explicitly on `/learning`.
+- Drafts, Guided Practice, Done/streak, backup/sync token, heatmap and Farm save are namespaced
+  per profile. Legacy browser data belongs to Luân and is preserved lazily.
+- Import refuses a backup from the other named profile, preventing accidental history merges.
+- This is not authentication: someone on the same browser can switch profiles.
+
+### 2B — real accounts: next, requires an identity decision
+
+- Add sign-in and recovery through one provider; do not build passwords by hand.
+- Bind the existing habit sync profile to the authenticated user after explicit migration.
+- Add `learnerId` ownership to private attempts before Phi can submit work for review.
+- Keep Studio's owner/admin permission separate from the learner role.
+- Do not start AI personalization until account ownership and privacy tests pass.
+
 ## Phase 2 — real content, deployed
 
 Conditions to start: build/lint clean, flows verified (done as of 2026-09-26 — see
@@ -65,11 +83,10 @@ Conditions to start: enough real lesson/attempt history exists to know what's ac
 - Migrate `src/middleware.ts` to the `proxy.ts` convention Next.js 16 prefers (currently just a
   deprecation warning, not a functional problem — see [OPERATIONS.md](OPERATIONS.md)).
 
-## Explicitly deferred, no planned phase
+## Explicitly deferred
 
-- Multi-user email accounts, comments, or public visitor-generated content — Studio still has
-  one writer. Anonymous learner progress is isolated by sync token; add real accounts only when
-  sign-in, recovery or named cross-device profiles are required.
+- Comments and public visitor-generated content remain out of scope. Real learner accounts are
+  now Stage 2B because Luân and Phi need named cross-device ownership; Studio remains one-writer.
 - Deeper Japanese content beyond the Starter pack — the shared language configuration and four
   Starter skills are in place; expand from observed learner attempts rather than guessing a
   full N5 curriculum upfront.

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getLocalCompletionSummary, recordLocalCompletion, syncLocalProgress, type LocalCompletionSummary } from "@/lib/localLearningProgress";
+import { readProfileStorage, writeProfileStorage } from "@/lib/learnerProfiles";
+import { useLearnerProfile } from "@/lib/useLearnerProfile";
 
 type Language = "en" | "zh";
 type Gap = "understanding" | "reasoning" | "language" | "pronunciation";
@@ -42,6 +44,7 @@ function nextDay(): string {
   const d = new Date(date + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0,10);
 }
 export function GuidedPractice() {
+  const learner = useLearnerProfile();
   const [language, setLanguage] = useState<Language>("en");
   const [budget, setBudget] = useState(10);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -61,7 +64,7 @@ export function GuidedPractice() {
   }, [completionId, activeLanguage]);
   function persist(next: Draft) {
     setDraft(next);
-    try { localStorage.setItem("guided-practice-v1:" + next.language, JSON.stringify(next)); setNotice("Đã lưu bước hiện tại trên trình duyệt này."); }
+    try { writeProfileStorage("guided-practice-v1:" + next.language, JSON.stringify(next)); setNotice(`Đã lưu bước hiện tại cho ${learner.name}.`); }
     catch { setNotice("Không lưu được trên thiết bị. Hãy sao chép nội dung trước khi đóng trang."); }
   }
   function update(patch: Partial<Draft>) { if (draft) persist({ ...draft, ...patch }); }
@@ -72,7 +75,7 @@ export function GuidedPractice() {
   }
   function resume() {
     try {
-      const raw = localStorage.getItem("guided-practice-v1:" + language);
+      const raw = readProfileStorage("guided-practice-v1:" + language);
       if (!raw) { setNotice("Chưa có phiên lưu cho ngôn ngữ này. Bấm bắt đầu."); return; }
       const value: unknown = JSON.parse(raw);
       if (!validDraft(value)) throw new Error("Invalid draft");
@@ -123,7 +126,7 @@ export function GuidedPractice() {
     <Link href="/learning">← Kho bài và bộ lọc</Link>
     <header className="lesson-detail__header"><h1>Buổi học có hướng dẫn</h1><p>Một mục tiêu, một nhiệm vụ ở mỗi bước. Học lúc rảnh; có thể dừng rồi tiếp tục trên cùng trình duyệt.</p></header>
     <p className="tag">{english ? "English · B1+ tự báo" : "中文 · Beginner"} · {draft?.budget ?? budget} phút dự kiến</p>
-    <p>Bài tập do trợ lý soạn. Bản viết chỉ lưu trên thiết bị; máy chủ chỉ đồng bộ metadata Done/streak, không lưu câu trả lời hoặc audio.</p>
+    <p><strong>Đang học: {learner.name}.</strong> Bài tập do trợ lý soạn. Bản viết chỉ lưu trong profile này; máy chủ chỉ đồng bộ metadata Done/streak, không lưu câu trả lời hoặc audio.</p>
     <ol aria-label="Các bước buổi học">{STAGES.map((name,index) => <li key={name} aria-current={step === index ? "step" : undefined}>{step === index ? "→ " : ""}{name}</li>)}</ol>
     {step === 0 ? <section className="lesson-detail__section">
       <h2>Bắt đầu hoặc tiếp tục</h2>
@@ -148,8 +151,8 @@ export function GuidedPractice() {
           </p>
           {showText && (english ? <div>
             <p><strong>Script luyện đọc · bản tóm lược do trợ lý soạn</strong></p>
-            <p>People spend much of the day looking at screens for work and personal communication. The guest works online for a fashion magazine, uses websites and social media, and also keeps in touch with friends and family. Because work and personal life overlap, being online can feel continuous. She began thinking about a digital detox after reading advice about changing digital habits.</p>
-            <p><small>Đây không phải transcript nguyên văn. Dùng bản này để đọc hiểu hoặc luyện nói lại. Nếu muốn shadowing khớp chính xác với audio, mở transcript chính thức ở British Council và cuộn tới mục Transcript.</small></p>
+            <p>Online work and personal messages can blend together. A digital detox means deliberately changing when and how you use devices.</p>
+            <p><small>Đây là paraphrase ngắn do trợ lý soạn, không phải transcript. Muốn shadowing khớp audio, hãy mở transcript chính thức ở British Council.</small></p>
           </div> : <p><strong>Script luyện đọc · do trợ lý soạn</strong><br/>你好，我叫小林。我想要一杯茶，不要糖。<br/>Nǐ hǎo, wǒ jiào Xiǎolín. Wǒ xiǎng yào yì bēi chá, bú yào táng.</p>)}
         </>}
         {step === 2 && <><p>{english ? "Bài nói về chủ đề gì? Ghi một chi tiết nghe được và đánh dấu điều chưa chắc. Nếu dùng đọc thay, ghi ý đã đọc." : "Bạn nghe/đọc được tên, đồ uống hoặc yêu cầu gì? Ghi đúng điều nguồn bạn dùng có nói; chưa rõ thì đánh dấu."}</p><label htmlFor="guided-understanding">Ý hiểu được bằng lời của bạn</label><textarea id="guided-understanding" rows={4} maxLength={5000} value={draft.comprehension} onChange={e => update({comprehension:e.target.value})} style={{width:"100%"}} /></>}

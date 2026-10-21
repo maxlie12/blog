@@ -3,6 +3,22 @@
 Reverse-chronological log of decisions with material impact and their rationale. See linked
 docs for full detail; this file is the "why," not the "how."
 
+## 2026-10-21 — Stage 2 starts with profile namespaces, not a second progress backend
+
+**Decision:** Luân and Phi are selectable local learner profiles. All learner-owned browser
+state uses a profile namespace, while Done/streak continues to sync through the existing random
+token API. Legacy unscoped data migrates to Luân. A profile switch reloads the page.
+
+**Why:** the immediate failure mode is accidental data mixing on a shared app, not password
+security. The existing token sync already provides durable anonymous isolation, so adding Clerk
+or Better Auth before choosing account recovery and attempt privacy would duplicate the source
+of truth. Reloading is deliberately simple and prevents an open draft from one learner being
+saved after switching to the other.
+
+**Boundary:** this does not authenticate either learner. Same-browser users can switch profiles.
+Stage 2B must use a real auth provider, bind/migrate the current sync token, and add learner
+ownership to private Attempts before learner submissions are enabled.
+
 ## 2026-10-21 — Shared language packs before named learner accounts
 
 **Decision:** add Japanese through the same language configuration, lesson engine, filters and

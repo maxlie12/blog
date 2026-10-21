@@ -69,14 +69,18 @@ configuration, so English, Chinese and Japanese do not require separate page imp
 
 - Public lessons are shared read-only content.
 - Studio remains the single-owner admin surface, protected by its signed session cookie.
-- A learner's Done/streak history is isolated by the browser's random 256-bit sync token. Two
-  people using different browser profiles receive different server-side progress records; no
-  name, email, answer or audio is stored by this habit-sync path.
+- The Learning page has two local learner profiles: Luân and Phi. `src/lib/learnerProfiles.ts`
+  namespaces drafts, Done/streak, Guided Practice and Farm state. Existing unscoped browser
+  data migrates lazily to Luân; switching profiles reloads the page so an in-memory draft cannot
+  be saved into the newly selected profile.
+- Each profile has its own random 256-bit sync token and therefore a separate server-side habit
+  history. The habit API still receives no name, email, answer or audio.
 - This is anonymous profile isolation, not email authentication. A learner can move the same
   profile to another device only by importing the private backup containing its sync token.
-- Real learner accounts are deferred until email sign-in or account recovery is a demonstrated
-  need. They must replace or deliberately migrate the token model rather than run beside it as
-  a second source of truth.
+- Anyone using the same browser can switch between Luân and Phi; this is data separation, not
+  an access-control boundary. Phase 2B adds real sign-in only after an auth provider and account
+  recovery path are selected. It must attach the existing token-backed history to the signed-in
+  user rather than create a second source of progress truth.
 
 ## Studio auth
 
@@ -165,7 +169,8 @@ number anywhere that could drift from the underlying attempts.
   always creates the attempt with `reviewStatus: "pending"` — only Studio's own attempt editor
   can mark one `"reviewed"`. See [DECISIONS.md](DECISIONS.md).
 - **Write (local-first practice):** `PracticeCoach` and `GuidedPractice` save drafts and
-  explicit Done records in versioned `localStorage`. A lesson/session ID is idempotent, and a
+  explicit Done records in profile-namespaced, versioned `localStorage`. Farm state uses the
+  same namespace. A lesson/session ID is idempotent inside one learner profile, and a
   calendar day can extend each language streak only once using the Asia/Ho_Chi_Minh date. With
   `NEON_DATABASE_URL`, `/api/learning/progress` hashes a browser-generated 256-bit token and
   merge-syncs only lesson ID, language, skill, minutes and timestamps. Answers and audio never

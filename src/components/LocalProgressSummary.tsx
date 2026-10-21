@@ -13,6 +13,7 @@ import {
   type LocalProgressSummary,
 } from "@/lib/localLearningProgress";
 import styles from "./LocalProgressSummary.module.css";
+import { useLearnerProfile } from "@/lib/useLearnerProfile";
 
 type DashboardState = Record<LanguageId, {
   summary: LocalProgressSummary;
@@ -87,6 +88,7 @@ function readDashboard(): DashboardState {
 }
 
 export function LocalProgressSummary({ testPackets = [] }: { testPackets?: TestPacket[] }) {
+  const learner = useLearnerProfile();
   const [progress, setProgress] = useState<DashboardState | null>(null);
   const [message, setMessage] = useState("");
   const [syncState, setSyncState] = useState<"idle" | "syncing" | "synced" | "offline">("syncing");
@@ -129,7 +131,7 @@ export function LocalProgressSummary({ testPackets = [] }: { testPackets?: TestP
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `maxlie-learning-progress-${new Date().toISOString().slice(0, 10)}.json`;
+    anchor.download = `maxlie-learning-${learner.id}-${new Date().toISOString().slice(0, 10)}.json`;
     anchor.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 0);
     setMessage("Đã tạo file sao lưu trên thiết bị của bạn.");
@@ -154,8 +156,8 @@ export function LocalProgressSummary({ testPackets = [] }: { testPackets?: TestP
   return <section id="streak-checkpoints" className={styles.summary} aria-labelledby="local-progress-title">
     <div>
       <p className="eyebrow">TIẾN ĐỘ CÁ NHÂN</p>
-      <h2 id="local-progress-title">Done và streak cá nhân</h2>
-      <p>Học bù vẫn ghi vào ngày bạn thực sự hoàn thành. Nhiều bài trong một ngày chỉ kéo dài streak một ngày. Mỗi browser profile có khóa đồng bộ riêng, nên không dùng chung file sao lưu giữa hai người.</p>
+      <h2 id="local-progress-title">Tiến độ của {learner.name}</h2>
+      <p>Học bù vẫn ghi vào ngày thực sự hoàn thành. Nhiều bài trong một ngày chỉ kéo dài streak một ngày. Profile này có khóa đồng bộ riêng; không nhập file của người khác.</p>
     </div>
 
     {progress ? <>

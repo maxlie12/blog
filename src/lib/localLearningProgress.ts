@@ -1,4 +1,5 @@
 import { computeStreaks } from "./streak.ts";
+import { getActiveLearnerProfileId, getLearnerProfile, isLearnerProfileId, readProfileStorage, writeProfileStorage, type LearnerProfileId } from "./learnerProfiles.ts";
 
 export type LocalCompletionInput = {
   id: string;
@@ -22,6 +23,7 @@ type LocalProgressBackup = LocalProgressStore & {
   format: "maxlie-learning-progress";
   exportedAt: string;
   syncToken?: string;
+  learnerProfile?: { id: LearnerProfileId; name: string };
 };
 
 export type LocalProgressSummary = {
@@ -103,9 +105,9 @@ function isSyncToken(value: unknown): value is string {
   return typeof value === "string" && /^[a-f0-9]{64}$/.test(value);
 }
 
-function readStore(): LocalProgressStore {
+function readStore(profileId = getActiveLearnerProfileId()): LocalProgressStore {
   try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    const parsed: unknown = JSON.parse(readProfileStorage(STORAGE_KEY, profileId) || "null");
     if (!parsed || typeof parsed !== "object") return { version: 1, completions: [] };
     const candidate = parsed as Partial<LocalProgressStore>;
     if (candidate.version !== 1 || !Array.isArray(candidate.completions)) {
@@ -117,17 +119,17 @@ function readStore(): LocalProgressStore {
   }
 }
 
-function writeStore(store: LocalProgressStore): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+function writeStore(store: LocalProgressStore, profileId = getActiveLearnerProfileId()): void {
+  writeProfileStorage(STORAGE_KEY, JSON.stringify(store), profileId);
   if (typeof window !== "undefined") window.dispatchEvent(new Event("learning-progress-changed"));
 }
 
-function getOrCreateSyncToken(): string {
-  const stored = localStorage.getItem(SYNC_TOKEN_KEY);
+function getOrCreateSyncToken(profileId = getActiveLearnerProfileId()): string {
+  const stored = readProfileStorage(SYNC_TOKEN_KEY, profileId);
   if (isSyncToken(stored)) return stored;
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   const token = Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("");
-  localStorage.setItem(SYNC_TOKEN_KEY, token);
+  writeProfileStorage(SYNC_TOKEN_KEY, token, profileId);
   return token;
 }
 
@@ -184,11 +186,14 @@ export function recordLocalCompletion(input: LocalCompletionInput): RecordComple
 }
 
 export function exportLocalProgressBackup(): string {
+  const profileId = getActiveLearnerProfileId();
+  const profile = getLearnerProfile(profileId);
   const backup: LocalProgressBackup = {
     format: BACKUP_FORMAT,
     exportedAt: new Date().toISOString(),
-    syncToken: getOrCreateSyncToken(),
-    ...readStore(),
+    syncToken: getOrCreateSyncToken(profileId),
+    learnerProfile: { id: profile.id, name: profile.name },
+    ...readStore(profileId),
   };
   return JSON.stringify(backup, null, 2);
 }
@@ -212,12 +217,29 @@ export function importLocalProgressBackup(raw: string): ImportProgressResult {
     throw new Error("Bản sao có dữ liệu không hợp lệ hoặc quá nhiều bản ghi.");
   }
 
-  const store = readStore();
+  const activeProfile = getActiveLearnerProfileId();
+  if (backup.learnerProfile !== undefined && (
+    !backup.learnerProfile ||
+    !isLearnerProfileId(backup.learnerProfile.id) ||
+    typeof backup.learnerProfile.name !== "string" ||
+    backup.learnerProfile.name.length < 1 ||
+    backup.learnerProfile.name.length > 100
+  )) {
+    throw new Error("Hồ sơ trong bản sao không hợp lệ.");
+  }
+  if (backup.learnerProfile && backup.learnerProfile.id !== activeProfile) {
+    throw new Error(`Bản sao thuộc hồ sơ ${backup.learnerProfile.name}. Hãy chuyển đúng hồ sơ rồi nhập lại.`);
+  }
+  if (!backup.learnerProfile && activeProfile !== "luan") {
+    throw new Error("Bản sao cũ chưa có tên hồ sơ. Hãy chuyển sang Luân rồi nhập lại để tránh trộn dữ liệu.");
+  }
+
+  const store = readStore(activeProfile);
   let syncProfileImported = false;
   if (backup.syncToken !== undefined) {
     if (!isSyncToken(backup.syncToken)) throw new Error("Khóa đồng bộ trong bản sao không hợp lệ.");
-    if (localStorage.getItem(SYNC_TOKEN_KEY) !== backup.syncToken) {
-      localStorage.setItem(SYNC_TOKEN_KEY, backup.syncToken);
+    if (readProfileStorage(SYNC_TOKEN_KEY, activeProfile) !== backup.syncToken) {
+      writeProfileStorage(SYNC_TOKEN_KEY, backup.syncToken, activeProfile);
       syncProfileImported = true;
     }
   }
@@ -229,21 +251,23 @@ export function importLocalProgressBackup(raw: string): ImportProgressResult {
     existingIds.add(completion.id);
     added += 1;
   }
-  writeStore(store);
+  writeStore(store, activeProfile);
   return { added, skipped: backup.completions.length - added, total: store.completions.length, syncProfileImported };
 }
 
-let syncInFlight: Promise<SyncProgressResult> | null = null;
+const syncInFlight = new Map<LearnerProfileId, Promise<SyncProgressResult>>();
 
 export function syncLocalProgress(): Promise<SyncProgressResult> {
-  if (syncInFlight) return syncInFlight;
-  syncInFlight = (async () => {
-    const before = readStore();
+  const profileId = getActiveLearnerProfileId();
+  const existing = syncInFlight.get(profileId);
+  if (existing) return existing;
+  const request = (async () => {
+    const before = readStore(profileId);
     const response = await fetch("/api/learning/progress", {
       method: "POST",
       headers: { "content-type": "application/json" },
       cache: "no-store",
-      body: JSON.stringify({ token: getOrCreateSyncToken(), completions: before.completions }),
+      body: JSON.stringify({ token: getOrCreateSyncToken(profileId), completions: before.completions }),
     });
     if (!response.ok) throw new Error("Không thể đồng bộ lúc này.");
     const payload: unknown = await response.json();
@@ -253,7 +277,7 @@ export function syncLocalProgress(): Promise<SyncProgressResult> {
       throw new Error("Dữ liệu đồng bộ không hợp lệ.");
     }
 
-    const latest = readStore();
+    const latest = readStore(profileId);
     const ids = new Set(latest.completions.map((item) => item.id));
     let addedFromServer = 0;
     for (const completion of remote) {
@@ -262,10 +286,11 @@ export function syncLocalProgress(): Promise<SyncProgressResult> {
       ids.add(completion.id);
       addedFromServer += 1;
     }
-    if (addedFromServer > 0) writeStore(latest);
+    if (addedFromServer > 0) writeStore(latest, profileId);
     return { addedFromServer, total: latest.completions.length, syncedAt: new Date().toISOString() };
   })().finally(() => {
-    syncInFlight = null;
+    syncInFlight.delete(profileId);
   });
-  return syncInFlight;
+  syncInFlight.set(profileId, request);
+  return request;
 }

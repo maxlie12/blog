@@ -6,6 +6,7 @@ import { PracticeLogSection } from "@/components/PracticeLogSection";
 import { LessonFilterProvider } from "@/lib/lessonFilter";
 import { getAllLessons } from "@/lib/lessonsData";
 import { getJourneyCheckpoints } from "@/lib/journeyData";
+import { LearnerProfileSwitcher } from "@/components/LearnerProfileSwitcher";
 
 export const metadata: Metadata = { title: "Learning" };
 export const dynamic = "force-dynamic";
@@ -26,6 +27,8 @@ export default async function LearningPage() {
         <Link href="/learning/daily" className="button button--ghost">Kho bài theo ngày →</Link>
       </header>
 
+      <LearnerProfileSwitcher />
+
       <section className="learning-world-teaser">
         <div><p className="eyebrow">NEW · PLAY TO LEARN</p><h2>Nông trại dưới chân núi</h2><p>Trồng rau, nuôi cá, chăn gà vịt cừu bò, chế biến rồi chở hàng lên phố bán. Lưu một bài luyện 5 phút mỗi ngày để nhận thêm quà trong game.</p></div>
         <Link href="/learning/world" className="field-link">Vào nông trại ↗</Link>
@@ -37,7 +40,7 @@ export default async function LearningPage() {
         <MountainJourney checkpoints={checkpoints} />
       </div>
 
-      <section className="lesson-detail__section"><h2>Bài học theo cấp độ</h2><p>Tiếng Anh: A2 → C1 theo độ khó nhiệm vụ. Tiếng Trung: Beginner → Elementary. Tiếng Nhật: Starter → A1/N5, bắt đầu bằng Can-do giao tiếp và không coi A1 tương đương JLPT N5. Luân và Phi có tiến độ riêng khi dùng browser profile hoặc khóa đồng bộ riêng.</p></section>
+      <section className="lesson-detail__section"><h2>Bài học theo cấp độ</h2><p>Tiếng Anh: A2 → C1 theo độ khó nhiệm vụ. Tiếng Trung: Beginner → Elementary. Tiếng Nhật: Starter → A1/N5, bắt đầu bằng Can-do giao tiếp và không coi A1 tương đương JLPT N5. Profile Luân và Phi tách riêng bản nháp, Done, streak, khóa đồng bộ và dữ liệu nông trại.</p></section>
       <LessonFilterProvider>
         <div className="learning-board">
           <SkillCards lessons={lessons} />

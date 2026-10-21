@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import * as Farm from "@/lib/farm/engine";
+import { getActiveLearnerProfileId, readProfileStorage, writeProfileStorage } from "@/lib/learnerProfiles";
 import {
   QUALITY_LABELS,
   detectQuality,
@@ -127,6 +128,7 @@ function randomSeed() {
 }
 
 export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[] }) {
+  const profileId = getActiveLearnerProfileId();
   const [state, dispatch] = useReducer(reducer, { game: null, toast: null, seq: 0, saveSeq: 0, storage: "pending" });
   const [view, setView] = useState<FarmView>("farm");
   const [tool, setTool] = useState<Tool>("hand");
@@ -147,7 +149,7 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
       let raw: string | null = null;
       let available: Storage = "ok";
       try {
-        raw = window.localStorage.getItem(Farm.SAVE_KEY);
+        raw = readProfileStorage(Farm.SAVE_KEY, profileId);
       } catch {
         available = "unavailable";
       }
@@ -163,7 +165,7 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
       dispatch({ type: "load", game: Farm.createGame(now), message, storage: available });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, []);
+  }, [profileId]);
 
   useEffect(() => {
     const tick = () => dispatch({ type: "tick", now: Date.now(), seed: randomSeed() });
@@ -186,26 +188,26 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
     const now = Date.now();
     if (savedAt.current.seq === saveSeq && now - savedAt.current.time < 10_000) return;
     try {
-      window.localStorage.setItem(Farm.SAVE_KEY, JSON.stringify(game));
+      writeProfileStorage(Farm.SAVE_KEY, JSON.stringify(game), profileId);
       savedAt.current = { time: now, seq: saveSeq };
     } catch {
       // Storage full or blocked: the farm keeps running in memory for this visit.
     }
-  }, [game, saveSeq, storage]);
+  }, [game, profileId, saveSeq, storage]);
 
   useEffect(() => {
     if (storage !== "ok") return;
     const persist = () => {
       if (!gameRef.current) return;
       try {
-        window.localStorage.setItem(Farm.SAVE_KEY, JSON.stringify(gameRef.current));
+        writeProfileStorage(Farm.SAVE_KEY, JSON.stringify(gameRef.current), profileId);
       } catch {
         // Ignore: nothing else can be done while the page is closing.
       }
     };
     window.addEventListener("pagehide", persist);
     return () => window.removeEventListener("pagehide", persist);
-  }, [storage]);
+  }, [profileId, storage]);
 
   useEffect(() => {
     if (!toast) return;
