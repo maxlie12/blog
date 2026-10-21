@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { LearningWorld, type WorldQuest } from "@/components/LearningWorld";
 import { getAllLessons } from "@/lib/lessonsData";
 import type { SkillId } from "@/lib/lessonTypes";
+import { getAuthenticatedLearnerId } from "@/lib/learnerAuth";
 
 export const metadata: Metadata = { title: "Learning Farm" };
 export const dynamic = "force-dynamic";
@@ -25,7 +26,8 @@ function toQuest(lesson: Awaited<ReturnType<typeof getAllLessons>>[number]): Wor
 }
 
 export default async function LearningWorldPage() {
-  const lessons = await getAllLessons();
+  const learnerId = await getAuthenticatedLearnerId();
+  const lessons = await getAllLessons({ learnerId });
   const daily = lessons
     .filter((lesson) => lesson.id.startsWith("daily-"))
     .sort((a, b) => a.id.localeCompare(b.id));

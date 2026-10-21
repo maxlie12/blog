@@ -4,6 +4,8 @@ import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/theme";
 import { PublicChrome } from "@/components/PublicChrome";
+import { ClerkProvider } from "@clerk/nextjs";
+import { isLearnerAuthConfigured } from "@/lib/learnerAuth";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,6 +46,16 @@ const NO_FLASH_SCRIPT = `
 `;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
+  const content = <ThemeProvider>
+    <PublicChrome>
+      {process.env.BLOG_READ_ONLY_PREVIEW === "1" && <aside className="preview-note" role="status">
+        <strong>Bản xem thử · mở bài và luyện tập</strong>
+        <p>Mở kho bài tại Learning → Bài học mỗi ngày. Câu trả lời vẫn riêng trên thiết bị; metadata Done và streak được đồng bộ khi máy chủ sẵn sàng. Gửi bài hoặc audio về ChatGPT chỉ khi muốn nhận phản hồi sâu.</p>
+      </aside>}
+      {children}
+    </PublicChrome>
+  </ThemeProvider>;
+
   return (
     <html
       lang="en"
@@ -54,15 +66,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Script id="no-flash-theme" strategy="beforeInteractive">
           {NO_FLASH_SCRIPT}
         </Script>
-        <ThemeProvider>
-          <PublicChrome>
-            {process.env.BLOG_READ_ONLY_PREVIEW === "1" && <aside className="preview-note" role="status">
-              <strong>Bản xem thử · mở bài và luyện tập</strong>
-              <p>Mở kho bài tại Learning → Bài học mỗi ngày. Câu trả lời vẫn riêng trên thiết bị; metadata Done và streak được đồng bộ khi máy chủ sẵn sàng. Gửi bài hoặc audio về ChatGPT chỉ khi muốn nhận phản hồi sâu.</p>
-            </aside>}
-            {children}
-          </PublicChrome>
-        </ThemeProvider>
+        {isLearnerAuthConfigured()
+          ? <ClerkProvider>{content}</ClerkProvider>
+          : content}
       </body>
     </html>
   );

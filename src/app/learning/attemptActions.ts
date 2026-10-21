@@ -6,6 +6,9 @@ import { hasStudioSession } from "@/lib/studioSession";
 import { todayInTz } from "@/lib/streak";
 import { getDailyLesson } from "@/lib/dailyLessons";
 import { getLevelLesson } from "@/lib/levelLessons";
+import { getAuthenticatedLearnerId } from "@/lib/learnerAuth";
+import { getHabitAccountLink } from "@/lib/habitSyncServer";
+import { getLearnerProfile, isLearnerProfileId } from "@/lib/learnerProfiles";
 
 export interface SubmitAttemptState {
   error?: string;
@@ -23,9 +26,27 @@ export async function submitAttempt(
   _prev: SubmitAttemptState,
   formData: FormData
 ): Promise<SubmitAttemptState> {
-  const authenticated = await hasStudioSession();
-  if (!authenticated) {
+  const [studioSession, learnerId] = await Promise.all([
+    hasStudioSession(),
+    getAuthenticatedLearnerId(),
+  ]);
+  if (!studioSession && !learnerId) {
     return { error: "Sign in to submit an attempt." };
+  }
+
+  const selectedProfile = formData.get("learnerProfileId");
+  if (learnerId && !studioSession) {
+    if (!isLearnerProfileId(selectedProfile)) return { error: "Hồ sơ người học không hợp lệ." };
+    let accountLink;
+    try {
+      accountLink = await getHabitAccountLink(learnerId);
+    } catch {
+      return { error: "Chưa thể kiểm tra quyền sở hữu hồ sơ. Bài của bạn chưa được gửi." };
+    }
+    if (!accountLink) return { error: "Hãy liên kết hồ sơ học tập với tài khoản trước khi nộp bài." };
+    if (accountLink.learnerProfileId !== selectedProfile) {
+      return { error: `Tài khoản thuộc hồ sơ ${getLearnerProfile(accountLink.learnerProfileId).name}. Hãy chuyển đúng hồ sơ.` };
+    }
   }
 
   const lessonId = String(formData.get("lessonId") ?? "");
@@ -48,6 +69,8 @@ export async function submitAttempt(
       lessonId,
       date: todayInTz(),
       response,
+      learnerId: studioSession ? null : learnerId,
+      isPublic: false,
       reviewStatus: "pending",
     },
   });

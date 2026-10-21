@@ -59,6 +59,11 @@ export type SyncProgressResult = {
   syncedAt: string;
 };
 
+export type LearnerAccountLinkResult = {
+  learnerProfileId: LearnerProfileId;
+  linkedAt: string;
+};
+
 const STORAGE_KEY = "learning-completions-v1";
 const SYNC_TOKEN_KEY = "learning-sync-token-v1";
 const BACKUP_FORMAT = "maxlie-learning-progress";
@@ -273,6 +278,11 @@ export function syncLocalProgress(): Promise<SyncProgressResult> {
     const payload: unknown = await response.json();
     if (!payload || typeof payload !== "object") throw new Error("Phản hồi đồng bộ không hợp lệ.");
     const remote = (payload as { completions?: unknown }).completions;
+    const linkedProfile = (payload as { learnerProfileId?: unknown }).learnerProfileId;
+    if (linkedProfile !== null && linkedProfile !== undefined && linkedProfile !== profileId) {
+      if (!isLearnerProfileId(linkedProfile)) throw new Error("Hồ sơ tài khoản không hợp lệ.");
+      throw new Error(`Tài khoản này thuộc hồ sơ ${getLearnerProfile(linkedProfile).name}. Hãy chuyển đúng hồ sơ để đồng bộ.`);
+    }
     if (!Array.isArray(remote) || remote.length > MAX_COMPLETIONS || !remote.every(isCompletion)) {
       throw new Error("Dữ liệu đồng bộ không hợp lệ.");
     }
@@ -293,4 +303,42 @@ export function syncLocalProgress(): Promise<SyncProgressResult> {
   });
   syncInFlight.set(profileId, request);
   return request;
+}
+
+export async function getLearnerAccountLink(): Promise<LearnerAccountLinkResult | null> {
+  const response = await fetch("/api/learning/account", { cache: "no-store" });
+  if (!response.ok) throw new Error("Không thể đọc liên kết tài khoản.");
+  const payload: unknown = await response.json();
+  const link = (payload as { link?: unknown }).link;
+  if (link === null) return null;
+  if (!link || typeof link !== "object") throw new Error("Liên kết tài khoản không hợp lệ.");
+  const candidate = link as Partial<LearnerAccountLinkResult>;
+  if (!isLearnerProfileId(candidate.learnerProfileId) || typeof candidate.linkedAt !== "string") {
+    throw new Error("Liên kết tài khoản không hợp lệ.");
+  }
+  return { learnerProfileId: candidate.learnerProfileId, linkedAt: candidate.linkedAt };
+}
+
+export async function linkActiveProfileToAccount(): Promise<LearnerAccountLinkResult> {
+  const learnerProfileId = getActiveLearnerProfileId();
+  const response = await fetch("/api/learning/account", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ learnerProfileId, token: getOrCreateSyncToken(learnerProfileId) }),
+  });
+  const payload: unknown = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message = payload && typeof payload === "object" && typeof (payload as { error?: unknown }).error === "string"
+      ? (payload as { error: string }).error
+      : "Không thể liên kết lúc này.";
+    throw new Error(message);
+  }
+  const link = (payload as { link?: unknown }).link;
+  if (!link || typeof link !== "object") throw new Error("Liên kết tài khoản không hợp lệ.");
+  const candidate = link as Partial<LearnerAccountLinkResult>;
+  if (!isLearnerProfileId(candidate.learnerProfileId) || typeof candidate.linkedAt !== "string") {
+    throw new Error("Liên kết tài khoản không hợp lệ.");
+  }
+  void syncLocalProgress().catch(() => undefined);
+  return { learnerProfileId: candidate.learnerProfileId, linkedAt: candidate.linkedAt };
 }

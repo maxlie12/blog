@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getLessonWithAttempts } from "@/lib/lessonsData";
 import { hasStudioSession } from "@/lib/studioSession";
 import { LessonDetailView } from "@/components/LessonDetailView";
+import { getAuthenticatedLearnerId } from "@/lib/learnerAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -22,11 +23,12 @@ export default async function LessonPage({
   params: Promise<{ lessonId: string }>;
 }) {
   const { lessonId } = await params;
-  const [lesson, canSubmit] = await Promise.all([
-    getLessonWithAttempts(lessonId),
+  const [studioSession, learnerId] = await Promise.all([
     hasStudioSession(),
+    getAuthenticatedLearnerId(),
   ]);
+  const lesson = await getLessonWithAttempts(lessonId, studioSession ? { includeAll: true } : { learnerId });
   if (!lesson) notFound();
 
-  return <LessonDetailView lesson={lesson} attempts={canSubmit ? lesson.attempts : []} canSubmit={canSubmit} />;
+  return <LessonDetailView lesson={lesson} attempts={lesson.attempts} canSubmit={studioSession || Boolean(learnerId)} />;
 }

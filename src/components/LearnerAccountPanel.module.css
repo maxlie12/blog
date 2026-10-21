@@ -1,0 +1,25 @@
+.panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 1rem;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--surface) 92%, var(--accent));
+}
+
+.panel p { margin: 0.25rem 0 0; }
+.identity, .actions { display: flex; align-items: center; gap: 0.75rem; }
+.actions { flex-wrap: wrap; justify-content: flex-end; }
+
+@media (max-width: 42rem) {
+  .panel { align-items: stretch; flex-direction: column; }
+  .actions { justify-content: flex-start; }
+  .actions :global(.button) { min-height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel * { scroll-behavior: auto; }
+}

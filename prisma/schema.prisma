@@ -77,10 +77,13 @@ model Attempt {
   date         String // "YYYY-MM-DD"
   response     String? // what the learner produced, or notes about the session
   feedback     String?
+  learnerId    String? // Clerk user ID; null only for legacy/Studio-authored attempts
+  isPublic     Boolean  @default(false)
   reviewStatus String   @default("pending") // "pending" | "reviewed" | "needs-revision"
   createdAt    DateTime @default(now())
 
   @@index([lessonId])
+  @@index([learnerId])
 }
 
 // Mountain-journey checkpoints, editable in Studio. `isCurrent` is set by hand only — never

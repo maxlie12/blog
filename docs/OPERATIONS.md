@@ -6,6 +6,8 @@
 |---|---|---|---|
 | `DATABASE_URL` | Yes | Prisma/SQLite connection string | `file:./data/blog.db` |
 | `NEON_DATABASE_URL` | No | Server-only Neon URL for Done/streak metadata sync | supplied by Vercel Neon |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | No | Clerk browser key; activates learner sign-in only when the secret key is also present | `pk_test_...` |
+| `CLERK_SECRET_KEY` | No | Clerk server key for learner identity; never expose it to the browser | `sk_test_...` |
 | `SITE_TIMEZONE` | No (defaults `UTC`) | IANA timezone used to compute "today" for streaks/log dates | `Asia/Shanghai` |
 | `SITE_URL` | No (defaults `http://localhost:3000`) | Absolute base URL used in `sitemap.ts`/`robots.ts` | `https://maxlie.dev` |
 | `STUDIO_PASSWORD` | Yes, to use `/studio` | The single owner password checked on `/studio/login` | a long random string |

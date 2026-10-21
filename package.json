@@ -16,6 +16,7 @@
     "models:meshy": "node scripts/meshy-models.mjs"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.9.18",
     "@libsql/client": "^0.18.0",
     "@neondatabase/serverless": "^1.2.0",
     "@prisma/adapter-libsql": "^6.19.3",

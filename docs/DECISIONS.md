@@ -1,5 +1,22 @@
 # Decisions
 
+## 2026-10-21 — Learner auth claims the existing sync profile; Studio remains separate
+
+**Decision:** use Clerk for learner identity, but keep the existing Studio password/session as
+the sole admin authorization. A learner explicitly claims the currently selected Luân or Phi
+sync token. The claim maps the provider user ID to the existing hashed profile, instead of
+copying progress into a new account table.
+
+**Why:** the token-backed habit history is already deployed and device backups depend on it.
+Replacing it would risk lost or duplicated streaks. Explicit claim prevents an accidental Luân
+→ Phi merge; unique constraints prevent two accounts from claiming the same history. Once
+claimed, anonymous token access is refused. Clerk handles password/recovery/session security;
+the application handles only ownership.
+
+**Boundary:** learner authentication grants no Studio access. Attempts are private and owned by
+the Clerk user; Studio can read/review them through its existing independent gate. Clerk remains
+disabled until its production environment variables exist, so local-first study still works.
+
 Reverse-chronological log of decisions with material impact and their rationale. See linked
 docs for full detail; this file is the "why," not the "how."
 

@@ -6,6 +6,7 @@ import { getAllLessons, SKILLS } from "@/lib/lessonsData";
 import { todayInTz } from "@/lib/streak";
 import { hasStudioSession } from "@/lib/studioSession";
 import { getLanguageLabel } from "@/lib/languages";
+import { getAuthenticatedLearnerId } from "@/lib/learnerAuth";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Daily practice" };
@@ -14,9 +15,11 @@ export default async function DailyPage({ searchParams }: {
   searchParams: Promise<{ date?: string }>;
 }) {
   const today = todayInTz();
-  const [packets, lessons, signedIn, query] = await Promise.all([
-    getDailyPackets(), getAllLessons(), hasStudioSession(), searchParams,
+  const [packets, studioSession, learnerId, query] = await Promise.all([
+    getDailyPackets(), hasStudioSession(), getAuthenticatedLearnerId(), searchParams,
   ]);
+  const lessons = await getAllLessons(studioSession ? { includeAll: true } : { learnerId });
+  const signedIn = studioSession || Boolean(learnerId);
   const available = packets.filter((p) => p.date <= today);
   const byId = new Map(lessons.map((l) => [l.id, l]));
   const unfinished = available.find((p) => p.lessons.some((l) =>
@@ -34,7 +37,7 @@ export default async function DailyPage({ searchParams }: {
     </header>
     {!signedIn && (process.env.BLOG_READ_ONLY_PREVIEW === "1"
       ? <p>Mở một bài bên dưới và làm trong 5 phút. Bản viết lưu trên trình duyệt; sau khi tự kiểm tra và luyện lại, bấm Done để ghi streak và đồng bộ metadata. Chỉ gửi câu trả lời hoặc audio về ChatGPT khi muốn nhận phản hồi.</p>
-      : <p><Link href="/studio/login">Đăng nhập</Link> để nộp bài và xem tiến độ của bạn.</p>)}
+      : <p><Link href="/sign-in">Đăng nhập</Link> để nộp bài và xem tiến độ riêng của bạn.</p>)}
     {selected ? <>
       <section className="lesson-detail__section">
         <span className="tag">{selected.date}</span><h2>{selected.title}</h2>

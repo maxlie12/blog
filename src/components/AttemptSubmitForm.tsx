@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { submitAttempt, type SubmitAttemptState } from "@/app/learning/attemptActions";
 import type { SkillId } from "@/lib/lessonTypes";
+import { useLearnerProfile } from "@/lib/useLearnerProfile";
 
 const initialState: SubmitAttemptState = {};
 
@@ -99,6 +100,7 @@ function AttemptForm({
   onReset: () => void;
 }) {
   const router = useRouter();
+  const learner = useLearnerProfile();
   const [state, formAction, pending] = useActionState(submitAttempt, initialState);
 
   useEffect(() => {
@@ -126,6 +128,7 @@ function AttemptForm({
   return (
     <form action={formAction} className="studio-form">
       <input type="hidden" name="lessonId" value={lessonId} />
+      <input type="hidden" name="learnerProfileId" value={learner.id} />
 
       {skill === "speaking" && <SpeakingRecorder />}
 
@@ -146,8 +149,11 @@ function AttemptForm({
           {state.error.includes("Sign in") && (
             <>
               {" "}
-              <Link href="/studio/login">Sign in →</Link>
+              <Link href="/sign-in">Sign in →</Link>
             </>
+          )}
+          {state.error.includes("liên kết hồ sơ") && (
+            <> <Link href="/learning#learner-account">Liên kết hồ sơ →</Link></>
           )}
         </p>
       )}

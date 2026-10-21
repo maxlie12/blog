@@ -1,4 +1,5 @@
-import { mergeHabitCompletions, syncRequestSchema } from "@/lib/habitSyncServer";
+import { HabitProfileAccessError, mergeHabitCompletions, syncRequestSchema } from "@/lib/habitSyncServer";
+import { getAuthenticatedLearnerId } from "@/lib/learnerAuth";
 
 export const runtime = "nodejs";
 
@@ -26,9 +27,13 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   try {
-    const completions = await mergeHabitCompletions(parsed.data.token, parsed.data.completions);
-    return Response.json({ completions }, { headers: NO_STORE });
+    const userId = await getAuthenticatedLearnerId();
+    const result = await mergeHabitCompletions(parsed.data.token, parsed.data.completions, userId);
+    return Response.json(result, { headers: NO_STORE });
   } catch (error) {
+    if (error instanceof HabitProfileAccessError) {
+      return Response.json({ error: error.message }, { status: 403, headers: NO_STORE });
+    }
     console.error("Habit progress sync failed", error instanceof Error ? error.message : "Unknown error");
     return Response.json({ error: "Sync unavailable" }, { status: 503, headers: NO_STORE });
   }

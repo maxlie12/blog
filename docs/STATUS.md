@@ -1,6 +1,17 @@
 # Status
 
-Last verified: 2026-10-21 (learner-profile separation, Stage 2A).
+Last verified: 2026-10-21 (Stage 2B code complete; Clerk production activation pending).
+
+## 2026-10-21 — Stage 2B account ownership and private attempts
+
+- Added environment-gated Clerk learner sign-in/sign-up without changing Studio authorization.
+- A signed-in learner can explicitly claim the selected Luân/Phi sync profile. Claims are
+  one-account-to-one-profile; a claimed token no longer syncs anonymously.
+- Added `Attempt.learnerId` and private-by-default attempt visibility. Learners see only their
+  own history; Studio retains review access. Public aggregate counts exclude private attempts.
+- Migrated Next.js interception from deprecated `middleware.ts` to `proxy.ts`.
+- Verified locally: 12 tests, ESLint and production build pass. Production auth cannot be
+  verified until Clerk is connected to the Vercel project and the migration runs there.
 
 ## 2026-10-21 — Stage 2A separates Luân and Phi on one browser
 

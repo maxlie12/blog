@@ -7,13 +7,16 @@ import { LessonFilterProvider } from "@/lib/lessonFilter";
 import { getAllLessons } from "@/lib/lessonsData";
 import { getJourneyCheckpoints } from "@/lib/journeyData";
 import { LearnerProfileSwitcher } from "@/components/LearnerProfileSwitcher";
+import { LearnerAccountPanel } from "@/components/LearnerAccountPanel";
+import { getAuthenticatedLearnerId, isLearnerAuthConfigured } from "@/lib/learnerAuth";
 
 export const metadata: Metadata = { title: "Learning" };
 export const dynamic = "force-dynamic";
 
 export default async function LearningPage() {
+  const learnerId = await getAuthenticatedLearnerId();
   const [lessons, checkpoints] = await Promise.all([
-    getAllLessons(),
+    getAllLessons({ learnerId }),
     getJourneyCheckpoints(),
   ]);
 
@@ -28,6 +31,7 @@ export default async function LearningPage() {
       </header>
 
       <LearnerProfileSwitcher />
+      {isLearnerAuthConfigured() && <LearnerAccountPanel />}
 
       <section className="learning-world-teaser">
         <div><p className="eyebrow">NEW · PLAY TO LEARN</p><h2>Nông trại dưới chân núi</h2><p>Trồng rau, nuôi cá, chăn gà vịt cừu bò, chế biến rồi chở hàng lên phố bán. Lưu một bài luyện 5 phút mỗi ngày để nhận thêm quà trong game.</p></div>

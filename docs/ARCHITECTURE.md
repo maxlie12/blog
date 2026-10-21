@@ -75,12 +75,14 @@ configuration, so English, Chinese and Japanese do not require separate page imp
   be saved into the newly selected profile.
 - Each profile has its own random 256-bit sync token and therefore a separate server-side habit
   history. The habit API still receives no name, email, answer or audio.
-- This is anonymous profile isolation, not email authentication. A learner can move the same
-  profile to another device only by importing the private backup containing its sync token.
-- Anyone using the same browser can switch between Luân and Phi; this is data separation, not
-  an access-control boundary. Phase 2B adds real sign-in only after an auth provider and account
-  recovery path are selected. It must attach the existing token-backed history to the signed-in
-  user rather than create a second source of progress truth.
+- Before sign-in is activated, this remains anonymous profile isolation. A learner can move the
+  same profile by importing the private backup containing its sync token.
+- Stage 2B uses Clerk for learner identity, while Studio keeps its separate owner/admin cookie.
+  Linking is explicit: the signed-in learner claims the currently selected token-backed Luân or
+  Phi profile. The same habit rows remain the source of truth; no second progress store is
+  created. After a claim, token-only access is rejected and the authenticated account is needed.
+- The Clerk code path is environment-gated so the existing local-first app still builds and
+  works before the production integration is provisioned.
 
 ## Studio auth
 
@@ -121,7 +123,8 @@ Lesson (SQLite, authored in Studio)
 
 Attempt (SQLite) — recorded separately from Lesson so history can be corrected
   without editing the lesson definition itself.
-  lessonId, date, response?, feedback?, reviewStatus (pending|reviewed|needs-revision)
+  lessonId, learnerId?, isPublic=false, date, response?, feedback?,
+  reviewStatus (pending|reviewed|needs-revision)
 
 JourneyCheckpoint (SQLite, authored in Studio)
   label, title, order, optional, isCurrent (hand-set only — see docs/DECISIONS.md)
@@ -162,12 +165,10 @@ number anywhere that could drift from the underlying attempts.
   layer — Server Actions are the only write path, called directly from Studio's client
   components.
 - **Write (attempt submission, from the public lesson page):** a separate Server Action
-  (`src/app/learning/attemptActions.ts#submitAttempt`) — not under `/studio` — lets a signed-in
-  owner submit an attempt directly from `/learning/[lessonId]`, so practicing doesn't require a
-  detour through Studio. It independently checks `hasStudioSession()` (not
-  `requireStudioSession()`, since a public page must still render for signed-out visitors) and
-  always creates the attempt with `reviewStatus: "pending"` — only Studio's own attempt editor
-  can mark one `"reviewed"`. See [DECISIONS.md](DECISIONS.md).
+  (`src/app/learning/attemptActions.ts#submitAttempt`) accepts either an authenticated Clerk
+  learner or the existing Studio owner. Learner submissions store the Clerk user ID, are private
+  by default and always start `pending`; only Studio can review them. Attempt lists and detail
+  routes scope reads to that learner unless the Studio owner is present.
 - **Write (local-first practice):** `PracticeCoach` and `GuidedPractice` save drafts and
   explicit Done records in profile-namespaced, versioned `localStorage`. Farm state uses the
   same namespace. A lesson/session ID is idempotent inside one learner profile, and a
@@ -186,7 +187,7 @@ number anywhere that could drift from the underlying attempts.
 |---|---|---|
 | `Post.status: "draft"` | No | `getPublicArticles()`/`getPublicArticleBySlug()` only ever select `status: "published"` |
 | Articles marked `draft: true` (MDX) | No | Filtered in `getAllArticles()` in production, same as before |
-| `Attempt` rows | Yes, always — the attempt-detail page (`/learning/[lessonId]/attempts/[id]`) shows the response/feedback regardless of `reviewStatus` | There is no private/public flag on an attempt. Anyone who created it did so as the signed-in owner (submission is gated — see "Data flows"), so there's no visitor-submitted content to protect against; a pending attempt is just as visible as a reviewed one, it simply doesn't count toward completion yet. If a future attempt ever needs to stay private, that needs a new field. |
+| `Attempt` rows | No | New attempts default `isPublic: false`, carry `learnerId`, and are returned only to that learner or Studio. Public aggregate counts include only explicitly public attempts. |
 | `JourneyEvidence` | Yes, always | Free-text and short by design (see content model) — don't put anything in an evidence note you wouldn't want public. |
 | `LearningLog` rows | Yes, but only if `isPublic: true` | Unchanged from before |
 | `InterviewRecord` rows | No (defaults `isPublic: false`) | Unchanged — no UI yet |

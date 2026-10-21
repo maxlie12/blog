@@ -13,12 +13,16 @@ for the authoritative, currently-verified picture.
 - Import refuses a backup from the other named profile, preventing accidental history merges.
 - This is not authentication: someone on the same browser can switch profiles.
 
-### 2B — real accounts: next, requires an identity decision
+### 2B — real accounts: implementation ready, production activation pending
 
-- Add sign-in and recovery through one provider; do not build passwords by hand.
-- Bind the existing habit sync profile to the authenticated user after explicit migration.
-- Add `learnerId` ownership to private attempts before Phi can submit work for review.
-- Keep Studio's owner/admin permission separate from the learner role.
+- Clerk is integrated behind environment flags; its provider supplies sign-in, sign-up and
+  recovery instead of a hand-built password system. Production still needs the Clerk
+  Marketplace connection and environment variables before the UI appears.
+- The learner must explicitly claim the currently selected Luân/Phi sync profile. One account
+  owns one profile and a claimed profile rejects anonymous-token access.
+- New attempts carry `learnerId`, default private, and are readable only by that learner or
+  Studio. The database migration is included and must run in each deployed environment.
+- Studio's owner/admin cookie remains separate from the learner role.
 - Do not start AI personalization until account ownership and privacy tests pass.
 
 ## Phase 2 — real content, deployed
@@ -80,8 +84,8 @@ Conditions to start: enough real lesson/attempt history exists to know what's ac
   `audioUrl`) rather than overloading `response`.
 - Calendar heatmap of practice days on the Learning page.
 - Rich-text (not just Markdown-with-toolbar) editing, if plain Markdown proves limiting.
-- Migrate `src/middleware.ts` to the `proxy.ts` convention Next.js 16 prefers (currently just a
-  deprecation warning, not a functional problem — see [OPERATIONS.md](OPERATIONS.md)).
+- ~~Migrate `src/middleware.ts` to `proxy.ts`.~~ Done as part of Stage 2B so Studio and Clerk
+  share the single Next.js 16 request-interception entry point.
 
 ## Explicitly deferred
 

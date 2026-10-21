@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Learning · Studio" };
 export const dynamic = "force-dynamic";
 
 export default async function StudioLearningPage() {
-  const [lessons, progress] = await Promise.all([getAllLessons(), getSkillProgress()]);
+  const [lessons, progress] = await Promise.all([getAllLessons({ includeAll: true }), getSkillProgress("en", { includeAll: true })]);
 
   return (
     <div className="studio-page">

@@ -1,15 +1,24 @@
 import { prisma } from "@/lib/db";
 import { getDailyPackets, getDailyLesson } from "@/lib/dailyLessons";
 import { LEVEL_LESSONS, getLevelLesson } from "@/lib/levelLessons";
+import type { Prisma } from "@prisma/client";
 
 import { SKILLS, type SkillId, type LessonSummary } from "@/lib/lessonTypes";
 export { SKILLS, type SkillId, type LessonSummary, type AttemptRecord } from "@/lib/lessonTypes";
 
 /** Public read: all lessons with attempt counts, for the skill cards + lesson picker. */
-export async function getAllLessons(): Promise<LessonSummary[]> {
+type AttemptScope = { learnerId?: string | null; includeAll?: boolean };
+
+function attemptWhere(scope: AttemptScope = {}): Prisma.AttemptWhereInput {
+  if (scope.includeAll) return {};
+  if (scope.learnerId) return { learnerId: scope.learnerId };
+  return { isPublic: true };
+}
+
+export async function getAllLessons(scope: AttemptScope = {}): Promise<LessonSummary[]> {
   const [lessons, counts] = await Promise.all([
     prisma.lesson.findMany({ orderBy: { createdAt: "asc" } }),
-    prisma.attempt.groupBy({ by: ["lessonId", "reviewStatus"], _count: { _all: true } }),
+    prisma.attempt.groupBy({ by: ["lessonId", "reviewStatus"], where: attemptWhere(scope), _count: { _all: true } }),
   ]);
   const byLesson = new Map<string, { total: number; reviewed: number }>();
   for (const count of counts) {
@@ -35,10 +44,10 @@ export async function getAllLessons(): Promise<LessonSummary[]> {
   }));
 }
 
-export async function getLessonWithAttempts(id: string) {
+export async function getLessonWithAttempts(id: string, scope: AttemptScope = { includeAll: true }) {
   const lesson = await prisma.lesson.findUnique({
     where: { id },
-    include: { attempts: { orderBy: { date: "desc" } } },
+    include: { attempts: { where: attemptWhere(scope), orderBy: { date: "desc" } } },
   });
   if (!lesson) {
     const daily = await getDailyLesson(id) ?? getLevelLesson(id);
@@ -57,8 +66,8 @@ export async function getLessonWithAttempts(id: string) {
 /** A lesson counts toward a skill's completed progress once it has at least one *reviewed*
  * attempt — a pending or needs-revision attempt means the work isn't done yet. Never derived
  * from a raw attempt/lesson count alone. See docs/DECISIONS.md. */
-export async function getSkillProgress(language = "en"): Promise<Record<SkillId, { completed: number; total: number }>> {
-  const lessons = await getAllLessons();
+export async function getSkillProgress(language = "en", scope: AttemptScope = {}): Promise<Record<SkillId, { completed: number; total: number }>> {
+  const lessons = await getAllLessons(scope);
   const progress = {} as Record<SkillId, { completed: number; total: number }>;
   for (const skill of SKILLS) {
     const skillLessons = lessons.filter((l) => l.skill === skill.id && l.language === language);

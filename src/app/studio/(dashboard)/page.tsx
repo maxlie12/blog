@@ -20,8 +20,8 @@ function isToday(iso: string): boolean {
 export default async function StudioOverviewPage() {
   const [posts, lessons, progress, recentAttempts, checkpoints] = await Promise.all([
     getStudioPosts(),
-    getAllLessons(),
-    getSkillProgress(),
+    getAllLessons({ includeAll: true }),
+    getSkillProgress("en", { includeAll: true }),
     getRecentAttempts(5),
     getJourneyCheckpoints(),
   ]);

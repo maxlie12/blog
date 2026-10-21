@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAttemptWithLesson, SKILLS } from "@/lib/lessonsData";
-import { requireStudioSession } from "@/lib/studioSession";
+import { getAuthenticatedLearnerId } from "@/lib/learnerAuth";
+import { hasStudioSession } from "@/lib/studioSession";
+import { canReadAttempt } from "@/lib/attemptAccess";
 
 export const dynamic = "force-dynamic";
 
@@ -11,10 +13,10 @@ export async function generateMetadata({
 }: {
   params: Promise<{ attemptId: string }>;
 }): Promise<Metadata> {
-  await requireStudioSession();
+  const [studioSession, learnerId] = await Promise.all([hasStudioSession(), getAuthenticatedLearnerId()]);
   const { attemptId } = await params;
   const attempt = await getAttemptWithLesson(attemptId);
-  return { title: attempt ? `Attempt: ${attempt.lesson.title}` : "Attempt" };
+  return { title: attempt && canReadAttempt(attempt.learnerId, learnerId, studioSession) ? `Attempt: ${attempt.lesson.title}` : "Attempt" };
 }
 
 export default async function AttemptDetailPage({
@@ -22,10 +24,10 @@ export default async function AttemptDetailPage({
 }: {
   params: Promise<{ lessonId: string; attemptId: string }>;
 }) {
-  await requireStudioSession();
+  const [studioSession, learnerId] = await Promise.all([hasStudioSession(), getAuthenticatedLearnerId()]);
   const { lessonId, attemptId } = await params;
   const attempt = await getAttemptWithLesson(attemptId);
-  if (!attempt || attempt.lessonId !== lessonId) notFound();
+  if (!attempt || attempt.lessonId !== lessonId || !canReadAttempt(attempt.learnerId, learnerId, studioSession)) notFound();
 
   return (
     <article className="lesson-detail">

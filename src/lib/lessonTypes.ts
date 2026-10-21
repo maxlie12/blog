@@ -27,6 +27,8 @@ export interface AttemptRecord {
   date: string;
   response: string | null;
   feedback: string | null;
+  learnerId: string | null;
+  isPublic: boolean;
   reviewStatus: string;
   createdAt: string;
 }
