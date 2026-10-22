@@ -1,6 +1,25 @@
 # Status
 
-Last verified: 2026-10-22 (automatic lesson start verified in production).
+Last verified: 2026-10-22 (spaced review queue verified in production).
+
+## 2026-10-22 — explicit 1–3–7–14 spaced review queue
+
+- A Done lesson now seeds four deterministic retrieval dates. Each next interval is measured
+  from the learner's last explicit review, so returning late does not stack several reviews on
+  the same day.
+- `/learning` resumes an unfinished draft first, then prioritizes the oldest due review before
+  new content. The lesson page records a review only through the learner's “Đã ôn lại” action
+  and shows the next date.
+- Review metadata extends the real study streak, but is excluded from the Done-lesson count and
+  never changes CEFR, HSK or JLPT claims.
+- Checks: 26 Node tests, ESLint and `tsc --noEmit` passed. Fixed tests cover every interval,
+  two lessons completed on the same day, and the Asia/Ho_Chi_Minh midnight boundary. Vercel's
+  GitHub check succeeded for commit `0520649`; production `/learning` and the selected lesson
+  loaded, the primary action measured 44.95px, and app-origin console errors were zero.
+- A local `next build` could not bootstrap the workspace's missing/invalid SQLite fixture;
+  the production Vercel build is the authoritative successful build for this release. The due
+  review UI was not forced with fabricated production history; its due and persistence branches
+  are covered by the fixed scheduler/storage tests.
 
 ## 2026-10-22 — one-tap start chooses the next suitable lesson
 

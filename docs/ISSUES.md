@@ -11,7 +11,6 @@ evidence and never proves a CEFR, HSK or JLPT level.
 | ID | Priority | Status | Problem | Next smallest outcome |
 |---|---:|---|---|---|
 | LEARN-001 | P0 | Ready | A daily lesson can still feel like an external link plus instructions; the learner may finish without a reusable language takeaway. | After Done, show one phrase, one pattern and one small reuse prompt from the lesson. |
-| REVIEW-001 | P1 | Active | Old language is not yet scheduled back into later tasks from actual learner history. | Add a deterministic 1–3–7–14-day review queue before considering AI-generated review. |
 | ASSESS-001 | P1 | Planned | The product has self-reported levels and milestone UI, but insufficient unseen four-skill evidence to claim progress. | Keep level unchanged; attach weekly checks and a 28-day assessment to evidence records. |
 | LANG-001 | P1 | Planned | English, Chinese and Japanese share an engine, but their teaching rules are not yet explicit data. | Define language-pack rules without splitting the page into three implementations. |
 | FEEDBACK-001 | P2 | Blocked | Personal correction is manual; automatic AI feedback is not implemented or cost-controlled. | First collect real attempts and define a one-error feedback contract. |
@@ -33,16 +32,6 @@ but they do not replace lesson quality, review or assessment.
   this CEFR progress.
 - **Open decision:** prefer authored takeaways in the packet. Do not generate them with AI on
   every page load.
-
-### REVIEW-001 — review queue
-
-- **User problem:** completing new content can crowd out retrieval of useful old phrases.
-- **Required reading:** the local progress section of `docs/ARCHITECTURE.md`,
-  `src/lib/localLearningProgress.ts`, its tests and the component that selects the next task.
-- **Boundary:** the scheduler may choose an item; it may not infer skill level or mark an item
-  reviewed without an explicit learner action.
-- **Acceptance evidence:** fixed tests cover due dates, multiple completions on one day and the
-  Asia/Ho_Chi_Minh day boundary.
 
 ### ASSESS-001 — evidence-based milestones
 

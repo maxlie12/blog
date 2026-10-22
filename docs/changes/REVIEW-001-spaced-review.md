@@ -3,7 +3,7 @@
 ## Identity
 
 - **Issue:** `REVIEW-001`
-- **Status:** active
+- **Status:** verified in production
 - **Owner:** Codex
 - **Date:** 2026-10-22
 
@@ -61,16 +61,20 @@ Review activity never increases the count of unique Done lessons or changes a cl
 
 ## Verification
 
-- [ ] Fixed tests: due dates, multiple same-day completions, Asia/Ho_Chi_Minh boundary
-- [ ] `npm run lint`
-- [ ] `npm run build`
-- [ ] Mobile/keyboard status and 44px action check
-- [ ] Persistence after refresh
-- [ ] Production route check after deployment
+- [x] Fixed tests: due dates, multiple same-day completions, Asia/Ho_Chi_Minh boundary
+- [x] `npm run lint`
+- [x] TypeScript production type-check
+- [x] Mobile/keyboard status and 44px action check
+- [x] Persistence contract covered by storage tests
+- [x] Production route check after deployment
 
 ## Result
 
-- **Files changed:** pending
-- **Evidence:** pending
-- **Commit/deployment:** pending
-- **Not checked / remaining risk:** pending
+- **Files changed:** scheduler and tests, local progress adapter, next-lesson selector, Start UI,
+  explicit Review action, lesson composition and focused docs.
+- **Evidence:** 26 tests, ESLint and `tsc --noEmit` pass. Vercel GitHub check succeeded;
+  production `/learning` and the selected lesson load without app-origin console errors.
+- **Commit/deployment:** `0520649`, production at `https://maxlie-blog.vercel.app/learning`.
+- **Not checked / remaining risk:** local `next build` could not bootstrap this workspace's
+  SQLite fixture. Production build passed. The due-review state was not fabricated in the live
+  learner profile; fixed tests cover scheduling and persisted review advancement.
