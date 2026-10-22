@@ -172,7 +172,11 @@ number anywhere that could drift from the underlying attempts.
 - **Write (local-first practice):** `PracticeCoach` and `GuidedPractice` save drafts and
   explicit Done records in profile-namespaced, versioned `localStorage`. Farm state uses the
   same namespace. A lesson/session ID is idempotent inside one learner profile, and a
-  calendar day can extend each language streak only once using the Asia/Ho_Chi_Minh date. With
+  calendar day can extend each language streak only once using the Asia/Ho_Chi_Minh date.
+  Lesson Done records also seed a deterministic review queue: the next explicit review is due
+  1, 3, 7 and 14 days after the previous learner-confirmed event. Review records reuse the
+  metadata store with a `review:<interval>:<lessonId>` client ID, extend habit activity, and do
+  not increase the unique Done-lesson count or feed proficiency claims. With
   `NEON_DATABASE_URL`, `/api/learning/progress` hashes a browser-generated 256-bit token and
   merge-syncs only lesson ID, language, skill, minutes and timestamps. Answers and audio never
   leave the browser through this path. A validated JSON export includes the private sync token,

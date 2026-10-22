@@ -1,5 +1,6 @@
 import { computeStreaks } from "./streak.ts";
 import { getActiveLearnerProfileId, getLearnerProfile, isLearnerProfileId, readProfileStorage, writeProfileStorage, type LearnerProfileId } from "./learnerProfiles.ts";
+import { dueReviews, nextScheduledReview, reviewCompletionId, type ScheduledReview } from "./reviewSchedule.ts";
 
 export type LocalCompletionInput = {
   id: string;
@@ -71,7 +72,7 @@ const TIME_ZONE = "Asia/Ho_Chi_Minh";
 const MAX_COMPLETIONS = 10_000;
 const MAX_BACKUP_LENGTH = 1_000_000;
 
-function dateInLearningTimezone(value = new Date()): string {
+export function dateInLearningTimezone(value = new Date()): string {
   const parts = new Intl.DateTimeFormat("en", {
     timeZone: TIME_ZONE,
     year: "numeric",
@@ -144,7 +145,7 @@ export function getLocalLanguageSummary(language: string): LocalProgressSummary 
   return {
     currentStreak: streak.current,
     longestStreak: streak.longest,
-    totalCompleted: languageCompletions.length,
+    totalCompleted: languageCompletions.filter((item) => !item.id.startsWith("review:")).length,
   };
 }
 
@@ -165,6 +166,14 @@ export function getLocalCompletedLessonIds(): Set<string> {
   return new Set(readStore().completions.map((item) => item.lessonId));
 }
 
+export function getLocalDueReviews(now = new Date()): ScheduledReview[] {
+  return dueReviews(readStore().completions, dateInLearningTimezone(now));
+}
+
+export function getLocalScheduledReview(lessonId: string, now = new Date()): ScheduledReview | null {
+  return nextScheduledReview(readStore().completions, lessonId, dateInLearningTimezone(now));
+}
+
 export function getLocalCompletionSummary(id: string, language: string): LocalCompletionSummary {
   const completions = readStore().completions;
   const match = completions.find((item) => item.id === id);
@@ -175,7 +184,7 @@ export function getLocalCompletionSummary(id: string, language: string): LocalCo
   };
 }
 
-export function recordLocalCompletion(input: LocalCompletionInput): RecordCompletionResult {
+export function recordLocalCompletion(input: LocalCompletionInput, now = new Date()): RecordCompletionResult {
   const store = readStore();
   const existing = store.completions.find((item) => item.id === input.id);
   let newlyCompleted = false;
@@ -184,14 +193,31 @@ export function recordLocalCompletion(input: LocalCompletionInput): RecordComple
     store.completions.push({
       ...input,
       minutes: Math.max(1, Math.min(60, Math.round(input.minutes))),
-      date: dateInLearningTimezone(),
-      completedAt: new Date().toISOString(),
+      date: dateInLearningTimezone(now),
+      completedAt: now.toISOString(),
     });
     writeStore(store);
     newlyCompleted = true;
   }
 
   return { ...getLocalCompletionSummary(input.id, input.language), newlyCompleted };
+}
+
+export function recordLocalReview(
+  input: Omit<LocalCompletionInput, "id">,
+  now = new Date(),
+): { newlyRecorded: boolean; nextReview: ScheduledReview | null } {
+  const scheduled = getLocalScheduledReview(input.lessonId, now);
+  if (!scheduled?.isDue) return { newlyRecorded: false, nextReview: scheduled };
+
+  const result = recordLocalCompletion({
+    ...input,
+    id: reviewCompletionId(input.lessonId, scheduled.interval),
+  }, now);
+  return {
+    newlyRecorded: result.newlyCompleted,
+    nextReview: getLocalScheduledReview(input.lessonId, now),
+  };
 }
 
 export function exportLocalProgressBackup(): string {

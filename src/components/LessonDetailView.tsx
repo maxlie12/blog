@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SKILLS, type SkillId } from "@/lib/lessonTypes";
 import { AttemptSubmitForm } from "@/components/AttemptSubmitForm";
 import { PracticeCoach } from "@/components/PracticeCoach";
+import { ReviewCompletion } from "@/components/ReviewCompletion";
 
 interface AttemptView {
   id: string;
@@ -106,6 +107,8 @@ export function LessonDetailView({
           Bản viết chỉ lưu trên trình duyệt. Metadata Done và streak được đồng bộ khi máy chủ sẵn sàng; review và điểm CEFR vẫn là luồng riêng.
         </p>
       )}
+
+      <ReviewCompletion lessonId={lesson.id} skill={lesson.skill} language={lesson.language} />
 
       {attempts.length > 0 && (
         <section className="lesson-detail__section">

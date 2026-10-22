@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getLanguageLabel } from "@/lib/languages";
-import { getLocalCompletedLessonIds } from "@/lib/localLearningProgress";
+import { getLocalCompletedLessonIds, getLocalDueReviews } from "@/lib/localLearningProgress";
 import { readProfileStorage } from "@/lib/learnerProfiles";
 import type { LessonSummary } from "@/lib/lessonTypes";
 import { selectNextLesson, type NextLesson } from "@/lib/nextLesson";
@@ -22,12 +22,14 @@ function hasSavedDraft(lessonId: string): boolean {
 
 const actionLabel = {
   resume: "Tiếp tục bài đang dở",
+  "due-review": "Ôn bài đến hạn",
   next: "Bắt đầu học",
   review: "Ôn lại một bài",
 } as const;
 
 const reasonLabel = {
   resume: "Bạn có bản nháp chưa Done. Hệ thống giữ đúng bài đó để không mất mạch học.",
+  "due-review": "Bài cũ được gọi lại theo nhịp 1–3–7–14 ngày, trước khi bạn học thêm bài mới.",
   next: "Đây là bài chưa Done phù hợp tiếp theo trong lộ trình hiện tại.",
   review: "Bạn đã Done toàn bộ bài hiện có. Hệ thống chọn lại bài đầu lộ trình để ôn.",
 } as const;
@@ -39,8 +41,9 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
   useEffect(() => {
     const choose = () => {
       const completed = getLocalCompletedLessonIds();
+      const dueReviews = getLocalDueReviews();
       const drafts = new Set(lessons.filter((lesson) => hasSavedDraft(lesson.id)).map((lesson) => lesson.id));
-      setTarget(selectNextLesson(lessons, learner.id, completed, drafts));
+      setTarget(selectNextLesson(lessons, learner.id, completed, drafts, dueReviews));
     };
     choose();
     window.addEventListener("learning-progress-changed", choose);
@@ -57,6 +60,7 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
             <strong>{target.lesson.title}</strong>
             <span>{getLanguageLabel(target.lesson.language, true)} · {target.lesson.level}</span>
             <p>{reasonLabel[target.reason]}</p>
+            {target.review && <small>Mốc ôn +{target.review.interval} ngày · đến hạn {target.review.dueDate}</small>}
           </div>
         ) : (
           <p aria-live="polite">Đang đọc tiến độ trên thiết bị để chọn bài…</p>

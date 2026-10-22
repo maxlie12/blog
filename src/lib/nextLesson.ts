@@ -1,12 +1,14 @@
 import type { LearnerProfileId } from "./learnerProfiles.ts";
 import { lessonLevel } from "./lessonLevels.ts";
 import type { LessonSummary } from "./lessonTypes.ts";
+import type { ScheduledReview } from "./reviewSchedule.ts";
 
-export type NextLessonReason = "resume" | "next" | "review";
+export type NextLessonReason = "resume" | "due-review" | "next" | "review";
 
 export type NextLesson = {
   lesson: LessonSummary;
   reason: NextLessonReason;
+  review?: ScheduledReview;
 };
 
 const PROFILE_PATHS: Record<LearnerProfileId, { languages: string[]; levels: Record<string, string[]> }> = {
@@ -49,10 +51,16 @@ export function selectNextLesson(
   profileId: LearnerProfileId,
   completedLessonIds: ReadonlySet<string>,
   draftLessonIds: ReadonlySet<string>,
+  dueReviewItems: readonly ScheduledReview[] = [],
 ): NextLesson | null {
   const ordered = orderedLessons(lessons, profileId);
   const resume = ordered.find((lesson) => draftLessonIds.has(lesson.id) && !completedLessonIds.has(lesson.id));
   if (resume) return { lesson: resume, reason: "resume" };
+
+  for (const review of dueReviewItems) {
+    const lesson = ordered.find((item) => item.id === review.lessonId);
+    if (lesson) return { lesson, reason: "due-review", review };
+  }
 
   const next = ordered.find((lesson) => !completedLessonIds.has(lesson.id));
   if (next) return { lesson: next, reason: "next" };

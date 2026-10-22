@@ -54,3 +54,21 @@ test("when everything is Done the selector offers a deterministic review", () =>
   assert.equal(result?.lesson.id, "daily-2026-10-10-en-listening");
   assert.equal(result?.reason, "review");
 });
+
+test("a due review wins over a new lesson but not over an unfinished draft", () => {
+  const completed = new Set(["daily-2026-10-10-en-listening"]);
+  const due = [{
+    lessonId: "daily-2026-10-10-en-listening",
+    interval: 1 as const,
+    dueDate: "2026-10-11",
+    isDue: true,
+  }];
+
+  const review = selectNextLesson(lessons, "luan", completed, new Set(), due);
+  assert.equal(review?.reason, "due-review");
+  assert.equal(review?.lesson.id, "daily-2026-10-10-en-listening");
+
+  const resume = selectNextLesson(lessons, "luan", completed, new Set(["level-en-b2-listening"]), due);
+  assert.equal(resume?.reason, "resume");
+  assert.equal(resume?.lesson.id, "level-en-b2-listening");
+});

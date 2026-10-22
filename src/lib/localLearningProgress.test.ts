@@ -5,8 +5,11 @@ import {
   getLocalCompletedLessonIds,
   getLocalLanguageActivity,
   getLocalLanguageSummary,
+  getLocalDueReviews,
+  getLocalScheduledReview,
   importLocalProgressBackup,
   recordLocalCompletion,
+  recordLocalReview,
 } from "./localLearningProgress.ts";
 import { profileStorageKey, setActiveLearnerProfile } from "./learnerProfiles.ts";
 
@@ -112,4 +115,30 @@ test("backup rejects an unknown learner profile", () => {
   const backup = JSON.parse(exportLocalProgressBackup());
   backup.learnerProfile = { id: "attacker", name: "Unknown" };
   assert.throws(() => importLocalProgressBackup(JSON.stringify(backup)), /không hợp lệ/);
+});
+
+test("review events advance the schedule and do not inflate Done lesson count", () => {
+  recordLocalCompletion({ id: "lesson:lesson-en", lessonId: "lesson-en", language: "en", skill: "listening", minutes: 5 }, new Date("2026-10-10T02:00:00.000Z"));
+
+  assert.equal(getLocalScheduledReview("lesson-en", new Date("2026-10-11T02:00:00.000Z"))?.isDue, true);
+  const result = recordLocalReview({ lessonId: "lesson-en", language: "en", skill: "listening", minutes: 3 }, new Date("2026-10-11T02:00:00.000Z"));
+
+  assert.equal(result.newlyRecorded, true);
+  assert.deepEqual(result.nextReview, { lessonId: "lesson-en", interval: 3, dueDate: "2026-10-14", isDue: false });
+  assert.equal(getLocalLanguageSummary("en").totalCompleted, 1);
+});
+
+test("due review uses the Asia/Ho_Chi_Minh calendar boundary", () => {
+  recordLocalCompletion({ id: "lesson:lesson-en", lessonId: "lesson-en", language: "en", skill: "listening", minutes: 5 }, new Date("2026-10-18T02:00:00.000Z"));
+
+  assert.deepEqual(getLocalDueReviews(new Date("2026-10-18T16:59:59.000Z")), []);
+  assert.equal(getLocalDueReviews(new Date("2026-10-18T17:00:00.000Z"))[0]?.lessonId, "lesson-en");
+});
+
+test("multiple lessons completed on one day are all returned when due", () => {
+  const completedAt = new Date("2026-10-10T03:00:00.000Z");
+  recordLocalCompletion({ id: "lesson:lesson-a", lessonId: "lesson-a", language: "en", skill: "reading", minutes: 5 }, completedAt);
+  recordLocalCompletion({ id: "lesson:lesson-b", lessonId: "lesson-b", language: "en", skill: "writing", minutes: 5 }, completedAt);
+
+  assert.deepEqual(getLocalDueReviews(new Date("2026-10-11T03:00:00.000Z")).map((item) => item.lessonId), ["lesson-a", "lesson-b"]);
 });
