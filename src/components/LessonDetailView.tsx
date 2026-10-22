@@ -99,7 +99,7 @@ export function LessonDetailView({
       {canSubmit ? (
         <section className="lesson-detail__section lesson-detail__submit">
           <h2>Submit an attempt</h2>
-          <AttemptSubmitForm lessonId={lesson.id} skill={lesson.skill} />
+          <AttemptSubmitForm lessonId={lesson.id} skill={lesson.skill} language={lesson.language} />
         </section>
       ) : (
         <p className="lesson-detail__disclaimer">

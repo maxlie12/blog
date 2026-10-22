@@ -1,6 +1,21 @@
 # Status
 
-Last verified: 2026-10-21 (Stage 2B code complete; Clerk production activation pending).
+Last verified: 2026-10-22 (learning-method flow verified locally; deployment pending).
+
+## 2026-10-22 — focused learning methods and a shorter Done path
+
+- Added one shared method catalogue filtered by skill: recall, shadowing, retelling, changing
+  the situation and a short Learning Note. Anonymous and signed-in lesson forms use the same
+  definitions instead of duplicating prompt text.
+- Anonymous practice now needs one saved real output before Done. Self-check, one-point repair
+  and ChatGPT export remain available but are optional disclosures, not gates.
+- Signed-in learners see the same method choices. After a private attempt is submitted, they can
+  separately record local-first Done/streak; pending review and habit completion remain distinct.
+- Added `docs/WORK-ROUTER.md`, `docs/ISSUES.md` and `docs/CHANGE-BRIEF.md` so future agents start
+  from a named issue and narrow file scope instead of reading the whole repository.
+- Checks: 14 focused Node tests, ESLint and the Next.js 16 production build passed. A local
+  `next start` browser check was blocked by the managed runtime's `uv_interface_addresses`
+  system error; production interaction verification remains required after deployment.
 
 ## 2026-10-21 — Stage 2B account ownership and private attempts
 

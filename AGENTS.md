@@ -16,11 +16,15 @@ This is a personal learning product. Prefer a small, complete change over a broa
 
 ## Required reading
 
-Before editing, read the files that own the behavior plus:
-- `docs/ARCHITECTURE.md` for data boundaries.
-- `docs/AI-WORKFLOW.md` for the delivery and review sequence.
-- `.claude/skills/ponytail/SKILL.md` for coding changes.
-- `.claude/skills/ui-ux-pro-max/SKILL.md` for any visible or interactive change.
+Start with `docs/WORK-ROUTER.md`, then open the active item in `docs/ISSUES.md` or a filled
+`docs/CHANGE-BRIEF.md`. Read only the owning files and conditional references listed there.
+Do not scan the whole repository unless the user explicitly asks for an audit.
+
+Additionally:
+- Read `docs/ARCHITECTURE.md` only when a change crosses a data, auth, privacy or storage boundary.
+- Read `docs/AI-WORKFLOW.md` for non-trivial code changes or releases.
+- Read `.claude/skills/ponytail/SKILL.md` for coding changes.
+- Read `.claude/skills/ui-ux-pro-max/SKILL.md` for any visible or interactive change.
 
 ## Working rules
 
@@ -31,5 +35,7 @@ Before editing, read the files that own the behavior plus:
 5. Run `npm run lint` and `npm run build` after code changes. For an interaction, verify the full production flow in a browser.
 6. Review the connected code, not only the diff. Use the Ponytail review format for findings and fix must-fix items before shipping.
 7. Never commit secrets, private answers, audio, or personal feedback.
+8. Do not modify files outside the active change brief. If another file is required, update the
+   brief first and state why.
 
 <!-- END:project-ai-workflow -->

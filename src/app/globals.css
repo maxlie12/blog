@@ -2476,6 +2476,89 @@ body { line-height: 1.65; }
 
 /* ---------- Local lesson completion ---------- */
 
+.learning-methods {
+  border: 0;
+  padding: 0;
+  margin: 1.25rem 0;
+}
+
+.learning-methods legend {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.learning-methods > p,
+.learning-method span span,
+.learning-method-action,
+.practice-options,
+.practice-review {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.learning-methods__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.learning-method {
+  min-height: 44px;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.learning-method[data-selected="true"] {
+  border-color: var(--forest);
+  background: color-mix(in srgb, var(--sage) 66%, var(--surface));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--forest) 14%, transparent);
+}
+
+.learning-method input {
+  margin-top: 0.25rem;
+}
+
+.learning-method > span {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.learning-method small {
+  color: var(--forest);
+  font-weight: 700;
+}
+
+.learning-method-action {
+  border-left: 4px solid var(--butter);
+  background: color-mix(in srgb, var(--butter) 20%, var(--surface));
+  color: var(--text);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.practice-options,
+.practice-review {
+  border-top: 1px solid var(--border);
+  margin: 1rem 0;
+  padding-top: 0.75rem;
+}
+
+.practice-options summary,
+.practice-review summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .lesson-completion,
 .local-progress {
   border: 1px solid color-mix(in srgb, var(--forest) 25%, var(--border));
@@ -2596,6 +2679,10 @@ body { line-height: 1.65; }
 }
 
 @media (max-width: 520px) {
+  .learning-methods__grid {
+    grid-template-columns: 1fr;
+  }
+
   .lesson-completion__stats {
     grid-template-columns: 1fr;
   }
