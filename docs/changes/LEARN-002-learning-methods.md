@@ -3,7 +3,7 @@
 ## Identity
 
 - **Issue:** `LEARN-002`
-- **Status:** verified locally
+- **Status:** deployed; production interaction QA pending
 - **Owner:** Codex
 - **Date:** 2026-10-22
 
@@ -67,13 +67,14 @@ same choices before submitting a private attempt.
 - [x] `npm run lint`
 - [x] `npm run build`
 - [x] Mobile/keyboard code review: native radios, labels, 44px targets and one-column phone layout
-- [ ] Production route after deployment
+- [x] Vercel deployment status for code commit
+- [ ] Direct production interaction check
 
 ## Result
 
 - **Files changed:** shared method catalogue/test, anonymous and signed-in lesson forms, focused
   styles and workflow/status documentation.
 - **Evidence:** 14 tests, lint and production build pass.
-- **Commit/deployment:** pending.
+- **Commit/deployment:** code commit `57321db`; Vercel status succeeded.
 - **Not checked / remaining risk:** the managed runtime cannot start Next because
   `uv_interface_addresses` fails, so the live interaction still needs production browser QA.

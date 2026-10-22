@@ -1,6 +1,6 @@
 # Status
 
-Last verified: 2026-10-22 (learning-method flow verified locally; deployment pending).
+Last verified: 2026-10-22 (learning-method flow deployed; production browser interaction pending).
 
 ## 2026-10-22 — focused learning methods and a shorter Done path
 
@@ -13,9 +13,10 @@ Last verified: 2026-10-22 (learning-method flow verified locally; deployment pen
   separately record local-first Done/streak; pending review and habit completion remain distinct.
 - Added `docs/WORK-ROUTER.md`, `docs/ISSUES.md` and `docs/CHANGE-BRIEF.md` so future agents start
   from a named issue and narrow file scope instead of reading the whole repository.
-- Checks: 14 focused Node tests, ESLint and the Next.js 16 production build passed. A local
-  `next start` browser check was blocked by the managed runtime's `uv_interface_addresses`
-  system error; production interaction verification remains required after deployment.
+- Checks: 14 focused Node tests, ESLint and the Next.js 16 production build passed. Vercel
+  reported a successful deployment for commit `57321db`. A local `next start` browser check was
+  blocked by the managed runtime's `uv_interface_addresses` system error, and the connected web
+  fetcher could not open the public route; direct production interaction QA is still pending.
 
 ## 2026-10-21 — Stage 2B account ownership and private attempts
 
