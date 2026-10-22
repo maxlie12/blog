@@ -954,6 +954,63 @@ a {
   gap: 1.75rem;
 }
 
+.learning-start {
+  display: grid;
+  gap: 1.25rem;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border: 1px solid color-mix(in srgb, var(--forest) 28%, var(--border));
+  border-radius: 22px;
+  background: linear-gradient(135deg, var(--sage), var(--butter));
+  color: var(--text);
+  box-shadow: 0 14px 34px -26px #173f3077;
+}
+
+.learning-start h2 {
+  max-width: 24ch;
+  margin: 0.45rem 0 0.8rem;
+  font-size: clamp(1.35rem, 4vw, 2rem);
+  line-height: 1.2;
+}
+
+.learning-start__selection {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.learning-start__selection > span,
+.learning-start__selection p,
+.learning-start__action small {
+  color: var(--text-muted);
+}
+
+.learning-start__selection p {
+  margin-top: 0.35rem;
+  max-width: 60ch;
+}
+
+.learning-start__action {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.55rem;
+}
+
+.learning-start__action .button {
+  justify-content: center;
+  min-width: 11rem;
+}
+
+@media (min-width: 720px) {
+  .learning-start {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .learning-start__action {
+    align-items: center;
+  }
+}
+
 .journey-hero--wide .journey__svg {
   height: 260px;
 }

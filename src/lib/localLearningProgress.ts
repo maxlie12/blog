@@ -161,6 +161,10 @@ export function getLocalLanguageActivity(language: string, days = 28, now = new 
   });
 }
 
+export function getLocalCompletedLessonIds(): Set<string> {
+  return new Set(readStore().completions.map((item) => item.lessonId));
+}
+
 export function getLocalCompletionSummary(id: string, language: string): LocalCompletionSummary {
   const completions = readStore().completions;
   const match = completions.find((item) => item.id === id);

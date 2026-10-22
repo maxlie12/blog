@@ -10,6 +10,7 @@ evidence and never proves a CEFR, HSK or JLPT level.
 
 | ID | Priority | Status | Problem | Next smallest outcome |
 |---|---:|---|---|---|
+| LEARN-003 | P0 | Active | The Learning page still makes the learner choose among many filters before starting a short session. | Add one deterministic “Bắt đầu học” action that resumes a draft or opens the next profile-appropriate unfinished lesson. |
 | LEARN-001 | P0 | Ready | A daily lesson can still feel like an external link plus instructions; the learner may finish without a reusable language takeaway. | After Done, show one phrase, one pattern and one small reuse prompt from the lesson. |
 | REVIEW-001 | P1 | Planned | Old language is not yet scheduled back into later tasks from actual learner history. | Add a deterministic 1–3–7–14-day review queue before considering AI-generated review. |
 | ASSESS-001 | P1 | Planned | The product has self-reported levels and milestone UI, but insufficient unseen four-skill evidence to claim progress. | Keep level unchanged; attach weekly checks and a 28-day assessment to evidence records. |
@@ -20,6 +21,13 @@ Game and decorative progression are intentionally below these items. They may re
 but they do not replace lesson quality, review or assessment.
 
 ## Issue details
+
+### LEARN-003 — automatic next lesson
+
+- **User problem:** the learner wants to start in one tap instead of deciding among the full lesson library.
+- **Required reading:** the local progress section of `docs/ARCHITECTURE.md`, `docs/LEVEL-LESSONS.md`, `src/app/learning/page.tsx`, the lesson/profile helpers and the new selector test.
+- **Boundary:** resume a profile-local draft first; otherwise choose a profile-appropriate unfinished lesson deterministically. Do not infer proficiency, raise a level, or use server review as profile-local Done.
+- **Acceptance evidence:** Luân starts with an unfinished English B1/B1+ lesson and Phi with Japanese Starter; a saved draft wins; Done lessons are skipped; one visible 44px action works on phone and keyboard.
 
 ### LEARN-001 — reusable takeaway after Done
 

@@ -8,6 +8,7 @@ import { getAllLessons } from "@/lib/lessonsData";
 import { getJourneyCheckpoints } from "@/lib/journeyData";
 import { LearnerProfileSwitcher } from "@/components/LearnerProfileSwitcher";
 import { LearnerAccountPanel } from "@/components/LearnerAccountPanel";
+import { StartLearning } from "@/components/StartLearning";
 import { getAuthenticatedLearnerId, isLearnerAuthConfigured } from "@/lib/learnerAuth";
 
 export const metadata: Metadata = { title: "Learning" };
@@ -32,6 +33,8 @@ export default async function LearningPage() {
 
       <LearnerProfileSwitcher />
       {isLearnerAuthConfigured() && <LearnerAccountPanel />}
+
+      <StartLearning lessons={lessons} />
 
       <section className="learning-world-teaser">
         <div><p className="eyebrow">NEW · PLAY TO LEARN</p><h2>Nông trại dưới chân núi</h2><p>Trồng rau, nuôi cá, chăn gà vịt cừu bò, chế biến rồi chở hàng lên phố bán. Lưu một bài luyện 5 phút mỗi ngày để nhận thêm quà trong game.</p></div>

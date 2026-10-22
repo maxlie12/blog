@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   exportLocalProgressBackup,
+  getLocalCompletedLessonIds,
   getLocalLanguageActivity,
   getLocalLanguageSummary,
   importLocalProgressBackup,
@@ -91,6 +92,14 @@ test("Luân and Phi keep independent completions on the same browser", () => {
   setActiveLearnerProfile("luan");
   assert.equal(getLocalLanguageSummary("en").totalCompleted, 1);
   assert.equal(getLocalLanguageSummary("ja").totalCompleted, 0);
+});
+
+test("completed lesson IDs are profile-local", () => {
+  recordLocalCompletion({ id: "lesson:lesson-en", lessonId: "lesson-en", language: "en", skill: "listening", minutes: 5 });
+  assert.deepEqual([...getLocalCompletedLessonIds()], ["lesson-en"]);
+
+  setActiveLearnerProfile("phi");
+  assert.deepEqual([...getLocalCompletedLessonIds()], []);
 });
 
 test("backup cannot be imported into a different learner profile", () => {
