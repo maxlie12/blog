@@ -3,7 +3,7 @@
 ## Identity
 
 - **Issue:** `LEARN-003`
-- **Status:** active
+- **Status:** verified in production
 - **Owner:** Codex
 - **Date:** 2026-10-22
 
@@ -52,15 +52,15 @@ One primary action on `/learning` resumes a saved draft or opens the next unfini
 
 ## Verification
 
-- [ ] Focused selector and local progress tests
-- [ ] `npm run lint`
-- [ ] `npm run build`
-- [ ] 375px, keyboard and reduced-motion check
-- [ ] Production route after deployment
+- [x] Focused selector and local progress tests
+- [x] `npm run lint`
+- [x] `npm run build`
+- [x] Keyboard semantics, 44px target and responsive/reduced-motion code review
+- [x] Production route and primary navigation
 
 ## Result
 
-- **Files changed:** pending
-- **Evidence:** pending
-- **Commit/deployment:** pending
-- **Not checked / remaining risk:** pending
+- **Files changed:** one leaf Start component, pure selector/test, local Done-ID accessor/test, Learning page/styles and focused docs.
+- **Evidence:** 19 tests, ESLint and production build pass. Production `/learning` displayed the recommendation for Luân; its native link opened `daily-2026-10-10-en-listening`, and the button measured 44.95px high.
+- **Commit/deployment:** code commit `09a1e92`; visible on `https://maxlie-blog.vercel.app/learning`.
+- **Not checked / remaining risk:** no 375px browser emulation was available. Phone layout is covered by the existing mobile-first one-column CSS; profile-specific draft/Done branches are covered by fixed tests rather than changing production learner data.

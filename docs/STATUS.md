@@ -1,6 +1,20 @@
 # Status
 
-Last verified: 2026-10-22 (learning-method flow deployed; production browser interaction pending).
+Last verified: 2026-10-22 (automatic lesson start verified in production).
+
+## 2026-10-22 — one-tap start chooses the next suitable lesson
+
+- `/learning` now presents one primary “Bắt đầu học” action directly after the learner profile.
+  It resumes an unfinished profile-local draft first, otherwise opens the next unfinished lesson;
+  when all lessons are Done it offers a deterministic review.
+- Selection is local and explicit: Luân prioritizes English B1/B1+ before B2 and secondary
+  languages; Phi prioritizes Japanese Starter. It does not call AI, use public review counts or
+  raise a learner's level.
+- Checks: 19 Node tests, ESLint and the Next.js 16 production build passed. Production displayed
+  the recommendation and opened `daily-2026-10-10-en-listening` from the primary link. The link
+  measured 44.95px high; the only console errors came from the cloud-browser extension, not the app.
+- Commit `09a1e92` is visible at `https://maxlie-blog.vercel.app/learning`. A 375px browser
+  emulation was unavailable; the mobile layout received a responsive code review.
 
 ## 2026-10-22 — focused learning methods and a shorter Done path
 
