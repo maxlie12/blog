@@ -10,6 +10,7 @@ evidence and never proves a CEFR, HSK or JLPT level.
 
 | ID | Priority | Status | Problem | Next smallest outcome |
 |---|---:|---|---|---|
+| LEARN-004 | P0 | Active | The main Learning page exposes a large mixed catalog after already choosing the next lesson. | Keep one purposeful start action; move deliberate browsing to the dated archive. |
 | ASSESS-001 | P1 | Planned | The product has self-reported levels and milestone UI, but insufficient unseen four-skill evidence to claim progress. | Keep level unchanged; attach weekly checks and a 28-day assessment to evidence records. |
 | LANG-001 | P1 | Planned | English, Chinese and Japanese share an engine, but their teaching rules are not yet explicit data. | Define language-pack rules without splitting the page into three implementations. |
 | FEEDBACK-001 | P2 | Blocked | Personal correction is manual; automatic AI feedback is not implemented or cost-controlled. | First collect real attempts and define a one-error feedback contract. |
@@ -18,6 +19,16 @@ Game and decorative progression are intentionally below these items. They may re
 but they do not replace lesson quality, review or assessment.
 
 ## Issue details
+
+### LEARN-004 — one purposeful entry point
+
+- **User problem:** “Choose a lesson” exposes unrelated filters and lessons after the app has
+  already selected what to do next.
+- **Boundary:** remove only the main-page catalog. Keep the deterministic next-lesson selector,
+  lesson data and dated archive unchanged.
+- **Acceptance evidence:** `/learning` contains no “Choose a lesson”, skill-card catalog or
+  duplicate level explanation; the primary action still opens a real task with instructions,
+  an output field and Done.
 
 ### ASSESS-001 — evidence-based milestones
 

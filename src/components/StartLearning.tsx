@@ -74,7 +74,7 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
         ) : (
           <button className="button button--primary" type="button" disabled>Đang chọn bài…</button>
         )}
-        <small>Có thể đổi bài bằng bộ lọc bên dưới.</small>
+        <small>Muốn xem lại một bài cụ thể? <Link href="/learning/daily">Mở lịch sử bài học</Link>.</small>
       </div>
     </section>
   );

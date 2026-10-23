@@ -64,9 +64,9 @@ A single public site that is a genuine record of growth, not a highlight reel:
 - Blog list + detail pages — **now merges Studio-authored posts (database) with hand-written
   `.mdx` articles.**
 - Learning page: mountain-journey milestone map (hand-set, not computed) — **now database-backed
-  and editable in Studio**; four skill cards with a filterable lesson picker — **lessons and
-  progress now come from the database, not a static file**; the original tracked streak/public
-  log-entries section, unchanged and kept visibly separate from lessons.
+  and editable in Studio**; one profile-local start action resumes a draft, opens a due review or
+  selects the next suitable lesson. Deliberate browsing lives in the separate dated archive;
+  the original tracked streak/public log-entries section remains visibly separate from lessons.
 - A documented, git-based way to add/edit legacy articles and projects.
 - A documented CLI (`npm run log`) for the original practice-log flow.
 - Theme (light/dark) and accent-color switcher, persisted per-browser.

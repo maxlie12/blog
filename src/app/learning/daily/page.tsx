@@ -27,7 +27,7 @@ export default async function DailyPage({ searchParams }: {
   const selected = query.date ? available.find((p) => p.date === query.date) : unfinished ?? available.at(-1);
   if (query.date && !selected) notFound();
   return <article className="lesson-detail">
-    <Link href="/learning">← Kho bài · lọc theo cấp độ / kỹ năng</Link>
+    <Link href="/learning">← Quay lại Learning</Link>
     <header className="lesson-detail__header">
       <h1>Bài học mỗi ngày</h1>
       <Link className="button" href="/learning/session">Buổi học 5–10 phút có hướng dẫn →</Link>{" "}
