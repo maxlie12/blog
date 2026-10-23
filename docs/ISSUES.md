@@ -10,7 +10,7 @@ evidence and never proves a CEFR, HSK or JLPT level.
 
 | ID | Priority | Status | Problem | Next smallest outcome |
 |---|---:|---|---|---|
-| LEARN-001 | P0 | Ready | A daily lesson can still feel like an external link plus instructions; the learner may finish without a reusable language takeaway. | After Done, show one phrase, one pattern and one small reuse prompt from the lesson. |
+| LEARN-001 | P0 | Active | A daily lesson can still feel like an external link plus instructions; the learner may finish without a reusable language takeaway. | After Done, show one phrase, one pattern and one small reuse prompt from the lesson. |
 | ASSESS-001 | P1 | Planned | The product has self-reported levels and milestone UI, but insufficient unseen four-skill evidence to claim progress. | Keep level unchanged; attach weekly checks and a 28-day assessment to evidence records. |
 | LANG-001 | P1 | Planned | English, Chinese and Japanese share an engine, but their teaching rules are not yet explicit data. | Define language-pack rules without splitting the page into three implementations. |
 | FEEDBACK-001 | P2 | Blocked | Personal correction is manual; automatic AI feedback is not implemented or cost-controlled. | First collect real attempts and define a one-error feedback contract. |

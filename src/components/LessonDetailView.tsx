@@ -4,6 +4,8 @@ import { SKILLS, type SkillId } from "@/lib/lessonTypes";
 import { AttemptSubmitForm } from "@/components/AttemptSubmitForm";
 import { PracticeCoach } from "@/components/PracticeCoach";
 import { ReviewCompletion } from "@/components/ReviewCompletion";
+import { LessonTakeaway } from "@/components/LessonTakeaway";
+import type { LessonTakeaway as LessonTakeawayContent } from "@/lib/dailyLessons";
 
 interface AttemptView {
   id: string;
@@ -32,6 +34,7 @@ export function LessonDetailView({
     material: string | null;
     exercises: string | null;
     completionCriteria: string;
+    takeaway?: LessonTakeawayContent;
   };
   attempts: AttemptView[];
   canSubmit: boolean;
@@ -54,14 +57,23 @@ export function LessonDetailView({
         <p className="lesson-detail__summary">{lesson.completionCriteria}</p>
       </header>
 
+      <ol className="lesson-route" aria-label="Luồng học của bài này">
+        <li><span>1</span><strong>Mục tiêu</strong></li>
+        <li><span>2</span><strong>Học nguồn</strong></li>
+        <li><span>3</span><strong>Tạo đầu ra</strong></li>
+        <li><span>4</span><strong>Done &amp; mang đi</strong></li>
+      </ol>
+
       <section className="lesson-detail__section">
-        <h2>Instructions</h2>
+        <p className="lesson-step-kicker">BƯỚC 1 · MỤC TIÊU</p>
+        <h2>Biết mình cần làm gì trước khi mở nguồn</h2>
         <p>{lesson.instructions}</p>
       </section>
 
       {lesson.material && (
         <section className="lesson-detail__section">
-          <h2>Material</h2>
+          <p className="lesson-step-kicker">BƯỚC 2 · HỌC NGUỒN</p>
+          <h2>Nghe hoặc đọc đúng phần được giao</h2>
           {lesson.skill === "listening" && isAudioUrl(lesson.material) ? (
             <audio controls src={lesson.material} className="lesson-detail__audio" />
           ) : (
@@ -74,7 +86,7 @@ export function LessonDetailView({
 
       {lesson.exercises && (
         <section className="lesson-detail__section lesson-detail__sample">
-          <h2>Exercise</h2>
+          <h2>Đầu ra cần tạo</h2>
           <p style={{ whiteSpace: "pre-wrap" }}>{lesson.exercises}</p>
         </section>
       )}
@@ -99,7 +111,7 @@ export function LessonDetailView({
 
       {canSubmit ? (
         <section className="lesson-detail__section lesson-detail__submit">
-          <h2>Submit an attempt</h2>
+          <h2>Bước 3 · Tạo đầu ra và nộp bài</h2>
           <AttemptSubmitForm lessonId={lesson.id} skill={lesson.skill} language={lesson.language} />
         </section>
       ) : (
@@ -107,6 +119,8 @@ export function LessonDetailView({
           Bản viết chỉ lưu trên trình duyệt. Metadata Done và streak được đồng bộ khi máy chủ sẵn sàng; review và điểm CEFR vẫn là luồng riêng.
         </p>
       )}
+
+      {lesson.takeaway && <LessonTakeaway lessonId={lesson.id} language={lesson.language} takeaway={lesson.takeaway} />}
 
       <ReviewCompletion lessonId={lesson.id} skill={lesson.skill} language={lesson.language} />
 

@@ -103,6 +103,7 @@ export function PracticeCoach({ lessonId, skill, language }: { lessonId: string;
   const method = getLearningMethod(methodId);
   const exportText = attempt ? "Bài: " + lessonId + "\nPhương pháp: " + getLearningMethod(attempt.method ?? getDefaultLearningMethod(skill)).label + "\nThời gian: " + attempt.minutes + " phút\nHỗ trợ: " + attempt.support + "\nTập trung tự báo: " + attempt.focus + "\nBản đầu:\n" + attempt.response + "\nKết quả bài ở nguồn (tự báo): " + (sourceResult || "chưa ghi") + "\nĐiểm muốn sửa: " + gap + "\nBản làm lại:\n" + revision : "";
   return <section className="lesson-detail__section">
+    <p className="lesson-step-kicker">BƯỚC 3 · TẠO ĐẦU RA</p>
     <h2>Chọn một cách học → tạo một đầu ra → Done</h2>
     <p><strong>Đang học: {learner.name}.</strong> Bài tập và hướng dẫn do trợ lý soạn. Bản viết chỉ lưu trong profile này; máy chủ chỉ đồng bộ metadata Done/streak, không lưu nội dung bài hoặc chấm điểm. Không nhập thông tin công việc nhạy cảm.</p>
     <button type="button" className="button button--ghost" onClick={restore}>Mở bài đã lưu trên thiết bị</button>

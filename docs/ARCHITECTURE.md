@@ -121,6 +121,10 @@ Lesson (SQLite, authored in Studio)
   material?, exercises?, completionCriteria
   └─ attempts: Attempt[]
 
+Daily lesson packet (content/daily-lessons/YYYY-MM-DD.json)
+  same public lesson fields plus takeaway? (one authored phrase, one sentence pattern
+  and one transfer prompt for the post-Done summary)
+
 Attempt (SQLite) — recorded separately from Lesson so history can be corrected
   without editing the lesson definition itself.
   lessonId, learnerId?, isPublic=false, date, response?, feedback?,

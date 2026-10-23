@@ -3,6 +3,14 @@ import path from "node:path";
 import { z } from "zod";
 import { LANGUAGE_IDS } from "@/lib/languages";
 
+const takeawaySchema = z.object({
+  phrase: z.string().min(1).max(160),
+  pattern: z.string().min(1).max(240),
+  reusePrompt: z.string().min(1).max(320),
+});
+
+export type LessonTakeaway = z.infer<typeof takeawaySchema>;
+
 const lessonSchema = z.object({
   id: z.string().regex(/^daily-[a-z0-9-]+$/),
   skill: z.enum(["listening", "reading", "speaking", "writing"]),
@@ -10,6 +18,7 @@ const lessonSchema = z.object({
   title: z.string().min(1), level: z.string().min(1),
   instructions: z.string().min(1), material: z.string().nullable(),
   exercises: z.string().min(1), completionCriteria: z.string().min(1),
+  takeaway: takeawaySchema.optional(),
 });
 const packetSchema = z.object({
   date: z.iso.date(), title: z.string().min(1),

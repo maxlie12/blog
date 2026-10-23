@@ -13,7 +13,12 @@
       "instructions": "Bài do trợ lý soạn. British Council là nguồn miễn phí, có audio, transcript và bài tập. Chọn một đoạn 60–90 giây trong A digital detox podcast mà bạn chưa thuộc; không mở transcript, không giảm tốc độ và chỉ nghe một lượt.",
       "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
       "exercises": "Không cần hiểu từng từ. Viết ba dòng tiếng Anh: 1) One thing the speaker did or suggested; 2) One reason or result; 3) One point I am not sure about. Ghi thêm mức chắc chắn 0–100% và số phút thực học.",
-      "completionCriteria": "Bấm Done sau một lượt nghe và ba dòng nguyên bản. Nếu muốn nhận phản hồi, gửi đúng bản đầu, % chắc chắn và số phút; trợ lý sẽ xác nhận ý đúng, sửa một lỗi ưu tiên và chưa quy đổi CEFR."
+      "completionCriteria": "Bấm Done sau một lượt nghe và ba dòng nguyên bản. Nếu muốn nhận phản hồi, gửi đúng bản đầu, % chắc chắn và số phút; trợ lý sẽ xác nhận ý đúng, sửa một lỗi ưu tiên và chưa quy đổi CEFR.",
+      "takeaway": {
+        "phrase": "I’m not sure whether …",
+        "pattern": "The speaker suggested … because …",
+        "reusePrompt": "Che nguồn và nói hai câu về một lời khuyên khác trong công việc hoặc đời sống: lời khuyên là gì và vì sao nó có ích?"
+      }
     },
     {
       "id": "daily-2026-10-23-en-reading",
@@ -24,7 +29,12 @@
       "instructions": "Bài do trợ lý soạn. Chỉ mở transcript sau khi đã lưu ba dòng nghe. Đọc đúng đoạn đã nghe, không đọc toàn bài.",
       "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
       "exercises": "Đánh dấu mỗi dòng là Correct, Partly correct hoặc Incorrect. Chọn tối đa hai cụm ngắn trong transcript làm bằng chứng, rồi tự sửa đúng một dòng bằng lời của bạn.",
-      "completionCriteria": "Bấm Done khi đã đối chiếu và sửa một dòng. Đây là tự kiểm chứng, không phải điểm đọc hay chứng nhận trình độ."
+      "completionCriteria": "Bấm Done khi đã đối chiếu và sửa một dòng. Đây là tự kiểm chứng, không phải điểm đọc hay chứng nhận trình độ.",
+      "takeaway": {
+        "phrase": "The transcript shows that …",
+        "pattern": "I first thought …, but the evidence shows …",
+        "reusePrompt": "Dùng cùng khung để sửa một hiểu lầm nhỏ từ email, tài liệu hoặc cuộc trò chuyện gần đây."
+      }
     },
     {
       "id": "daily-2026-10-23-en-speaking",
@@ -35,7 +45,12 @@
       "instructions": "Bài do trợ lý soạn. Che transcript và ghi chú; nói 30–45 giây từ trí nhớ, không đọc thành tiếng bản viết.",
       "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
       "exercises": "Nói theo khung: The speaker suggested … because … / A possible drawback is … / At work, I could test this by … . Đổi tình huống sang một focus block khi làm Angular hoặc học ngoại ngữ.",
-      "completionCriteria": "Bấm Done sau một lượt nói thật. Gửi audio nếu muốn nhận xét phát âm và nhịp; gửi transcript nếu chỉ muốn sửa nội dung hoặc ngữ pháp."
+      "completionCriteria": "Bấm Done sau một lượt nói thật. Gửi audio nếu muốn nhận xét phát âm và nhịp; gửi transcript nếu chỉ muốn sửa nội dung hoặc ngữ pháp.",
+      "takeaway": {
+        "phrase": "A possible drawback is …",
+        "pattern": "I would … because …, but …",
+        "reusePrompt": "Nói lại 20 giây với một lựa chọn thật của bạn hôm nay; thêm đúng một bất tiện bằng but."
+      }
     },
     {
       "id": "daily-2026-10-23-en-writing",
@@ -46,7 +61,12 @@
       "instructions": "Bài do trợ lý soạn. Không dùng AI sửa bản đầu. Viết như một tin nhắn cho đồng đội, không tóm tắt toàn bộ podcast.",
       "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
       "exercises": "Viết 50–70 từ: đề xuất một focus block 30 phút, nêu lý do, cách giữ liên lạc khẩn cấp, một bất tiện và cách kiểm tra hiệu quả sau ba ngày. Dùng because và but hoặc however.",
-      "completionCriteria": "Bấm Done sau khi lưu bản đầu. Nếu gửi về ChatGPT, kèm số phút và hỗ trợ đã dùng; trợ lý chỉ sửa một lỗi ưu tiên rồi giao một lần viết lại ngắn."
+      "completionCriteria": "Bấm Done sau khi lưu bản đầu. Nếu gửi về ChatGPT, kèm số phút và hỗ trợ đã dùng; trợ lý chỉ sửa một lỗi ưu tiên rồi giao một lần viết lại ngắn.",
+      "takeaway": {
+        "phrase": "We could try … for three days.",
+        "pattern": "I suggest … because …; however, … . We can check … by … .",
+        "reusePrompt": "Viết một tin nhắn 2 câu đề xuất một thay đổi nhỏ khác và nêu cách kiểm tra kết quả."
+      }
     },
     {
       "id": "daily-2026-10-23-zh-speaking",
@@ -57,7 +77,12 @@
       "instructions": "Bài do trợ lý soạn. HelloChinese tải miễn phí và có video/audio người bản ngữ; một số nội dung đầy đủ cần Premium. Nghe lại mẫu gọi món trong app nếu có, rồi đóng chữ.",
       "material": "https://www.hellochinese.cc/vi",
       "exercises": "Từ trí nhớ, nói một câu gọi một cốc trà và một câu đổi thành hai cốc cà phê. Sau đó thêm 请问，多少钱？Qǐngwèn, duōshao qián? Nếu quên, mở lại mẫu sau lượt đầu rồi nói lại đúng một lần.",
-      "completionCriteria": "Bấm Done sau hai lượt: một lượt nhớ lại và một lượt sửa. Gửi audio 15–20 giây nếu muốn sửa thanh điệu; văn bản không đủ để đánh giá phát âm."
+      "completionCriteria": "Bấm Done sau hai lượt: một lượt nhớ lại và một lượt sửa. Gửi audio 15–20 giây nếu muốn sửa thanh điệu; văn bản không đủ để đánh giá phát âm.",
+      "takeaway": {
+        "phrase": "请问，多少钱？Qǐngwèn, duōshao qián?",
+        "pattern": "我要 + số lượng + lượng từ + món, 谢谢。",
+        "reusePrompt": "Đổi trà thành cà phê và đổi một cốc thành hai cốc; che chữ rồi nói lại cả câu một lần."
+      }
     }
   ]
 }

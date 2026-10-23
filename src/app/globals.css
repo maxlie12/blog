@@ -1063,6 +1063,42 @@ a {
 .lesson-detail__summary {
   color: var(--text-muted);
 }
+.lesson-route {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.lesson-route li {
+  min-width: 0;
+  min-height: 52px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--sage) 52%, var(--surface));
+  padding: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.lesson-route span {
+  flex: 0 0 1.55rem;
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 999px;
+  background: var(--forest);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.lesson-route strong {
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
 .lesson-detail__section {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1095,6 +1131,50 @@ a {
 .lesson-detail__disclaimer {
   font-size: 0.75rem;
   color: var(--text-muted);
+}
+.lesson-step-kicker {
+  margin: 0 0 0.35rem;
+  color: var(--forest);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+.lesson-takeaway {
+  border: 1px solid color-mix(in srgb, var(--butter-ink) 30%, var(--border));
+  border-radius: 18px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--butter) 72%, var(--surface)), var(--surface));
+  padding: 1.25rem;
+  box-shadow: 0 12px 30px -24px color-mix(in srgb, var(--butter-ink) 45%, transparent);
+}
+.lesson-takeaway h2 {
+  margin: 0 0 1rem;
+  font-size: 1.2rem;
+}
+.lesson-takeaway__list {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+}
+.lesson-takeaway__list > div {
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  padding: 0.8rem;
+}
+.lesson-takeaway dt {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+.lesson-takeaway dd {
+  margin: 0.25rem 0 0;
+  font-weight: 650;
+  line-height: 1.55;
+}
+.lesson-takeaway__note {
+  margin: 0.85rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.76rem;
 }
 
 /* ---------- Practice log ---------- */
@@ -2736,6 +2816,10 @@ body { line-height: 1.65; }
 }
 
 @media (max-width: 520px) {
+  .lesson-route {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .learning-methods__grid {
     grid-template-columns: 1fr;
   }
