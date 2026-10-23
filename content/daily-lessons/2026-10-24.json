@@ -1,0 +1,88 @@
+{
+  "date": "2026-10-24",
+  "title": "Một cuộc gọi công việc — nghe yêu cầu, lý do và kết quả",
+  "kind": "practice",
+  "note": "Ngày 1 của chu kỳ ba ngày: nghe và đọc hiểu. Chưa có bài làm mới nên giữ mức B1+ tự báo, không suy ra tiến bộ và không tăng độ khó. Chỉ bài nghe đầu tiên là bắt buộc 5 phút; các phần còn lại là tùy chọn. Tất cả nhiệm vụ là bài do trợ lý soạn, không phải đề British Council, IELTS, TOEIC hay HSK chính thức. Không có đáp án kèm đề; Done/streak chỉ ghi nhận hoạt động học.",
+  "lessons": [
+    {
+      "id": "daily-2026-10-24-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Bắt buộc 5 phút — nghe một yêu cầu trong công việc",
+      "level": "B1+ practice / B1 source",
+      "instructions": "Bài do trợ lý soạn. Nguồn British Council miễn phí, có audio, transcript và bài tập tương tác. Chưa mở transcript. Nghe từ đầu tối đa hai lượt; mục tiêu là hiểu tình huống, không bắt từng từ.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b1/phone-call-customer",
+      "exercises": "Viết ba dòng tiếng Anh: 1) The customer is calling because …; 2) She asks for …; 3) The other person finally … . Ghi thêm một chỗ chưa chắc, số lượt nghe và số phút thực học.",
+      "completionCriteria": "Bấm Done sau khi đã nghe và lưu ba dòng nguyên bản. Nếu muốn nhận phản hồi, gửi ba dòng cùng chỗ chưa chắc; trợ lý chỉ sửa một lỗi ưu tiên và chưa quy đổi CEFR.",
+      "takeaway": {
+        "phrase": "I’m calling about …",
+        "pattern": "She asked for … because …, so …",
+        "reusePrompt": "Che nguồn và nói hai câu về một cuộc gọi công việc khác: bạn gọi về việc gì và muốn người nghe làm gì?"
+      }
+    },
+    {
+      "id": "daily-2026-10-24-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — dùng transcript để kiểm chứng",
+      "level": "B1+ practice / B1 source",
+      "instructions": "Bài do trợ lý soạn. Chỉ mở transcript sau khi đã lưu ba dòng nghe. Đọc đến khi tìm thấy yêu cầu chính và phản hồi cuối cùng; không cần đọc thuộc toàn bài.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b1/phone-call-customer",
+      "exercises": "Đánh dấu ba dòng của bạn là Correct, Partly correct hoặc Incorrect. Chép tối đa hai cụm ngắn làm bằng chứng, rồi sửa đúng một dòng bằng lời của bạn.",
+      "completionCriteria": "Bấm Done sau khi đối chiếu và sửa một dòng. Đây là tự kiểm chứng, không phải điểm đọc hay chứng nhận trình độ.",
+      "takeaway": {
+        "phrase": "The key request is …",
+        "pattern": "At first I thought …, but the transcript shows …",
+        "reusePrompt": "Dùng khung này để sửa một điều bạn từng hiểu nhầm trong email hoặc cuộc họp."
+      }
+    },
+    {
+      "id": "daily-2026-10-24-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — gọi để nhờ hỗ trợ",
+      "level": "B1+ practice",
+      "instructions": "Bài do trợ lý soạn. Không tóm tắt toàn bộ hội thoại. Tưởng tượng bạn cần thêm một ngày để hoàn thành một task Angular; nói như một cuộc gọi ngắn với đồng đội.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b1/phone-call-customer",
+      "exercises": "Nói 30–45 giây theo bốn bước: reason for calling → request → reason → proposed solution. Dùng I’m calling about … và Would it be possible to …?; nói lại một lần nếu bị ngắt quá lâu.",
+      "completionCriteria": "Bấm Done sau một lượt nói thật và một lượt sửa. Gửi audio nếu muốn nhận xét phát âm/nhịp; transcript chỉ dùng sửa nội dung và ngữ pháp.",
+      "takeaway": {
+        "phrase": "Would it be possible to …?",
+        "pattern": "I’m calling about … . Would it be possible to … because …?",
+        "reusePrompt": "Đổi yêu cầu gia hạn thành xin đổi giờ họp và nói lại trong 20 giây."
+      }
+    },
+    {
+      "id": "daily-2026-10-24-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5–10 phút — email xác nhận sau cuộc gọi",
+      "level": "B1+ practice",
+      "instructions": "Bài do trợ lý soạn. Không dùng AI sửa bản đầu. Viết email xác nhận một thỏa thuận sau cuộc gọi; đây là chuyển tình huống, không chép transcript.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b1/phone-call-customer",
+      "exercises": "Viết 45–65 từ: nhắc lại yêu cầu, điều đã được đồng ý, việc tiếp theo và lời cảm ơn. Dùng Thank you for … / As agreed, … / I will … by … .",
+      "completionCriteria": "Bấm Done sau khi lưu bản đầu. Nếu gửi về ChatGPT, gửi nguyên bản cùng số phút; trợ lý sẽ nêu một điểm tốt, sửa một lỗi ưu tiên và giao một lần viết lại ngắn.",
+      "takeaway": {
+        "phrase": "As agreed, …",
+        "pattern": "Thank you for … . As agreed, … . I will … by … .",
+        "reusePrompt": "Viết hai câu xác nhận một việc thật sau cuộc họp hoặc trao đổi công việc gần đây."
+      }
+    },
+    {
+      "id": "daily-2026-10-24-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tiếng Trung phụ 5 phút — gọi món rồi đổi số lượng",
+      "level": "Beginner",
+      "instructions": "Bài do trợ lý soạn. HelloChinese tải miễn phí và có audio/video người bản ngữ; một số nội dung cần Premium. Nghe mẫu gọi món trong app nếu có, rồi đóng chữ trước lượt nói.",
+      "material": "https://www.hellochinese.cc/vi",
+      "exercises": "Nói: 我要一杯茶，谢谢。Wǒ yào yì bēi chá, xièxie. Sau đó đổi thành hai cốc cà phê: 我要两杯咖啡，谢谢。Wǒ yào liǎng bēi kāfēi, xièxie. Cuối cùng hỏi 请问，多少钱？Qǐngwèn, duōshao qián?",
+      "completionCriteria": "Bấm Done sau một lượt nhìn mẫu và một lượt che chữ. Gửi audio 15–20 giây nếu muốn sửa thanh điệu; văn bản không đủ để đánh giá phát âm.",
+      "takeaway": {
+        "phrase": "我要……，谢谢。Wǒ yào …, xièxie.",
+        "pattern": "我要 + số lượng + 杯 + đồ uống。",
+        "reusePrompt": "Đổi trà/cà phê thành đồ uống bạn muốn và đổi số lượng 1 ↔ 2, rồi nói lại không nhìn chữ."
+      }
+    }
+  ]
+}
