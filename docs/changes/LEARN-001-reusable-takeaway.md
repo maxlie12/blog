@@ -3,7 +3,7 @@
 ## Identity
 
 - **Issue:** `LEARN-001`
-- **Status:** active
+- **Status:** verified in production
 - **Owner:** Codex
 - **Date:** 2026-10-23
 
@@ -60,16 +60,22 @@ summary, not a CEFR claim.
 
 ## Verification
 
-- [ ] Daily packet contract and focused tests
-- [ ] `npm run lint`
-- [ ] TypeScript production type-check
-- [ ] Phone/keyboard/reduced-motion review
-- [ ] Done takeaway remains visible after refresh
-- [ ] Production route check after deployment
+- [x] Daily packet contract and focused tests
+- [x] `npm run lint`
+- [x] TypeScript production type-check
+- [x] Phone/keyboard/reduced-motion code review
+- [x] Done takeaway remains visible after refresh
+- [x] Production route check after deployment
 
 ## Result
 
-- **Files changed:**
-- **Evidence:**
-- **Commit/deployment:**
-- **Not checked / remaining risk:**
+- **Files changed:** optional daily-packet takeaway contract, one current packet, leaf Done-state
+  card, lesson route labels/styles and focused documentation.
+- **Evidence:** 26 tests, ESLint, TypeScript and JSON parsing pass. Production revealed exactly
+  one phrase, one pattern and one transfer prompt after Done, and the card remained after reload.
+  Vercel's GitHub check succeeded; app-origin console errors were zero.
+- **Commit/deployment:** `4abfc7b`, production at
+  `https://maxlie-blog.vercel.app/learning/daily-2026-10-23-en-listening`.
+- **Not checked / remaining risk:** local `next build` is blocked by the existing invalid SQLite
+  fixture; Vercel built successfully. The managed browser could not emulate 375px, so the phone
+  layout has responsive code review but not a phone screenshot.

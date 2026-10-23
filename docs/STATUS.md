@@ -1,6 +1,25 @@
 # Status
 
-Last verified: 2026-10-22 (spaced review queue verified in production).
+Last verified: 2026-10-23 (reusable post-Done lesson takeaway verified in production).
+
+## 2026-10-23 — predictable lesson route and reusable takeaway
+
+- Daily lesson pages now show one four-step route: goal, source, learner output, then Done and
+  takeaway. The existing method choices and optional repair stay inside that route rather than
+  becoming another mandatory checklist.
+- Dated packets can author exactly one reusable phrase, one sentence pattern and one transfer
+  prompt. The current weekly mini-test includes them for all four English skills and the Chinese
+  speaking task. No AI call runs when the page opens.
+- The takeaway appears only after the existing local-first Done action. It remains visible after
+  refresh, works for anonymous and signed-in flows, and is explicitly separated from CEFR/HSK
+  assessment.
+- Checks: 26 Node tests, ESLint, TypeScript and JSON parsing passed. Vercel's GitHub check
+  succeeded for commit `4abfc7b`; production displayed all four route steps, revealed exactly
+  the phrase/pattern/transfer prompt after Done and preserved the card after refresh. There were
+  no app-origin console errors or horizontal overflow at the verified desktop viewport.
+- A local `next build` stopped on the workspace's existing invalid SQLite persistence fixture;
+  the Vercel production build succeeded. A real 375px emulation was unavailable, so the two-column
+  phone route received responsive code review rather than screenshot verification.
 
 ## 2026-10-22 — explicit 1–3–7–14 spaced review queue
 
