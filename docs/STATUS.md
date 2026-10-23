@@ -1,6 +1,23 @@
 # Status
 
-Last verified: 2026-10-23 (reusable post-Done lesson takeaway verified in production).
+Last verified: 2026-10-23 (one purposeful Learning entry point verified in production).
+
+## 2026-10-23 — one purposeful Learning entry point
+
+- Removed the competing “Choose a lesson” catalog, skill cards, filters and duplicate level
+  explanation from `/learning`. The page now asks the learner to make one decision: start the
+  lesson selected for the active profile.
+- The deterministic selection rule is unchanged: resume an unfinished draft, then serve a due
+  1–3–7–14 review, then choose the next unfinished lesson for the profile. Deliberate browsing is
+  still available through the secondary “Mở lịch sử bài học” link.
+- Checks: 26 Node tests, ESLint and `tsc --noEmit` passed. Vercel's GitHub check succeeded for
+  implementation commit `9fbf04f`. Production contained no catalog text or controls, and the
+  primary action opened a real lesson with a goal, source, required output, response field and
+  Done flow. There was no horizontal overflow at the verified desktop viewport.
+- The only production console warning is the existing Clerk development-key warning. A local
+  `next build` still stops on the workspace's invalid SQLite persistence fixture; Vercel built
+  the same commit successfully. A real 375px viewport was unavailable. Dormant catalog code was
+  left unmounted rather than deleted outside this issue's scope.
 
 ## 2026-10-23 — predictable lesson route and reusable takeaway
 

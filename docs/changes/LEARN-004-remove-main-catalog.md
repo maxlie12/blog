@@ -3,7 +3,7 @@
 ## Identity
 
 - **Issue:** `LEARN-004`
-- **Status:** active
+- **Status:** verified
 - **Owner:** Codex
 - **Date:** 2026-10-23
 
@@ -53,16 +53,24 @@ lesson can still open the separate dated archive.
 
 ## Verification
 
-- [ ] Existing next-lesson tests
-- [ ] `npm run lint`
-- [ ] TypeScript production type-check
-- [ ] `/learning` has one primary learning action and no “Choose a lesson”
-- [ ] Dated archive remains reachable
-- [ ] Production route check after deployment
+- [x] Existing next-lesson tests
+- [x] `npm run lint`
+- [x] TypeScript production type-check
+- [x] `/learning` has one primary learning action and no “Choose a lesson”
+- [x] Dated archive remains reachable
+- [x] Production route check after deployment
 
 ## Result
 
-- **Files changed:**
-- **Evidence:**
-- **Commit/deployment:**
-- **Not checked / remaining risk:**
+- **Files changed:** `src/app/learning/page.tsx`, `src/components/StartLearning.tsx`,
+  `src/app/learning/daily/page.tsx` and targeted product/status documentation.
+- **Evidence:** 26 tests, ESLint and `tsc --noEmit` passed. Production `/learning` contains no
+  catalog, skill cards, filters or duplicate level explainer. Its primary action opens a real
+  lesson with a goal, source, required output, response field and Done flow. The dated archive
+  remains linked as “Mở lịch sử bài học”.
+- **Commit/deployment:** implementation commit `9fbf04f`; Vercel GitHub status succeeded and
+  production was inspected on 2026-10-23.
+- **Not checked / remaining risk:** a real 375px viewport was not available. The local production
+  build still stops on the workspace's existing invalid SQLite persistence fixture; Vercel's
+  production build succeeded. Dormant catalog components remain in the repository but are not
+  mounted on `/learning`, avoiding unrelated cleanup in this change.
