@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-25",
+  "title": "Khởi động lại 5 phút — hiểu cuộc gọi trước khi học tiếp",
+  "kind": "restart",
+  "note": "Chưa có bài làm ngày 24/10 nên hôm nay không chuyển sang shadowing/ngày 2, không tăng độ khó và không suy ra tiến bộ. Chỉ bài nghe tiếng Anh đầu tiên là nhiệm vụ chính; tiếng Trung là tùy chọn. Đây là bài do trợ lý soạn, không phải đề British Council, IELTS, TOEIC hay HSK chính thức. Done/streak chỉ ghi nhận hoạt động học, không chứng nhận CEFR.",
+  "lessons": [
+    {
+      "id": "daily-2026-10-25-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Bắt buộc 5 phút — bắt lại ý chính của cuộc gọi",
+      "level": "B1+ restart / B1 source",
+      "instructions": "Bài do trợ lý soạn. Dùng lại nguồn British Council miễn phí của bài 24/10, có audio, transcript và bài tập tương tác. Chưa mở transcript. Nghe 45–60 giây đầu một lượt; chỉ nghe lượt hai nếu thật sự cần. Mục tiêu là lấy ý, không bắt từng từ.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b1/phone-call-customer",
+      "exercises": "Trong 5 phút, lưu đúng ba dòng bằng tiếng Anh: 1) The call is about …; 2) The customer wants …; 3) I am …% confident because … . Không tra từ và không sửa bằng AI trước khi bấm Done.",
+      "completionCriteria": "Bấm Done sau khi đã nghe và lưu đủ ba dòng. Nếu muốn nhận phản hồi, gửi nguyên ba dòng; trợ lý sẽ xác nhận ý đúng/sai, sửa một lỗi ưu tiên và quyết định nên giữ bài hay chuyển sang ngày shadowing. Không có bài làm thì vẫn giữ mức hiện tại.",
+      "takeaway": {
+        "phrase": "I’m calling about …",
+        "pattern": "I’m calling about … because …",
+        "reusePrompt": "Không nhìn nguồn, nói một câu về lý do bạn gọi cho đồng đội trong một tình huống thật hoặc tưởng tượng."
+      }
+    },
+    {
+      "id": "daily-2026-10-25-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — gọi món và đổi số lượng",
+      "level": "Beginner restart",
+      "instructions": "Bài do trợ lý soạn. HelloChinese có tải miễn phí, video người bản ngữ và luyện nhận diện giọng nói; một số nội dung cần Premium. Nếu có app, nghe một mẫu gọi món của người bản ngữ rồi đóng chữ.",
+      "material": "https://www.hellochinese.cc/vi",
+      "exercises": "Nói một lượt nhìn mẫu rồi một lượt che chữ: 我要一杯茶，谢谢。Wǒ yào yì bēi chá, xièxie. Đổi thành hai cốc cà phê: 我要两杯咖啡，谢谢。Wǒ yào liǎng bēi kāfēi, xièxie. Cuối cùng hỏi: 多少钱？Duōshao qián?",
+      "completionCriteria": "Bấm Done sau một lượt nhìn và một lượt che chữ. Gửi audio 15–20 giây nếu muốn sửa thanh điệu; không dùng văn bản để kết luận phát âm.",
+      "takeaway": {
+        "phrase": "我要……，谢谢。Wǒ yào …, xièxie.",
+        "pattern": "我要 + số lượng + 杯 + đồ uống。",
+        "reusePrompt": "Đổi đồ uống và số lượng 1 ↔ 2 rồi nói lại không nhìn chữ."
+      }
+    }
+  ]
+}
