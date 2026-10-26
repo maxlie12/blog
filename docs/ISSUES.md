@@ -10,6 +10,7 @@ evidence and never proves a CEFR, HSK or JLPT level.
 
 | ID | Priority | Status | Problem | Next smallest outcome |
 |---|---:|---|---|---|
+| LEARN-006 | P0 | Active | A lesson contains the right pieces, but a mobile learner cannot immediately see the session scope, current step or next action. | Add an at-a-glance scope, stateful route, one mobile next-action dock and a compact completion closure. |
 | ASSESS-001 | P1 | Planned | The product has self-reported levels and milestone UI, but insufficient unseen four-skill evidence to claim progress. | Keep level unchanged; attach weekly checks and a 28-day assessment to evidence records. |
 | LANG-001 | P1 | Planned | English, Chinese and Japanese share an engine, but their teaching rules are not yet explicit data. | Define language-pack rules without splitting the page into three implementations. |
 | FEEDBACK-001 | P2 | Blocked | Personal correction is manual; automatic AI feedback is not implemented or cost-controlled. | First collect real attempts and define a one-error feedback contract. |
@@ -18,6 +19,16 @@ Game and decorative progression are intentionally below these items. They may re
 but they do not replace lesson quality, review or assessment.
 
 ## Issue details
+
+### LEARN-006 — guided five-minute lesson flow
+
+- **User problem:** lesson content is present, but the four equal-looking route cards and the lack
+  of a persistent next action make the learner re-decide where to start and when the session is
+  complete.
+- **Required reading:** public lesson composition, anonymous practice, direct Learning styles and
+  `docs/changes/LEARN-006-guided-lesson-flow.md`.
+- **Boundary:** preserve lesson content, local drafts and Done records. Add no account, database,
+  domain, game or new lesson-generation work.
 
 ### ASSESS-001 — evidence-based milestones
 

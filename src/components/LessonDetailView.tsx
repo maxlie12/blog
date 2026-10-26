@@ -5,6 +5,7 @@ import { AttemptSubmitForm } from "@/components/AttemptSubmitForm";
 import { PracticeCoach } from "@/components/PracticeCoach";
 import { ReviewCompletion } from "@/components/ReviewCompletion";
 import { LessonTakeaway } from "@/components/LessonTakeaway";
+import { LessonFlowGuide, LessonSourceAction } from "@/components/LessonFlowGuide";
 import type { LessonTakeaway as LessonTakeawayContent } from "@/lib/dailyLessons";
 
 interface AttemptView {
@@ -54,9 +55,12 @@ export function LessonDetailView({
   canSubmit: boolean;
 }) {
   const reviewedCount = attempts.filter((a) => a.reviewStatus === "reviewed").length;
+  const externalSource = lesson.material && /^https?:\/\/\S+$/i.test(lesson.material) && !isAudioUrl(lesson.material)
+    ? lesson.material
+    : null;
 
   return (
-    <article className="lesson-detail">
+    <article className="lesson-detail" id="lesson-start">
       <Link href="/learning" className="lesson-detail__back">
         ← Back to lessons
       </Link>
@@ -71,12 +75,7 @@ export function LessonDetailView({
         <p className="lesson-detail__summary">{lesson.completionCriteria}</p>
       </header>
 
-      <ol className="lesson-route" aria-label="Luồng học của bài này">
-        <li><span>1</span><strong>Mục tiêu</strong></li>
-        <li><span>2</span><strong>Bài học chính</strong></li>
-        <li><span>3</span><strong>Làm &amp; lưu</strong></li>
-        <li><span>4</span><strong>Done &amp; ghi nhớ</strong></li>
-      </ol>
+      <LessonFlowGuide lessonId={lesson.id} language={lesson.language} sourceUrl={externalSource} />
 
       <section className="lesson-detail__section">
         <p className="lesson-step-kicker">BƯỚC 1 · MỤC TIÊU</p>
@@ -98,11 +97,7 @@ export function LessonDetailView({
             <audio controls src={lesson.material} className="lesson-detail__audio" />
           ) : (
             /^https?:\/\/\S+$/i.test(lesson.material) ?
-              <a className="lesson-source-cta" href={lesson.material} target="_blank" rel="noopener noreferrer">
-                <span className="lesson-source-cta__badge">BÀI HỌC CHÍNH</span>
-                <strong>Mở bài trên {getSourceLabel(lesson.material)} <span aria-hidden="true">↗</span></strong>
-                <small>Mở tab mới · học ở nguồn rồi quay lại đây để lưu câu trả lời</small>
-              </a> :
+              <LessonSourceAction lessonId={lesson.id} href={lesson.material} label={getSourceLabel(lesson.material)} /> :
               <p style={{ whiteSpace: "pre-wrap" }}>{lesson.material}</p>
           )}
         </section>
@@ -134,7 +129,7 @@ export function LessonDetailView({
         )}
       </div>
 
-      {!canSubmit && <PracticeCoach key={lesson.id} lessonId={lesson.id} skill={lesson.skill} language={lesson.language} />}
+      {!canSubmit && <PracticeCoach key={lesson.id} lessonId={lesson.id} skill={lesson.skill} language={lesson.language} takeaway={lesson.takeaway} />}
 
       {canSubmit ? (
         <section className="lesson-detail__section lesson-detail__submit">
@@ -147,7 +142,7 @@ export function LessonDetailView({
         </p>
       )}
 
-      {lesson.takeaway && <LessonTakeaway lessonId={lesson.id} language={lesson.language} takeaway={lesson.takeaway} />}
+      {canSubmit && lesson.takeaway && <LessonTakeaway lessonId={lesson.id} language={lesson.language} takeaway={lesson.takeaway} />}
 
       <ReviewCompletion lessonId={lesson.id} skill={lesson.skill} language={lesson.language} />
 

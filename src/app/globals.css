@@ -1064,6 +1064,23 @@ a {
 .lesson-detail__summary {
   color: var(--text-muted);
 }
+.lesson-session-scope {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  color: var(--forest);
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+.lesson-session-scope span {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--forest) 24%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--sage) 70%, var(--surface));
+}
 .lesson-route {
   list-style: none;
   margin: 0;
@@ -1082,8 +1099,9 @@ a {
   display: flex;
   align-items: center;
   gap: 0.45rem;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
 }
-.lesson-route span {
+.lesson-route > li > span:first-child {
   flex: 0 0 1.55rem;
   width: 1.55rem;
   height: 1.55rem;
@@ -1096,10 +1114,44 @@ a {
   font-size: 0.72rem;
   font-weight: 800;
 }
+.lesson-route__copy {
+  min-width: 0;
+  display: grid;
+  gap: 0.1rem;
+}
 .lesson-route strong {
   font-size: 0.78rem;
   line-height: 1.2;
 }
+.lesson-route small {
+  color: var(--forest);
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+.lesson-route li[data-state="current"] {
+  border-color: var(--forest);
+  background: color-mix(in srgb, var(--sage) 82%, var(--surface));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--forest) 12%, transparent);
+}
+.lesson-route li[data-state="upcoming"] {
+  background: var(--surface);
+  color: var(--text-muted);
+}
+.lesson-route li[data-state="upcoming"] > span:first-child {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.lesson-route li[data-state="complete"] > span:first-child {
+  position: relative;
+  color: transparent;
+}
+.lesson-route li[data-state="complete"] > span:first-child::after {
+  content: "✓";
+  position: absolute;
+  color: #fff;
+}
+.lesson-mobile-action { display: none; }
 .lesson-detail__section {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -2800,6 +2852,43 @@ body { line-height: 1.65; }
   margin: 0;
 }
 
+.lesson-completion__closure {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.lesson-completion__closure h3,
+.lesson-completion__closure p {
+  margin: 0;
+}
+
+.lesson-completion__takeaway {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.lesson-completion__takeaway p {
+  min-width: 0;
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
+  overflow-wrap: anywhere;
+}
+
+.lesson-completion__takeaway span {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.lesson-completion__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
 .local-progress {
   margin-bottom: 1.25rem;
   gap: 1rem;
@@ -2853,6 +2942,43 @@ body { line-height: 1.65; }
   transform: translateY(1px);
 }
 
+@media (max-width: 720px) {
+  .lesson-detail {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+
+  .lesson-mobile-action {
+    position: fixed;
+    z-index: 40;
+    right: 1rem;
+    bottom: calc(0.75rem + env(safe-area-inset-bottom));
+    left: 1rem;
+    display: grid;
+    padding: 0.45rem;
+    border: 1px solid color-mix(in srgb, var(--forest) 28%, var(--border));
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    box-shadow: 0 16px 40px -18px color-mix(in srgb, var(--forest) 70%, transparent);
+  }
+
+  .lesson-mobile-action a,
+  .lesson-mobile-action button {
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 12px;
+    background: var(--forest);
+    color: #fff;
+    font: inherit;
+    font-weight: 800;
+    text-decoration: none;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+}
+
 @media (max-width: 520px) {
   .lesson-route {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2863,6 +2989,10 @@ body { line-height: 1.65; }
   }
 
   .lesson-completion__stats {
+    grid-template-columns: 1fr;
+  }
+
+  .lesson-completion__takeaway {
     grid-template-columns: 1fr;
   }
 

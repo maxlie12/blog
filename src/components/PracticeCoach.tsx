@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import Link from "next/link";
 import type { SkillId } from "@/lib/lessonTypes";
+import type { LessonTakeaway } from "@/lib/dailyLessons";
+import { announceResponseStarted } from "@/components/LessonFlowGuide";
 import { getDefaultLearningMethod, getLearningMethod, type LearningMethodId } from "@/lib/learningMethods";
 import { getLocalCompletionSummary, recordLocalCompletion, syncLocalProgress, type LocalCompletionSummary } from "@/lib/localLearningProgress";
 import { readProfileStorage, writeProfileStorage } from "@/lib/learnerProfiles";
@@ -41,7 +44,7 @@ const languageDrill: Partial<Record<string, string>> = {
   ja: "2–3 phút: giữ mẫu chào hỏi/tự giới thiệu, đổi tên hoặc quốc gia. Nghe audio, nhại hai lượt, che chữ rồi nói lại. Ghi rõ dùng kana hay romaji; gửi audio nếu muốn sửa phát âm.",
 };
 
-export function PracticeCoach({ lessonId, skill, language }: { lessonId: string; skill: SkillId; language: string }) {
+export function PracticeCoach({ lessonId, skill, language, takeaway }: { lessonId: string; skill: SkillId; language: string; takeaway?: LessonTakeaway }) {
   const [response, setResponse] = useState("");
   const [minutes, setMinutes] = useState(5);
   const [support, setSupport] = useState("Không dùng");
@@ -120,7 +123,11 @@ export function PracticeCoach({ lessonId, skill, language }: { lessonId: string;
     }
   }
   const exportText = attempt ? "Bài: " + lessonId + "\nPhương pháp: " + getLearningMethod(attempt.method ?? getDefaultLearningMethod(skill)).label + "\nThời gian: " + attempt.minutes + " phút\nHỗ trợ: " + attempt.support + "\nTập trung tự báo: " + attempt.focus + "\nBản đầu:\n" + attempt.response + "\nKết quả bài ở nguồn (tự báo): " + (sourceResult || "chưa ghi") + "\nĐiểm muốn sửa: " + gap + "\nBản làm lại:\n" + revision : "";
-  return <section className="lesson-detail__section">
+  function reviewLesson() {
+    document.getElementById("lesson-start")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  return <section className="lesson-detail__section" id="lesson-step-output">
     <p className="lesson-step-kicker">BƯỚC 3 · TẠO ĐẦU RA</p>
     <h2>Làm một đầu ra ngắn rồi ghi Done</h2>
     <p>Bài tập và hướng dẫn do trợ lý soạn. Câu trả lời tự lưu trên trình duyệt này; máy chủ chỉ có thể đồng bộ metadata Done, không lưu nội dung hoặc chấm điểm. Không nhập thông tin công việc nhạy cảm.</p>
@@ -128,7 +135,7 @@ export function PracticeCoach({ lessonId, skill, language }: { lessonId: string;
     <div className="learning-method-action"><strong>Cách làm được đề xuất:</strong> {method.action}</div>
     <form onSubmit={finishLesson}>
       <p><label htmlFor={lessonId + "-response"}>{method.outputLabel}</label></p>
-      <textarea id={lessonId + "-response"} rows={6} maxLength={10000} required value={response} onChange={e => setResponse(e.target.value)} style={{ width: "100%" }} />
+      <textarea id={lessonId + "-response"} rows={6} maxLength={10000} required value={response} onFocus={() => announceResponseStarted(lessonId)} onChange={e => setResponse(e.target.value)} style={{ width: "100%" }} />
       <p className="lesson-detail__note">Bản nháp tự lưu khi bạn gõ. Khi đã có đầu ra thật, bấm nút dưới để ghi Done.</p>
       <p><label>Thời gian thực tế (phút) <input type="number" min={1} max={60} required value={minutes} onChange={e => setMinutes(Number(e.target.value))} /></label></p>
       <details className="practice-options">
@@ -144,7 +151,18 @@ export function PracticeCoach({ lessonId, skill, language }: { lessonId: string;
     {attempt && <div>
       <div className="lesson-completion" data-complete={completion?.completed ? "true" : "false"}>
         <p className="lesson-completion__label">{completion?.completed ? "ĐÃ GHI NHẬN" : "BẢN NHÁP ĐÃ LƯU"}</p>
-        {completion?.completed && <p aria-live="polite"><strong>{completion.totalCompleted} bài đã Done.</strong> Bạn có thể dừng phiên học ở đây.</p>}
+        {completion?.completed && <div className="lesson-completion__closure" aria-live="polite">
+          <h3>Hoàn thành phiên học</h3>
+          <p><strong>{completion.totalCompleted} bài đã Done.</strong> Bạn có thể dừng ở đây — không cần làm thêm để giữ chuỗi.</p>
+          {takeaway && <div className="lesson-completion__takeaway">
+            <p><span>Cụm nên giữ</span><strong>{takeaway.phrase}</strong></p>
+            <p><span>Khung tái sử dụng</span><strong>{takeaway.pattern}</strong></p>
+          </div>}
+          <div className="lesson-completion__actions">
+            <Link className="button lesson-completion__button" href="/learning">Về Learning</Link>
+            <button className="button button--ghost" type="button" onClick={reviewLesson}>Xem lại bài</button>
+          </div>
+        </div>}
         <p className="lesson-completion__note">Done được ghi trên thiết bị trước rồi mới thử đồng bộ metadata khi có mạng; đây là hoạt động học, không phải điểm CEFR/HSK/JLPT.</p>
       </div>
       <details className="practice-review">
