@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-26",
+  "title": "Quay lại bài đang dở — hoàn thành một bằng chứng nhỏ",
+  "kind": "restart",
+  "note": "Chưa có bài làm được gửi trong chat và automation không đọc được dữ liệu Done trên web, nên không suy ra tiến bộ, không tăng độ khó và không mở ngày shadowing. Gói này chỉ dẫn về nhiệm vụ đang dở của 25/10 thay vì tạo thêm backlog. Tiếng Anh là chính; tiếng Trung là tùy chọn. Done/streak ghi nhận hoạt động học, không phải điểm CEFR.",
+  "lessons": [
+    {
+      "id": "daily-2026-10-26-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Bắt buộc 5 phút — hoàn tất bài nghe đang dở",
+      "level": "B1+ restart / B1 source",
+      "instructions": "Bài do trợ lý soạn. Mở lại bài nghe 25/10 bên dưới; bài đó dùng nguồn British Council miễn phí có audio, transcript và bài tương tác. Chưa mở transcript. Nghe 45–60 giây đầu một lượt, tối đa hai lượt. Đây là tiếp tục bài cũ, không phải bài mới.",
+      "material": "https://maxlie-blog.vercel.app/learning/daily-2026-10-25-en-listening",
+      "exercises": "Lưu ba dòng trong bài 25/10: 1) The call is about …; 2) The customer wants …; 3) I am …% confident because … . Sau đó nói lại dòng 1 và 2 không nhìn chữ trong 20 giây.",
+      "completionCriteria": "Bấm Done sau khi đã lưu đủ ba dòng và nói lại một lượt. Nếu đã hoàn thành bài 25/10 trên thiết bị này, chỉ cần mở lại takeaway và nói reuse prompt; không cần làm trùng. Gửi ba dòng về ChatGPT nếu muốn xác nhận ý và sửa một lỗi ưu tiên.",
+      "takeaway": {
+        "phrase": "I’m calling about …",
+        "pattern": "The customer is calling about … because …",
+        "reusePrompt": "Đổi customer thành bạn và nói lý do bạn gọi cho đồng đội để xin thay đổi thời hạn hoặc giờ họp."
+      }
+    },
+    {
+      "id": "daily-2026-10-26-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — gọi món không nhìn chữ",
+      "level": "Beginner restart",
+      "instructions": "Bài do trợ lý soạn. Mở lại bài tiếng Trung 25/10. Nếu có HelloChinese, nghe một mẫu người bản ngữ trong app; app có phần miễn phí và một số nội dung Premium.",
+      "material": "https://maxlie-blog.vercel.app/learning/daily-2026-10-25-zh-speaking",
+      "exercises": "Che chữ và nói: 我要一杯茶，谢谢。Sau đó đổi một cốc trà thành hai cốc cà phê và hỏi giá. Chỉ mở lại pinyin sau lượt đầu.",
+      "completionCriteria": "Bấm Done sau một lượt không nhìn chữ và một lượt tự sửa. Nếu đã hoàn thành bài 25/10, chỉ cần thay đồ uống bằng món bạn muốn; không cần lặp nguyên bài.",
+      "takeaway": {
+        "phrase": "我要……，谢谢。Wǒ yào …, xièxie.",
+        "pattern": "我要 + số lượng + 杯 + đồ uống。",
+        "reusePrompt": "Nói một đơn mới với đồ uống khác, rồi hỏi 多少钱？"
+      }
+    }
+  ]
+}
