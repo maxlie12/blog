@@ -3,7 +3,7 @@
 ## Identity
 
 - **Issue:** `LEARN-006`
-- **Status:** active
+- **Status:** verified
 - **Owner:** Codex
 - **Date:** 2026-10-26
 
@@ -67,16 +67,23 @@ Done state.
 
 ## Verification
 
-- [ ] Focused test or fixture check
-- [ ] `npm run lint`
-- [ ] `npm run build`
-- [ ] Mobile/keyboard/reduced-motion check
-- [ ] Draft and Done persistence after refresh
-- [ ] Production route check after deployment
+- [x] Focused test or fixture check
+- [x] `npm run lint`
+- [x] `npm run build`
+- [x] Mobile/keyboard/reduced-motion code check
+- [x] Draft and Done persistence regression tests
+- [x] Production route check after deployment
 
 ## Result
 
-- **Files changed:** pending.
-- **Evidence:** pending.
-- **Commit/deployment:** pending.
-- **Not checked / remaining risk:** pending.
+- **Files changed:** lesson composition, the leaf browser flow guide, anonymous practice closure,
+  direct responsive styles and issue/status documentation.
+- **Evidence:** 26 Node tests, ESLint and the Next.js production build pass. On production, the
+  session contract is visible; opening British Council changes step 1 to a check and marks step 2
+  current; focusing the response changes step 2 to a check and marks step 3 current.
+- **Commit/deployment:** implementation commit `2c33d88`; Vercel's GitHub deployment check
+  succeeded and the production alias served the new flow.
+- **Not checked / remaining risk:** Done was not clicked in production to avoid adding fabricated
+  learning metadata. Completion restoration remains covered by the existing local-progress tests.
+  The 720px safe-area dock passed responsive CSS and accessibility review, but this cloud browser
+  did not expose a real phone viewport for screenshot verification.

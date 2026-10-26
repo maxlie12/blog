@@ -1,6 +1,21 @@
 # Status
 
-Last verified: 2026-10-26 (guest-first Learning flow verified in production).
+Last verified: 2026-10-26 (guided five-minute lesson flow verified in production).
+
+## 2026-10-26 — guided five-minute lesson flow
+
+- Every public lesson now states the session contract up front: `5–10 phút · 1 nguồn · 1 đầu ra`.
+  The four-step route has one explicit “Đang làm” state and turns completed steps into checks.
+- Opening an external source advances the route; focusing the response advances it again. On
+  screens up to 720px, one safe-area-aware bottom action changes from “Mở bài học” to “Viết câu
+  trả lời” and reserved page padding prevents it from covering content.
+- Done now closes the anonymous session with its real total, the lesson's existing phrase/pattern,
+  and clear return/review actions. It neither awards a level nor duplicates the signed-in
+  takeaway flow.
+- Checks: 26 Node tests, ESLint and the Next.js production build passed. Vercel's GitHub check
+  succeeded for implementation commit `2c33d88`. Production visibly advanced from goal → source
+  → response after real source/focus interactions. Done was not written in production to avoid
+  fabricated learning metadata; the existing local-progress tests cover persistence.
 
 ## 2026-10-26 — guest-first Learning with a flexible rhythm
 
