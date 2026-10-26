@@ -431,6 +431,7 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  min-height: 44px;
   padding: 0.6rem 1.1rem;
   border-radius: 10px;
   font-size: 0.9rem;
@@ -1109,6 +1110,43 @@ a {
   font-size: 1rem;
   margin-bottom: 0.5rem;
 }
+.lesson-source-task {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.85rem 0 1rem;
+  padding: 0.9rem 1rem;
+  border-left: 4px solid var(--accent-amber);
+  border-radius: 0 12px 12px 0;
+  background: color-mix(in srgb, var(--butter) 38%, var(--surface));
+}
+.lesson-source-task p { margin: 0; }
+.lesson-source-cta {
+  display: grid;
+  gap: 0.3rem;
+  width: 100%;
+  min-height: 72px;
+  padding: 1rem 1.1rem;
+  border: 2px solid color-mix(in srgb, var(--accent) 78%, var(--border));
+  border-radius: 14px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  text-decoration: none;
+  box-shadow: 0 12px 24px -18px color-mix(in srgb, var(--accent) 85%, transparent);
+}
+.lesson-source-cta:hover { transform: translateY(-1px); box-shadow: 0 16px 30px -20px color-mix(in srgb, var(--accent) 90%, transparent); }
+.lesson-source-cta__badge {
+  width: fit-content;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: var(--butter);
+  color: var(--butter-ink);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.lesson-source-cta strong { font-size: 1rem; }
+.lesson-source-cta small { color: inherit; opacity: 0.88; }
 .lesson-detail__sample {
   background: color-mix(in srgb, var(--accent) 8%, var(--surface));
 }

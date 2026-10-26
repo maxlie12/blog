@@ -52,7 +52,7 @@ export function ReviewCompletion({
         </>
       )}
       {message && <p className="lesson-completion__note" role="status" aria-atomic="true">{message}</p>}
-      <p className="lesson-completion__note">Lần ôn được tính vào streak nhưng không tăng số bài Done và không thay đổi trình độ.</p>
+      <p className="lesson-completion__note">Lần ôn được tính vào nhịp hoạt động nhưng không tăng số bài Done và không thay đổi trình độ.</p>
     </section>
   );
 }

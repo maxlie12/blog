@@ -58,7 +58,7 @@ configuration, so English, Chinese and Japanese do not require separate page imp
   serverless hosts (see "Deployment implications") applies more now, since Studio's writes are
   exactly the kind of thing that must survive a redeploy.
 - **Two meanings of completion stay separate.** A local-first Done action records the
-  learner's self-reported habit and powers a streak. The browser writes immediately; when Neon
+  learner's self-reported activity and powers a rolling rhythm/history. The browser writes immediately; when Neon
   is configured it also syncs only completion metadata under a hashed random profile token.
   It remains intentionally easy and never changes public skill progress or CEFR claims.
   Studio's `Attempt` model remains the reviewed evidence layer:
@@ -69,10 +69,10 @@ configuration, so English, Chinese and Japanese do not require separate page imp
 
 - Public lessons are shared read-only content.
 - Studio remains the single-owner admin surface, protected by its signed session cookie.
-- The Learning page has two local learner profiles: Luân and Phi. `src/lib/learnerProfiles.ts`
-  namespaces drafts, Done/streak, Guided Practice and Farm state. Existing unscoped browser
-  data migrates lazily to Luân; switching profiles reloads the page so an in-memory draft cannot
-  be saved into the newly selected profile.
+- Public Learning is guest-first and shows no profile chooser, learner name or account gate.
+  `src/lib/learnerProfiles.ts` still namespaces legacy drafts, Done records, Guided Practice and
+  Farm state internally so existing browser data is not deleted. A fresh browser uses the
+  default namespace; this compatibility detail is not user identity.
 - Each profile has its own random 256-bit sync token and therefore a separate server-side habit
   history. The habit API still receives no name, email, answer or audio.
 - Before sign-in is activated, this remains anonymous profile isolation. A learner can move the

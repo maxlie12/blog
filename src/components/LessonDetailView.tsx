@@ -19,6 +19,20 @@ function isAudioUrl(value: string): boolean {
   return /^https?:\/\//i.test(value) && AUDIO_EXTENSION.test(value);
 }
 
+function getSourceLabel(value: string): string {
+  try {
+    const hostname = new URL(value).hostname;
+    if (hostname.includes("britishcouncil.org")) return "British Council";
+    if (hostname.includes("cambridgeenglish.org")) return "Cambridge English";
+    if (hostname.includes("hellochinese.cc")) return "HelloChinese";
+    if (hostname.includes("duchinese.net")) return "Du Chinese";
+    if (hostname.includes("irodori.jpf.go.jp")) return "Irodori";
+  } catch {
+    return "Nguồn bài học";
+  }
+  return "Nguồn bài học";
+}
+
 export function LessonDetailView({
   lesson,
   attempts,
@@ -59,9 +73,9 @@ export function LessonDetailView({
 
       <ol className="lesson-route" aria-label="Luồng học của bài này">
         <li><span>1</span><strong>Mục tiêu</strong></li>
-        <li><span>2</span><strong>Học nguồn</strong></li>
-        <li><span>3</span><strong>Tạo đầu ra</strong></li>
-        <li><span>4</span><strong>Done &amp; mang đi</strong></li>
+        <li><span>2</span><strong>Bài học chính</strong></li>
+        <li><span>3</span><strong>Làm &amp; lưu</strong></li>
+        <li><span>4</span><strong>Done &amp; ghi nhớ</strong></li>
       </ol>
 
       <section className="lesson-detail__section">
@@ -72,22 +86,35 @@ export function LessonDetailView({
 
       {lesson.material && (
         <section className="lesson-detail__section">
-          <p className="lesson-step-kicker">BƯỚC 2 · HỌC NGUỒN</p>
-          <h2>Nghe hoặc đọc đúng phần được giao</h2>
+          <p className="lesson-step-kicker">BƯỚC 2 · BÀI HỌC CHÍNH</p>
+          <h2>Đọc nhiệm vụ trước, rồi mở nguồn để học</h2>
+          {lesson.exercises && (
+            <div className="lesson-source-task">
+              <strong>Nhiệm vụ cần trả lời</strong>
+              <p style={{ whiteSpace: "pre-wrap" }}>{lesson.exercises}</p>
+            </div>
+          )}
           {lesson.skill === "listening" && isAudioUrl(lesson.material) ? (
             <audio controls src={lesson.material} className="lesson-detail__audio" />
           ) : (
             /^https?:\/\/\S+$/i.test(lesson.material) ?
-              <a href={lesson.material} target="_blank" rel="noopener noreferrer">Mở nguồn bài học ↗</a> :
+              <a className="lesson-source-cta" href={lesson.material} target="_blank" rel="noopener noreferrer">
+                <span className="lesson-source-cta__badge">BÀI HỌC CHÍNH</span>
+                <strong>Mở bài trên {getSourceLabel(lesson.material)} <span aria-hidden="true">↗</span></strong>
+                <small>Mở tab mới · học ở nguồn rồi quay lại đây để lưu câu trả lời</small>
+              </a> :
               <p style={{ whiteSpace: "pre-wrap" }}>{lesson.material}</p>
           )}
         </section>
       )}
 
-      {lesson.exercises && (
-        <section className="lesson-detail__section lesson-detail__sample">
-          <h2>Đầu ra cần tạo</h2>
-          <p style={{ whiteSpace: "pre-wrap" }}>{lesson.exercises}</p>
+      {!lesson.material && lesson.exercises && (
+        <section className="lesson-detail__section">
+          <p className="lesson-step-kicker">BƯỚC 2 · BÀI HỌC CHÍNH</p>
+          <h2>Nhiệm vụ cần trả lời</h2>
+          <div className="lesson-source-task">
+            <p style={{ whiteSpace: "pre-wrap" }}>{lesson.exercises}</p>
+          </div>
         </section>
       )}
 
@@ -116,7 +143,7 @@ export function LessonDetailView({
         </section>
       ) : (
         <p className="lesson-detail__disclaimer">
-          Bản viết chỉ lưu trên trình duyệt. Metadata Done và streak được đồng bộ khi máy chủ sẵn sàng; review và điểm CEFR vẫn là luồng riêng.
+          Bản viết chỉ lưu trên trình duyệt. Metadata Done có thể được đồng bộ khi máy chủ sẵn sàng; review và điểm CEFR vẫn là luồng riêng.
         </p>
       )}
 
@@ -143,7 +170,7 @@ export function LessonDetailView({
       )}
 
       <p className="lesson-detail__disclaimer">
-        Nút Done ghi nhận thói quen tự học và streak trên thiết bị; mỗi bài chỉ được ghi một lần.
+        Nút Done ghi nhận hoạt động tự học trên thiết bị; mỗi bài chỉ được ghi một lần.
         Điểm CEFR hoặc trạng thái reviewed vẫn cần bài làm thực tế và phản hồi riêng.
       </p>
     </article>

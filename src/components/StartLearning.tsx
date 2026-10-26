@@ -53,8 +53,8 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
   return (
     <section className="learning-start" aria-labelledby="learning-start-title">
       <div>
-        <p className="eyebrow">Gợi ý cho {learner.name} · 5–10 phút</p>
-        <h2 id="learning-start-title">Không cần chọn — bắt đầu từ bài phù hợp nhất</h2>
+        <p className="eyebrow">PHIÊN HỌC TIẾP THEO · 5–10 PHÚT</p>
+        <h2 id="learning-start-title">Tiếp tục từ việc quan trọng nhất</h2>
         {target ? (
           <div className="learning-start__selection" aria-live="polite">
             <strong>{target.lesson.title}</strong>
@@ -74,7 +74,7 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
         ) : (
           <button className="button button--primary" type="button" disabled>Đang chọn bài…</button>
         )}
-        <small>Muốn xem lại một bài cụ thể? <Link href="/learning/daily">Mở lịch sử bài học</Link>.</small>
+        <small>Muốn đổi bài hoặc học lại? <Link href="/learning/daily">Mở lịch sử bài học</Link>.</small>
       </div>
     </section>
   );

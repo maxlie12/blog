@@ -7,7 +7,8 @@ A single public site that is a genuine record of growth, not a highlight reel:
 - Show what has been built (portfolio/projects).
 - Show what is being learned and how (English, Chinese, Japanese, software), including setbacks.
 - Provide a space to practice explaining technical topics clearly.
-- Track daily practice as a streak that reflects real activity, not public performance.
+- Track a flexible rolling learning rhythm that reflects real activity without making rest days
+  into debt or evidence of ability.
 - Support interview preparation notes with strict privacy defaults.
 - Give the owner a private, authenticated workspace ("Studio") to publish and manage all of the
   above without hand-editing files or running scripts for every change.
@@ -22,9 +23,9 @@ A single public site that is a genuine record of growth, not a highlight reel:
 - **Secondary: visitors** — recruiters/hiring managers evaluating the portfolio, and readers of
   the blog (peers, other learners). Visitors only ever see public data; they cannot reach
   `/studio` at all without the owner's password.
-- **Learners:** use public lessons and keep anonymous Done/streak metadata under a random sync
-  profile. Separate browser profiles remain separate learners; this does not grant Studio
-  access and is not an email account.
+- **Learners:** open public lessons without login and keep drafts plus Done metadata on their
+  device. A random sync namespace may preserve metadata behind the scenes; it is not presented
+  as an account and never grants Studio access.
 
 ## Core flows
 
@@ -63,10 +64,10 @@ A single public site that is a genuine record of growth, not a highlight reel:
 - Projects list + detail pages, rendered from MDX, including Atlas as a placeholder entry.
 - Blog list + detail pages — **now merges Studio-authored posts (database) with hand-written
   `.mdx` articles.**
-- Learning page: mountain-journey milestone map (hand-set, not computed) — **now database-backed
-  and editable in Studio**; one profile-local start action resumes a draft, opens a due review or
-  selects the next suitable lesson. Deliberate browsing lives in the separate dated archive;
-  the original tracked streak/public log-entries section remains visibly separate from lessons.
+- Learning page: one guest-first start action resumes a draft, opens a due review or selects the
+  next suitable lesson. A compact 7-day rhythm and neutral 28-day history follow it; archive,
+  game and owner-facing evidence tools stay outside this primary surface. Mountain milestones
+  remain database-backed and editable in Studio, but activity never moves them automatically.
 - A documented, git-based way to add/edit legacy articles and projects.
 - A documented CLI (`npm run log`) for the original practice-log flow.
 - Theme (light/dark) and accent-color switcher, persisted per-browser.
