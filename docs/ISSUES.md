@@ -1,16 +1,15 @@
 # Active issues
 
-Last reviewed: 2026-10-23.
+Last reviewed: 2026-10-26.
 
 This is the current work queue. It contains user-visible problems, not every possible feature.
-An item moves to **Done** only with the evidence listed in that item. Streak/Done data is habit
+An item moves to **Done** only with the evidence listed in that item. Activity/Done data is habit
 evidence and never proves a CEFR, HSK or JLPT level.
 
 ## Priority order
 
 | ID | Priority | Status | Problem | Next smallest outcome |
 |---|---:|---|---|---|
-| LEARN-005 | P0 | Active | Public learning asks for a named profile/account before a five-minute lesson. | Make the flow anonymous and device-local, with no profile or login gate. |
 | ASSESS-001 | P1 | Planned | The product has self-reported levels and milestone UI, but insufficient unseen four-skill evidence to claim progress. | Keep level unchanged; attach weekly checks and a 28-day assessment to evidence records. |
 | LANG-001 | P1 | Planned | English, Chinese and Japanese share an engine, but their teaching rules are not yet explicit data. | Define language-pack rules without splitting the page into three implementations. |
 | FEEDBACK-001 | P2 | Blocked | Personal correction is manual; automatic AI feedback is not implemented or cost-controlled. | First collect real attempts and define a one-error feedback contract. |
@@ -19,15 +18,6 @@ Game and decorative progression are intentionally below these items. They may re
 but they do not replace lesson quality, review or assessment.
 
 ## Issue details
-
-### LEARN-005 — anonymous public learning
-
-- **User problem:** the profile chooser and learner sign-in make the site feel like account
-  management instead of an ESL Lab-style practice page.
-- **Boundary:** remove identity/account UI from public learning only. Keep Studio auth and the
-  existing local-first storage/sync implementation intact.
-- **Acceptance evidence:** a fresh visitor can open `/learning`, start the suggested lesson,
-  save one output and record Done without selecting a person or signing in.
 
 ### ASSESS-001 — evidence-based milestones
 

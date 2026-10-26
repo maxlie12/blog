@@ -1,6 +1,26 @@
 # Status
 
-Last verified: 2026-10-23 (one purposeful Learning entry point verified in production).
+Last verified: 2026-10-26 (guest-first Learning flow verified in production).
+
+## 2026-10-26 — guest-first Learning with a flexible rhythm
+
+- `/learning` now has one primary suggested lesson and one compact progress surface. Public
+  profile/account controls, Farm teaser, mountain and legacy practice log no longer compete with
+  the five-minute start action. No login is required.
+- A public lesson now places the exact task immediately before a high-contrast source action,
+  prescribes one appropriate method, restores drafts automatically and uses one button to save
+  the answer plus record Done. Self-check, revision, export and data tools remain optional.
+- Three language streaks were replaced in the visible UI by one rolling 7-day rhythm with
+  3-day minimum, 5-day recommendation and 7-day stretch targets. The 28-day heatmap is neutral;
+  missed days create no backlog, and tests are not unlocked by streak length.
+- Direct review of Mendako's guest lesson confirmed a useful pattern for beginner packs:
+  scoped card sequence, native audio, active recall, immediate quiz feedback and an explicit
+  completion screen. That pattern is recorded for Chinese/Japanese; English B1+ keeps
+  source-to-output work so recognition quizzes do not substitute for speaking or writing.
+- Checks: 26 Node tests, ESLint, `tsc --noEmit` and a clean-cache Next.js production build passed.
+  Vercel deployed production commit `5aa0488` as READY. Production `/learning` showed no identity
+  gate and the selected English lesson showed the task, prominent British Council action,
+  device-local response field and “Lưu câu trả lời & ghi Done”.
 
 ## 2026-10-23 — one purposeful Learning entry point
 

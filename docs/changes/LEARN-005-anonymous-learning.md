@@ -70,7 +70,7 @@ surface contains a profile chooser, sign-in prompt or named learner copy. Progre
 - [x] Required task is rendered before the prominent external source action
 - [x] Local output and Done controls remain available
 - [x] Rolling rhythm does not punish a missed calendar day or require three languages daily
-- [ ] Production route check after deployment
+- [x] Production route check after deployment
 
 ## Result
 
@@ -79,7 +79,8 @@ surface contains a profile chooser, sign-in prompt or named learner copy. Progre
 - **Evidence:** 26 library tests pass; ESLint passes; `tsc --noEmit` passes; clean-cache
   `next build` passes. Server-rendered local route QA is blocked because this workspace has no
   usable `data/blog.db`; this is an environment/runtime fixture issue, not a compile failure.
-- **Commit/deployment:**
-- **Not checked / remaining risk:** visual browser QA and the live production route remain pending
-  until this change is committed and deployed. Existing localStorage/profile-key compatibility is
-  preserved but intentionally hidden from the public UI.
+- **Commit/deployment:** production commit `5aa0488`; Vercel deployment
+  `dpl_GFm1wizFqmRJuKCgHvy8Jv49JTWM` reached `READY` on 2026-10-26.
+- **Not checked / remaining risk:** the response-to-Done write was not executed during production
+  QA to avoid creating a fabricated learner record. Existing localStorage/profile-key
+  compatibility is preserved but intentionally hidden from the public UI.
