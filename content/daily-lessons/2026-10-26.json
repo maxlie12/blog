@@ -34,6 +34,18 @@
         "phrase": "我要……，谢谢。Wǒ yào …, xièxie.",
         "pattern": "我要 + số lượng + 杯 + đồ uống。",
         "reusePrompt": "Nói một đơn mới với đồ uống khác, rồi hỏi 多少钱？"
+      },
+      "chinesePractice": {
+        "sentence": "我要一杯茶，谢谢。",
+        "translation": "Tôi muốn một cốc trà, cảm ơn.",
+        "tokens": [
+          { "hanzi": "我", "pinyin": "wǒ", "meaning": "tôi" },
+          { "hanzi": "要", "pinyin": "yào", "meaning": "muốn / lấy" },
+          { "hanzi": "一杯", "pinyin": "yì bēi", "meaning": "một cốc" },
+          { "hanzi": "茶", "pinyin": "chá", "meaning": "trà" },
+          { "hanzi": "谢谢", "pinyin": "xièxie", "meaning": "cảm ơn" }
+        ],
+        "outputPrompt": "Viết một câu gọi món mới bằng chữ Hán: đổi đồ uống hoặc số lượng và có thể thêm 多少钱？"
       }
     }
   ]

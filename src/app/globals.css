@@ -2769,6 +2769,183 @@ body { line-height: 1.65; }
   margin-bottom: 1rem;
 }
 
+.chinese-writing {
+  display: grid;
+  gap: 1rem;
+  margin: 1rem 0 1.25rem;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--forest) 28%, var(--border));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--sage) 42%, var(--surface));
+}
+
+.chinese-writing h3,
+.chinese-writing header p,
+.chinese-writing__translation,
+.chinese-writing__recall p,
+.chinese-writing__output-prompt {
+  margin: 0;
+}
+
+.chinese-writing__tokens {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 0.6rem;
+}
+
+.chinese-writing__tokens button {
+  min-height: 84px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.2rem;
+  padding: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-raised);
+  color: var(--text);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.chinese-writing__tokens button[aria-expanded="true"] {
+  border-color: var(--forest);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--forest) 12%, transparent);
+}
+
+.chinese-writing__tokens strong {
+  font-size: 1.45rem;
+  line-height: 1.2;
+}
+
+.chinese-writing__tokens button > span {
+  display: grid;
+  justify-items: center;
+  color: var(--forest);
+  font-size: 0.82rem;
+}
+
+.chinese-writing__tokens small,
+.chinese-writing__hidden-hint {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.chinese-writing__translation,
+.chinese-writing__output-prompt {
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--butter) 34%, var(--surface));
+}
+
+.chinese-writing__recall {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.chinese-writing__recall label {
+  font-weight: 700;
+}
+
+.chinese-writing__recall input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-raised);
+  color: var(--text);
+  font-size: 1.1rem;
+}
+
+.chinese-writing__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.chinese-writing__feedback {
+  min-height: 1.5rem;
+  font-weight: 700;
+}
+
+.chinese-writing__feedback--correct { color: var(--forest); }
+.chinese-writing__feedback--retry { color: var(--accent-amber); }
+
+.chinese-handwriting {
+  border-top: 1px solid var(--border);
+  padding-top: 0.5rem;
+}
+
+.chinese-handwriting summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chinese-handwriting__characters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.chinese-handwriting__characters button {
+  min-width: 48px;
+  min-height: 48px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-raised);
+  color: var(--text);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.chinese-handwriting__characters button[aria-pressed="true"] {
+  border-color: var(--forest);
+  background: color-mix(in srgb, var(--sage) 76%, var(--surface));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--forest) 12%, transparent);
+}
+
+.chinese-handwriting__pad {
+  position: relative;
+  width: min(100%, 280px);
+  aspect-ratio: 1;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background:
+    linear-gradient(to right, transparent calc(50% - 0.5px), var(--border) 50%, transparent calc(50% + 0.5px)),
+    linear-gradient(to bottom, transparent calc(50% - 0.5px), var(--border) 50%, transparent calc(50% + 0.5px)),
+    var(--surface-raised);
+  overflow: hidden;
+}
+
+.chinese-handwriting__pad span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: color-mix(in srgb, var(--forest) 16%, transparent);
+  font-size: 10rem;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.chinese-handwriting__pad canvas {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: var(--text);
+  cursor: crosshair;
+  touch-action: none;
+}
+
 .practice-options,
 .practice-review {
   border-top: 1px solid var(--border);

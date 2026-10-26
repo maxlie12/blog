@@ -6,7 +6,7 @@ import { PracticeCoach } from "@/components/PracticeCoach";
 import { ReviewCompletion } from "@/components/ReviewCompletion";
 import { LessonTakeaway } from "@/components/LessonTakeaway";
 import { LessonFlowGuide, LessonSourceAction } from "@/components/LessonFlowGuide";
-import type { LessonTakeaway as LessonTakeawayContent } from "@/lib/dailyLessons";
+import type { ChinesePractice, LessonTakeaway as LessonTakeawayContent } from "@/lib/dailyLessons";
 
 interface AttemptView {
   id: string;
@@ -50,6 +50,7 @@ export function LessonDetailView({
     exercises: string | null;
     completionCriteria: string;
     takeaway?: LessonTakeawayContent;
+    chinesePractice?: ChinesePractice;
   };
   attempts: AttemptView[];
   canSubmit: boolean;
@@ -129,7 +130,7 @@ export function LessonDetailView({
         )}
       </div>
 
-      {!canSubmit && <PracticeCoach key={lesson.id} lessonId={lesson.id} skill={lesson.skill} language={lesson.language} takeaway={lesson.takeaway} />}
+      {!canSubmit && <PracticeCoach key={lesson.id} lessonId={lesson.id} skill={lesson.skill} language={lesson.language} takeaway={lesson.takeaway} chinesePractice={lesson.chinesePractice} />}
 
       {canSubmit ? (
         <section className="lesson-detail__section lesson-detail__submit">

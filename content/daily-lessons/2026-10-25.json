@@ -34,6 +34,18 @@
         "phrase": "我要……，谢谢。Wǒ yào …, xièxie.",
         "pattern": "我要 + số lượng + 杯 + đồ uống。",
         "reusePrompt": "Đổi đồ uống và số lượng 1 ↔ 2 rồi nói lại không nhìn chữ."
+      },
+      "chinesePractice": {
+        "sentence": "我要两杯咖啡，谢谢。",
+        "translation": "Tôi muốn hai cốc cà phê, cảm ơn.",
+        "tokens": [
+          { "hanzi": "我", "pinyin": "wǒ", "meaning": "tôi" },
+          { "hanzi": "要", "pinyin": "yào", "meaning": "muốn / lấy" },
+          { "hanzi": "两杯", "pinyin": "liǎng bēi", "meaning": "hai cốc" },
+          { "hanzi": "咖啡", "pinyin": "kāfēi", "meaning": "cà phê" },
+          { "hanzi": "谢谢", "pinyin": "xièxie", "meaning": "cảm ơn" }
+        ],
+        "outputPrompt": "Viết một câu mới: đổi đồ uống hoặc số lượng, rồi nói câu đó không nhìn mẫu."
       }
     }
   ]

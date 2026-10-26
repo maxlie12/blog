@@ -11,6 +11,19 @@ const takeawaySchema = z.object({
 
 export type LessonTakeaway = z.infer<typeof takeawaySchema>;
 
+const chinesePracticeSchema = z.object({
+  sentence: z.string().min(1).max(120),
+  translation: z.string().min(1).max(240),
+  tokens: z.array(z.object({
+    hanzi: z.string().min(1).max(12),
+    pinyin: z.string().min(1).max(40),
+    meaning: z.string().min(1).max(80),
+  })).min(2).max(12),
+  outputPrompt: z.string().min(1).max(240),
+});
+
+export type ChinesePractice = z.infer<typeof chinesePracticeSchema>;
+
 const lessonSchema = z.object({
   id: z.string().regex(/^daily-[a-z0-9-]+$/),
   skill: z.enum(["listening", "reading", "speaking", "writing"]),
@@ -19,6 +32,7 @@ const lessonSchema = z.object({
   instructions: z.string().min(1), material: z.string().nullable(),
   exercises: z.string().min(1), completionCriteria: z.string().min(1),
   takeaway: takeawaySchema.optional(),
+  chinesePractice: chinesePracticeSchema.optional(),
 });
 const packetSchema = z.object({
   date: z.iso.date(), title: z.string().min(1),

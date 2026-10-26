@@ -11,7 +11,7 @@ evidence and never proves a CEFR, HSK or JLPT level.
 | ID | Priority | Status | Problem | Next smallest outcome |
 |---|---:|---|---|---|
 | ASSESS-001 | P1 | Planned | The product has self-reported levels and milestone UI, but insufficient unseen four-skill evidence to claim progress. | Keep level unchanged; attach weekly checks and a 28-day assessment to evidence records. |
-| LANG-001 | P1 | Planned | English, Chinese and Japanese share an engine, but their teaching rules are not yet explicit data. | Define language-pack rules without splitting the page into three implementations. |
+| LANG-001 | P1 | Active | English, Chinese and Japanese share an engine, but their teaching rules are not yet explicit data. | Ship one Chinese word/chunk and writing slice without splitting the shared lesson flow. |
 | FEEDBACK-001 | P2 | Blocked | Personal correction is manual; automatic AI feedback is not implemented or cost-controlled. | First collect real attempts and define a one-error feedback contract. |
 
 Game and decorative progression are intentionally below these items. They may reward learning,

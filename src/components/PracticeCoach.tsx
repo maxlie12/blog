@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import type { SkillId } from "@/lib/lessonTypes";
-import type { LessonTakeaway } from "@/lib/dailyLessons";
+import type { ChinesePractice, LessonTakeaway } from "@/lib/dailyLessons";
 import { announceResponseStarted } from "@/components/LessonFlowGuide";
+import { ChineseWritingPractice } from "@/components/ChineseWritingPractice";
 import { getDefaultLearningMethod, getLearningMethod, type LearningMethodId } from "@/lib/learningMethods";
 import { getLocalCompletionSummary, recordLocalCompletion, syncLocalProgress, type LocalCompletionSummary } from "@/lib/localLearningProgress";
 import { readProfileStorage, writeProfileStorage } from "@/lib/learnerProfiles";
@@ -44,7 +45,7 @@ const languageDrill: Partial<Record<string, string>> = {
   ja: "2–3 phút: giữ mẫu chào hỏi/tự giới thiệu, đổi tên hoặc quốc gia. Nghe audio, nhại hai lượt, che chữ rồi nói lại. Ghi rõ dùng kana hay romaji; gửi audio nếu muốn sửa phát âm.",
 };
 
-export function PracticeCoach({ lessonId, skill, language, takeaway }: { lessonId: string; skill: SkillId; language: string; takeaway?: LessonTakeaway }) {
+export function PracticeCoach({ lessonId, skill, language, takeaway, chinesePractice }: { lessonId: string; skill: SkillId; language: string; takeaway?: LessonTakeaway; chinesePractice?: ChinesePractice }) {
   const [response, setResponse] = useState("");
   const [minutes, setMinutes] = useState(5);
   const [support, setSupport] = useState("Không dùng");
@@ -133,8 +134,9 @@ export function PracticeCoach({ lessonId, skill, language, takeaway }: { lessonI
     <p>Bài tập và hướng dẫn do trợ lý soạn. Câu trả lời tự lưu trên trình duyệt này; máy chủ chỉ có thể đồng bộ metadata Done, không lưu nội dung hoặc chấm điểm. Không nhập thông tin công việc nhạy cảm.</p>
     <div className="learning-transfer"><h3>Trước khi làm: bài này dùng để làm gì?</h3><p>{purpose[skill]}</p><p><strong>Khung đầu ra:</strong> {frames[skill]}. Khung là bản đồ để bạn tự tạo câu, không phải đoạn mẫu để chép.</p></div>
     <div className="learning-method-action"><strong>Cách làm được đề xuất:</strong> {method.action}</div>
+    {chinesePractice && <ChineseWritingPractice practice={chinesePractice} />}
     <form onSubmit={finishLesson}>
-      <p><label htmlFor={lessonId + "-response"}>{method.outputLabel}</label></p>
+      <p><label htmlFor={lessonId + "-response"}>{chinesePractice?.outputPrompt ?? method.outputLabel}</label></p>
       <textarea id={lessonId + "-response"} rows={6} maxLength={10000} required value={response} onFocus={() => announceResponseStarted(lessonId)} onChange={e => setResponse(e.target.value)} style={{ width: "100%" }} />
       <p className="lesson-detail__note">Bản nháp tự lưu khi bạn gõ. Khi đã có đầu ra thật, bấm nút dưới để ghi Done.</p>
       <p><label>Thời gian thực tế (phút) <input type="number" min={1} max={60} required value={minutes} onChange={e => setMinutes(Number(e.target.value))} /></label></p>
