@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-27",
+  "title": "Khởi động lại 5 phút — nghe một yêu cầu và ghi bằng chứng",
+  "kind": "restart",
+  "note": "Chưa có bài làm mới được gửi trong chat và automation không đọc dữ liệu Done trên thiết bị, nên giữ B1+ tự đánh giá, không tăng độ khó và chưa chuyển sang shadowing. Chỉ phần tiếng Anh 5 phút là nhiệm vụ chính; tiếng Trung là tùy chọn. Done ghi nhận hoạt động học, không phải điểm CEFR.",
+  "lessons": [
+    {
+      "id": "daily-2026-10-27-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Bắt buộc 5 phút — tình huống, yêu cầu, kết quả",
+      "level": "B1+ restart / B1 source",
+      "instructions": "Bài do trợ lý soạn, không phải đề British Council/IELTS/TOEIC chính thức. Nguồn British Council miễn phí có audio, transcript và bài tương tác. Chưa mở transcript; nghe 45–60 giây đầu một lượt, chỉ nghe lần hai nếu cần.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b1/phone-call-customer",
+      "exercises": "Viết đúng ba dòng: 1) The call is about …; 2) The customer wants …; 3) I am …% confident because … . Nếu còn 2 phút, mở transcript để tự đánh dấu Correct / Partly correct / Incorrect cho từng dòng, rồi sửa đúng một dòng. Tùy chọn nói: che chữ và kể lại tình huống trong 20–30 giây.",
+      "completionCriteria": "Lưu ba dòng nguyên bản và ghi số lượt nghe cùng số phút thực học, rồi bấm Done. Không cần làm bù các ngày trước. Gửi ba dòng về ChatGPT nếu muốn được xác nhận ý, sửa một lỗi quan trọng nhất và nhận lượt luyện lại 2 phút.",
+      "takeaway": {
+        "phrase": "I’m calling about …",
+        "pattern": "I’m calling about … because …",
+        "reusePrompt": "Đổi sang tình huống Angular: gọi cho đồng đội để xin thay đổi deadline hoặc giờ họp, nêu một lý do thật ngắn."
+      }
+    },
+    {
+      "id": "daily-2026-10-27-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — nhận cụm, gõ lại, đổi món",
+      "level": "Beginner restart",
+      "instructions": "Bài do trợ lý soạn. Nếu vừa học Duolingo, dùng bài này để chuyển từ nhận diện sang tự tạo câu. Chạm từng cụm để xem pinyin/nghĩa, ẩn mẫu rồi gõ lại. Nếu có HelloChinese, nghe thêm một mẫu người bản ngữ; app có phần miễn phí và nội dung Premium.",
+      "material": "https://www.hellochinese.cc/",
+      "exercises": "Nói và gõ lại 我要一杯茶，谢谢。 Sau đó đổi 一杯茶 thành 两杯咖啡 hoặc đồ uống bạn biết. Luyện viết tay một chữ là tùy chọn; không lưu và không tự chấm.",
+      "completionCriteria": "Chỉ bấm Done sau khi tự viết một câu gọi món mới bằng chữ Hán và nói câu đó một lượt không nhìn mẫu. Nhận diện hoặc chép nguyên câu chưa đủ.",
+      "takeaway": {
+        "phrase": "我要……，谢谢。Wǒ yào …, xièxie.",
+        "pattern": "我要 + số lượng + 杯 + đồ uống。",
+        "reusePrompt": "Đổi đồ uống hoặc số lượng, rồi thêm 多少钱？"
+      },
+      "chinesePractice": {
+        "sentence": "我要一杯茶，谢谢。",
+        "translation": "Tôi muốn một cốc trà, cảm ơn.",
+        "tokens": [
+          {
+            "hanzi": "我",
+            "pinyin": "wǒ",
+            "meaning": "tôi"
+          },
+          {
+            "hanzi": "要",
+            "pinyin": "yào",
+            "meaning": "muốn / lấy"
+          },
+          {
+            "hanzi": "一杯",
+            "pinyin": "yì bēi",
+            "meaning": "một cốc"
+          },
+          {
+            "hanzi": "茶",
+            "pinyin": "chá",
+            "meaning": "trà"
+          },
+          {
+            "hanzi": "谢谢",
+            "pinyin": "xièxie",
+            "meaning": "cảm ơn"
+          }
+        ],
+        "outputPrompt": "Viết một câu gọi món mới bằng chữ Hán: đổi đồ uống hoặc số lượng và có thể thêm 多少钱？"
+      }
+    }
+  ]
+}
