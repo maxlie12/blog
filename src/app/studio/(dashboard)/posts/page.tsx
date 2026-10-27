@@ -6,10 +6,16 @@ import { unpublishPost, deletePost } from "./actions";
 export const metadata: Metadata = { title: "Blog posts · Studio" };
 export const dynamic = "force-dynamic";
 
-export default async function StudioPostsPage() {
+export default async function StudioPostsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ published?: string }>;
+}) {
   const posts = await getStudioPosts();
   const drafts = posts.filter((p) => p.status === "draft");
   const published = posts.filter((p) => p.status === "published");
+  const publishedSlug = (await searchParams).published;
+  const justPublished = published.find((p) => p.slug === publishedSlug);
 
   return (
     <div className="studio-page">
@@ -22,6 +28,13 @@ export default async function StudioPostsPage() {
           + New post
         </Link>
       </header>
+
+      {justPublished && (
+        <p role="status" className="post-editor__saved">
+          Published “{justPublished.title}” ✓{" "}
+          <Link href={`/blog/${justPublished.slug}`}>View post</Link>
+        </p>
+      )}
 
       {posts.length === 0 ? (
         <p className="empty-state">No posts yet. Create your first one.</p>

@@ -124,7 +124,9 @@ export function PostEditor({ initial }: { initial?: EditablePost }) {
           status: result.status ?? p.status,
         }));
         setSavedSnapshot(snapshot({ ...post, id: result.id ?? post.id, status: result.status ?? post.status }));
-        if (wasNew && result.id) {
+        if (intent === "publish" && result.slug) {
+          router.push(`/studio/posts?published=${encodeURIComponent(result.slug)}`);
+        } else if (wasNew && result.id) {
           router.replace(`/studio/posts/${result.id}`);
         } else {
           router.refresh();
