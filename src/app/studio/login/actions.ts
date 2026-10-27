@@ -32,8 +32,11 @@ export async function login(formData: FormData): Promise<{ error?: string }> {
   redirect(from.startsWith("/studio") ? from : "/studio");
 }
 
+export async function clearStudioCookie(): Promise<void> {
+  (await cookies()).delete(SESSION_COOKIE);
+}
+
 export async function logout(): Promise<void> {
-  const store = await cookies();
-  store.delete(SESSION_COOKIE);
+  await clearStudioCookie();
   redirect("/studio/login");
 }

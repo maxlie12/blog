@@ -1,8 +1,9 @@
 "use client";
 
+import { useClerk } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { logout } from "@/app/studio/login/actions";
+import { clearStudioCookie, logout } from "@/app/studio/login/actions";
 
 const NAV = [
   { href: "/studio", label: "Overview", icon: "⌂" },
@@ -16,7 +17,19 @@ function isActive(pathname: string, href: string) {
   return pathname.startsWith(href);
 }
 
-export function StudioSidebar() {
+// Only rendered inside ClerkProvider; ends both the Clerk session and any password cookie.
+function ClerkLogoutForm() {
+  const { signOut } = useClerk();
+  return (
+    <form action={async () => { await clearStudioCookie(); await signOut({ redirectUrl: "/studio/login" }); }}>
+      <button type="submit" className="studio-sidebar__logout">
+        Log out
+      </button>
+    </form>
+  );
+}
+
+export function StudioSidebar({ clerkEnabled }: { clerkEnabled: boolean }) {
   const pathname = usePathname();
 
   return (
@@ -46,11 +59,13 @@ export function StudioSidebar() {
 
       <div className="studio-sidebar__footer">
         <p className="studio-sidebar__quote">&ldquo;A little progress every day.&rdquo;</p>
-        <form action={logout}>
-          <button type="submit" className="studio-sidebar__logout">
-            Log out
-          </button>
-        </form>
+        {clerkEnabled ? <ClerkLogoutForm /> : (
+          <form action={logout}>
+            <button type="submit" className="studio-sidebar__logout">
+              Log out
+            </button>
+          </form>
+        )}
         <Link href="/" className="studio-sidebar__view-site">
           ← View public site
         </Link>

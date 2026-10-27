@@ -1596,9 +1596,15 @@ a {
   font-size: 0.85rem;
   margin-bottom: 0.75rem;
 }
-.studio-login__card button {
+.studio-login__card .button {
   width: 100%;
   justify-content: center;
+}
+.studio-login__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
 }
 
 .studio-shell {

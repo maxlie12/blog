@@ -1,5 +1,19 @@
 # Decisions
 
+## 2026-10-27 — The owner's Clerk account also opens Studio
+
+**Decision:** `/studio` admits either the existing password cookie or a Clerk session whose
+verified email equals `STUDIO_OWNER_EMAIL` (`src/lib/studioSession.ts`). The password becomes an
+optional fallback.
+
+**Why:** production had Clerk but no Studio env vars, so the owner could not sign in. One account
+for learning and Studio removes a second secret to provision, rotate and remember. The owner
+email is already public as the git author, so it lives in code rather than another env var.
+
+**Boundary:** this supersedes "learner authentication grants no Studio access" below for the
+owner account only. Every other Clerk learner still gets no Studio access, and every Studio
+action still calls `requireStudioSession()`.
+
 ## 2026-10-21 — Learner auth claims the existing sync profile; Studio remains separate
 
 **Decision:** use Clerk for learner identity, but keep the existing Studio password/session as

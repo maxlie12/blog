@@ -88,12 +88,15 @@ configuration, so English, Chinese and Japanese do not require separate page imp
 
 Smallest workable scheme for a single owner, not a general auth system:
 
+- With Clerk configured, the owner signs in with Clerk; `requireStudioSession()` admits only a
+  verified `STUDIO_OWNER_EMAIL` (`src/lib/studioSession.ts`). The password below is a fallback.
 - `STUDIO_PASSWORD` (env var) is checked with a constant-time string comparison
   (`src/lib/auth.ts`).
 - On success, an HMAC-SHA256-signed session token (Web Crypto API, so the same code runs in
   both the Edge middleware runtime and normal server code) is stored in an httpOnly, `SameSite:
   lax` cookie for 7 days.
-- `src/middleware.ts` gates every `/studio/**` route except `/studio/login`, redirecting to
+- `src/proxy.ts` gates every `/studio/**` route except `/studio/login` (letting any Clerk user
+  through to the owner check above), redirecting to
   login with a `?from=` param if the cookie is missing or invalid.
 - Every Server Action under `/studio` also calls `requireStudioSession()`
   (`src/lib/studioSession.ts`) itself, independent of the middleware — defense in depth, since

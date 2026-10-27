@@ -67,7 +67,7 @@ export async function createSessionToken(): Promise<{ token: string; maxAge: num
 
 export async function isValidSessionToken(token: string | undefined): Promise<boolean> {
   if (process.env.BLOG_READ_ONLY_PREVIEW === '1') return false;
-  if (!token) return false;
+  if (!token || !process.env.STUDIO_SESSION_SECRET) return false;
   const [payload, signature] = token.split(".");
   if (!payload || !signature) return false;
   const expected = await sign(payload);

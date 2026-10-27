@@ -1,58 +1,57 @@
-"use client";
+import Link from "next/link";
+import { SignOutButton } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
+import { getAuthenticatedLearnerId, isLearnerAuthConfigured } from "@/lib/learnerAuth";
+import { hasStudioSession } from "@/lib/studioSession";
+import { LoginForm } from "./LoginForm";
 
-import { Suspense, useActionState } from "react";
-import { useSearchParams } from "next/navigation";
-import { login } from "./actions";
+export const dynamic = "force-dynamic";
 
-const initialState: { error?: string } = {};
+export default async function StudioLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string }>;
+}) {
+  const requested = (await searchParams).from;
+  const from = requested?.startsWith("/studio") ? requested : "/studio";
+  if (await hasStudioSession()) redirect(from);
 
-function LoginForm() {
-  const searchParams = useSearchParams();
-  const from = searchParams.get("from") || "/studio";
-  const [state, formAction, pending] = useActionState(
-    async (_prev: { error?: string }, formData: FormData) => {
-      return (await login(formData)) ?? {};
-    },
-    initialState
-  );
+  const clerkEnabled = isLearnerAuthConfigured();
+  const passwordEnabled = Boolean(process.env.STUDIO_PASSWORD && process.env.STUDIO_SESSION_SECRET);
+  const signedInAsOther = clerkEnabled && Boolean(await getAuthenticatedLearnerId());
 
-  return (
-    <form action={formAction} className="studio-login__card">
-      <p className="studio-login__eyebrow">LUÂN / STUDIO</p>
-      <h1>Private workspace</h1>
-      <p className="studio-login__hint">Sign in to manage blog posts and learning content.</p>
-
-      <input type="hidden" name="from" value={from} />
-
-      <label htmlFor="password">Password</label>
-      <input
-        id="password"
-        name="password"
-        type="password"
-        required
-        autoFocus
-        autoComplete="current-password"
-      />
-
-      {state?.error && (
-        <p className="studio-login__error" role="alert">
-          {state.error}
-        </p>
-      )}
-
-      <button type="submit" className="button button--primary" disabled={pending}>
-        {pending ? "Signing in…" : "Sign in"}
-      </button>
-    </form>
-  );
-}
-
-export default function StudioLoginPage() {
   return (
     <div className="studio-login">
-      <Suspense fallback={null}>
-        <LoginForm />
-      </Suspense>
+      <div className="studio-login__card">
+        <p className="studio-login__eyebrow">LUÂN / STUDIO</p>
+        <h1>Private workspace</h1>
+        <p className="studio-login__hint">Sign in to manage blog posts and learning content.</p>
+
+        {signedInAsOther && (
+          <>
+            <p className="studio-login__error" role="alert">
+              This account can’t open Studio. Sign out, then sign in with the owner account.
+            </p>
+            <SignOutButton redirectUrl={`/studio/login?from=${encodeURIComponent(from)}`}>
+              <button type="button" className="button button--primary">Sign out</button>
+            </SignOutButton>
+          </>
+        )}
+
+        {clerkEnabled && !signedInAsOther && (
+          <Link href={`/sign-in?redirect_url=${encodeURIComponent(from)}`} className="button button--primary">
+            Sign in with your account
+          </Link>
+        )}
+
+        {passwordEnabled && <LoginForm from={from} />}
+
+        {!clerkEnabled && !passwordEnabled && (
+          <p className="studio-login__error" role="alert">
+            Studio sign-in isn’t configured. Set the Clerk keys or STUDIO_PASSWORD + STUDIO_SESSION_SECRET (see docs/OPERATIONS.md).
+          </p>
+        )}
+      </div>
     </div>
   );
 }

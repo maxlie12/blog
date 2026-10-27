@@ -2,12 +2,14 @@ import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, isValidSessionToken } from "@/lib/auth";
 
-async function routeRequest(request: NextRequest) {
+async function routeRequest(request: NextRequest, clerkSignedIn = false) {
   const { pathname } = request.nextUrl;
   if (!pathname.startsWith("/studio") || pathname === "/studio/login") {
     return NextResponse.next();
   }
 
+  // A Clerk user passes here; requireStudioSession() then checks it is the owner's verified email.
+  if (clerkSignedIn) return NextResponse.next();
   const token = request.cookies.get(SESSION_COOKIE)?.value;
   if (await isValidSessionToken(token)) return NextResponse.next();
 
@@ -20,7 +22,7 @@ const authConfigured = Boolean(
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
   process.env.CLERK_SECRET_KEY
 );
-const withLearnerAuth = authConfigured ? clerkMiddleware((_auth, request) => routeRequest(request)) : null;
+const withLearnerAuth = authConfigured ? clerkMiddleware(async (auth, request) => routeRequest(request, Boolean((await auth()).userId))) : null;
 
 export default function proxy(request: NextRequest, event: Parameters<NonNullable<typeof withLearnerAuth>>[1]) {
   return withLearnerAuth ? withLearnerAuth(request, event) : routeRequest(request);

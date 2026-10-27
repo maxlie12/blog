@@ -10,23 +10,29 @@
 | `CLERK_SECRET_KEY` | No | Clerk server key for learner identity; never expose it to the browser | `sk_test_...` |
 | `SITE_TIMEZONE` | No (defaults `UTC`) | IANA timezone used to compute "today" for streaks/log dates | `Asia/Shanghai` |
 | `SITE_URL` | No (defaults `http://localhost:3000`) | Absolute base URL used in `sitemap.ts`/`robots.ts` | `https://maxlie.dev` |
-| `STUDIO_PASSWORD` | Yes, to use `/studio` | The single owner password checked on `/studio/login` | a long random string |
-| `STUDIO_SESSION_SECRET` | Yes, to use `/studio` | Signs the session cookie (HMAC-SHA256) | 32+ random bytes, hex-encoded |
+| `STUDIO_PASSWORD` | Only without Clerk | Optional fallback owner password checked on `/studio/login` | a long random string |
+| `STUDIO_SESSION_SECRET` | Only with `STUDIO_PASSWORD` | Signs the password session cookie (HMAC-SHA256) | 32+ random bytes, hex-encoded |
 
 Copy `.env.example` to `.env` for local dev. In Vercel, set these under Project Settings →
 Environment Variables.
 
 ### Studio authentication
 
-Generate a secret once:
+When the Clerk keys are set (as in production), the owner signs in to Studio with their Clerk
+account: `/studio/login` → "Sign in with your account". Only a verified
+`STUDIO_OWNER_EMAIL` (`src/lib/studioSession.ts`) is admitted; any other Clerk account sees
+"This account can't open Studio". No Studio env vars are needed for this path.
+
+The password below is an optional fallback, mainly for local dev without Clerk. Generate a
+secret once:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
 Put it in `STUDIO_SESSION_SECRET`, and pick any password for `STUDIO_PASSWORD`. Without both
-set, `/studio/login` shows a config-error message instead of a broken login form — see
-`src/app/studio/login/actions.ts`.
+set, `/studio/login` hides the password form; with neither Clerk nor the password configured
+it shows a config-error message — see `src/app/studio/login/page.tsx`.
 
 **Rotating the secret** invalidates every existing session immediately (all signed cookies stop
 verifying) — use this as your "log out everywhere" lever if needed. **Changing the password**
@@ -140,9 +146,11 @@ GitHub `master` branch is connected to Vercel. For future deployments:
   `next dev` process started before a schema/migration change won't pick up a client
   regenerated in another terminal without a restart). Fix: `npx prisma generate`, then restart
   `next dev`.
-- **`/studio/login` shows "Studio auth isn't configured":** `STUDIO_PASSWORD` or
-  `STUDIO_SESSION_SECRET` isn't set in the current environment. Set both (see above) and
-  restart the dev server / redeploy.
+- **`/studio/login` shows "Studio sign-in isn't configured":** neither the Clerk keys nor
+  `STUDIO_PASSWORD` + `STUDIO_SESSION_SECRET` are set in the current environment. Set one pair
+  (see above) and restart the dev server / redeploy.
+- **"This account can't open Studio":** you are signed in to Clerk with an account whose
+  verified email is not `STUDIO_OWNER_EMAIL`. Sign out and use the owner account.
 - **Logged in, but immediately redirected back to login:** the session cookie didn't get set or
   didn't verify — check that `STUDIO_SESSION_SECRET` is identical between the process that
   issued the cookie and the one verifying it (e.g. after rotating the secret, old sessions are
