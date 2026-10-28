@@ -24,48 +24,48 @@
       "id": "daily-2026-10-27-zh-speaking",
       "language": "zh",
       "skill": "speaking",
-      "title": "Tùy chọn 5 phút — nhận cụm, gõ lại, đổi món",
+      "title": "Tùy chọn 5 phút — năm đồ vật quanh bạn",
       "level": "Beginner restart",
-      "instructions": "Bài do trợ lý soạn. Nếu vừa học Duolingo, dùng bài này để chuyển từ nhận diện sang tự tạo câu. Chạm từng cụm để xem pinyin/nghĩa, ẩn mẫu rồi gõ lại. Nếu có HelloChinese, nghe thêm một mẫu người bản ngữ; app có phần miễn phí và nội dung Premium.",
+      "instructions": "Bài do trợ lý soạn. Chạm từng từ để xem pinyin và nghĩa, nghe/đọc thành tiếng, sau đó ẩn mẫu và gõ lại chữ Hán. Tập trung phân biệt thanh điệu; đặc biệt 筷子 đọc kuàizi, không phải “kuan zi”.",
       "material": "https://www.hellochinese.cc/",
-      "exercises": "Nói và gõ lại 我要一杯茶，谢谢。 Sau đó đổi 一杯茶 thành 两杯咖啡 hoặc đồ uống bạn biết. Luyện viết tay một chữ là tùy chọn; không lưu và không tự chấm.",
-      "completionCriteria": "Chỉ bấm Done sau khi tự viết một câu gọi món mới bằng chữ Hán và nói câu đó một lượt không nhìn mẫu. Nhận diện hoặc chép nguyên câu chưa đủ.",
+      "exercises": "Học 5 từ: 窗户 chuānghu (cửa sổ), 台灯 táidēng (đèn bàn), 筷子 kuàizi (đũa), 勺子 sháozi (thìa), 椅子 yǐzi (ghế). Sau đó nói câu mẫu một lượt và đổi vị trí hoặc đồ vật để tạo một câu mới.",
+      "completionCriteria": "Chỉ bấm Done sau khi nhận diện đúng cả 5 từ, tự gõ lại ít nhất 3 từ bằng chữ Hán và nói hoặc viết một câu mới không nhìn mẫu.",
       "takeaway": {
-        "phrase": "我要……，谢谢。Wǒ yào …, xièxie.",
-        "pattern": "我要 + số lượng + 杯 + đồ uống。",
-        "reusePrompt": "Đổi đồ uống hoặc số lượng, rồi thêm 多少钱？"
+        "phrase": "窗户、台灯、筷子、勺子、椅子",
+        "pattern": "……旁边有……；……上有……",
+        "reusePrompt": "Nhìn quanh phòng và tạo một câu mới về vị trí của hai đồ vật."
       },
       "chinesePractice": {
-        "sentence": "我要一杯茶，谢谢。",
-        "translation": "Tôi muốn một cốc trà, cảm ơn.",
+        "sentence": "窗户旁边有一把椅子，桌子上有一盏台灯、一双筷子和一把勺子。",
+        "translation": "Cạnh cửa sổ có một chiếc ghế; trên bàn có một chiếc đèn bàn, một đôi đũa và một cái thìa.",
         "tokens": [
           {
-            "hanzi": "我",
-            "pinyin": "wǒ",
-            "meaning": "tôi"
+            "hanzi": "窗户",
+            "pinyin": "chuānghu",
+            "meaning": "cửa sổ"
           },
           {
-            "hanzi": "要",
-            "pinyin": "yào",
-            "meaning": "muốn / lấy"
+            "hanzi": "台灯",
+            "pinyin": "táidēng",
+            "meaning": "đèn bàn"
           },
           {
-            "hanzi": "一杯",
-            "pinyin": "yì bēi",
-            "meaning": "một cốc"
+            "hanzi": "筷子",
+            "pinyin": "kuàizi",
+            "meaning": "đũa"
           },
           {
-            "hanzi": "茶",
-            "pinyin": "chá",
-            "meaning": "trà"
+            "hanzi": "勺子",
+            "pinyin": "sháozi",
+            "meaning": "thìa"
           },
           {
-            "hanzi": "谢谢",
-            "pinyin": "xièxie",
-            "meaning": "cảm ơn"
+            "hanzi": "椅子",
+            "pinyin": "yǐzi",
+            "meaning": "ghế"
           }
         ],
-        "outputPrompt": "Viết một câu gọi món mới bằng chữ Hán: đổi đồ uống hoặc số lượng và có thể thêm 多少钱？"
+        "outputPrompt": "Không nhìn mẫu, viết một câu mới với ít nhất hai từ trong năm từ trên và dùng 有 hoặc 在."
       }
     }
   ]
