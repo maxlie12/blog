@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-29",
+  "title": "Khởi động 5 phút — nghe lại và bắt đúng hai chi tiết",
+  "kind": "restart",
+  "note": "Chưa có bài làm mới hoặc bằng chứng Done được gửi trong chat, nên giữ B1+ tự đánh giá, không tăng độ khó và chưa chuyển sang shadowing. Tiếng Anh là nhiệm vụ chính; tiếng Trung là ôn tùy chọn. Không tạo bài bù bắt buộc.",
+  "lessons": [
+    {
+      "id": "daily-2026-10-29-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Nhiệm vụ chính 5 phút — hai chi tiết có thể kiểm chứng",
+      "level": "B1+ restart / B1 source",
+      "instructions": "Bài do trợ lý soạn, không phải đề British Council/IELTS/TOEIC chính thức. Dùng lại nguồn British Council miễn phí có audio, transcript và bài tương tác. Chưa mở transcript; nghe 45–60 giây đầu một lượt, tối đa hai lượt.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b1/phone-call-customer",
+      "exercises": "Viết hai câu tiếng Anh: 1) The caller is …; 2) The caller needs … . Thêm một dòng Evidence: ghi một từ hoặc cụm ngắn bạn thực sự nghe được để hỗ trợ hai câu. Sau đó mở transcript, đánh dấu mỗi câu Correct / Partly correct / Incorrect và chỉ sửa một câu.",
+      "completionCriteria": "Lưu hai câu ban đầu, một cụm Evidence, số lượt nghe và số phút thực học rồi bấm Done. Gửi phần này về ChatGPT nếu muốn được kiểm tra nội dung và sửa một lỗi quan trọng nhất.",
+      "takeaway": {
+        "phrase": "The caller needs …",
+        "pattern": "The caller needs … because …",
+        "reusePrompt": "Đổi sang tình huống công việc: một người dùng gọi báo lỗi và cần đội kỹ thuật làm một việc cụ thể."
+      }
+    },
+    {
+      "id": "daily-2026-10-29-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — hỏi vị trí và tự trả lời",
+      "level": "Beginner restart",
+      "instructions": "Bài do trợ lý soạn. Không nhìn pinyin trước: nhớ lại các từ đồ vật đã học, rồi chạm từng cụm để kiểm tra. HelloChinese có phần học miễn phí và nội dung Premium, có audio người bản ngữ; chỉ mở nếu bạn muốn nghe thêm.",
+      "material": "https://www.hellochinese.cc/",
+      "exercises": "Nói và gõ câu hỏi 勺子在哪儿？ rồi tự trả lời bằng 在. Sau đó thay 勺子 bằng 台灯、筷子、椅子 hoặc 窗户 để tạo một cặp hỏi–đáp mới. Viết tay một chữ là tùy chọn, không lưu và không tự chấm.",
+      "completionCriteria": "Chỉ bấm Done sau khi tự gõ một cặp hỏi–đáp mới và đọc cả hai câu một lượt không nhìn mẫu.",
+      "takeaway": {
+        "phrase": "……在哪儿？",
+        "pattern": "A 在哪儿？A 在 B 上 / 旁边。",
+        "reusePrompt": "Đổi cả đồ vật và vị trí để tạo một cặp hỏi–đáp khác."
+      },
+      "chinesePractice": {
+        "sentence": "勺子在哪儿？勺子在桌子上。",
+        "translation": "Cái thìa ở đâu? Cái thìa ở trên bàn.",
+        "tokens": [
+          {
+            "hanzi": "勺子",
+            "pinyin": "sháozi",
+            "meaning": "thìa"
+          },
+          {
+            "hanzi": "在哪儿",
+            "pinyin": "zài nǎr",
+            "meaning": "ở đâu"
+          },
+          {
+            "hanzi": "在",
+            "pinyin": "zài",
+            "meaning": "ở / nằm tại"
+          },
+          {
+            "hanzi": "桌子",
+            "pinyin": "zhuōzi",
+            "meaning": "cái bàn"
+          },
+          {
+            "hanzi": "上",
+            "pinyin": "shàng",
+            "meaning": "trên"
+          }
+        ],
+        "outputPrompt": "Không nhìn mẫu, viết một cặp hỏi–đáp mới bằng 在哪儿 và 在, dùng một trong các từ 台灯、筷子、椅子、窗户。"
+      }
+    }
+  ]
+}
