@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-28",
+  "title": "Khởi động 5 phút — nghe lại có mục tiêu, không chạy theo streak",
+  "kind": "restart",
+  "note": "Chưa có bài làm mới hoặc bằng chứng Done được gửi trong chat, nên giữ B1+ tự đánh giá, không tăng độ khó và chưa chuyển sang shadowing. Tiếng Anh là nhiệm vụ chính; tiếng Trung là ôn tùy chọn. Không cần học bù toàn bộ.",
+  "lessons": [
+    {
+      "id": "daily-2026-10-28-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Nhiệm vụ chính 5 phút — ai gọi, muốn gì, bước tiếp theo",
+      "level": "B1+ restart / B1 source",
+      "instructions": "Bài do trợ lý soạn, không phải đề British Council/IELTS/TOEIC chính thức. Dùng lại nguồn British Council miễn phí có audio, transcript và bài tương tác. Chưa mở transcript; nghe 45–60 giây đầu một lượt, chỉ nghe lần hai nếu cần.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b1/phone-call-customer",
+      "exercises": "Không nhìn bài hôm qua, viết ba ý ngắn bằng tiếng Anh: Who is calling? What does the customer want? What should happen next? Sau đó mở transcript để kiểm tra và chỉ sửa một ý chưa khớp. Nếu còn thời gian, nói lại ba ý trong 20–30 giây.",
+      "completionCriteria": "Lưu ba ý nguyên bản, ghi số lượt nghe và số phút thực học rồi bấm Done. Gửi ba ý về ChatGPT nếu muốn được kiểm tra nội dung và sửa một lỗi quan trọng nhất.",
+      "takeaway": {
+        "phrase": "The customer would like to …",
+        "pattern": "The customer would like to …, so the next step is to …",
+        "reusePrompt": "Đổi sang công việc Angular: một người dùng báo lỗi và bạn nêu bước xử lý tiếp theo."
+      }
+    },
+    {
+      "id": "daily-2026-10-28-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — nhớ lại đồ vật và tự đặt câu",
+      "level": "Beginner restart",
+      "instructions": "Bài do trợ lý soạn. Không nhìn pinyin trước: nhớ lại năm từ hôm qua, sau đó chạm từng cụm để kiểm tra pinyin và nghĩa. HelloChinese có bài miễn phí và nội dung Premium; chỉ mở nếu bạn muốn nghe thêm giọng bản ngữ.",
+      "material": "https://www.hellochinese.cc/",
+      "exercises": "Nhớ lại và gõ: 窗户、台灯、筷子、勺子、椅子. Đọc từng từ một lượt, rồi dùng 有 hoặc 在 để nói và gõ một câu mới về hai đồ vật quanh bạn. Viết tay một chữ là tùy chọn, không lưu và không tự chấm.",
+      "completionCriteria": "Chỉ bấm Done sau khi tự gõ đúng ít nhất ba từ và tạo một câu mới không chép nguyên câu mẫu.",
+      "takeaway": {
+        "phrase": "旁边有……",
+        "pattern": "A 在 B 旁边。/ B 旁边有 A。",
+        "reusePrompt": "Đổi vị trí và hai đồ vật để tạo câu khác với câu vừa làm."
+      },
+      "chinesePractice": {
+        "sentence": "椅子在窗户旁边，台灯在桌子上。",
+        "translation": "Chiếc ghế ở cạnh cửa sổ, đèn bàn ở trên bàn.",
+        "tokens": [
+          {
+            "hanzi": "椅子",
+            "pinyin": "yǐzi",
+            "meaning": "ghế"
+          },
+          {
+            "hanzi": "在",
+            "pinyin": "zài",
+            "meaning": "ở / nằm tại"
+          },
+          {
+            "hanzi": "窗户旁边",
+            "pinyin": "chuānghu pángbiān",
+            "meaning": "bên cạnh cửa sổ"
+          },
+          {
+            "hanzi": "台灯",
+            "pinyin": "táidēng",
+            "meaning": "đèn bàn"
+          },
+          {
+            "hanzi": "桌子上",
+            "pinyin": "zhuōzi shàng",
+            "meaning": "trên bàn"
+          }
+        ],
+        "outputPrompt": "Không nhìn mẫu, viết một câu mới bằng 有 hoặc 在 với ít nhất hai từ: 窗户、台灯、筷子、勺子、椅子。"
+      }
+    }
+  ]
+}
