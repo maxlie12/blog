@@ -1,5 +1,14 @@
 # Decisions
 
+## 2026-10-28 — "Học bài" opens the next new lesson before a due review
+
+**Decision:** `selectNextLesson` now orders unfinished draft → next new lesson → due review →
+review of the first lesson. A due review shows as a secondary "Đến hạn ôn" link under the main
+action instead of taking it over.
+
+**Why:** after Done, the 1-day review made the main button send the learner back to the lesson
+they had just finished, which read as being stuck. The 1–3–7–14 schedule itself is unchanged.
+
 ## 2026-10-27 — The owner's Clerk account also opens Studio
 
 **Decision:** `/studio` admits either the existing password cookie or a Clerk session whose

@@ -7,6 +7,7 @@ import { getLocalCompletedLessonIds, getLocalDueReviews } from "@/lib/localLearn
 import { readProfileStorage } from "@/lib/learnerProfiles";
 import type { LessonSummary } from "@/lib/lessonTypes";
 import { selectNextLesson, type NextLesson } from "@/lib/nextLesson";
+import type { ScheduledReview } from "@/lib/reviewSchedule";
 import { useLearnerProfile } from "@/lib/useLearnerProfile";
 
 function hasSavedDraft(lessonId: string): boolean {
@@ -29,7 +30,7 @@ const actionLabel = {
 
 const reasonLabel = {
   resume: "Bạn có bản nháp chưa Done. Hệ thống giữ đúng bài đó để không mất mạch học.",
-  "due-review": "Bài cũ được gọi lại theo nhịp 1–3–7–14 ngày, trước khi bạn học thêm bài mới.",
+  "due-review": "Bạn đã Done hết bài mới. Bài cũ này đến hạn ôn theo nhịp 1–3–7–14 ngày.",
   next: "Đây là bài chưa Done phù hợp tiếp theo trong lộ trình hiện tại.",
   review: "Bạn đã Done toàn bộ bài hiện có. Hệ thống chọn lại bài đầu lộ trình để ôn.",
 } as const;
@@ -37,13 +38,19 @@ const reasonLabel = {
 export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
   const learner = useLearnerProfile();
   const [target, setTarget] = useState<NextLesson | null>(null);
+  const [dueReview, setDueReview] = useState<{ review: ScheduledReview; title: string } | null>(null);
 
   useEffect(() => {
     const choose = () => {
       const completed = getLocalCompletedLessonIds();
       const dueReviews = getLocalDueReviews();
       const drafts = new Set(lessons.filter((lesson) => hasSavedDraft(lesson.id)).map((lesson) => lesson.id));
-      setTarget(selectNextLesson(lessons, learner.id, completed, drafts, dueReviews));
+      const next = selectNextLesson(lessons, learner.id, completed, drafts, dueReviews);
+      setTarget(next);
+      // Due reviews stay one tap away without taking the main action from a new lesson.
+      const review = next?.reason === "due-review" ? undefined : dueReviews.find((item) => lessons.some((l) => l.id === item.lessonId));
+      const title = review && lessons.find((l) => l.id === review.lessonId)?.title;
+      setDueReview(review && title ? { review, title } : null);
     };
     choose();
     window.addEventListener("learning-progress-changed", choose);
@@ -73,6 +80,9 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
           </Link>
         ) : (
           <button className="button button--primary" type="button" disabled>Đang chọn bài…</button>
+        )}
+        {dueReview && (
+          <small>Đến hạn ôn: <Link href={`/learning/${dueReview.review.lessonId}`}>{dueReview.title}</Link> (+{dueReview.review.interval} ngày)</small>
         )}
         <small>Muốn đổi bài hoặc học lại? <Link href="/learning/daily">Mở lịch sử bài học</Link>.</small>
       </div>

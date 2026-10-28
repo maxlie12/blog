@@ -55,7 +55,7 @@ test("when everything is Done the selector offers a deterministic review", () =>
   assert.equal(result?.reason, "review");
 });
 
-test("a due review wins over a new lesson but not over an unfinished draft", () => {
+test("a new lesson wins over a due review; the review comes back once new lessons run out", () => {
   const completed = new Set(["daily-2026-10-10-en-listening"]);
   const due = [{
     lessonId: "daily-2026-10-10-en-listening",
@@ -64,7 +64,11 @@ test("a due review wins over a new lesson but not over an unfinished draft", () 
     isDue: true,
   }];
 
-  const review = selectNextLesson(lessons, "luan", completed, new Set(), due);
+  const next = selectNextLesson(lessons, "luan", completed, new Set(), due);
+  assert.equal(next?.reason, "next");
+  assert.equal(next?.lesson.id, "level-en-b1-listening");
+
+  const review = selectNextLesson(lessons, "luan", new Set(lessons.map((item) => item.id)), new Set(), due);
   assert.equal(review?.reason, "due-review");
   assert.equal(review?.lesson.id, "daily-2026-10-10-en-listening");
 

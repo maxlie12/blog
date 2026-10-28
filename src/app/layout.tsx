@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/lib/theme";
 import { PublicChrome } from "@/components/PublicChrome";
 import { ClerkProvider } from "@clerk/nextjs";
 import { isLearnerAuthConfigured } from "@/lib/learnerAuth";
+import { DEFAULT_PALETTE, PALETTES } from "@/lib/palettes";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,15 +33,16 @@ export const metadata: Metadata = {
     "Code. Learn. Explore a sharper self. Portfolio, writing, and an English-learning space — projects, articles, and practice tracked as it actually happens.",
 };
 
-// Applies the persisted theme/accent before first paint to avoid a flash of the default theme.
+// Applies the persisted theme/palette before first paint to avoid a flash of the default theme.
 const NO_FLASH_SCRIPT = `
 (function () {
   try {
     var theme = localStorage.getItem("site-theme");
     if (!theme) theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     document.documentElement.setAttribute("data-theme", theme);
-    var accent = localStorage.getItem("site-accent") || "teal";
-    document.documentElement.setAttribute("data-accent", accent);
+    var palette = localStorage.getItem("site-palette");
+    if (${JSON.stringify(PALETTES.map((p) => p.id))}.indexOf(palette) < 0) palette = "${DEFAULT_PALETTE}";
+    document.documentElement.setAttribute("data-palette", palette);
   } catch (e) {}
 })();
 `;

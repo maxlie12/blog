@@ -2,20 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTheme, type AccentId } from "@/lib/theme";
+import { PALETTES } from "@/lib/palettes";
+import { useTheme } from "@/lib/theme";
 
 const NAV_LINKS = [
   { href: "/blog", label: "Blog" },
   { href: "/projects", label: "Projects" },
   { href: "/learning", label: "Learning" },
   { href: "/about", label: "About" },
-];
-
-const ACCENTS: { id: AccentId; label: string }[] = [
-  { id: "ivory", label: "Sage accent" },
-  { id: "teal", label: "Leaf green accent" },
-  { id: "deep-teal", label: "Forest green accent" },
-  { id: "amber", label: "Butter yellow accent" },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -25,7 +19,7 @@ function isActive(pathname: string, href: string) {
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const { mode, accent, setMode, setAccent } = useTheme();
+  const { mode, palette, setMode, setPalette } = useTheme();
 
   return (
     <header className="site-header">
@@ -58,20 +52,37 @@ export function SiteHeader() {
         </nav>
 
         <div className="site-header__controls">
-          <fieldset className="accent-picker">
-            <legend className="sr-only">Accent color</legend>
-            {ACCENTS.map((a) => (
-              <button
-                key={a.id}
-                type="button"
-                aria-label={a.label}
-                aria-pressed={accent === a.id}
-                data-swatch={a.id}
-                className="accent-picker__dot"
-                onClick={() => setAccent(a.id)}
-              />
-            ))}
-          </fieldset>
+          <button
+            type="button"
+            className="theme-toggle"
+            popoverTarget="palette-picker"
+            aria-label="Choose color palette"
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 3a9 9 0 1 0 0 18c1 0 1.5-.7 1.5-1.5 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.8.7-1.5 1.5-1.5H16a5 5 0 0 0 5-5c0-4.4-4-7.8-9-7.8Z" />
+              <circle cx="7.5" cy="10.5" r="1" fill="currentColor" />
+              <circle cx="12" cy="7.5" r="1" fill="currentColor" />
+              <circle cx="16.5" cy="10.5" r="1" fill="currentColor" />
+            </svg>
+          </button>
+          <div id="palette-picker" popover="auto" className="palette-picker">
+            <fieldset>
+              <legend>Color palette</legend>
+              {PALETTES.map((p) => (
+                <label key={p.id} className="palette-picker__option">
+                  <input
+                    type="radio"
+                    name="palette"
+                    value={p.id}
+                    checked={palette === p.id}
+                    onChange={() => setPalette(p.id)}
+                  />
+                  <span className="palette-picker__swatch" data-swatch={p.id} aria-hidden="true" />
+                  {p.label}
+                </label>
+              ))}
+            </fieldset>
+          </div>
           <button
             type="button"
             className="theme-toggle"

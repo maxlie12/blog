@@ -1,12 +1,12 @@
 "use client";
 
 import { createContext, useContext, useSyncExternalStore, type ReactNode } from "react";
+import { DEFAULT_PALETTE, isPaletteId, type PaletteId } from "@/lib/palettes";
 
 export type ThemeMode = "light" | "dark";
-export type AccentId = "ivory" | "teal" | "deep-teal" | "amber";
 
 const THEME_KEY = "site-theme";
-const ACCENT_KEY = "site-accent";
+const PALETTE_KEY = "site-palette";
 
 const listeners = new Set<() => void>();
 
@@ -29,32 +29,31 @@ function readMode(): ThemeMode {
   return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-function readAccent(): AccentId {
+function readPalette(): PaletteId {
   try {
-    const stored = window.localStorage.getItem(ACCENT_KEY);
-    if (stored === "ivory" || stored === "teal" || stored === "deep-teal" || stored === "amber") {
-      return stored;
-    }
+    const stored = window.localStorage.getItem(PALETTE_KEY);
+    if (isPaletteId(stored)) return stored;
   } catch {
     // ignore
   }
-  return "teal";
+  return DEFAULT_PALETTE;
 }
 
 function getModeSnapshot(): ThemeMode {
   return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
 }
 
-function getAccentSnapshot(): AccentId {
-  return (document.documentElement.getAttribute("data-accent") as AccentId) || "teal";
+function getPaletteSnapshot(): PaletteId {
+  const value = document.documentElement.getAttribute("data-palette");
+  return isPaletteId(value) ? value : DEFAULT_PALETTE;
 }
 
 function getServerModeSnapshot(): ThemeMode {
   return "light";
 }
 
-function getServerAccentSnapshot(): AccentId {
-  return "teal";
+function getServerPaletteSnapshot(): PaletteId {
+  return DEFAULT_PALETTE;
 }
 
 function setMode(mode: ThemeMode) {
@@ -67,10 +66,10 @@ function setMode(mode: ThemeMode) {
   notify();
 }
 
-function setAccent(accent: AccentId) {
-  document.documentElement.setAttribute("data-accent", accent);
+function setPalette(palette: PaletteId) {
+  document.documentElement.setAttribute("data-palette", palette);
   try {
-    window.localStorage.setItem(ACCENT_KEY, accent);
+    window.localStorage.setItem(PALETTE_KEY, palette);
   } catch {
     // ignore
   }
@@ -81,24 +80,24 @@ function setAccent(accent: AccentId) {
 // no-flash script in layout.tsx already performed against the DOM attributes.
 if (typeof document !== "undefined" && !document.documentElement.hasAttribute("data-theme")) {
   document.documentElement.setAttribute("data-theme", readMode());
-  document.documentElement.setAttribute("data-accent", readAccent());
+  document.documentElement.setAttribute("data-palette", readPalette());
 }
 
 interface ThemeContextValue {
   mode: ThemeMode;
-  accent: AccentId;
+  palette: PaletteId;
   setMode: (mode: ThemeMode) => void;
-  setAccent: (accent: AccentId) => void;
+  setPalette: (palette: PaletteId) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const mode = useSyncExternalStore(subscribe, getModeSnapshot, getServerModeSnapshot);
-  const accent = useSyncExternalStore(subscribe, getAccentSnapshot, getServerAccentSnapshot);
+  const palette = useSyncExternalStore(subscribe, getPaletteSnapshot, getServerPaletteSnapshot);
 
   return (
-    <ThemeContext.Provider value={{ mode, accent, setMode, setAccent }}>
+    <ThemeContext.Provider value={{ mode, palette, setMode, setPalette }}>
       {children}
     </ThemeContext.Provider>
   );
