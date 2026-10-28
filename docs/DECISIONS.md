@@ -6,8 +6,14 @@
 review of the first lesson. A due review shows as a secondary "Đến hạn ôn" link under the main
 action instead of taking it over.
 
+Within a language and level, the newest daily packet comes first (then listening → reading →
+speaking → writing). A signed-in submission now also records the local habit Done; its review
+status stays "pending" and the lesson still says Done does not raise a level.
+
 **Why:** after Done, the 1-day review made the main button send the learner back to the lesson
-they had just finished, which read as being stuck. The 1–3–7–14 schedule itself is unchanged.
+they had just finished, which read as being stuck. Oldest-first ordering also buried new packets
+under ~50 older lessons that all used the same digital-detox source, and a submitted attempt
+without a second Done tap was offered again. The 1–3–7–14 schedule itself is unchanged.
 
 ## 2026-10-27 — The owner's Clerk account also opens Studio
 

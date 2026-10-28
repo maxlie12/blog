@@ -1,5 +1,5 @@
 import type { LearnerProfileId } from "./learnerProfiles.ts";
-import { lessonLevel } from "./lessonLevels.ts";
+import { lessonLevel, lessonRank } from "./lessonLevels.ts";
 import type { LessonSummary } from "./lessonTypes.ts";
 import type { ScheduledReview } from "./reviewSchedule.ts";
 
@@ -35,6 +35,10 @@ function rank(value: string, values: string[]): number {
   return index < 0 ? values.length : index;
 }
 
+function dailyDate(id: string): string {
+  return /^daily-(\d{4}-\d{2}-\d{2})-/.exec(id)?.[1] ?? "";
+}
+
 function orderedLessons(lessons: LessonSummary[], profileId: LearnerProfileId): LessonSummary[] {
   const path = PROFILE_PATHS[profileId];
   return [...lessons].sort((a, b) => {
@@ -42,7 +46,10 @@ function orderedLessons(lessons: LessonSummary[], profileId: LearnerProfileId): 
     if (languageDifference) return languageDifference;
     const levels = path.levels[a.language] ?? ["Other"];
     const levelDifference = rank(lessonLevel(a.level, a.language), levels) - rank(lessonLevel(b.level, b.language), levels);
-    return levelDifference || a.id.localeCompare(b.id);
+    if (levelDifference) return levelDifference;
+    // Newest daily packet first, so freshly prepared lessons are not buried under weeks of older ones.
+    const dateDifference = dailyDate(b.id).localeCompare(dailyDate(a.id));
+    return dateDifference || lessonRank(a.skill) - lessonRank(b.skill) || a.id.localeCompare(b.id);
   });
 }
 

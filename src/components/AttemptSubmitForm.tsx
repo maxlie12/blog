@@ -108,7 +108,10 @@ function AttemptForm({
   const completionId = "lesson:" + lessonId;
 
   useEffect(() => {
-    if (state.attemptId) router.refresh();
+    if (!state.attemptId) return;
+    router.refresh();
+    // A submitted output is the Done criterion, so "Bắt đầu học" moves on; review status stays pending.
+    finishLesson();
     // Only re-run when a new attempt id shows up — router changes identity every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.attemptId]);
@@ -135,6 +138,9 @@ function AttemptForm({
       <div className="attempt-form__success" role="status">
         <p>✓ Attempt submitted.</p>
         <div className="attempt-form__success-actions">
+          <Link href="/learning" className="button button--primary button--sm">
+            Học bài tiếp theo →
+          </Link>
           <Link href={`/learning/${lessonId}/attempts/${state.attemptId}`}>
             View your submitted attempt →
           </Link>

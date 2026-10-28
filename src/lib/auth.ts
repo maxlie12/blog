@@ -51,6 +51,16 @@ function timingSafeEqualStrings(a: string, b: string): boolean {
   return diff === 0;
 }
 
+/** True when one of a Clerk user's emails is the owner's and Clerk has verified it. */
+export function isOwnerEmail(
+  emails: readonly { emailAddress: string; verification?: { status?: string } | null }[],
+  owner: string
+): boolean {
+  return emails.some(
+    (email) => email.emailAddress.toLowerCase() === owner.toLowerCase() && email.verification?.status === "verified"
+  );
+}
+
 export function checkPassword(candidate: string): boolean {
   if (process.env.BLOG_READ_ONLY_PREVIEW === '1') return false;
   const expected = process.env.STUDIO_PASSWORD;

@@ -35,7 +35,8 @@ export async function submitAttempt(
   }
 
   const selectedProfile = formData.get("learnerProfileId");
-  if (learnerId && !studioSession) {
+  // The owner's Clerk session is also a Studio session; their own attempts still belong to their learner account.
+  if (learnerId) {
     if (!isLearnerProfileId(selectedProfile)) return { error: "Hồ sơ người học không hợp lệ." };
     let accountLink;
     try {
@@ -69,7 +70,7 @@ export async function submitAttempt(
       lessonId,
       date: todayInTz(),
       response,
-      learnerId: studioSession ? null : learnerId,
+      learnerId: learnerId ?? null,
       isPublic: false,
       reviewStatus: "pending",
     },

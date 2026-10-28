@@ -33,6 +33,19 @@ test("Luân gets current English practice before harder or secondary-language le
   assert.equal(result?.reason, "next");
 });
 
+test("the newest daily packet comes first, listening before writing on the same day", () => {
+  const daily = [
+    lesson("daily-2026-10-10-en-listening", "en", "B1+ practice"),
+    { ...lesson("daily-2026-10-28-en-writing", "en", "B1+ restart"), skill: "writing" as const },
+    lesson("daily-2026-10-28-en-listening", "en", "B1+ restart"),
+  ];
+  assert.equal(selectNextLesson(daily, "luan", new Set(), new Set())?.lesson.id, "daily-2026-10-28-en-listening");
+  assert.equal(
+    selectNextLesson(daily, "luan", new Set(["daily-2026-10-28-en-listening"]), new Set())?.lesson.id,
+    "daily-2026-10-28-en-writing",
+  );
+});
+
 test("Phi starts with Japanese Starter", () => {
   assert.equal(selectNextLesson(lessons, "phi", new Set(), new Set())?.lesson.id, "level-ja-starter-listening");
 });
