@@ -2,13 +2,18 @@
 
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import type { ChinesePractice } from "@/lib/dailyLessons";
-import { getHandwritingCharacters, normalizeChineseAnswer } from "@/lib/chineseWriting";
+import { getHandwritingCharacters, normalizeChineseAnswer, scheduleChineseRetry } from "@/lib/chineseWriting";
 
 type CheckState = "idle" | "correct" | "retry";
+type PracticePhase = "study" | "cards" | "sentence";
 
 export function ChineseWritingPractice({ practice }: { practice: ChinesePractice }) {
   const [revealed, setRevealed] = useState<Set<number>>(() => new Set());
-  const [recallMode, setRecallMode] = useState(false);
+  const [phase, setPhase] = useState<PracticePhase>("study");
+  const [cardQueue, setCardQueue] = useState<number[]>([]);
+  const [masteredCards, setMasteredCards] = useState<Set<number>>(() => new Set());
+  const [cardAnswer, setCardAnswer] = useState("");
+  const [cardCheckState, setCardCheckState] = useState<CheckState>("idle");
   const [answer, setAnswer] = useState("");
   const [checkState, setCheckState] = useState<CheckState>("idle");
   const characters = getHandwritingCharacters(practice.sentence);
@@ -16,6 +21,8 @@ export function ChineseWritingPractice({ practice }: { practice: ChinesePractice
   const [showGuide, setShowGuide] = useState(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
+  const currentCardIndex = cardQueue[0];
+  const currentCard = currentCardIndex === undefined ? undefined : practice.tokens[currentCardIndex];
 
   function toggleToken(index: number) {
     setRevealed((current) => {
@@ -29,6 +36,46 @@ export function ChineseWritingPractice({ practice }: { practice: ChinesePractice
   function checkAnswer() {
     const correct = normalizeChineseAnswer(answer) === normalizeChineseAnswer(practice.sentence);
     setCheckState(correct ? "correct" : "retry");
+  }
+
+  function beginCards() {
+    setCardQueue(practice.tokens.map((_, index) => index));
+    setMasteredCards(new Set());
+    setCardAnswer("");
+    setCardCheckState("idle");
+    setPhase("cards");
+  }
+
+  function beginSentenceRecall() {
+    setAnswer("");
+    setCheckState("idle");
+    setPhase("sentence");
+  }
+
+  function checkCard() {
+    if (!currentCard || currentCardIndex === undefined) return;
+    const correct = normalizeChineseAnswer(cardAnswer) === normalizeChineseAnswer(currentCard.hanzi);
+    setCardCheckState(correct ? "correct" : "retry");
+    if (correct) {
+      setMasteredCards((current) => new Set(current).add(currentCardIndex));
+    }
+  }
+
+  function advanceCard() {
+    if (currentCardIndex === undefined || cardCheckState === "idle") return;
+    const remaining = cardQueue.slice(1);
+    const nextQueue = cardCheckState === "retry"
+      ? scheduleChineseRetry(remaining, currentCardIndex)
+      : remaining;
+
+    if (nextQueue.length === 0) {
+      beginSentenceRecall();
+      return;
+    }
+
+    setCardQueue(nextQueue);
+    setCardAnswer("");
+    setCardCheckState("idle");
   }
 
   function point(event: ReactPointerEvent<HTMLCanvasElement>) {
@@ -83,7 +130,7 @@ export function ChineseWritingPractice({ practice }: { practice: ChinesePractice
         <p>Mỗi thẻ là một cụm có nghĩa, không nhất thiết là một chữ. Chạm thẻ để xem pinyin và nghĩa.</p>
       </header>
 
-      {!recallMode ? (
+      {phase === "study" ? (
         <>
           <div className="chinese-writing__tokens" aria-label="Các cụm trong câu mẫu">
             {practice.tokens.map((token, index) => {
@@ -99,10 +146,50 @@ export function ChineseWritingPractice({ practice }: { practice: ChinesePractice
             })}
           </div>
           <p className="chinese-writing__translation"><strong>Nghĩa câu:</strong> {practice.translation}</p>
-          <button className="button button--primary" type="button" onClick={() => { setRecallMode(true); setCheckState("idle"); }}>
-            Ẩn mẫu &amp; bắt đầu nhớ lại
+          <button className="button button--primary" type="button" onClick={beginCards}>
+            Bắt đầu thẻ nhớ
           </button>
         </>
+      ) : phase === "cards" && currentCard ? (
+        <div className="chinese-writing__card-round">
+          <div className="chinese-writing__progress" aria-label={`Đã nhớ ${masteredCards.size} trên ${practice.tokens.length} cụm`}>
+            <span>Thẻ nhớ</span>
+            <strong>{masteredCards.size}/{practice.tokens.length} cụm</strong>
+          </div>
+          <div className="chinese-writing__card">
+            <p className="lesson-step-kicker">NHỚ LẠI, KHÔNG CHÉP</p>
+            <p>Gõ cụm chữ Hán có nghĩa:</p>
+            <strong>“{currentCard.meaning}”</strong>
+            <label htmlFor="chinese-card-answer">Cụm chữ Hán</label>
+            <input
+              id="chinese-card-answer"
+              lang="zh-Hans"
+              autoComplete="off"
+              disabled={cardCheckState !== "idle"}
+              value={cardAnswer}
+              onChange={(event) => { setCardAnswer(event.target.value); setCardCheckState("idle"); }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && cardAnswer.trim() && cardCheckState === "idle") checkCard();
+              }}
+            />
+            {cardCheckState === "idle" ? (
+              <button className="button button--primary" type="button" onClick={checkCard} disabled={!cardAnswer.trim()}>
+                Kiểm tra thẻ
+              </button>
+            ) : (
+              <button className="button button--primary" type="button" onClick={advanceCard}>
+                {cardCheckState === "correct" ? "Thẻ tiếp theo" : "Để thẻ quay lại"}
+              </button>
+            )}
+            <p className={`chinese-writing__feedback chinese-writing__feedback--${cardCheckState}`} aria-live="polite">
+              {cardCheckState === "correct" && <>Đúng: <span lang="zh-Hans">{currentCard.hanzi}</span> · {currentCard.pinyin}</>}
+              {cardCheckState === "retry" && <>Chưa đúng. Đáp án là <span lang="zh-Hans">{currentCard.hanzi}</span> · {currentCard.pinyin}. Thẻ này sẽ quay lại sau tối đa hai thẻ khác.</>}
+            </p>
+          </div>
+          <button className="button button--ghost" type="button" onClick={beginSentenceRecall}>
+            Chỉ còn 5 phút? Luyện cả câu luôn
+          </button>
+        </div>
       ) : (
         <div className="chinese-writing__recall">
           <p><strong>Mẫu đã ẩn.</strong> Dựa vào nghĩa: “{practice.translation}”</p>
@@ -116,7 +203,7 @@ export function ChineseWritingPractice({ practice }: { practice: ChinesePractice
           />
           <div className="chinese-writing__actions">
             <button className="button button--primary" type="button" onClick={checkAnswer} disabled={!answer.trim()}>Kiểm tra</button>
-            <button className="button button--ghost" type="button" onClick={() => setRecallMode(false)}>Xem lại các cụm</button>
+            <button className="button button--ghost" type="button" onClick={() => setPhase("study")}>Xem lại các cụm</button>
           </div>
           <p className={`chinese-writing__feedback chinese-writing__feedback--${checkState}`} aria-live="polite">
             {checkState === "correct" && "Đúng câu mẫu. Tiếp theo hãy viết một câu mới ở phần bên dưới."}
