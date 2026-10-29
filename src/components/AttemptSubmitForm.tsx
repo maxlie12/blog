@@ -8,6 +8,7 @@ import type { SkillId } from "@/lib/lessonTypes";
 import { getDefaultLearningMethod, getLearningMethod, getLearningMethods, type LearningMethodId } from "@/lib/learningMethods";
 import { getLocalCompletionSummary, recordLocalCompletion, syncLocalProgress, type LocalCompletionSummary } from "@/lib/localLearningProgress";
 import { useLearnerProfile } from "@/lib/useLearnerProfile";
+import type { TranscribeMessage } from "@/lib/transcribe";
 
 const initialState: SubmitAttemptState = {};
 
@@ -18,12 +19,24 @@ const ANSWER_PLACEHOLDER: Record<SkillId, string> = {
   speaking: "Type out what you said (or a close summary) — this is what actually gets saved.",
 };
 
-function SpeakingRecorder() {
+const TRANSCRIBE_STATUS: Record<TranscribeMessage["status"], string> = {
+  loading: "Đang tải model chép lời (chỉ lần đầu)…",
+  transcribing: "Đang chép lời trên máy…",
+  done: "Đã thêm bản nháp vào ô bên dưới. Hãy nghe lại và sửa cho đúng điều bạn nói.",
+  error: "Không chép lời được trên trình duyệt này. Bạn vẫn có thể tự gõ bên dưới.",
+};
+
+function SpeakingRecorder({ language, onTranscript }: { language: string; onTranscript: (text: string) => void }) {
   const [recording, setRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [unsupported, setUnsupported] = useState(false);
+  const [transcribe, setTranscribe] = useState<TranscribeMessage | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const blobRef = useRef<Blob | null>(null);
+  const workerRef = useRef<Worker | null>(null);
+
+  useEffect(() => () => workerRef.current?.terminate(), []);
 
   async function startRecording() {
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
@@ -37,7 +50,9 @@ function SpeakingRecorder() {
       recorder.ondataavailable = (e) => chunksRef.current.push(e.data);
       recorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType || chunksRef.current[0]?.type || "audio/webm" });
+        blobRef.current = blob;
         setAudioUrl(URL.createObjectURL(blob));
+        setTranscribe(null);
         stream.getTracks().forEach((t) => t.stop());
       };
       recorder.start();
@@ -52,6 +67,29 @@ function SpeakingRecorder() {
     recorderRef.current?.stop();
     setRecording(false);
   }
+
+  async function transcribeRecording() {
+    if (!blobRef.current) return;
+    setTranscribe({ status: "loading", progress: 0 });
+    try {
+      // Whisper expects 16 kHz mono samples; the browser resamples while decoding.
+      const context = new AudioContext({ sampleRate: 16000 });
+      const audio = (await context.decodeAudioData(await blobRef.current.arrayBuffer())).getChannelData(0);
+      void context.close();
+      if (!workerRef.current) workerRef.current = new Worker(new URL("../lib/transcribeWorker.ts", import.meta.url), { type: "module" });
+      const worker = workerRef.current;
+      worker.onmessage = (event: MessageEvent<TranscribeMessage>) => {
+        setTranscribe(event.data);
+        if (event.data.status === "done") onTranscript(event.data.text);
+      };
+      worker.onerror = () => setTranscribe({ status: "error" });
+      worker.postMessage({ audio, language }, [audio.buffer]);
+    } catch {
+      setTranscribe({ status: "error" });
+    }
+  }
+
+  const transcribing = transcribe?.status === "loading" || transcribe?.status === "transcribing";
 
   if (unsupported) {
     return (
@@ -75,11 +113,22 @@ function SpeakingRecorder() {
           </button>
         )}
         {audioUrl && <><audio controls src={audioUrl} /><a href={audioUrl} download="speaking-recording">Download recording</a></>}
+        {audioUrl && !recording && (
+          <button type="button" className="button button--ghost button--sm" onClick={transcribeRecording} disabled={transcribing}>
+            {transcribing ? "Đang chép lời…" : "Chép lời trên máy"}
+          </button>
+        )}
       </div>
+      <p className="attempt-form__recorder-hint" aria-live="polite">
+        {transcribe && (transcribe.status === "loading" && transcribe.progress
+          ? `${TRANSCRIBE_STATUS.loading} ${transcribe.progress}%`
+          : TRANSCRIBE_STATUS[transcribe.status])}
+      </p>
       <p className="attempt-form__recorder-hint">
         This recording plays back locally, for your own self-check — it is <strong>not</strong>{" "}
-        uploaded or saved (no audio storage is set up yet). Type what you said in the transcript
-        field below; that transcript is what actually gets submitted.
+        uploaded or saved. &ldquo;Chép lời trên máy&rdquo; runs speech recognition inside this
+        browser (first use downloads about 100MB, then it is cached) and only drafts the
+        transcript field below; check and edit it, because that transcript is what gets submitted.
       </p>
     </div>
   );
@@ -105,6 +154,7 @@ function AttemptForm({
   const [minutes, setMinutes] = useState(5);
   const [completion, setCompletion] = useState<LocalCompletionSummary | null>(null);
   const [completionMessage, setCompletionMessage] = useState("");
+  const responseRef = useRef<HTMLTextAreaElement>(null);
   const completionId = "lesson:" + lessonId;
 
   useEffect(() => {
@@ -119,6 +169,15 @@ function AttemptForm({
   useEffect(() => {
     queueMicrotask(() => setCompletion(getLocalCompletionSummary(completionId, language)));
   }, [completionId, language]);
+
+  function appendTranscript(text: string) {
+    const field = responseRef.current;
+    if (!field || !text) return;
+    // Append so a transcript the learner already typed is never overwritten.
+    field.value = field.value.trim() ? `${field.value.trimEnd()}
+${text}` : text;
+    field.focus();
+  }
 
   function finishLesson() {
     try {
@@ -177,11 +236,12 @@ function AttemptForm({
       </fieldset>
       <div className="learning-method-action" aria-live="polite"><strong>Làm như sau:</strong> {method.action}</div>
 
-      {skill === "speaking" && <SpeakingRecorder />}
+      {skill === "speaking" && <SpeakingRecorder language={language} onTranscript={appendTranscript} />}
 
       <label className="field">
         <span>{method.outputLabel}</span>
         <textarea
+          ref={responseRef}
           name="response"
           rows={skill === "speaking" ? 3 : 6}
           placeholder={ANSWER_PLACEHOLDER[skill]}

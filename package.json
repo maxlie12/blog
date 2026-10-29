@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.18",
+    "@huggingface/transformers": "^3.8.1",
     "@libsql/client": "^0.18.0",
     "@neondatabase/serverless": "^1.2.0",
     "@prisma/adapter-libsql": "^6.19.3",

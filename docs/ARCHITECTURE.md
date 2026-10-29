@@ -151,7 +151,10 @@ InterviewRecord (SQLite, schema only — still no UI, see docs/ROADMAP.md)
 `material` can be an audio URL (played back with a plain `<audio>` element if it looks like one
 — see `src/components/LessonDetailView.tsx`); a Speaking attempt's `response` is always a typed
 transcript, even though the submission form offers an in-browser recording for the learner's
-own playback. Neither ever uploads a file — there is no blob storage configured (see
+own playback. The learner may draft that transcript with on-device Whisper
+(`src/lib/transcribeWorker.ts`, transformers.js in a Web Worker): only model files are
+downloaded from Hugging Face/jsDelivr; the audio and draft never leave the browser until the
+learner edits and submits the text. Neither ever uploads a file — there is no blob storage configured (see
 [ROADMAP.md](ROADMAP.md)), so nothing would be able to persist one. See
 [DECISIONS.md](DECISIONS.md).
 
