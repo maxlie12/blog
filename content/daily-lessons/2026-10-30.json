@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-30",
+  "title": "Mini-test 7 ngày — kiểm tra nhớ thật, không học bài mới",
+  "kind": "weekly-test",
+  "note": "Mốc ôn cách quãng 7 ngày tính từ 09/10/2026. Chưa có bài làm mới hoặc bằng chứng Done được gửi trong chat, nên giữ B1+ tự đánh giá, không tăng độ khó và không suy ra tiến bộ. Làm nhiệm vụ Anh chính khi rảnh; tiếng Trung là tùy chọn, không cần học bù.",
+  "lessons": [
+    {
+      "id": "daily-2026-10-30-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Nhiệm vụ chính 7–10 phút — nghe, kiểm chứng và kể lại",
+      "level": "B1+ self-assessed / weekly review",
+      "instructions": "Mini-test do trợ lý soạn, không phải đề British Council/IELTS/TOEIC chính thức. Dùng lại nguồn British Council miễn phí có audio, transcript và bài tương tác; không mở transcript ở lượt đầu. Bài này ôn lại thay vì thêm nội dung mới.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b1/phone-call-customer",
+      "exercises": "1) Nghe 45–60 giây đầu đúng một lượt và ghi hai ý: Who is calling? What does the caller need? 2) Mở transcript, tìm hai cụm ngắn làm bằng chứng và đánh dấu từng ý Correct / Partly correct / Incorrect. 3) Đóng transcript, nói lại nội dung trong 30–45 giây. 4) Viết 40–60 từ: tóm tắt cuộc gọi và thêm một câu bạn sẽ nói nếu là nhân viên tiếp nhận. Không dùng AI sửa bản đầu.",
+      "completionCriteria": "Lưu bản nghe ban đầu, hai cụm bằng chứng, nhãn tự kiểm tra và đoạn 40–60 từ. Ghi thêm số lượt nghe, số phút thực học và xác nhận đã nói 30–45 giây rồi mới bấm Done. Việc Done không tự suy ra CEFR hoặc tiến bộ.",
+      "takeaway": {
+        "phrase": "The caller needs …",
+        "pattern": "The caller needs …, so I would …",
+        "reusePrompt": "Đổi sang một cuộc gọi báo lỗi frontend: nêu vấn đề, nhu cầu của người gọi và hành động tiếp theo của bạn."
+      }
+    },
+    {
+      "id": "daily-2026-10-30-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — nhớ vị trí rồi đổi đồ vật",
+      "level": "Beginner review",
+      "instructions": "Bài ôn do trợ lý soạn, không phải bài HelloChinese chính thức. Không nhìn mẫu trước; tự nhớ lại một câu hỏi vị trí và một câu trả lời. HelloChinese có phần miễn phí và nội dung Premium, với audio người bản ngữ trong ứng dụng nếu bạn muốn nghe lại.",
+      "material": "https://www.hellochinese.cc/",
+      "exercises": "Từ trí nhớ, gõ một cặp hỏi–đáp dùng 在哪儿 và 在. Sau đó thay cả đồ vật lẫn vị trí để tạo cặp thứ hai; chọn trong 台灯、筷子、椅子、窗户 và 上、旁边、里面. Đọc cặp mới thành tiếng một lượt. Viết tay một chữ là tùy chọn, không lưu và không tự chấm.",
+      "completionCriteria": "Chỉ bấm Done sau khi tự gõ cặp hỏi–đáp thứ hai và đọc không nhìn mẫu. Nhận diện hoặc chép lại câu cũ chưa đủ để ghi Done.",
+      "takeaway": {
+        "phrase": "……在哪儿？",
+        "pattern": "A 在哪儿？A 在 B 上 / 旁边 / 里面。",
+        "reusePrompt": "Đổi A và B để hỏi một đồ vật thật đang ở gần bạn."
+      },
+      "chinesePractice": {
+        "sentence": "台灯在哪儿？台灯在桌子旁边。",
+        "translation": "Đèn bàn ở đâu? Đèn bàn ở bên cạnh cái bàn.",
+        "tokens": [
+          {
+            "hanzi": "台灯",
+            "pinyin": "táidēng",
+            "meaning": "đèn bàn"
+          },
+          {
+            "hanzi": "在哪儿",
+            "pinyin": "zài nǎr",
+            "meaning": "ở đâu"
+          },
+          {
+            "hanzi": "在",
+            "pinyin": "zài",
+            "meaning": "ở / nằm tại"
+          },
+          {
+            "hanzi": "桌子",
+            "pinyin": "zhuōzi",
+            "meaning": "cái bàn"
+          },
+          {
+            "hanzi": "旁边",
+            "pinyin": "pángbiān",
+            "meaning": "bên cạnh"
+          }
+        ],
+        "outputPrompt": "Không nhìn mẫu, viết một cặp hỏi–đáp mới; đổi cả đồ vật và vị trí, rồi đọc thành tiếng một lượt."
+      }
+    }
+  ]
+}
