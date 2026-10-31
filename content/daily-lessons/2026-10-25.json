@@ -29,7 +29,7 @@
       "instructions": "Bài do trợ lý soạn. HelloChinese có tải miễn phí, video người bản ngữ và luyện nhận diện giọng nói; một số nội dung cần Premium. Nếu có app, nghe một mẫu gọi món của người bản ngữ rồi đóng chữ.",
       "material": "https://www.hellochinese.cc/vi",
       "exercises": "Nói một lượt nhìn mẫu rồi một lượt che chữ: 我要一杯茶，谢谢。Wǒ yào yì bēi chá, xièxie. Đổi thành hai cốc cà phê: 我要两杯咖啡，谢谢。Wǒ yào liǎng bēi kāfēi, xièxie. Cuối cùng hỏi: 多少钱？Duōshao qián?",
-      "completionCriteria": "Bấm Done sau một lượt nhìn và một lượt che chữ. Gửi audio 15–20 giây nếu muốn sửa thanh điệu; không dùng văn bản để kết luận phát âm.",
+      "completionCriteria": "Bấm Done sau một lượt nhìn và một lượt che chữ. Gửi ChatGPT audio 15–20 giây nếu muốn sửa thanh điệu; không dùng văn bản để kết luận phát âm.",
       "takeaway": {
         "phrase": "我要……，谢谢。Wǒ yào …, xièxie.",
         "pattern": "我要 + số lượng + 杯 + đồ uống。",

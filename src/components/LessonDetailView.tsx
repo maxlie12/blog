@@ -63,7 +63,7 @@ export function LessonDetailView({
   return (
     <article className="lesson-detail" id="lesson-start">
       <Link href="/learning" className="lesson-detail__back">
-        ← Back to lessons
+        ← Về Learning
       </Link>
 
       <header className="lesson-detail__header">
@@ -114,21 +114,17 @@ export function LessonDetailView({
         </section>
       )}
 
-      <div className="lesson-detail__actions">
+      {attempts.length > 0 && <div className="lesson-detail__actions">
         {reviewedCount > 0 ? (
           <p className="lesson-detail__status" role="status">
-            ✓ Completed — {reviewedCount} reviewed attempt{reviewedCount === 1 ? "" : "s"}
-          </p>
-        ) : attempts.length > 0 ? (
-          <p className="lesson-detail__status lesson-detail__status--pending" role="status">
-            {attempts.length} attempt{attempts.length === 1 ? "" : "s"} logged, awaiting review
+            ✓ Đã hoàn thành — {reviewedCount} bài đã được review
           </p>
         ) : (
           <p className="lesson-detail__status lesson-detail__status--pending" role="status">
-            Chưa có bài nộp lên server; tiến độ tự học trên thiết bị hiển thị bên dưới
+            {attempts.length} bài đã nộp, đang chờ review
           </p>
         )}
-      </div>
+      </div>}
 
       {!canSubmit && <PracticeCoach key={lesson.id} lessonId={lesson.id} skill={lesson.skill} language={lesson.language} takeaway={lesson.takeaway} chinesePractice={lesson.chinesePractice} />}
 
@@ -137,11 +133,7 @@ export function LessonDetailView({
           <h2>Bước 3 · Tạo đầu ra và nộp bài</h2>
           <AttemptSubmitForm lessonId={lesson.id} skill={lesson.skill} language={lesson.language} />
         </section>
-      ) : (
-        <p className="lesson-detail__disclaimer">
-          Bản viết chỉ lưu trên trình duyệt. Metadata Done có thể được đồng bộ khi máy chủ sẵn sàng; review và điểm CEFR vẫn là luồng riêng.
-        </p>
-      )}
+      ) : null}
 
       {canSubmit && lesson.takeaway && <LessonTakeaway lessonId={lesson.id} language={lesson.language} takeaway={lesson.takeaway} />}
 
@@ -149,7 +141,7 @@ export function LessonDetailView({
 
       {attempts.length > 0 && (
         <section className="lesson-detail__section">
-          <h2>Attempt history</h2>
+          <h2>Bài đã nộp</h2>
           <ul className="attempt-history">
             {attempts.map((a) => (
               <li key={a.id}>
@@ -166,8 +158,7 @@ export function LessonDetailView({
       )}
 
       <p className="lesson-detail__disclaimer">
-        Nút Done ghi nhận hoạt động tự học trên thiết bị; mỗi bài chỉ được ghi một lần.
-        Điểm CEFR hoặc trạng thái reviewed vẫn cần bài làm thực tế và phản hồi riêng.
+        Done chỉ ghi nhận thói quen tự học (mỗi bài một lần); trình độ CEFR/HSK/JLPT chỉ dựa trên bài đã được review.
       </p>
     </article>
   );

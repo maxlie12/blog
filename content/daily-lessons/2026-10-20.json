@@ -35,7 +35,7 @@
       "instructions": "Bài do trợ lý soạn. Chuẩn bị 20 giây, sau đó nói 45–60 giây; không viết script đầy đủ.",
       "material": null,
       "exercises": "Dùng khung: The main point is … / One example is … / In my work, I would … . Kể lại một ý từ đoạn nghe rồi liên hệ lúc bạn cần tập trung xử lý một bug Angular nhưng vẫn phải nhận thông báo khẩn.",
-      "completionCriteria": "Gửi audio hoặc transcript thật đã nói và ghi rõ có nhìn ghi chú không. Audio mới đủ để nhận xét phát âm/nhịp; transcript chỉ dùng sửa nội dung, lập luận và ngữ pháp."
+      "completionCriteria": "Gửi ChatGPT audio hoặc transcript thật đã nói và ghi rõ có nhìn ghi chú không. Audio mới đủ để nhận xét phát âm/nhịp; transcript chỉ dùng sửa nội dung, lập luận và ngữ pháp."
     },
     {
       "id": "daily-2026-10-20-en-writing",
@@ -57,7 +57,7 @@
       "instructions": "Bài do trợ lý soạn. HelloChinese có video người bản ngữ và nhận diện giọng nói; app tải miễn phí nhưng quyền truy cập đầy đủ có thể cần Premium. Nếu có bài nhà hàng/gọi món, nghe mẫu người bản ngữ hai lượt.",
       "material": "https://www.hellochinese.cc/vi",
       "exercises": "Nói: 请问，这个多少钱？我要一杯茶，少糖，谢谢。Qǐngwèn, zhège duōshao qián? Wǒ yào yì bēi chá, shǎo táng, xièxie. Sau đó thay 茶 bằng 咖啡 và 一杯 bằng 两杯.",
-      "completionCriteria": "Gửi audio 15–25 giây hoặc chữ Hán+pinyin và nói rõ có nhìn mẫu không. Phản hồi sẽ ưu tiên một lỗi thanh điệu hoặc trật tự từ; không đưa đáp án trước khi bạn làm."
+      "completionCriteria": "Gửi ChatGPT audio 15–25 giây hoặc chữ Hán+pinyin và nói rõ có nhìn mẫu không. Phản hồi sẽ ưu tiên một lỗi thanh điệu hoặc trật tự từ; không đưa đáp án trước khi bạn làm."
     }
   ]
 }

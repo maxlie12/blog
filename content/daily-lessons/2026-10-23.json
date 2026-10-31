@@ -45,7 +45,7 @@
       "instructions": "Bài do trợ lý soạn. Che transcript và ghi chú; nói 30–45 giây từ trí nhớ, không đọc thành tiếng bản viết.",
       "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
       "exercises": "Nói theo khung: The speaker suggested … because … / A possible drawback is … / At work, I could test this by … . Đổi tình huống sang một focus block khi làm Angular hoặc học ngoại ngữ.",
-      "completionCriteria": "Bấm Done sau một lượt nói thật. Gửi audio nếu muốn nhận xét phát âm và nhịp; gửi transcript nếu chỉ muốn sửa nội dung hoặc ngữ pháp.",
+      "completionCriteria": "Bấm Done sau một lượt nói thật. Gửi ChatGPT audio nếu muốn nhận xét phát âm và nhịp; gửi transcript nếu chỉ muốn sửa nội dung hoặc ngữ pháp.",
       "takeaway": {
         "phrase": "A possible drawback is …",
         "pattern": "I would … because …, but …",
@@ -77,7 +77,7 @@
       "instructions": "Bài do trợ lý soạn. HelloChinese tải miễn phí và có video/audio người bản ngữ; một số nội dung đầy đủ cần Premium. Nghe lại mẫu gọi món trong app nếu có, rồi đóng chữ.",
       "material": "https://www.hellochinese.cc/vi",
       "exercises": "Từ trí nhớ, nói một câu gọi một cốc trà và một câu đổi thành hai cốc cà phê. Sau đó thêm 请问，多少钱？Qǐngwèn, duōshao qián? Nếu quên, mở lại mẫu sau lượt đầu rồi nói lại đúng một lần.",
-      "completionCriteria": "Bấm Done sau hai lượt: một lượt nhớ lại và một lượt sửa. Gửi audio 15–20 giây nếu muốn sửa thanh điệu; văn bản không đủ để đánh giá phát âm.",
+      "completionCriteria": "Bấm Done sau hai lượt: một lượt nhớ lại và một lượt sửa. Gửi ChatGPT audio 15–20 giây nếu muốn sửa thanh điệu; văn bản không đủ để đánh giá phát âm.",
       "takeaway": {
         "phrase": "请问，多少钱？Qǐngwèn, duōshao qián?",
         "pattern": "我要 + số lượng + lượng từ + món, 谢谢。",

@@ -35,7 +35,7 @@
       "instructions": "Bài do trợ lý soạn. Đóng transcript, chuẩn bị 20 giây rồi thu âm 45–60 giây; không viết script hoàn chỉnh.",
       "material": null,
       "exercises": "Phần 1: retell one useful idea from the podcast. Phần 2: mở rộng: In an Angular project, when should a developer stay reachable and when should notifications be muted? Give one reason and one trade-off.",
-      "completionCriteria": "Gửi audio hoặc transcript nguyên bản và ghi rõ có nhìn ghi chú hay không. Audio mới đủ để nhận xét phát âm/nhịp; transcript chỉ dùng sửa nội dung và ngữ pháp."
+      "completionCriteria": "Gửi ChatGPT audio hoặc transcript nguyên bản và ghi rõ có nhìn ghi chú hay không. Audio mới đủ để nhận xét phát âm/nhịp; transcript chỉ dùng sửa nội dung và ngữ pháp."
     },
     {
       "id": "daily-2026-10-17-en-writing",
@@ -56,7 +56,7 @@
       "level": "Beginner",
       "instructions": "Bài do trợ lý soạn. HelloChinese có bài ngắn, nhận diện giọng nói và video người bản ngữ; phần miễn phí có thể dùng, một số nội dung nâng cao cần Premium. Nếu mở được bài gọi món, nghe mẫu người bản ngữ hai lượt trước khi nói.",
       "material": "https://www.hellochinese.cc/",
-      "exercises": "Không nhìn mẫu, nói 3 câu: 我要一杯咖啡，不要糖。→ đổi 咖啡 thành 茶 → đổi 一杯 thành 两杯. Sau đó tự tạo một câu hỏi với 吗 để xác nhận đồ uống. Có thể gửi audio 15–25 giây hoặc chữ Hán+pinyin.",
+      "exercises": "Không nhìn mẫu, nói 3 câu: 我要一杯咖啡，不要糖。→ đổi 咖啡 thành 茶 → đổi 一杯 thành 两杯. Sau đó tự tạo một câu hỏi với 吗 để xác nhận đồ uống. Có thể gửi ChatGPT audio 15–25 giây hoặc chữ Hán+pinyin.",
       "completionCriteria": "Gửi bản đầu và ghi rõ có nhìn mẫu hay không. Chưa có đáp án trước khi làm; phản hồi sẽ ưu tiên một lỗi thanh điệu hoặc trật tự từ."
     }
   ]

@@ -24,7 +24,7 @@
       "instructions": "Bài do trợ lý soạn. HelloChinese có audio/video người bản ngữ và bài luyện nói; tải miễn phí, một số nội dung đầy đủ cần Premium. Nếu mở app, nghe mẫu giới thiệu hoặc gọi món hai lượt.",
       "material": "https://www.hellochinese.cc/vi",
       "exercises": "Nói: 你好，我叫小林。我要一杯茶，谢谢。Nǐ hǎo, wǒ jiào Xiǎolín. Wǒ yào yì bēi chá, xièxie. Sau đó thay 茶 bằng 咖啡 hoặc đổi tên thành tên của bạn.",
-      "completionCriteria": "Bấm Done sau khi đã nói ít nhất hai lượt. Nếu muốn sửa phát âm, gửi audio 15–20 giây và nói rõ có nhìn mẫu không; văn bản không đủ để chấm thanh điệu."
+      "completionCriteria": "Bấm Done sau khi đã nói ít nhất hai lượt. Nếu muốn sửa phát âm, gửi ChatGPT audio 15–20 giây và nói rõ có nhìn mẫu không; văn bản không đủ để chấm thanh điệu."
     }
   ]
 }

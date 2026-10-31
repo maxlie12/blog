@@ -3324,3 +3324,9 @@ body { line-height: 1.65; }
     text-align: left;
   }
 }
+
+/* Lesson page touch targets: 44px minimum; 16px text stops iOS zooming into focused fields. */
+.lesson-detail__back { display: inline-flex; align-items: center; min-height: 44px; }
+.lesson-detail select,
+.lesson-detail input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]) { min-height: 44px; font-size: 1rem; }
+.lesson-detail .attempt-form__recorder-controls a { display: inline-flex; align-items: center; min-height: 44px; }

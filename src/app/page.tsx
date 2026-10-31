@@ -4,8 +4,8 @@ import { getPublicArticles } from "@/lib/posts";
 import { getAllLessons } from "@/lib/lessonsData";
 import { BlogCard } from "@/components/BlogCard";
 import { MountainJourney } from "@/components/MountainJourney";
-import { SkillCards, LessonPicker } from "@/components/LearningExplorer";
-import { LessonFilterProvider } from "@/lib/lessonFilter";
+import { StartLearning } from "@/components/StartLearning";
+import { getAuthenticatedLearnerId } from "@/lib/learnerAuth";
 import { getJourneyCheckpoints } from "@/lib/journeyData";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   const [articles, lessons, checkpoints] = await Promise.all([
     getPublicArticles(),
-    getAllLessons(),
+    getAuthenticatedLearnerId().then((learnerId) => getAllLessons({ learnerId })),
     getJourneyCheckpoints(),
   ]);
   const latestArticles = articles.slice(0, 3);
@@ -56,20 +56,18 @@ export default async function Home() {
         ))}
       </section>
 
-      <LessonFilterProvider>
-        <section className="home-grid__journey" aria-label="Learning journey">
-          <div className="journey-hero">
-            <h2>The ascent to C1</h2>
-            <p>A long-term journey to clearer expression, deeper understanding, and a more open world.</p>
-            <MountainJourney checkpoints={checkpoints} />
-          </div>
-          <SkillCards lessons={lessons} />
-        </section>
+      <section className="home-grid__journey" aria-label="Learning journey">
+        <div className="journey-hero">
+          <h2>The ascent to C1</h2>
+          <p>A long-term journey to clearer expression, deeper understanding, and a more open world.</p>
+          <MountainJourney checkpoints={checkpoints} />
+        </div>
+      </section>
 
-        <aside className="home-grid__lessons" aria-label="Lesson picker">
-          <LessonPicker lessons={lessons} compact />
-        </aside>
-      </LessonFilterProvider>
+      <aside className="home-grid__lessons" aria-label="Học hôm nay">
+        <StartLearning lessons={lessons} />
+        <Link href="/learning" className="field-link">Xem tiến độ và kho bài →</Link>
+      </aside>
     </div>
   );
 }

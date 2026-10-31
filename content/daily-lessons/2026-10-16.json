@@ -33,7 +33,7 @@
       "level": "B1+ practice",
       "instructions": "Bài do trợ lý soạn. Đóng nguồn, chuẩn bị 20 giây rồi nói 30–45 giây. Nếu chưa nghe/đọc, nói về trải nghiệm của bạn và ghi rõ chưa dùng nguồn.",
       "material": null,
-      "exercises": "Retell the topic in one sentence, then answer: During an Angular task, which notification would you silence, which one would you keep, and why? Gửi audio để được nhận xét độ rõ, nhịp và phát âm; bản chép lời chỉ đủ sửa nội dung/ngữ pháp.",
+      "exercises": "Retell the topic in one sentence, then answer: During an Angular task, which notification would you silence, which one would you keep, and why? Gửi ChatGPT audio để được nhận xét độ rõ, nhịp và phát âm; bản chép lời chỉ đủ sửa nội dung/ngữ pháp.",
       "id": "daily-2026-10-16-en-speaking",
       "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có mở transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ chỉ ra điểm đúng, sửa một lỗi ưu tiên và giao một bài luyện lại 2 phút. Bản nháp chưa tính; sau khi luyện lại, bấm Done để ghi streak trên thiết bị. Đây chưa phải kết quả đã review hay bằng chứng CEFR."
     },
@@ -55,7 +55,7 @@
       "level": "Beginner",
       "instructions": "Bài do trợ lý soạn. HelloChinese có phần miễn phí và Premium; dùng audio/video người bản ngữ của bài gọi món nếu đang mở được, không cần mua gói. Nghe và nhại hai lượt trước khi che chữ.",
       "material": "https://www.hellochinese.cc/",
-      "exercises": "Mẫu: 我要一杯咖啡，不要糖。Wǒ yào yì bēi kāfēi, bú yào táng. (Tôi muốn một cốc cà phê, không đường.) Che chữ rồi đổi 咖啡 thành 茶; sau đó đổi 一杯 thành 两杯. Gửi audio 15–20 giây hoặc hai câu/pinyin và ghi rõ có nhìn mẫu không.",
+      "exercises": "Mẫu: 我要一杯咖啡，不要糖。Wǒ yào yì bēi kāfēi, bú yào táng. (Tôi muốn một cốc cà phê, không đường.) Che chữ rồi đổi 咖啡 thành 茶; sau đó đổi 一杯 thành 两杯. Gửi ChatGPT audio 15–20 giây hoặc hai câu/pinyin và ghi rõ có nhìn mẫu không.",
       "id": "daily-2026-10-16-zh-speaking",
       "completionCriteria": "Gửi bản đầu, số phút thực tế và mức hỗ trợ (số lần nghe, có mở transcript/tra từ không) về ChatGPT. Chưa có đáp án kèm đề; sau khi nhận bài, trợ lý sẽ chỉ ra điểm đúng, sửa một lỗi ưu tiên và giao một bài luyện lại 2 phút. Bản nháp chưa tính; sau khi luyện lại, bấm Done để ghi streak trên thiết bị. Đây chưa phải kết quả đã review hay bằng chứng CEFR."
     }

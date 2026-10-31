@@ -6,6 +6,7 @@ import type { SkillId } from "@/lib/lessonTypes";
 import type { ChinesePractice, LessonTakeaway } from "@/lib/dailyLessons";
 import { announceResponseStarted } from "@/components/LessonFlowGuide";
 import { ChineseWritingPractice } from "@/components/ChineseWritingPractice";
+import { SpeakingRecorder } from "@/components/SpeakingRecorder";
 import { getDefaultLearningMethod, getLearningMethod, type LearningMethodId } from "@/lib/learningMethods";
 import { getLocalCompletionSummary, recordLocalCompletion, syncLocalProgress, type LocalCompletionSummary } from "@/lib/localLearningProgress";
 import { readProfileStorage, writeProfileStorage } from "@/lib/learnerProfiles";
@@ -15,8 +16,8 @@ type Saved = { version: 1; lessonId: string; response: string; minutes: number; 
 const drills: Record<Gap, string> = {
   meaning: "2 phút: đóng nguồn, viết ý chính bằng một câu và một chi tiết làm bằng chứng. Mở lại đúng đoạn chưa hiểu để kiểm tra, rồi đóng nguồn và nói lại.",
   reasoning: "3 phút: đổi từ công việc sang một tình huống đời sống. Nói ba câu: lựa chọn → vì sao → cách kiểm tra. Thêm một bất tiện nếu có thời gian.",
-  language: "3 phút: chọn đúng một câu bạn chưa chắc. Gửi câu đó để nhận sửa, rồi tự viết hai câu mới dùng cùng cấu trúc. Không chép toàn bộ bài mẫu.",
-  delivery: "3 phút: chọn một câu từ audio người bản ngữ, nghe và nhại hai lượt. Che chữ, nói lại, rồi thay một chi tiết. Muốn đánh giá phát âm cần gửi audio thực tế.",
+  language: "3 phút: chọn đúng một câu bạn chưa chắc. Gửi câu đó cho ChatGPT để nhận sửa, rồi tự viết hai câu mới dùng cùng cấu trúc. Không chép toàn bộ bài mẫu.",
+  delivery: "3 phút: chọn một câu từ audio người bản ngữ, nghe và nhại hai lượt. Che chữ, nói lại, rồi thay một chi tiết. Muốn được sửa phát âm, gửi ChatGPT audio thật (app không nhận audio).",
 };
 const purpose: Record<SkillId, string> = {
   listening: "Mục tiêu là bắt ý chính và bằng chứng từ âm thanh, chưa cần hiểu mọi từ.",
@@ -41,8 +42,8 @@ const languageChecks: Partial<Record<string, string[]>> = {
   ja: ["Can-do — hoàn thành đúng việc giao tiếp", "Âm và nhịp — đối chiếu audio bản ngữ", "Kana/romaji — ghi đúng hệ chữ thực tế đã dùng", "Đổi tình huống — thay một chi tiết khi che mẫu"],
 };
 const languageDrill: Partial<Record<string, string>> = {
-  zh: "2–3 phút: giữ mẫu của bài đang học, đổi đúng một chi tiết như đồ uống hoặc số lượng. Nghe audio, che chữ và nói hai câu mới. Gửi audio nếu muốn sửa thanh điệu.",
-  ja: "2–3 phút: giữ mẫu chào hỏi/tự giới thiệu, đổi tên hoặc quốc gia. Nghe audio, nhại hai lượt, che chữ rồi nói lại. Ghi rõ dùng kana hay romaji; gửi audio nếu muốn sửa phát âm.",
+  zh: "2–3 phút: giữ mẫu của bài đang học, đổi đúng một chi tiết như đồ uống hoặc số lượng. Nghe audio, che chữ và nói hai câu mới. Gửi ChatGPT audio nếu muốn sửa thanh điệu.",
+  ja: "2–3 phút: giữ mẫu chào hỏi/tự giới thiệu, đổi tên hoặc quốc gia. Nghe audio, nhại hai lượt, che chữ rồi nói lại. Ghi rõ dùng kana hay romaji; gửi ChatGPT audio nếu muốn sửa phát âm.",
 };
 
 export function PracticeCoach({ lessonId, skill, language, takeaway, chinesePractice }: { lessonId: string; skill: SkillId; language: string; takeaway?: LessonTakeaway; chinesePractice?: ChinesePractice }) {
@@ -101,6 +102,15 @@ export function PracticeCoach({ lessonId, skill, language, takeaway, chinesePrac
     return () => window.clearTimeout(timer);
   }, [focus, gap, lessonId, method.id, minutes, response, revision, sourceResult, storageKey, support]);
 
+  function appendTranscript(text: string) {
+    if (!text) return;
+    // Append so an answer the learner already typed is never overwritten.
+    setResponse((current) => current.trim() ? `${current.trimEnd()}
+${text}` : text);
+    announceResponseStarted(lessonId);
+    document.getElementById(lessonId + "-response")?.focus();
+  }
+
   function finishLesson(event: FormEvent) {
     event.preventDefault();
     if (!response.trim()) { setMessage("Hãy viết hoặc ghi lại một đầu ra ngắn trước khi hoàn thành."); return; }
@@ -131,11 +141,12 @@ export function PracticeCoach({ lessonId, skill, language, takeaway, chinesePrac
   return <section className="lesson-detail__section" id="lesson-step-output">
     <p className="lesson-step-kicker">BƯỚC 3 · TẠO ĐẦU RA</p>
     <h2>Làm một đầu ra ngắn rồi ghi Done</h2>
-    <p>Bài tập và hướng dẫn do trợ lý soạn. Câu trả lời tự lưu trên trình duyệt này; máy chủ chỉ có thể đồng bộ metadata Done, không lưu nội dung hoặc chấm điểm. Không nhập thông tin công việc nhạy cảm.</p>
+    <p>Câu trả lời chỉ lưu trên trình duyệt này, không gửi lên máy chủ. Đừng nhập thông tin công việc nhạy cảm.</p>
     <div className="learning-transfer"><h3>Trước khi làm: bài này dùng để làm gì?</h3><p>{purpose[skill]}</p><p><strong>Khung đầu ra:</strong> {frames[skill]}. Khung là bản đồ để bạn tự tạo câu, không phải đoạn mẫu để chép.</p></div>
     <div className="learning-method-action"><strong>Cách làm được đề xuất:</strong> {method.action}</div>
     {chinesePractice && <ChineseWritingPractice practice={chinesePractice} />}
     <form onSubmit={finishLesson}>
+      {skill === "speaking" && <SpeakingRecorder language={language} onTranscript={appendTranscript} />}
       <p><label htmlFor={lessonId + "-response"}>{chinesePractice?.outputPrompt ?? method.outputLabel}</label></p>
       <textarea id={lessonId + "-response"} rows={6} maxLength={10000} required value={response} onFocus={() => announceResponseStarted(lessonId)} onChange={e => setResponse(e.target.value)} style={{ width: "100%" }} />
       <p className="lesson-detail__note">Bản nháp tự lưu khi bạn gõ. Khi đã có đầu ra thật, bấm nút dưới để ghi Done.</p>
@@ -165,7 +176,6 @@ export function PracticeCoach({ lessonId, skill, language, takeaway, chinesePrac
             <button className="button button--ghost" type="button" onClick={reviewLesson}>Xem lại bài</button>
           </div>
         </div>}
-        <p className="lesson-completion__note">Done được ghi trên thiết bị trước rồi mới thử đồng bộ metadata khi có mạng; đây là hoạt động học, không phải điểm CEFR/HSK/JLPT.</p>
       </div>
       <details className="practice-review">
         <summary>Tự kiểm tra hoặc luyện lại · tùy chọn</summary>

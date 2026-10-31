@@ -35,7 +35,7 @@
       "instructions": "Bài do trợ lý soạn. Không nhìn transcript. Dùng ý vừa kiểm chứng để nói 30–45 giây.",
       "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast",
       "exercises": "Nói theo khung: The speaker changed … / This mattered because … / In my case, I would … . Thêm một bất tiện thực tế thay vì cố nói dài.",
-      "completionCriteria": "Bấm Done sau một lượt nói thật. Muốn nhận xét phát âm/nhịp, gửi audio và nói rõ có nhìn ghi chú không; transcript chỉ dùng sửa nội dung và ngữ pháp."
+      "completionCriteria": "Bấm Done sau một lượt nói thật. Muốn nhận xét phát âm/nhịp, gửi ChatGPT audio và nói rõ có nhìn ghi chú không; transcript chỉ dùng sửa nội dung và ngữ pháp."
     },
     {
       "id": "daily-2026-10-22-en-writing",
@@ -57,7 +57,7 @@
       "instructions": "Bài do trợ lý soạn. HelloChinese tải miễn phí, có audio/video người bản ngữ và luyện nói; một số nội dung đầy đủ cần Premium. Nếu mở app, nghe mẫu gọi món hai lượt.",
       "material": "https://www.hellochinese.cc/vi",
       "exercises": "Nói: 我要一杯茶，谢谢。Wǒ yào yì bēi chá, xièxie. Sau đó đổi 茶 thành 咖啡, rồi đổi 一杯 thành 两杯: 我要两杯咖啡，谢谢。",
-      "completionCriteria": "Bấm Done sau khi nói ba biến thể. Muốn sửa thanh điệu, gửi audio 15–20 giây và nói rõ có nhìn mẫu không; văn bản không đủ để chấm phát âm."
+      "completionCriteria": "Bấm Done sau khi nói ba biến thể. Muốn sửa thanh điệu, gửi ChatGPT audio 15–20 giây và nói rõ có nhìn mẫu không; văn bản không đủ để chấm phát âm."
     }
   ]
 }

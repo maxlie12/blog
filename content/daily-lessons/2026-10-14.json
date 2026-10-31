@@ -56,7 +56,7 @@
       "level": "Beginner",
       "instructions": "HelloChinese có phần miễn phí và phần Premium trả phí. Dùng audio/video người bản ngữ của bài gọi món đang mở được; không cần mua gói cho phiên này. Mẫu do trợ lý soạn. Nếu không có bài phù hợp, ôn bài gọi món đã mở được thay vì cố đọc mẫu không có audio.",
       "material": "https://www.hellochinese.cc/",
-      "exercises": "我要一杯茶。Wǒ yào yì bēi chá. — Tôi muốn một cốc trà.\n我要两杯茶。Wǒ yào liǎng bēi chá. — Tôi muốn hai cốc trà.\nNghe mẫu, nhại hai lượt, che chữ rồi đổi 茶 thành 咖啡 (kāfēi). Đầu ra: nói hai câu đổi món/số lượng hoặc gửi audio 15–20 giây.",
+      "exercises": "我要一杯茶。Wǒ yào yì bēi chá. — Tôi muốn một cốc trà.\n我要两杯茶。Wǒ yào liǎng bēi chá. — Tôi muốn hai cốc trà.\nNghe mẫu, nhại hai lượt, che chữ rồi đổi 茶 thành 咖啡 (kāfēi). Đầu ra: nói hai câu đổi món/số lượng hoặc gửi ChatGPT audio 15–20 giây.",
       "completionCriteria": "Lưu bản đầu và thời gian thực tế trên trình duyệt; tự kiểm tra key rồi luyện lại một điểm. Gửi về ChatGPT để review. Bản nháp chưa tính; sau khi luyện lại, bấm Done để ghi streak trên thiết bị. Review vẫn là bước riêng."
     },
     {
