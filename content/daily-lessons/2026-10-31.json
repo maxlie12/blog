@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-31",
+  "title": "Đọc 10 phút — AI đã thay đổi nghề dev thế nào",
+  "kind": "practice",
+  "note": "Bài đọc tiếng Anh dùng bài blog do trợ lý viết từ các nguồn đã dẫn. Giữ B1+ tự đánh giá; đây là luyện đọc và dùng lại cấu trúc, không phải bài kiểm tra. Không cần đọc hết nếu chỉ có 5 phút: phần 2 và 4 là đủ.",
+  "lessons": [
+    {
+      "id": "daily-2026-10-31-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Đọc 10 phút — AI thay đổi nghề dev ra sao",
+      "level": "B1+ / B2 source",
+      "instructions": "Bài đọc do trợ lý viết từ các nguồn đã dẫn trong bài, không phải đề thi chính thức. Đọc lướt sáu tiêu đề trước (1 phút), rồi đọc kỹ phần 2 và phần 4. Lần đọc đầu đừng tra từ; từ in đậm có nghĩa ở cuối bài, động từ và cấu trúc ở cột bên phải.",
+      "material": "/blog/ai-and-the-developer-job-2026",
+      "exercises": "Không nhìn bài, viết bằng tiếng Anh: (1) one sentence with \"It is not that …; it is that …\" about how a developer's job has changed; (2) one sentence with \"The more …, the more …\" about AI-generated code and review; (3) two words from the article you can use at work this week, each in your own sentence. Sau đó mở lại bài để kiểm tra và chỉ sửa một câu.",
+      "completionCriteria": "Lưu bốn câu nguyên bản và số phút thực học rồi bấm Done. Gửi bốn câu cho ChatGPT nếu muốn được sửa một lỗi quan trọng nhất.",
+      "takeaway": {
+        "phrase": "What matters now is …",
+        "pattern": "It is not that …; it is that …",
+        "reusePrompt": "Giải thích cho một đồng đội vì sao code do AI viết vẫn cần review, dùng cả hai cấu trúc."
+      }
+    }
+  ]
+}

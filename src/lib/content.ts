@@ -19,6 +19,20 @@ export interface ArticleFrontmatter {
   sample?: boolean; // true = placeholder/demo content, clearly labelled in the UI
   relatedProjects?: string[]; // project slugs
   relatedLogAreas?: string[]; // LearningLog.area values this article discusses
+  study?: ArticleStudy; // language-study panel for English articles
+}
+
+export interface StudyTerm {
+  term: string;
+  meaning: string; // Vietnamese gloss
+  example?: string;
+}
+
+export interface ArticleStudy {
+  lessonId?: string; // practice lesson on /learning that uses this article
+  words: StudyTerm[];
+  verbs: StudyTerm[];
+  structures: StudyTerm[];
 }
 
 export interface Article extends ArticleFrontmatter {

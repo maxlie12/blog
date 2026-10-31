@@ -20,7 +20,13 @@ function isAudioUrl(value: string): boolean {
   return /^https?:\/\//i.test(value) && AUDIO_EXTENSION.test(value);
 }
 
+// A lesson may use one of this site's own articles as its source.
+function isSourceLink(value: string): boolean {
+  return /^https?:\/\/\S+$/i.test(value) || /^\/blog\/[a-z0-9-]+$/.test(value);
+}
+
 function getSourceLabel(value: string): string {
+  if (value.startsWith("/blog/")) return "blog Field Notes";
   try {
     const hostname = new URL(value).hostname;
     if (hostname.includes("britishcouncil.org")) return "British Council";
@@ -56,7 +62,7 @@ export function LessonDetailView({
   canSubmit: boolean;
 }) {
   const reviewedCount = attempts.filter((a) => a.reviewStatus === "reviewed").length;
-  const externalSource = lesson.material && /^https?:\/\/\S+$/i.test(lesson.material) && !isAudioUrl(lesson.material)
+  const externalSource = lesson.material && isSourceLink(lesson.material) && !isAudioUrl(lesson.material)
     ? lesson.material
     : null;
 
@@ -97,7 +103,7 @@ export function LessonDetailView({
           {lesson.skill === "listening" && isAudioUrl(lesson.material) ? (
             <audio controls src={lesson.material} className="lesson-detail__audio" />
           ) : (
-            /^https?:\/\/\S+$/i.test(lesson.material) ?
+            isSourceLink(lesson.material) ?
               <LessonSourceAction lessonId={lesson.id} href={lesson.material} label={getSourceLabel(lesson.material)} /> :
               <p style={{ whiteSpace: "pre-wrap" }}>{lesson.material}</p>
           )}

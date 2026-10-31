@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getPublicArticleBySlug } from "@/lib/posts";
 import { getProjectBySlug } from "@/lib/content";
 import { Mdx } from "@/lib/mdx";
+import { StudyAside, StudyWordList } from "@/components/ArticleStudy";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export default async function ArticlePage({
     .map((s) => getProjectBySlug(s))
     .filter((p): p is NonNullable<typeof p> => Boolean(p));
 
-  return (
+  const page = (
     <article className="article-page">
       <Link href="/blog" className="field-link article-page__back">← Back to the journal</Link>
       {article.sample && (
@@ -64,6 +65,7 @@ export default async function ArticlePage({
         )}
       </header>
       <Mdx source={article.content} />
+      {article.study && <StudyWordList study={article.study} />}
 
       {relatedProjects.length > 0 && (
         <aside className="article-page__related">
@@ -80,5 +82,13 @@ export default async function ArticlePage({
         </aside>
       )}
     </article>
+  );
+
+  if (!article.study) return page;
+  return (
+    <div className="article-study-layout">
+      {page}
+      <StudyAside study={article.study} />
+    </div>
   );
 }

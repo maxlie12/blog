@@ -3330,3 +3330,33 @@ body { line-height: 1.65; }
 .lesson-detail select,
 .lesson-detail input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]) { min-height: 44px; font-size: 1rem; }
 .lesson-detail .attempt-form__recorder-controls a { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* Article + language-study panel: two columns on desktop, stacked on mobile. */
+.article-study-layout { display: grid; gap: 1.5rem; max-width: 76rem; margin: 0 auto; }
+.article-study-layout > * { min-width: 0; }
+.article-study-layout .article-page { margin: 0; max-width: none; }
+@media (min-width: 1024px) {
+  .article-study-layout { grid-template-columns: minmax(0, 1fr) 20rem; align-items: start; }
+  .study-aside { position: sticky; top: 1.5rem; max-height: calc(100vh - 3rem); overflow-y: auto; }
+}
+@media (max-width: 1023px) {
+  .study-aside__words { display: none; } /* the full word list already ends the article */
+}
+.study-aside { display: grid; gap: 1.25rem; padding: 1.25rem; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+.study-aside h2 { font-size: 1rem; margin: 0 0 .6rem; color: var(--forest); }
+.study-aside__practice { display: grid; gap: .6rem; padding: 1rem; border-radius: 12px; background: var(--sage); }
+.study-aside__practice p { margin: 0; font-size: .9rem; }
+.study-aside__practice .button { justify-content: center; }
+.study-aside__chips { display: flex; flex-wrap: wrap; gap: .4rem; list-style: none; margin: 0; padding: 0; }
+.study-aside__chips a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 .8rem; border-radius: 999px; background: var(--sage); color: var(--text); text-decoration: none; font-size: .9rem; }
+.study-aside__chips a:hover { text-decoration: underline; }
+.study-aside__list { display: grid; gap: .75rem; list-style: none; margin: 0; padding: 0; }
+.study-aside__list li { display: grid; gap: .15rem; font-size: .9rem; }
+.study-aside__list em, .study-words em { display: block; color: var(--text-muted); font-size: .85rem; }
+.study-words { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+.study-words h2 { color: var(--forest); font-size: 1.4rem; }
+.study-words dl { display: grid; gap: .9rem; margin: 1rem 0 0; }
+.study-words dl > div { scroll-margin-top: 1.5rem; padding: .75rem 1rem; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); }
+.study-words dl > div:target { border-color: var(--forest); }
+.study-words dt { font-weight: 700; }
+.study-words dd { margin: .2rem 0 0; }
