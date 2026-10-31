@@ -1,13 +1,20 @@
 {
   "date": "2026-10-31",
+<<<<<<< HEAD
   "title": "Đọc 10 phút — AI đã thay đổi nghề dev thế nào",
   "kind": "practice",
   "note": "Bài đọc tiếng Anh dùng bài blog do trợ lý viết từ các nguồn đã dẫn. Giữ B1+ tự đánh giá; đây là luyện đọc và dùng lại cấu trúc, không phải bài kiểm tra. Không cần đọc hết nếu chỉ có 5 phút: phần 2 và 4 là đủ.",
+=======
+  "title": "Khởi động 5 phút — đọc để tìm ba ý rõ ràng",
+  "kind": "restart",
+  "note": "Chưa có bài làm mới hoặc bằng chứng Done được gửi trong chat sau mini-test 30/10. Vì vậy giữ B1+ tự đánh giá, dùng lại cùng nguồn và chưa chuyển sang shadowing hay tăng độ khó. Tiếng Anh là nhiệm vụ chính; tiếng Trung chỉ là ôn tùy chọn, không tạo bài bù bắt buộc.",
+>>>>>>> d3ecf890bd2384d01ebda88c3132fbda1ed610e2
   "lessons": [
     {
       "id": "daily-2026-10-31-en-reading",
       "language": "en",
       "skill": "reading",
+<<<<<<< HEAD
       "title": "Đọc 10 phút — AI thay đổi nghề dev ra sao",
       "level": "B1+ / B2 source",
       "instructions": "Bài đọc do trợ lý viết từ các nguồn đã dẫn trong bài, không phải đề thi chính thức. Đọc lướt sáu tiêu đề trước (1 phút), rồi đọc kỹ phần 2 và phần 4. Lần đọc đầu đừng tra từ; từ in đậm có nghĩa ở cuối bài, động từ và cấu trúc ở cột bên phải.",
@@ -18,6 +25,66 @@
         "phrase": "What matters now is …",
         "pattern": "It is not that …; it is that …",
         "reusePrompt": "Giải thích cho một đồng đội vì sao code do AI viết vẫn cần review, dùng cả hai cấu trúc."
+=======
+      "title": "Nhiệm vụ chính 5 phút — đọc transcript và tìm ba ý",
+      "level": "B1+ restart / B1 source",
+      "instructions": "Bài do trợ lý soạn, không phải đề British Council/IELTS/TOEIC chính thức. Dùng lại nguồn British Council miễn phí có audio, transcript và bài tương tác. Hôm nay chỉ luyện hiểu ý; chưa chuyển sang shadowing.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b1/phone-call-customer",
+      "exercises": "Mở transcript và đọc phần đầu trong 90 giây. Không chép nguyên câu. Viết ba dòng tiếng Anh theo khung: 1) The caller is …; 2) The caller wants …; 3) The next action is … . Sau đó nghe 45–60 giây đầu một lượt và đặt ✓ cạnh dòng được audio xác nhận; nếu một dòng chưa chắc, chỉ sửa đúng dòng đó.",
+      "completionCriteria": "Lưu ba dòng ban đầu, dấu ✓ hoặc nhãn Not sure cho từng dòng, một dòng đã sửa nếu cần, số lượt nghe và số phút thực học rồi bấm Done. Hoàn thành bài không tự suy ra CEFR hay tiến bộ.",
+      "takeaway": {
+        "phrase": "The next action is …",
+        "pattern": "The caller wants …, so the next action is …",
+        "reusePrompt": "Áp dụng cho một ticket frontend: ai báo lỗi, họ cần gì và hành động tiếp theo là gì?"
+      }
+    },
+    {
+      "id": "daily-2026-10-31-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — ghép câu vị trí mới",
+      "level": "Beginner restart",
+      "instructions": "Bài ôn do trợ lý soạn, không phải bài HelloChinese chính thức. Chạm từng cụm để kiểm tra pinyin và nghĩa, rồi tự nhớ lại cả câu. HelloChinese có phần miễn phí và nội dung Premium, với audio người bản ngữ trong ứng dụng nếu bạn muốn nghe thêm.",
+      "material": "https://www.hellochinese.cc/",
+      "exercises": "Nhớ và gõ câu 椅子在哪儿？椅子在窗户旁边。 Sau đó đổi 椅子 hoặc 窗户 thành một đồ vật khác bạn đã học để tạo một cặp hỏi–đáp mới. Đọc cặp mới thành tiếng một lượt; viết tay một chữ chỉ là tùy chọn, không lưu và không tự chấm.",
+      "completionCriteria": "Chỉ bấm Done sau khi tự gõ một cặp hỏi–đáp đã đổi ít nhất một đồ vật và đọc không nhìn mẫu. Chép nguyên câu mẫu chưa đủ để ghi Done.",
+      "takeaway": {
+        "phrase": "在……旁边",
+        "pattern": "A 在哪儿？A 在 B 旁边。",
+        "reusePrompt": "Nhìn quanh phòng và đổi A, B thành hai đồ vật thật."
+      },
+      "chinesePractice": {
+        "sentence": "椅子在哪儿？椅子在窗户旁边。",
+        "translation": "Cái ghế ở đâu? Cái ghế ở bên cạnh cửa sổ.",
+        "tokens": [
+          {
+            "hanzi": "椅子",
+            "pinyin": "yǐzi",
+            "meaning": "cái ghế"
+          },
+          {
+            "hanzi": "在哪儿",
+            "pinyin": "zài nǎr",
+            "meaning": "ở đâu"
+          },
+          {
+            "hanzi": "在",
+            "pinyin": "zài",
+            "meaning": "ở / nằm tại"
+          },
+          {
+            "hanzi": "窗户",
+            "pinyin": "chuānghu",
+            "meaning": "cửa sổ"
+          },
+          {
+            "hanzi": "旁边",
+            "pinyin": "pángbiān",
+            "meaning": "bên cạnh"
+          }
+        ],
+        "outputPrompt": "Không nhìn mẫu, viết một cặp hỏi–đáp mới; đổi ít nhất một đồ vật rồi đọc thành tiếng một lượt."
+>>>>>>> d3ecf890bd2384d01ebda88c3132fbda1ed610e2
       }
     }
   ]

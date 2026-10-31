@@ -2918,6 +2918,7 @@ body { line-height: 1.65; }
 .chinese-writing header p,
 .chinese-writing__translation,
 .chinese-writing__recall p,
+.chinese-writing__card-round p,
 .chinese-writing__output-prompt {
   margin: 0;
 }
@@ -2973,16 +2974,20 @@ body { line-height: 1.65; }
   background: color-mix(in srgb, var(--butter) 34%, var(--surface));
 }
 
-.chinese-writing__recall {
+.chinese-writing__recall,
+.chinese-writing__card-round,
+.chinese-writing__card {
   display: grid;
   gap: 0.7rem;
 }
 
-.chinese-writing__recall label {
+.chinese-writing__recall label,
+.chinese-writing__card label {
   font-weight: 700;
 }
 
-.chinese-writing__recall input {
+.chinese-writing__recall input,
+.chinese-writing__card input {
   width: 100%;
   min-height: 48px;
   padding: 0.75rem;
@@ -2991,6 +2996,29 @@ body { line-height: 1.65; }
   background: var(--surface-raised);
   color: var(--text);
   font-size: 1.1rem;
+}
+
+.chinese-writing__progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 44px;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--butter) 34%, var(--surface));
+}
+
+.chinese-writing__card {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-raised);
+}
+
+.chinese-writing__card > strong {
+  color: var(--forest);
+  font-size: 1.15rem;
 }
 
 .chinese-writing__actions {
