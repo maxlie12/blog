@@ -1,0 +1,88 @@
+{
+  "date": "2026-11-01",
+  "title": "Khởi động 5 phút — nghe và chọn một ý chắc chắn",
+  "kind": "restart",
+  "note": "Chưa có bài làm mới hoặc bằng chứng Done được gửi trong chat, nên giữ B1+ tự đánh giá, dùng lại nguồn British Council trong cùng chu kỳ và chưa chuyển sang shadowing. Tiếng Anh là nhiệm vụ chính; tiếng Trung và Blog Seed là tùy chọn, không tạo áp lực học bù.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-01-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Nhiệm vụ chính 5 phút — một ý chắc, một bằng chứng",
+      "level": "B1+ restart / B1 source",
+      "instructions": "Bài do trợ lý soạn, không phải đề British Council/IELTS/TOEIC chính thức. Nguồn British Council miễn phí có audio, transcript và bài tương tác. Chưa mở transcript; nghe 45–60 giây đầu tối đa hai lượt.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b1/phone-call-customer",
+      "exercises": "Viết đúng hai dòng tiếng Anh: 1) One thing I am sure about: …; 2) Evidence I heard: “…” . Sau đó mở transcript để kiểm tra cụm Evidence. Chỉ đánh dấu Match / Not match và sửa cụm Evidence nếu cần; chưa cần tóm tắt toàn bài.",
+      "completionCriteria": "Lưu một ý ban đầu, một cụm Evidence, nhãn Match / Not match, số lượt nghe và số phút thực học rồi bấm Done. Hoàn thành bài không tự suy ra CEFR hay tiến bộ.",
+      "takeaway": {
+        "phrase": "One thing I am sure about is …",
+        "pattern": "I think … because I heard …",
+        "reusePrompt": "Dùng khung này để báo một điều chắc chắn và bằng chứng trong một bug report."
+      }
+    },
+    {
+      "id": "daily-2026-11-01-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — hỏi vị trí từ đồ vật thật",
+      "level": "Beginner restart",
+      "instructions": "Bài ôn do trợ lý soạn, không phải bài HelloChinese chính thức. HelloChinese có phần miễn phí và nội dung Premium, với audio người bản ngữ trong ứng dụng nếu bạn muốn nghe lại. Chạm cụm để kiểm tra pinyin và nghĩa sau khi đã tự nhớ.",
+      "material": "https://www.hellochinese.cc/",
+      "exercises": "Chọn hai đồ vật thật gần bạn. Gõ một cặp hỏi–đáp dùng 在哪儿 và 在……旁边 / 上 / 里面. Sau đó đổi đồ vật hỏi để tạo câu thứ hai và đọc cả hai câu một lượt. Viết tay một chữ chỉ là tùy chọn, không lưu và không tự chấm.",
+      "completionCriteria": "Chỉ bấm Done sau khi tự gõ một cặp hỏi–đáp mới gắn với đồ vật thật và đọc không nhìn mẫu. Chép nguyên câu mẫu chưa đủ để ghi Done.",
+      "takeaway": {
+        "phrase": "在……旁边",
+        "pattern": "A 在哪儿？A 在 B 旁边。",
+        "reusePrompt": "Đổi A, B thành hai đồ vật khác trong phòng."
+      },
+      "chinesePractice": {
+        "sentence": "筷子在哪儿？筷子在碗旁边。",
+        "translation": "Đũa ở đâu? Đũa ở bên cạnh cái bát.",
+        "tokens": [
+          {
+            "hanzi": "筷子",
+            "pinyin": "kuàizi",
+            "meaning": "đũa"
+          },
+          {
+            "hanzi": "在哪儿",
+            "pinyin": "zài nǎr",
+            "meaning": "ở đâu"
+          },
+          {
+            "hanzi": "在",
+            "pinyin": "zài",
+            "meaning": "ở / nằm tại"
+          },
+          {
+            "hanzi": "碗",
+            "pinyin": "wǎn",
+            "meaning": "cái bát"
+          },
+          {
+            "hanzi": "旁边",
+            "pinyin": "pángbiān",
+            "meaning": "bên cạnh"
+          }
+        ],
+        "outputPrompt": "Không nhìn mẫu, viết một cặp hỏi–đáp mới bằng hai đồ vật thật gần bạn rồi đọc thành tiếng."
+      }
+    },
+    {
+      "id": "daily-2026-11-01-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Blog Seed tùy chọn — A Routine That Protects My Focus",
+      "level": "B1+ optional writing",
+      "instructions": "Blog Seed do trợ lý soạn cho Chủ nhật tuần ISO chẵn. Đây không phải bài mẫu, bài thi hay nhiệm vụ bắt buộc; không dùng AI sửa bản đầu và không cần làm nếu hôm nay chỉ có 5 phút.",
+      "material": null,
+      "exercises": "Tiêu đề gợi ý: “A Small Routine That Protects My Focus”. Lập dàn ý bằng ba câu hỏi: 1) What usually distracts me before work? 2) What small routine could I follow? 3) How would I know it works after one week? Từ/cấu trúc hữu ích: protect my focus; get distracted by; before I start; instead of; the main benefit is; one possible drawback is; I will know it works if. Viết bản nháp 100–150 từ trong 10–15 phút; không xem bài mẫu.",
+      "completionCriteria": "Nếu chọn làm, lưu bản nháp 100–150 từ do chính bạn viết. Blog Seed không thay nhiệm vụ Anh chính, không bắt buộc để giữ streak và không được dùng để tự suy ra CEFR.",
+      "takeaway": {
+        "phrase": "One possible drawback is …",
+        "pattern": "Instead of …, I will … because …",
+        "reusePrompt": "Gửi bản nháp cho ChatGPT để sửa một lỗi lập luận, một lỗi ngôn ngữ và đề xuất bản chỉnh sửa."
+      }
+    }
+  ]
+}
