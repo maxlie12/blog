@@ -1,4 +1,7 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
+import type { MDXComponents } from "next-mdx-remote-client/rsc";
+import { GlossTerm } from "@/components/GlossTerm";
 import type { ArticleStudy, StudyTerm } from "@/lib/content";
 
 const anchor = (term: string) => "word-" + term.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -8,13 +11,36 @@ function TermList({ items }: { items: StudyTerm[] }) {
     <ul className="study-aside__list">
       {items.map((item) => (
         <li key={item.term}>
-          <strong>{item.term}</strong>
+          <strong>{item.term}{item.pos && <span className="study-pos">{item.pos}</span>}</strong>
           <span>{item.meaning}</span>
           {item.example && <em>{item.example}</em>}
         </li>
       ))}
     </ul>
   );
+}
+
+const normalize = (text: string) => text.toLowerCase().replace(/[.,;:!?]+$/, "").trim();
+
+/** MDX override: a bold run that matches a study term (or one of its `forms`) gets a hover card. */
+export function studyComponents(study: ArticleStudy): MDXComponents {
+  const glossary = new Map<string, { pos: string; meaning: string }>();
+  const add = (items: StudyTerm[], fallbackPos: string) => {
+    for (const item of items) {
+      const entry = { pos: item.pos ?? fallbackPos, meaning: item.meaning };
+      for (const key of [item.term, ...(item.forms ?? [])]) glossary.set(normalize(key), entry);
+    }
+  };
+  add(study.words, "từ mới");
+  add(study.verbs, "động từ");
+  add(study.structures, "cấu trúc");
+
+  return {
+    strong: ({ children }: { children?: ReactNode }) => {
+      const entry = typeof children === "string" ? glossary.get(normalize(children)) : undefined;
+      return entry ? <GlossTerm pos={entry.pos} meaning={entry.meaning}>{children}</GlossTerm> : <strong>{children}</strong>;
+    },
+  };
 }
 
 /** Right-hand panel: verbs and structures in full; words as links to the end-of-article list. */
@@ -56,7 +82,7 @@ export function StudyWordList({ study }: { study: ArticleStudy }) {
       <dl>
         {study.words.map((word) => (
           <div key={word.term} id={anchor(word.term)}>
-            <dt>{word.term}</dt>
+            <dt>{word.term}{word.pos && <span className="study-pos">{word.pos}</span>}</dt>
             <dd>{word.meaning}{word.example && <em>{word.example}</em>}</dd>
           </div>
         ))}

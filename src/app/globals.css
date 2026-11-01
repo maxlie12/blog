@@ -3388,3 +3388,19 @@ body { line-height: 1.65; }
 .study-words dl > div:target { border-color: var(--forest); }
 .study-words dt { font-weight: 700; }
 .study-words dd { margin: .2rem 0 0; }
+.study-pos { margin-left: .4rem; font-size: .75rem; font-weight: 600; color: var(--text-muted); text-transform: lowercase; }
+.study-pos::before { content: "("; }
+.study-pos::after { content: ")"; }
+
+/* Bold study words: hover, keyboard focus or tap shows the part of speech and meaning. */
+.gloss { position: relative; display: inline; }
+.gloss__term { all: unset; cursor: help; border-bottom: 2px dotted var(--forest); }
+.gloss__term:focus-visible { outline: 2px solid var(--forest); outline-offset: 2px; border-radius: 2px; }
+.gloss__tip { display: none; position: absolute; z-index: 20; left: 0; bottom: calc(100% + .4rem); width: max-content; max-width: 18rem; padding: .55rem .75rem; border-radius: 10px; background: var(--text); color: var(--surface); font-size: .9rem; font-weight: 400; line-height: 1.4; box-shadow: 0 6px 20px rgb(0 0 0 / .18); }
+.gloss__pos { display: block; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; opacity: .8; }
+.gloss:hover .gloss__tip, .gloss:focus-within .gloss__tip { display: block; }
+.gloss[data-dismissed] .gloss__tip { display: none; }
+@media (max-width: 640px) {
+  /* a card pinned to the bottom of the screen never overflows a narrow column */
+  .gloss__tip { position: fixed; left: 1rem; right: 1rem; bottom: 1rem; width: auto; max-width: none; }
+}

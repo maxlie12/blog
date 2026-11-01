@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getPublicArticleBySlug } from "@/lib/posts";
 import { getProjectBySlug } from "@/lib/content";
 import { Mdx } from "@/lib/mdx";
-import { StudyAside, StudyWordList } from "@/components/ArticleStudy";
+import { StudyAside, StudyWordList, studyComponents } from "@/components/ArticleStudy";
 
 export const dynamic = "force-dynamic";
 
@@ -64,7 +64,7 @@ export default async function ArticlePage({
           </p>
         )}
       </header>
-      <Mdx source={article.content} />
+      <Mdx source={article.content} components={article.study && studyComponents(article.study)} />
       {article.study && <StudyWordList study={article.study} />}
 
       {relatedProjects.length > 0 && (

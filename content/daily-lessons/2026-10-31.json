@@ -1,31 +1,13 @@
 {
   "date": "2026-10-31",
-<<<<<<< HEAD
-  "title": "Đọc 10 phút — AI đã thay đổi nghề dev thế nào",
-  "kind": "practice",
-  "note": "Bài đọc tiếng Anh dùng bài blog do trợ lý viết từ các nguồn đã dẫn. Giữ B1+ tự đánh giá; đây là luyện đọc và dùng lại cấu trúc, không phải bài kiểm tra. Không cần đọc hết nếu chỉ có 5 phút: phần 2 và 4 là đủ.",
-=======
   "title": "Khởi động 5 phút — đọc để tìm ba ý rõ ràng",
   "kind": "restart",
-  "note": "Chưa có bài làm mới hoặc bằng chứng Done được gửi trong chat sau mini-test 30/10. Vì vậy giữ B1+ tự đánh giá, dùng lại cùng nguồn và chưa chuyển sang shadowing hay tăng độ khó. Tiếng Anh là nhiệm vụ chính; tiếng Trung chỉ là ôn tùy chọn, không tạo bài bù bắt buộc.",
->>>>>>> d3ecf890bd2384d01ebda88c3132fbda1ed610e2
+  "note": "Chưa có bài làm mới hoặc bằng chứng Done được gửi trong chat sau mini-test 30/10. Vì vậy giữ B1+ tự đánh giá, dùng lại cùng nguồn và chưa chuyển sang shadowing hay tăng độ khó. Tiếng Anh là nhiệm vụ chính; tiếng Trung chỉ là ôn tùy chọn, không tạo bài bù bắt buộc. Hai bài đọc blog tiếng Anh bên dưới là tùy chọn, không thay nhiệm vụ chính.",
   "lessons": [
     {
       "id": "daily-2026-10-31-en-reading",
       "language": "en",
       "skill": "reading",
-<<<<<<< HEAD
-      "title": "Đọc 10 phút — AI thay đổi nghề dev ra sao",
-      "level": "B1+ / B2 source",
-      "instructions": "Bài đọc do trợ lý viết từ các nguồn đã dẫn trong bài, không phải đề thi chính thức. Đọc lướt sáu tiêu đề trước (1 phút), rồi đọc kỹ phần 2 và phần 4. Lần đọc đầu đừng tra từ; từ in đậm có nghĩa ở cuối bài, động từ và cấu trúc ở cột bên phải.",
-      "material": "/blog/ai-and-the-developer-job-2026",
-      "exercises": "Không nhìn bài, viết bằng tiếng Anh: (1) one sentence with \"It is not that …; it is that …\" about how a developer's job has changed; (2) one sentence with \"The more …, the more …\" about AI-generated code and review; (3) two words from the article you can use at work this week, each in your own sentence. Sau đó mở lại bài để kiểm tra và chỉ sửa một câu.",
-      "completionCriteria": "Lưu bốn câu nguyên bản và số phút thực học rồi bấm Done. Gửi bốn câu cho ChatGPT nếu muốn được sửa một lỗi quan trọng nhất.",
-      "takeaway": {
-        "phrase": "What matters now is …",
-        "pattern": "It is not that …; it is that …",
-        "reusePrompt": "Giải thích cho một đồng đội vì sao code do AI viết vẫn cần review, dùng cả hai cấu trúc."
-=======
       "title": "Nhiệm vụ chính 5 phút — đọc transcript và tìm ba ý",
       "level": "B1+ restart / B1 source",
       "instructions": "Bài do trợ lý soạn, không phải đề British Council/IELTS/TOEIC chính thức. Dùng lại nguồn British Council miễn phí có audio, transcript và bài tương tác. Hôm nay chỉ luyện hiểu ý; chưa chuyển sang shadowing.",
@@ -84,7 +66,38 @@
           }
         ],
         "outputPrompt": "Không nhìn mẫu, viết một cặp hỏi–đáp mới; đổi ít nhất một đồ vật rồi đọc thành tiếng một lượt."
->>>>>>> d3ecf890bd2384d01ebda88c3132fbda1ed610e2
+      }
+    },
+    {
+      "id": "daily-2026-10-31-en-blog-ai",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 10 phút — đọc blog: AI thay đổi nghề dev ra sao",
+      "level": "B1+ / B2 source",
+      "instructions": "Bài đọc do trợ lý viết từ các nguồn đã dẫn trong bài, không phải đề thi chính thức. Đọc lướt sáu tiêu đề trước (1 phút), rồi đọc kỹ phần 2 và phần 4. Lần đọc đầu đừng tra từ; di chuột hoặc chạm vào từ in đậm để xem nghĩa, động từ và cấu trúc ở cột bên phải.",
+      "material": "/blog/ai-and-the-developer-job-2026",
+      "exercises": "Không nhìn bài, viết bằng tiếng Anh: (1) one sentence with \"It is not that …; it is that …\" about how a developer's job has changed; (2) one sentence with \"The more …, the more …\" about AI-generated code and review; (3) two words from the article you can use at work this week, each in your own sentence. Sau đó mở lại bài để kiểm tra và chỉ sửa một câu.",
+      "completionCriteria": "Lưu bốn câu nguyên bản và số phút thực học rồi bấm Done. Gửi bốn câu cho ChatGPT nếu muốn được sửa một lỗi quan trọng nhất.",
+      "takeaway": {
+        "phrase": "What matters now is …",
+        "pattern": "It is not that …; it is that …",
+        "reusePrompt": "Giải thích cho một đồng đội vì sao code do AI viết vẫn cần review, dùng cả hai cấu trúc."
+      }
+    },
+    {
+      "id": "daily-2026-10-31-en-blog-learning",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 10 phút — đọc blog: học thế nào cho nhớ lâu",
+      "level": "B1+ / B2 source",
+      "instructions": "Bài đọc do trợ lý viết từ các nghiên cứu đã dẫn trong bài, không phải đề thi chính thức. Đọc phần 1 và phần 2 trước; di chuột hoặc chạm vào từ in đậm để xem nghĩa và loại từ. Đọc xong thì đóng bài lại trước khi làm nhiệm vụ — đó chính là luyện gợi nhớ (retrieval practice).",
+      "material": "/blog/how-to-learn-english-with-learning-science",
+      "exercises": "Không nhìn bài, viết bằng tiếng Anh: (1) ba điều bạn nhớ từ bài, mỗi điều một câu; (2) một kế hoạch cho tuần này theo mẫu \"When …, I will …\" (ví dụ: When I open my laptop at 8 a.m., I will …); (3) một câu với \"Instead of + V-ing, …\" về cách bạn sẽ đổi thói quen ôn bài. Sau đó mở lại bài, kiểm tra và chỉ sửa một câu.",
+      "completionCriteria": "Lưu năm câu nguyên bản và số phút thực học rồi bấm Done. Done là thói quen tự ghi nhận, không phải điểm trình độ.",
+      "takeaway": {
+        "phrase": "It turns out that …",
+        "pattern": "When [situation], I will [action].",
+        "reusePrompt": "Viết một câu \"When …, I will …\" cho lần học tiếng Anh tiếp theo và đặt nó ở nơi bạn sẽ nhìn thấy."
       }
     }
   ]

@@ -1,9 +1,9 @@
-import { MDXRemote } from "next-mdx-remote-client/rsc";
+import { MDXRemote, type MDXComponents } from "next-mdx-remote-client/rsc";
 
-export function Mdx({ source }: { source: string }) {
+export function Mdx({ source, components }: { source: string; components?: MDXComponents }) {
   return (
     <div className="prose-content">
-      <MDXRemote source={source} />
+      <MDXRemote source={source} components={components} />
     </div>
   );
 }
