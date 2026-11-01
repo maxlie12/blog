@@ -3,7 +3,7 @@
 ## Identity
 
 - **Issue:** `BLOG-002`
-- **Status:** verified locally
+- **Status:** verified
 - **Owner:** Claude
 - **Date:** 2026-10-31
 
@@ -59,3 +59,5 @@ of speech it is. There is also no article on *how* to practise (any skill, not o
   403 and are cited from search results; Roediger & Karpicke is described qualitatively (the PDF
   could not be read). Lally et al. is cited via PsyBlog, not the paper. Bold text that is not a
   study term (e.g. list labels in the AI article) stays plain bold by design. Dark mode not checked.
+
+Visible in production on 2026-11-01; see `docs/STATUS.md`.

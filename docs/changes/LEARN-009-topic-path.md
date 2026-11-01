@@ -3,7 +3,7 @@
 ## Identity
 
 - **Issue:** `LEARN-009`
-- **Status:** verified locally
+- **Status:** verified
 - **Owner:** Claude
 - **Date:** 2026-11-01
 
@@ -67,3 +67,5 @@ route, so a learner cannot see where they are or what comes next.
   scroll, no node past the edge or under 44px. Optional is read from the packet title, because the
   schema has no flag: a packet title without "tùy chọn" counts as a main task. The hidden state on a
   day without a packet was not exercised in the browser.
+
+Visible in production on 2026-11-01; see `docs/STATUS.md`.

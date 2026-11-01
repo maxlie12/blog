@@ -44,7 +44,7 @@ export default async function ArticlePage({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={article.coverImage} alt="" className="article-page__cover" />
         )}
-        <h1>{article.title}</h1>
+        <h1 lang={article.study ? "en" : undefined}>{article.title}</h1>
         <p className="article-page__meta">
           {article.date} · {article.readingMinutes} min read · {article.areas.join(", ")}
         </p>
@@ -64,7 +64,7 @@ export default async function ArticlePage({
           </p>
         )}
       </header>
-      <Mdx source={article.content} components={article.study && studyComponents(article.study)} />
+      <Mdx source={article.content} components={article.study && studyComponents(article.study)} lang={article.study ? "en" : undefined} />
       {article.study && <StudyWordList study={article.study} />}
 
       {relatedProjects.length > 0 && (

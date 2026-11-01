@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
+import { LearningPath } from "@/components/LearningPath";
 import { LocalProgressSummary } from "@/components/LocalProgressSummary";
 import { getAllLessons } from "@/lib/lessonsData";
 import { StartLearning } from "@/components/StartLearning";
 import { getAuthenticatedLearnerId } from "@/lib/learnerAuth";
+import { getLearningPathData } from "@/lib/learningPathData";
 
 export const metadata: Metadata = { title: "Learning" };
 export const dynamic = "force-dynamic";
 
 export default async function LearningPage() {
   const learnerId = await getAuthenticatedLearnerId();
-  const lessons = await getAllLessons({ learnerId });
+  const [lessons, path] = await Promise.all([getAllLessons({ learnerId }), getLearningPathData()]);
 
   return (
     <div className="learning-page">
@@ -19,6 +21,7 @@ export default async function LearningPage() {
       </header>
 
       <StartLearning lessons={lessons} />
+      <LearningPath {...path} />
       <LocalProgressSummary />
     </div>
   );

@@ -3,7 +3,7 @@
 ## Identity
 
 - **Issue:** `LEARN-008`
-- **Status:** verified locally
+- **Status:** verified
 - **Owner:** Claude
 - **Date:** 2026-11-01
 
@@ -60,3 +60,5 @@ place to read aloud, review words or switch to another topic.
   word, so a match does not prove pronunciation; the page says so. Hand-written IPA is US English
   and was not checked against a dictionary. Known words are not in the progress backup file. Dark
   mode not checked.
+
+Visible in production on 2026-11-01; see `docs/STATUS.md`.

@@ -55,6 +55,12 @@ A single public site that is a genuine record of growth, not a highlight reel:
    Lesson/Attempt — see [DECISIONS.md](DECISIONS.md).
 8. **Updating the mountain journey** — the owner edits checkpoints and attaches evidence in
    Studio, and explicitly sets which checkpoint is current. Never automatic.
+9. **Reading with study support** — a study article shows hover meanings, IPA, listen buttons,
+   a side panel and a glossary, and links to a practice lesson. See [CONTENT-GUIDE.md](CONTENT-GUIDE.md).
+10. **Free practice** — on a day without a lesson, a learner reviews word cards or reads a
+    paragraph aloud at `/learning/practice`. It records no Done or streak.
+11. **Following the path** — `/learning` shows today's packet, due reviews, one stage per study
+    article and finished lessons, under the next-session card. No step is locked, and marks stay on the device as habit data.
 
 ## MVP scope (original) + Studio extension
 

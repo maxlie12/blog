@@ -52,6 +52,34 @@ test("backup import merges by completion id without duplicating progress", () =>
   assert.equal(getLocalLanguageSummary("en").totalCompleted, 2);
 });
 
+test("backup carries known words and path marks and merges them", () => {
+  storage.setItem("learning-profile:luan:study-words-known-v1", JSON.stringify(["routine"]));
+  storage.setItem("learning-profile:luan:study-path-v1", JSON.stringify(["a:read"]));
+  const backup = exportLocalProgressBackup();
+
+  storage.clear();
+  storage.setItem("learning-profile:luan:study-words-known-v1", JSON.stringify(["myth"]));
+  importLocalProgressBackup(backup);
+
+  assert.deepEqual(JSON.parse(storage.getItem("learning-profile:luan:study-words-known-v1")!), ["myth", "routine"]);
+  assert.deepEqual(JSON.parse(storage.getItem("learning-profile:luan:study-path-v1")!), ["a:read"]);
+});
+
+test("a backup without study lists imports and keeps local words", () => {
+  storage.setItem("learning-profile:luan:study-words-known-v1", JSON.stringify(["myth"]));
+  const backup = JSON.parse(exportLocalProgressBackup());
+  delete backup.studyWords;
+  delete backup.studyPathMarks;
+  importLocalProgressBackup(JSON.stringify(backup));
+  assert.deepEqual(JSON.parse(storage.getItem("learning-profile:luan:study-words-known-v1")!), ["myth"]);
+});
+
+test("a backup with malformed study lists is rejected", () => {
+  const backup = JSON.parse(exportLocalProgressBackup());
+  backup.studyWords = [1];
+  assert.throws(() => importLocalProgressBackup(JSON.stringify(backup)), /từ vựng/);
+});
+
 test("backup carries the private sync profile to a fresh browser", () => {
   storage.setItem("learning-completions-v1", JSON.stringify({ version: 1, completions: [completion] }));
   const backup = exportLocalProgressBackup();

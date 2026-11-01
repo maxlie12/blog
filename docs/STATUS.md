@@ -1,6 +1,21 @@
 # Status
 
-Last verified: 2026-10-26 (guided five-minute lesson flow verified in production).
+Last verified: 2026-11-01 (study articles, free practice and topic path in production).
+
+## 2026-11-01 — study articles, free practice and topic path
+
+- Four English study articles have hover meanings, IPA, listen buttons, a side panel, a glossary
+  and an optional lesson. A lesson may now use a `/blog/…` article as its source.
+- `/learning/practice` offers word cards and read-aloud by topic, with no Done or streak.
+  `/learning/path` shows today's packet, then one unlocked stage per study article.
+- Home and lesson pages were simplified, guests can record and transcribe on the device, and audio
+  stays in the browser.
+- Checks: commit `793b4794` on `master`. Production, Playwright at 390px: all four articles returned
+  200 with 14 glossary entries, IPA and listen buttons, 21–24 hover cards and no horizontal scroll.
+  `/learning/path` showed today plus four stages, `/learning/practice` four topics, and `/learning`
+  kept `daily-2026-11-01-en-listening` as its action. No page errors. No Done was written in
+  production to avoid fabricated learning metadata.
+- Not verified: real speech voices, a real phone, Safari, Firefox, and zh/ja transcription.
 
 ## 2026-10-26 — guided five-minute lesson flow
 

@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { getLanguageLabel } from "@/lib/languages";
-import { getLocalCompletedLessonIds } from "@/lib/localLearningProgress";
+import { getLocalCompletedLessonIds, getLocalDueReviews } from "@/lib/localLearningProgress";
 import { addPathMark, pathSteps, readKnownWords, readPathMarks, todaySteps, type PathStepId, type PathTopic, type TodayLesson } from "@/lib/studyPath";
 import type { SkillId } from "@/lib/lessonTypes";
+import type { ScheduledReview } from "@/lib/reviewSchedule";
 
 const WINDING = [0, 3.5, 5, 3.5, 0, -3.5, -5, -3.5];
 
@@ -69,13 +70,18 @@ function PathNode({ href, icon, label, state, done, next, ariaLabel, onClick }: 
   );
 }
 
-/** Today's lessons, then stages from study articles. Nothing is locked; marks are habit data on this device. */
-export function LearningPath({ topics, today }: { topics: PathTopic[]; today: { date: string; title: string; lessons: TodayLesson[] } | null }) {
-  const [progress, setProgress] = useState<{ known: string[]; marks: string[]; completed: Set<string> } | null>(null);
-  const scrolled = useRef(false);
+type PathProgress = { known: string[]; marks: string[]; completed: Set<string>; due: ScheduledReview[] };
+
+/** The route on /learning: today, due reviews, blog stages, then finished lessons. Nothing is locked. */
+export function LearningPath({ topics, today, lessons }: {
+  topics: PathTopic[];
+  today: { date: string; title: string; lessons: TodayLesson[] } | null;
+  lessons: (TodayLesson & { date: string })[];
+}) {
+  const [progress, setProgress] = useState<PathProgress | null>(null);
 
   useEffect(() => {
-    const refresh = () => setProgress({ known: readKnownWords(), marks: readPathMarks(), completed: getLocalCompletedLessonIds() });
+    const refresh = () => setProgress({ known: readKnownWords(), marks: readPathMarks(), completed: getLocalCompletedLessonIds(), due: getLocalDueReviews() });
     refresh();
     window.addEventListener("learning-progress-changed", refresh);
     return () => window.removeEventListener("learning-progress-changed", refresh);
@@ -83,27 +89,33 @@ export function LearningPath({ topics, today }: { topics: PathTopic[]; today: { 
 
   const completed = progress?.completed ?? new Set<string>();
   const units = topics.map((topic) => ({ topic, steps: pathSteps(topic, progress?.known ?? [], progress?.marks ?? [], completed) }));
-  const lessons = today ? todaySteps(today.lessons, completed) : [];
-  const nextLesson = progress ? lessons.find((lesson) => !lesson.done && !lesson.optional) : undefined;
-  const nextUnit = progress && !nextLesson ? units.find((unit) => unit.steps.some((step) => !step.done)) : undefined;
+  const todayLessons = today ? todaySteps(today.lessons, completed) : [];
+  const reviews = (progress?.due ?? []).flatMap((review) => {
+    const lesson = lessons.find((item) => item.id === review.lessonId);
+    return lesson ? [{ review, lesson }] : [];
+  });
+  const finished = lessons.filter((lesson) => completed.has(lesson.id));
+  const nextLesson = progress ? todayLessons.find((lesson) => !lesson.done && !lesson.optional) : undefined;
+  const mainDone = todayLessons.some((lesson) => !lesson.optional) && !nextLesson;
+  const nextReview = progress && !nextLesson ? reviews[0] : undefined;
+  const nextUnit = progress && !nextLesson && !nextReview ? units.find((unit) => unit.steps.some((step) => !step.done)) : undefined;
   const nextStep = nextUnit?.steps.find((step) => !step.done);
 
-  useEffect(() => {
-    if (!progress || scrolled.current) return;
-    scrolled.current = true;
-    document.querySelector(".path-node--next")?.scrollIntoView({ block: "center" });
-  }, [progress]);
-
   return (
-    <div className="learning-path">
-      {today && lessons.length > 0 && (
+    <section id="learning-path" className="learning-path" aria-labelledby="learning-path-title">
+      <header className="learning-path__header">
+        <h2 id="learning-path-title">Lộ trình học</h2>
+        <p>Bước nào cũng mở sẵn. Đây là dấu thói quen trên thiết bị này, không phải trình độ.</p>
+      </header>
+
+      {today && todayLessons.length > 0 && (
         <section aria-labelledby="stage-today">
           <header className="path-stage path-stage--today">
             <p>Hôm nay · {today.date}</p>
-            <h2 id="stage-today">{today.title}</h2>
+            <h3 id="stage-today">{today.title}</h3>
           </header>
           <ol className="path-steps">
-            {lessons.map((lesson, index) => {
+            {todayLessons.map((lesson, index) => {
               const next = nextLesson?.id === lesson.id;
               const state = lesson.done ? "Đã xong" : next ? "Tiếp theo" : lesson.optional ? "Tùy chọn" : "Nhiệm vụ chính";
               const label = `${SKILLS[lesson.skill].label} · ${getLanguageLabel(lesson.language, true)}`;
@@ -122,22 +134,53 @@ export function LearningPath({ topics, today }: { topics: PathTopic[]; today: { 
               );
             })}
           </ol>
+          {mainDone && <p className="path-note" role="status">Xong nhiệm vụ chính hôm nay. Bạn có thể dừng ở đây, làm bài tùy chọn hoặc đi tiếp bước kế bên dưới.</p>}
+        </section>
+      )}
+
+      {reviews.length > 0 && (
+        <section aria-labelledby="stage-reviews">
+          <header className="path-stage path-stage--today">
+            <p>Ôn lại</p>
+            <h3 id="stage-reviews">{reviews.length} bài đến hạn ôn</h3>
+          </header>
+          <ol className="path-steps">
+            {reviews.map(({ review, lesson }, index) => {
+              const next = nextReview?.review === review;
+              const label = `Ôn · ${getLanguageLabel(lesson.language, true)}`;
+              const state = next ? "Tiếp theo" : `Sau ${review.interval} ngày`;
+              return (
+                <li key={review.lessonId} style={winding(index, -1)}>
+                  <PathNode
+                    href={`/learning/${lesson.id}`}
+                    icon={SKILLS[lesson.skill].icon}
+                    label={label}
+                    state={state}
+                    done={false}
+                    next={next}
+                    ariaLabel={`${label}, ${state}: ${lesson.title}`}
+                  />
+                </li>
+              );
+            })}
+          </ol>
         </section>
       )}
 
       {units.map(({ topic, steps }, unitIndex) => {
-        const finished = steps.every((step) => step.done);
+        const stageDone = steps.every((step) => step.done);
+        const side = unitIndex % 2 ? 1 : -1;
         return (
           <section key={topic.slug} aria-labelledby={`stage-${topic.slug}`}>
             <header className="path-stage">
               <p>Chặng {unitIndex + 1}</p>
-              <h2 id={`stage-${topic.slug}`} lang="en">{topic.title}</h2>
+              <h3 id={`stage-${topic.slug}`} lang="en">{topic.title}</h3>
             </header>
             <ol className="path-steps">
               {steps.map((step, index) => {
                 const next = nextUnit?.topic.slug === topic.slug && nextStep?.id === step.id;
                 return (
-                  <li key={step.id} style={winding(index, unitIndex % 2 ? 1 : -1)}>
+                  <li key={step.id} style={winding(index, side)}>
                     <PathNode
                       href={stepHref(topic, step.id)}
                       icon={STEPS[step.id].icon}
@@ -150,17 +193,33 @@ export function LearningPath({ topics, today }: { topics: PathTopic[]; today: { 
                   </li>
                 );
               })}
-              <li style={winding(steps.length, unitIndex % 2 ? 1 : -1)}>
-                <div className={`path-node path-node--marker${finished ? " path-node--done" : ""}`}>
+              <li style={winding(steps.length, side)}>
+                <div className={`path-node path-node--marker${stageDone ? " path-node--done" : ""}`}>
                   <span className="path-node__circle"><Icon><path d="M6 21V4" /><path d="M6 4h12l-3 4 3 4H6" /></Icon></span>
                   <span className="path-node__label">Xong chặng {unitIndex + 1}</span>
-                  <span className="path-node__state">{finished ? "Đã đủ các bước" : `${steps.filter((step) => step.done).length}/${steps.length} bước`}</span>
+                  <span className="path-node__state">{stageDone ? "Đã đủ các bước" : `${steps.filter((step) => step.done).length}/${steps.length} bước`}</span>
                 </div>
               </li>
             </ol>
           </section>
         );
       })}
-    </div>
+
+      {finished.length > 0 && (
+        <details className="path-finished">
+          <summary>Bài đã xong · {finished.length}</summary>
+          <ul>
+            {finished.map((lesson) => (
+              <li key={lesson.id}>
+                <Link href={`/learning/${lesson.id}`}>
+                  <span>{lesson.title}</span>
+                  <small>{lesson.date}</small>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </section>
   );
 }

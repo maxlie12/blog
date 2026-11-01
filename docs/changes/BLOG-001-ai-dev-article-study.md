@@ -3,7 +3,7 @@
 ## Identity
 
 - **Issue:** `BLOG-001`
-- **Status:** verified locally
+- **Status:** verified
 - **Owner:** Claude
 - **Date:** 2026-10-31
 
@@ -65,3 +65,5 @@ structures are not pulled out anywhere, and nothing connects the article to a le
   against the fetched pages; the METR figures (19% slower, ~20% felt faster, 16 developers)
   agree across several search results but were not checked against the METR paper itself.
   Dark mode not checked.
+
+Visible in production on 2026-11-01; see `docs/STATUS.md`.

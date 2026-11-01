@@ -3,7 +3,7 @@
 ## Identity
 
 - **Issue:** `BLOG-003`
-- **Status:** verified locally
+- **Status:** verified
 - **Owner:** Claude
 - **Date:** 2026-11-01
 
@@ -46,3 +46,5 @@ Nothing on the site explains in one place what maxlie-blog is, what it contains 
 - **Not checked / remaining risk:** facts come from the repository docs, code and the live home
   page; production database and sync settings were not inspected, so the article describes
   them as optional. Dark mode not checked.
+
+Visible in production on 2026-11-01; see `docs/STATUS.md`.

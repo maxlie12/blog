@@ -3,7 +3,7 @@
 ## Identity
 
 - **Issue:** `BLOG-004`
-- **Status:** verified locally
+- **Status:** verified
 - **Owner:** Claude
 - **Date:** 2026-11-01
 
@@ -50,3 +50,5 @@ public explains why it was built this way or what it costs.
   audio tracks and an on-device mode, neither tested here. The article uses the MDN wording, and
   SPEAK-001 keeps its original text as a record. Markdown tables do not render in articles (no
   remark-gfm), so the figures are a list. Dark mode not checked.
+
+Visible in production on 2026-11-01; see `docs/STATUS.md`.

@@ -169,8 +169,3 @@ GitHub `master` branch is connected to Vercel. For future deployments:
 - **A new `.mdx` article/project doesn't show up:** check `draft` isn't `true` (production
   builds filter drafts out), and confirm the filename ends in `.mdx` inside
   `content/articles/` or `content/projects/`.
-- **`npm run build` warns about the "middleware" file convention being deprecated:** known,
-  low-priority — Next.js 16 prefers `proxy.ts` over `middleware.ts`, but the latter still works.
-  Not fixed in this pass because the official codemod refuses to run against an uncommitted
-  changeset; run `npx @next/codemod@canary middleware-to-proxy .` on a clean tree when
-  convenient.

@@ -17,7 +17,7 @@ export function GlossTerm({ children, pos, ipa, meaning }: { children: ReactNode
       >
         <strong>{children}</strong>
       </button>
-      <span role="tooltip" id={id} className="gloss__tip">
+      <span role="tooltip" id={id} className="gloss__tip" lang="vi">
         <span className="gloss__pos">{pos}{ipa && ` · ${ipa}`}</span> {meaning}
       </span>
     </span>

@@ -67,6 +67,9 @@ actually said.
 - One primary action stays "Submit attempt"; the new button is secondary, 44px, keyboard
   reachable, visible focus; no motion beyond a progress indicator that respects reduced motion.
 
+> Correction (2026-11-01): MDN now describes audio-track input and an on-device mode for the Web
+> Speech API, so the reason above is out of date. Neither was tested; the original decision stands.
+
 ## Plan
 
 1. Keep the recorded `Blob` in `SpeakingRecorder` and expose it to the form.

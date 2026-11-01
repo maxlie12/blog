@@ -40,6 +40,7 @@ function writeList(key: string, value: string[]) {
 export const readKnownWords = () => readList(KNOWN_KEY);
 export const writeKnownWords = (words: string[]) => writeList(KNOWN_KEY, words);
 export const readPathMarks = () => readList(MARKS_KEY);
+export const writePathMarks = (marks: string[]) => writeList(MARKS_KEY, marks);
 
 export function addPathMark(slug: string, step: "read" | "speak") {
   const mark = `${slug}:${step}`;

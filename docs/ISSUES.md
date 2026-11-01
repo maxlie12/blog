@@ -1,6 +1,6 @@
 # Active issues
 
-Last reviewed: 2026-10-26.
+Last reviewed: 2026-11-01.
 
 This is the current work queue. It contains user-visible problems, not every possible feature.
 An item moves to **Done** only with the evidence listed in that item. Activity/Done data is habit
@@ -12,14 +12,9 @@ evidence and never proves a CEFR, HSK or JLPT level.
 |---|---:|---|---|---|
 | ASSESS-001 | P1 | Planned | The product has self-reported levels and milestone UI, but insufficient unseen four-skill evidence to claim progress. | Keep level unchanged; attach weekly checks and a 28-day assessment to evidence records. |
 | LANG-001 | P1 | Active | English, Chinese and Japanese share an engine, but their teaching rules are not yet explicit data. | Ship one Chinese word/chunk and writing slice without splitting the shared lesson flow. |
-| LEARN-007 | P1 | Active | A five-minute lesson reads like a policy page and the home page renders the full library. | Verified locally; deploy. See `docs/changes/LEARN-007-lesson-clarity.md`. |
-| BLOG-001 | P2 | Active | English dev articles are not connected to vocabulary study or a lesson. | Verified locally; deploy. See `docs/changes/BLOG-001-ai-dev-article-study.md`. |
-| BLOG-002 | P2 | Active | Bold study words show no meaning in place; no article on how to practise. | Verified locally; deploy. See `docs/changes/BLOG-002-learning-science-article-gloss.md`. |
-| BLOG-003 | P2 | Active | Nothing explains in one place what the site is and how it works. | Publish one overview article. See `docs/changes/BLOG-003-site-overview-article.md`. |
-| LEARN-008 | P2 | Active | No way to hear new words or to practise reading and words without a lesson. | Listen buttons and `/learning/practice`. See `docs/changes/LEARN-008-free-practice.md`. |
-| BLOG-004 | P2 | Active | Nothing public explains the on-device speech decision. | Publish one article. See `docs/changes/BLOG-004-speech-model-article.md`. |
-| LEARN-009 | P2 | Active | Study articles and practice are not shown as an ordered route. | Topic path at `/learning/path`. See `docs/changes/LEARN-009-topic-path.md`. |
-| SPEAK-001 | P2 | Active | After recording, the learner must retype their whole speaking answer. | On-device transcription draft fills the transcript field; audio never leaves the browser. See `docs/changes/SPEAK-001-browser-transcription.md`. |
+| SPEAK-001 | P2 | Active | On-device transcription is live but only proven with one synthetic English test. | Check a real voice on a phone, then zh/ja, Safari and Firefox. See `docs/changes/SPEAK-001-browser-transcription.md`. |
+| LEARN-011 | P1 | Active | The learner could not find the path, and it hid reviews and finished lessons. | Show it on `/learning`. See `docs/changes/LEARN-011-path-on-learning.md`. |
+| LEARN-010 | P2 | Active | Backup gaps, a dead link, page language and stale docs. | Verified locally; deploy. See `docs/changes/LEARN-010-docs-backup-cleanup.md`. |
 | FEEDBACK-001 | P2 | Blocked | Personal correction is manual; automatic AI feedback is not implemented or cost-controlled. | First collect real attempts and define a one-error feedback contract. |
 
 Game and decorative progression are intentionally below these items. They may reward learning,

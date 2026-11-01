@@ -8,6 +8,13 @@ Use the 2026-10-12 packet as the base JSON contract: date, title, kind (`restart
 
 The linked ChatGPT automation may add a packet through the authorized GitHub connector. It must inspect the latest master branch and use a lease for updates. Repository content is public: never commit learner answers, recordings, secrets or private feedback. Without access to saved attempts, it must not infer progress, mark completion or raise difficulty. Keep a restart task until evidence is supplied. Weekly/monthly tests remain assigned at the existing intervals, but can be split into short sessions.
 
-After each content update, a deployment is needed: commits are not a running website. Vercel currently has no connected project and production Turso credentials are unavailable. Daily publishing to GitHub is enabled separately from web deployment. Until hosting is connected, notify with a GitHub packet link and the chat exercise, not an invented live URL.
+After each content update, a deployment is needed: commits are not a running website. Pushing to `master` deploys to https://maxlie-blog.vercel.app, so a packet is live only after its commit is pushed and deployed. Do not announce a live URL before that.
 
 Text submissions require owner Studio sign-in. They are stored pending; manual feedback and review are available in Studio. Attempt permalinks require authentication. Audio can be recorded, played and downloaded locally, but is not uploaded or automatically scored. Cross-device persistence requires the production database described in VERCEL-TURSO.md. No automatic CEFR assessment or AI feedback is implemented.
+
+## Naming optional lessons
+
+The packet schema has no optional flag. The path on `/learning` reads the title: any lesson whose title
+contains "Tùy chọn" is shown as optional, and every other lesson counts as a main task. Always name
+extra work this way, for example "Tùy chọn 5 phút — …". A lesson whose `material` is a `/blog/…` path
+is shown in that article's stage instead of today's stage.

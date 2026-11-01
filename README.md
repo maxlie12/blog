@@ -3,8 +3,8 @@
 Personal site: portfolio, blog, and an English-learning space, with a private "Studio"
 workspace for publishing. Built with Next.js (App Router) and a SQLite database (via Prisma).
 
-**Status: MVP + editorial redesign + private Studio built and passing checks locally; not yet
-deployed and still running placeholder content in About/Projects.** See
+**Status: deployed at https://maxlie-blog.vercel.app, with placeholder content still in
+About/Projects.** See
 [docs/STATUS.md](docs/STATUS.md) for the full, current picture — what works, what's
 placeholder, and what's next.
 
@@ -24,7 +24,7 @@ a session secret).
 
 ## Documentation
 
-- **[docs/VERCEL-TURSO.md](docs/VERCEL-TURSO.md)** — prepared Vercel + Turso deployment, additive migrations, content import, English/Chinese lessons, and remaining account blockers. This preparation has not been pushed or deployed yet.
+- **[docs/VERCEL-TURSO.md](docs/VERCEL-TURSO.md)** — prepared Vercel + Turso deployment, additive migrations, content import, English/Chinese lessons, and remaining account blockers.
 
 - **[docs/LEARNING-FARM.md](docs/LEARNING-FARM.md)** — the farm, fishpond and ranch game at `/learning/world`: rules, graphics presets and performance, optional Meshy models, local-only storage.
 - **[docs/PRODUCT.md](docs/PRODUCT.md)** — goals, users, scope, what's deliberately excluded.
@@ -45,12 +45,12 @@ a session secret).
 ```
 content/articles/*.mdx     Legacy hand-written blog posts (still supported, merged with Studio)
 content/projects/*.mdx     Portfolio project write-ups
-src/app/                   Public routes: /, /blog, /projects, /learning, /about
+src/app/                   Public routes: /, /blog, /projects, /learning (+ /path, /practice), /about
 src/app/studio/            Private routes: login (unauthenticated) + (dashboard) route group
                             (Overview, Posts, Learning, Mountain journey — all session-gated)
-src/middleware.ts          Gates /studio/** by verifying the signed session cookie
+src/proxy.ts               Gates /studio/** by verifying the signed session cookie
 src/components/            Public UI (SiteHeader/Footer, BlogCard, MountainJourney,
-                            LearningExplorer, LessonDetailView, PracticeLogSection)
+                            LessonDetailView, LearningPath, FreePractice, ArticleStudy)
 src/components/studio/     Studio UI (StudioSidebar, PostEditor, LessonForm, AttemptsPanel)
 src/lib/                   Content/DB access (content.ts, posts.ts, lessonsData.ts,
                             journeyData.ts, db.ts, streak.ts), auth.ts, theme.tsx

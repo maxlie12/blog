@@ -3,7 +3,7 @@
 ## Identity
 
 - **Issue:** `LEARN-007`
-- **Status:** verified locally
+- **Status:** verified
 - **Owner:** Claude
 - **Date:** 2026-10-29
 
@@ -71,3 +71,5 @@ audio" reads as if the app accepts audio, and the home page renders the whole 86
 - **Not checked / remaining risk:** `LearningExplorer` and `LessonFilterProvider` are no longer
   imported anywhere — delete them and their CSS in a follow-up. Server-action error text is still
   English. zh/ja lessons and real phones not checked.
+
+Visible in production on 2026-11-01; see `docs/STATUS.md`.

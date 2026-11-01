@@ -12,9 +12,9 @@ function TermList({ items }: { items: StudyTerm[] }) {
     <ul className="study-aside__list">
       {items.map((item) => (
         <li key={item.term}>
-          <strong>{item.term}{item.pos && <span className="study-pos">{item.pos}</span>}</strong>
+          <strong lang="en">{item.term}{item.pos && <span className="study-pos">{item.pos}</span>}</strong>
           <span>{item.meaning}</span>
-          {item.example && <em className="study-listen">{item.example}<PronounceButton text={item.example} /></em>}
+          {item.example && <em className="study-listen" lang="en">{item.example}<PronounceButton text={item.example} /></em>}
         </li>
       ))}
     </ul>
@@ -37,6 +37,8 @@ export function studyComponents(study: ArticleStudy): MDXComponents {
   add(study.structures, "cấu trúc");
 
   return {
+    // The reading note above each English article is in Vietnamese.
+    blockquote: ({ children }: { children?: ReactNode }) => <blockquote lang="vi">{children}</blockquote>,
     strong: ({ children }: { children?: ReactNode }) => {
       const entry = typeof children === "string" ? glossary.get(normalize(children)) : undefined;
       return entry ? <GlossTerm pos={entry.pos} ipa={entry.ipa} meaning={entry.meaning}>{children}</GlossTerm> : <strong>{children}</strong>;
@@ -60,7 +62,7 @@ export function StudyAside({ study, slug }: { study: ArticleStudy; slug: string 
         <h2>Từ mới · {study.words.length}</h2>
         <ul className="study-aside__chips">
           {study.words.map((word) => (
-            <li key={word.term}><a href={`#${anchor(word.term)}`}>{word.term}</a></li>
+            <li key={word.term}><a href={`#${anchor(word.term)}`} lang="en">{word.term}</a></li>
           ))}
         </ul>
       </section>
@@ -85,10 +87,10 @@ export function StudyWordList({ study }: { study: ArticleStudy }) {
         {study.words.map((word) => (
           <div key={word.term} id={anchor(word.term)}>
             <dt>
-              <span>{word.term}{word.pos && <span className="study-pos">{word.pos}</span>}{word.ipa && <span className="study-ipa">{word.ipa}</span>}</span>
+              <span lang="en">{word.term}{word.pos && <span className="study-pos">{word.pos}</span>}{word.ipa && <span className="study-ipa">{word.ipa}</span>}</span>
               <PronounceButton text={word.term} />
             </dt>
-            <dd>{word.meaning}{word.example && <em>{word.example}</em>}</dd>
+            <dd>{word.meaning}{word.example && <em lang="en">{word.example}</em>}</dd>
           </div>
         ))}
       </dl>

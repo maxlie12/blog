@@ -56,6 +56,39 @@ public `/blog` page merges these with Studio posts.
 - **Mark drafts as drafts.** `draft: true` keeps a piece out of the production build entirely
   (see `src/lib/content.ts`), so half-finished writing never accidentally goes live.
 
+### Language-study articles
+
+An English `.mdx` article becomes a study article by adding `study` to its frontmatter. It then
+gets hover meanings, a side panel and a glossary, and appears on `/learning/practice` and as a
+stage on the `/learning` path after deployment. Studio posts do not support this.
+
+```yaml
+study:
+  lessonId: "daily-2026-11-01-en-blog-speech" # optional practice lesson
+  words:
+    - term: "transcript"
+      ipa: "/ˈtrænskrɪpt/"   # US IPA, shown in the glossary and word cards
+      pos: "noun"            # part of speech
+      meaning: "bản chép lại lời nói"
+      example: "The learner had to type a transcript."
+  verbs:
+    - term: "drift from"
+      pos: "phrasal verb"
+      forms: ["drifts from"] # other spellings used in bold in the text
+      meaning: "dần lệch khỏi"
+      example: "A typed transcript often drifts from what was said."
+  structures:
+    - term: "The catch is that …"
+      meaning: "Vấn đề là …"
+      example: "The catch is that speech is personal data."
+```
+
+- Reserve **bold** for study terms. A bold run gets a hover card only if it matches a `term` or a
+  `forms` entry exactly, so use italics for labels.
+- Every word should appear in bold in the text, and every structure should be used at least once.
+- Do not use Markdown tables: articles do not render them. Use a list.
+- Check facts against a fetched source and name what could not be checked.
+
 ## Adding a project
 
 1. Create `content/projects/<slug>.mdx`.

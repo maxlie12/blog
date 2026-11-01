@@ -25,7 +25,7 @@
                      │ gate: /studio/** only
               ┌──────┴──────┐
               │  middleware  │  checks a signed session cookie
-              │ (src/middleware.ts) │ (src/lib/auth.ts)
+              │  (src/proxy.ts)     │ (src/lib/auth.ts)
               └─────────────┘
 ```
 
@@ -163,6 +163,19 @@ derives each skill's `completed/total` from live `Attempt` rows (a lesson counts
 least one `reviewStatus: "reviewed"` attempt) every time it's read. There is no cached progress
 number anywhere that could drift from the underlying attempts.
 
+**Study articles feed practice without a new data model.** An article's optional `study`
+frontmatter (`src/lib/content.ts`) holds words, verbs, structures and an optional `lessonId`. The
+article page renders hover meanings, the side panel and the glossary from it. `/learning/practice`
+uses the same data for word cards and read-aloud, and the path on `/learning` turns each study article
+into a stage, after today's packet and due reviews, with finished lessons listed last. Listen buttons use the browser's own speech
+synthesis, so no audio is stored or requested. Studio posts have no `study` data.
+
+**Free practice and the path are device-only habit marks.** Known words
+(`study-words-known-v1`) and path marks (`study-path-v1`) live in localStorage under the learner
+profile and travel in the private backup. They write no Done, streak or attempt, are not synced to
+the server, and never count as level evidence. The read-aloud comparison is a text match, not a
+pronunciation score. The path's lesson step and today's stage only read existing Done records.
+
 ## Data flows
 
 - **Read (visitor):** unchanged in shape — Server Components read MDX files and query SQLite at
@@ -205,7 +218,7 @@ number anywhere that could drift from the underlying attempts.
 | `JourneyEvidence` | Yes, always | Free-text and short by design (see content model) — don't put anything in an evidence note you wouldn't want public. |
 | `LearningLog` rows | Yes, but only if `isPublic: true` | Unchanged from before |
 | `InterviewRecord` rows | No (defaults `isPublic: false`) | Unchanged — no UI yet |
-| Everything under `/studio` | No | `src/middleware.ts` + per-action `requireStudioSession()` |
+| Everything under `/studio` | No | `src/proxy.ts` + per-action `requireStudioSession()` |
 
 ## Deployment implications
 

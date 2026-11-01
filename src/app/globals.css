@@ -3440,7 +3440,7 @@ body { line-height: 1.65; }
 .path-stage { padding: 1rem 1.25rem; border-radius: 16px; background: var(--forest); color: var(--surface); }
 .path-stage--today { background: var(--sage); color: var(--text); border: 2px solid var(--forest); }
 .path-stage p { margin: 0; font-size: .85rem; font-weight: 700; }
-.path-stage h2 { margin: .15rem 0 0; color: inherit; font-size: 1.15rem; line-height: 1.35; }
+.path-stage h3 { margin: .15rem 0 0; color: inherit; font-size: 1.15rem; line-height: 1.35; }
 .path-steps { display: grid; justify-items: center; gap: .9rem; margin: 1.25rem 0 0; padding: 0; list-style: none; }
 .path-steps { --path-scale: 1rem; }
 @media (min-width: 720px) { .path-steps { --path-scale: 1.9rem; } }
@@ -3455,3 +3455,13 @@ a.path-node--done:hover .path-node__circle { color: var(--surface); }
 .path-node--marker .path-node__circle { border-radius: 16px; }
 .path-node__label { font-weight: 700; font-size: .95rem; line-height: 1.25; }
 .path-node__state { font-size: .8rem; color: var(--text-muted); }
+
+.learning-path__header { text-align: center; }
+.learning-path__header h2 { margin: 0; color: var(--forest); font-size: 1.75rem; }
+.learning-path__header p { margin: .25rem 0 0; color: var(--text-muted); }
+.path-note { margin: 1rem 0 0; padding: .75rem 1rem; border: 1px solid var(--forest); border-radius: 12px; background: var(--surface); text-align: center; }
+.path-finished { padding: .25rem 1rem; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+.path-finished summary { display: flex; align-items: center; min-height: 44px; font-weight: 700; cursor: pointer; }
+.path-finished ul { display: grid; gap: .25rem; margin: 0 0 .75rem; padding: 0; list-style: none; }
+.path-finished a { display: grid; align-content: center; min-height: 44px; padding: .35rem 0; color: var(--text); }
+.path-finished small { color: var(--text-muted); }

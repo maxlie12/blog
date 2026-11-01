@@ -1,4 +1,5 @@
 import { computeStreaks } from "./streak.ts";
+import { readKnownWords, readPathMarks, writeKnownWords, writePathMarks } from "./studyPath.ts";
 import { getActiveLearnerProfileId, getLearnerProfile, isLearnerProfileId, readProfileStorage, writeProfileStorage, type LearnerProfileId } from "./learnerProfiles.ts";
 import { dueReviews, nextScheduledReview, reviewCompletionId, type ScheduledReview } from "./reviewSchedule.ts";
 
@@ -25,6 +26,8 @@ type LocalProgressBackup = LocalProgressStore & {
   exportedAt: string;
   syncToken?: string;
   learnerProfile?: { id: LearnerProfileId; name: string };
+  studyWords?: string[];
+  studyPathMarks?: string[];
 };
 
 export type LocalProgressSummary = {
@@ -220,6 +223,10 @@ export function recordLocalReview(
   };
 }
 
+function isStudyList(value: unknown): boolean {
+  return value === undefined || (Array.isArray(value) && value.length <= MAX_COMPLETIONS && value.every((item) => typeof item === "string" && item.length <= 200));
+}
+
 export function exportLocalProgressBackup(): string {
   const profileId = getActiveLearnerProfileId();
   const profile = getLearnerProfile(profileId);
@@ -228,6 +235,8 @@ export function exportLocalProgressBackup(): string {
     exportedAt: new Date().toISOString(),
     syncToken: getOrCreateSyncToken(profileId),
     learnerProfile: { id: profile.id, name: profile.name },
+    studyWords: readKnownWords(),
+    studyPathMarks: readPathMarks(),
     ...readStore(profileId),
   };
   return JSON.stringify(backup, null, 2);
@@ -250,6 +259,10 @@ export function importLocalProgressBackup(raw: string): ImportProgressResult {
   }
   if (backup.completions.length > MAX_COMPLETIONS || !backup.completions.every(isCompletion)) {
     throw new Error("Bản sao có dữ liệu không hợp lệ hoặc quá nhiều bản ghi.");
+  }
+
+  if (!isStudyList(backup.studyWords) || !isStudyList(backup.studyPathMarks)) {
+    throw new Error("Bản sao có dữ liệu từ vựng không hợp lệ.");
   }
 
   const activeProfile = getActiveLearnerProfileId();
@@ -287,6 +300,9 @@ export function importLocalProgressBackup(raw: string): ImportProgressResult {
     added += 1;
   }
   writeStore(store, activeProfile);
+  // Older backups have neither list; a merge keeps what this browser already has.
+  if (backup.studyWords) writeKnownWords([...new Set([...readKnownWords(), ...backup.studyWords])]);
+  if (backup.studyPathMarks) writePathMarks([...new Set([...readPathMarks(), ...backup.studyPathMarks])]);
   return { added, skipped: backup.completions.length - added, total: store.completions.length, syncProfileImported };
 }
 
