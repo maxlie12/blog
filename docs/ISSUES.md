@@ -18,6 +18,7 @@ evidence and never proves a CEFR, HSK or JLPT level.
 | BLOG-003 | P2 | Active | Nothing explains in one place what the site is and how it works. | Publish one overview article. See `docs/changes/BLOG-003-site-overview-article.md`. |
 | LEARN-008 | P2 | Active | No way to hear new words or to practise reading and words without a lesson. | Listen buttons and `/learning/practice`. See `docs/changes/LEARN-008-free-practice.md`. |
 | BLOG-004 | P2 | Active | Nothing public explains the on-device speech decision. | Publish one article. See `docs/changes/BLOG-004-speech-model-article.md`. |
+| LEARN-009 | P2 | Active | Study articles and practice are not shown as an ordered route. | Topic path at `/learning/path`. See `docs/changes/LEARN-009-topic-path.md`. |
 | SPEAK-001 | P2 | Active | After recording, the learner must retype their whole speaking answer. | On-device transcription draft fills the transcript field; audio never leaves the browser. See `docs/changes/SPEAK-001-browser-transcription.md`. |
 | FEEDBACK-001 | P2 | Blocked | Personal correction is manual; automatic AI feedback is not implemented or cost-controlled. | First collect real attempts and define a one-error feedback contract. |
 

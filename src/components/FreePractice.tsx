@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { PronounceButton } from "@/components/PronounceButton";
 import { SpeakingRecorder } from "@/components/SpeakingRecorder";
 import type { StudyTerm } from "@/lib/content";
-import { readProfileStorage, writeProfileStorage } from "@/lib/learnerProfiles";
+import { addPathMark, readKnownWords, writeKnownWords } from "@/lib/studyPath";
 import { compareReading } from "@/lib/studyText";
 
 export interface PracticeTopic {
@@ -12,17 +12,6 @@ export interface PracticeTopic {
   title: string;
   words: StudyTerm[];
   paragraphs: string[];
-}
-
-const KNOWN_KEY = "study-words-known-v1";
-
-function readKnown(): string[] {
-  try {
-    const stored: unknown = JSON.parse(readProfileStorage(KNOWN_KEY) ?? "[]");
-    return Array.isArray(stored) ? stored.filter((item) => typeof item === "string") : [];
-  } catch {
-    return [];
-  }
 }
 
 function WordCards({ topic, known, setKnown }: { topic: PracticeTopic; known: string[]; setKnown: (next: string[]) => void }) {
@@ -92,6 +81,11 @@ function ReadAloud({ topic }: { topic: PracticeTopic }) {
     setSpoken(null);
   }
 
+  function compare(text: string) {
+    setSpoken(text);
+    addPathMark(topic.slug, "speak");
+  }
+
   return (
     <div className="free-card">
       <p className="free-card__count">Đoạn {index + 1}/{topic.paragraphs.length}</p>
@@ -114,7 +108,7 @@ function ReadAloud({ topic }: { topic: PracticeTopic }) {
       <SpeakingRecorder
         key={`${topic.slug}-${index}`}
         language="en"
-        onTranscript={setSpoken}
+        onTranscript={compare}
         hint="Bản ghi ở lại trên máy này. Lần chép lời đầu tiên tải khoảng 100MB, sau đó được lưu sẵn."
       />
     </div>
@@ -122,22 +116,18 @@ function ReadAloud({ topic }: { topic: PracticeTopic }) {
 }
 
 /** Practice for days without a lesson. It writes no Done, streak or attempt. */
-export function FreePractice({ topics, initialSlug }: { topics: PracticeTopic[]; initialSlug?: string }) {
+export function FreePractice({ topics, initialSlug, initialMode }: { topics: PracticeTopic[]; initialSlug?: string; initialMode?: string }) {
   const [slug, setSlug] = useState(topics.some((topic) => topic.slug === initialSlug) ? initialSlug : topics[0].slug);
-  const [mode, setMode] = useState<"words" | "read">("words");
+  const [mode, setMode] = useState<"words" | "read">(initialMode === "read" ? "read" : "words");
   const [known, setKnownState] = useState<string[]>([]);
   const topic = topics.find((item) => item.slug === slug) ?? topics[0];
 
   // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage exists only after hydration
-  useEffect(() => setKnownState(readKnown()), []);
+  useEffect(() => setKnownState(readKnownWords()), []);
 
   function setKnown(next: string[]) {
     setKnownState(next);
-    try {
-      writeProfileStorage(KNOWN_KEY, JSON.stringify(next));
-    } catch {
-      // Blocked storage only means the marks last for this visit.
-    }
+    writeKnownWords(next);
   }
 
   function switchTopic() {

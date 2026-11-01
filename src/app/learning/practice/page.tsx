@@ -6,8 +6,8 @@ import { articleParagraphs } from "@/lib/studyText";
 
 export const metadata: Metadata = { title: "Tự luyện" };
 
-export default async function FreePracticePage({ searchParams }: { searchParams: Promise<{ topic?: string }> }) {
-  const { topic } = await searchParams;
+export default async function FreePracticePage({ searchParams }: { searchParams: Promise<{ topic?: string; mode?: string }> }) {
+  const { topic, mode } = await searchParams;
   const topics = getAllArticles().flatMap((article) => article.study
     ? [{ slug: article.slug, title: article.title, words: article.study.words, paragraphs: articleParagraphs(article.content) }]
     : []);
@@ -19,7 +19,7 @@ export default async function FreePracticePage({ searchParams }: { searchParams:
         <h1>Tự luyện</h1>
         <p>Cho những hôm không làm được bài chính: ôn từ mới hoặc đọc to một đoạn, dừng lúc nào cũng được. Phần này không tính vào Done hay nhịp học.</p>
       </header>
-      {topics.length > 0 ? <FreePractice topics={topics} initialSlug={topic} /> : <p>Chưa có bài viết nào có từ vựng để luyện.</p>}
+      {topics.length > 0 ? <FreePractice topics={topics} initialSlug={topic} initialMode={mode} /> : <p>Chưa có bài viết nào có từ vựng để luyện.</p>}
     </div>
   );
 }

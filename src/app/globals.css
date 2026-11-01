@@ -3434,3 +3434,24 @@ body { line-height: 1.65; }
 .free-card__actions { display: flex; flex-wrap: wrap; gap: .5rem; }
 .free-read { font-size: 1.1rem; line-height: 1.75; overflow-wrap: anywhere; }
 .free-read__missed { text-decoration: underline wavy var(--forest) 2px; text-underline-offset: 4px; }
+
+/* Topic path: stages from study articles on a winding line. */
+.learning-path { display: grid; gap: 2rem; max-width: 34rem; margin: 0 auto; }
+.path-stage { padding: 1rem 1.25rem; border-radius: 16px; background: var(--forest); color: var(--surface); }
+.path-stage--today { background: var(--sage); color: var(--text); border: 2px solid var(--forest); }
+.path-stage p { margin: 0; font-size: .85rem; font-weight: 700; }
+.path-stage h2 { margin: .15rem 0 0; color: inherit; font-size: 1.15rem; line-height: 1.35; }
+.path-steps { display: grid; justify-items: center; gap: .9rem; margin: 1.25rem 0 0; padding: 0; list-style: none; }
+.path-steps { --path-scale: 1rem; }
+@media (min-width: 720px) { .path-steps { --path-scale: 1.9rem; } }
+.path-steps li { transform: translateX(calc(var(--path-x) * var(--path-scale))); }
+.path-node { display: grid; justify-items: center; gap: .15rem; width: 7.5rem; min-height: 44px; padding: .25rem; border-radius: 16px; color: var(--text); text-align: center; text-decoration: none; }
+a.path-node:focus-visible { outline: 2px solid var(--forest); outline-offset: 2px; }
+.path-node__circle { display: grid; place-items: center; width: 4.25rem; height: 4.25rem; border: 2px solid var(--border); border-bottom-width: 6px; border-radius: 50%; background: var(--surface); color: var(--text-muted); }
+a.path-node:hover .path-node__circle { border-color: var(--forest); color: var(--forest); }
+.path-node--done .path-node__circle { border-color: var(--forest); background: var(--forest); color: var(--surface); }
+a.path-node--done:hover .path-node__circle { color: var(--surface); }
+.path-node--next .path-node__circle { width: 5rem; height: 5rem; border-color: var(--forest); background: var(--sage); color: var(--forest); }
+.path-node--marker .path-node__circle { border-radius: 16px; }
+.path-node__label { font-weight: 700; font-size: .95rem; line-height: 1.25; }
+.path-node__state { font-size: .8rem; color: var(--text-muted); }
