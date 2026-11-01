@@ -25,6 +25,7 @@ export interface ArticleFrontmatter {
 export interface StudyTerm {
   term: string;
   meaning: string; // Vietnamese gloss
+  ipa?: string; // US pronunciation, e.g. "/ruːˈtiːn/"
   pos?: string; // part of speech shown in the hover card, e.g. "noun", "phrasal verb"
   forms?: string[]; // other bold spellings in the text, e.g. "overseeing" for "oversee"
   example?: string;

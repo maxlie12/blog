@@ -88,7 +88,7 @@ export default async function ArticlePage({
   return (
     <div className="article-study-layout">
       {page}
-      <StudyAside study={article.study} />
+      <StudyAside study={article.study} slug={article.slug} />
     </div>
   );
 }

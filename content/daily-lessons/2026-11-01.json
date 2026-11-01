@@ -83,6 +83,38 @@
         "pattern": "Instead of …, I will … because …",
         "reusePrompt": "Gửi bản nháp cho ChatGPT để sửa một lỗi lập luận, một lỗi ngôn ngữ và đề xuất bản chỉnh sửa."
       }
+    },
+    {
+      "id": "daily-2026-11-01-en-blog-overview",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 10 phút — giới thiệu dự án của bạn trong 60 giây",
+      "level": "B1+ / B1 source",
+      "instructions": "Bài đọc do trợ lý viết từ tài liệu của dự án, không phải đề thi chính thức. Đọc lướt các tiêu đề, rồi đọc kỹ phần 3 và phần 4; di chuột hoặc chạm vào từ in đậm để xem nghĩa và loại từ. Đóng bài trước khi nói.",
+      "material": "/blog/inside-maxlie-blog",
+      "exercises": "Không nhìn bài, nói bằng tiếng Anh trong 60 giây như đang giới thiệu dự án với người phỏng vấn: (1) what the site is; (2) one technical decision and its trade-off, dùng \"The trade-off is …\"; (3) what is not finished yet. Ghi âm một lượt, chép lại lời nói, rồi chỉ sửa một câu.",
+      "completionCriteria": "Lưu bản chép lời, một câu đã sửa và số phút thực học rồi bấm Done. Done là thói quen tự ghi nhận, không phải điểm trình độ.",
+      "takeaway": {
+        "phrase": "The trade-off is …",
+        "pattern": "Unlike A, B …, so that …",
+        "reusePrompt": "Giới thiệu một quyết định kỹ thuật trong dự án đang làm, nói rõ điều được và điều phải đánh đổi."
+      }
+    },
+    {
+      "id": "daily-2026-11-01-en-blog-speech",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 10 phút — giải thích một quyết định kỹ thuật",
+      "level": "B1+ / B2 source",
+      "instructions": "Bài đọc do trợ lý viết từ ghi chép của dự án, không phải đề thi chính thức. Đọc phần 1, 2 và 4; di chuột hoặc chạm vào từ in đậm để xem nghĩa, phiên âm và loại từ. Đóng bài trước khi viết.",
+      "material": "/blog/i-put-a-speech-model-inside-my-browser",
+      "exercises": "Không nhìn bài, viết năm câu tiếng Anh về một quyết định kỹ thuật của bạn: (1) vấn đề, dùng \"What if …?\"; (2) phương án dễ nhất và điểm trừ, dùng \"The catch is that …\"; (3) phương án bạn chọn, dùng \"…, which is why …\"; (4) một con số thật, dùng \"It took … to …\"; (5) một điều chưa kiểm tra. Mở lại bài, kiểm tra và chỉ sửa một câu.",
+      "completionCriteria": "Lưu năm câu nguyên bản và số phút thực học rồi bấm Done. Done là thói quen tự ghi nhận, không phải điểm trình độ.",
+      "takeaway": {
+        "phrase": "The catch is that …",
+        "pattern": "…, which is why …",
+        "reusePrompt": "Trình bày một quyết định kỹ thuật trong công việc: nêu điểm trừ của phương án dễ nhất và lý do bạn chọn cách khác."
+      }
     }
   ]
 }

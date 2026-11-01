@@ -3,7 +3,7 @@
 import { useId, useState, type ReactNode } from "react";
 
 /** A bold study word: hover, focus or tap shows its part of speech and meaning; Escape hides it. */
-export function GlossTerm({ children, pos, meaning }: { children: ReactNode; pos: string; meaning: string }) {
+export function GlossTerm({ children, pos, ipa, meaning }: { children: ReactNode; pos: string; ipa?: string; meaning: string }) {
   const id = useId();
   const [dismissed, setDismissed] = useState(false);
   return (
@@ -18,7 +18,7 @@ export function GlossTerm({ children, pos, meaning }: { children: ReactNode; pos
         <strong>{children}</strong>
       </button>
       <span role="tooltip" id={id} className="gloss__tip">
-        <span className="gloss__pos">{pos}</span> {meaning}
+        <span className="gloss__pos">{pos}{ipa && ` · ${ipa}`}</span> {meaning}
       </span>
     </span>
   );

@@ -1,0 +1,240 @@
+---
+title: "Inside maxlie-blog: A Tour of What This Site Is and How It Works"
+date: "2026-11-01"
+summary: "An overview of maxlie-blog: the journal, projects, language lessons, farm game and private Studio, how they fit together technically, and what is still unfinished."
+areas: ["dev", "learning"]
+study:
+  lessonId: "daily-2026-11-01-en-blog-overview"
+  words:
+    - term: "highlight reel"
+      ipa: "/ˈhaɪlaɪt riːl/"
+      pos: "noun phrase"
+      meaning: "tập hợp những khoảnh khắc đẹp nhất, chỉ khoe phần tốt"
+      example: "It is a record of growth, not a highlight reel."
+    - term: "repository"
+      ipa: "/rɪˈpɑːzətɔːri/"
+      pos: "noun"
+      meaning: "kho mã nguồn (repo)"
+      example: "Articles live as files in the repository."
+    - term: "schema"
+      ipa: "/ˈskiːmə/"
+      pos: "noun"
+      meaning: "lược đồ — quy định cấu trúc của dữ liệu"
+      example: "A schema checks every lesson file."
+    - term: "friction"
+      ipa: "/ˈfrɪkʃn/"
+      pos: "noun"
+      meaning: "lực cản, những bước phiền khiến người dùng dễ bỏ cuộc"
+      example: "A sign-up form adds friction."
+    - term: "rhythm"
+      ipa: "/ˈrɪðəm/"
+      pos: "noun"
+      meaning: "nhịp đều đặn"
+      example: "The page shows a rolling seven-day rhythm."
+    - term: "backlog"
+      ipa: "/ˈbæklɔːɡ/"
+      pos: "noun"
+      meaning: "phần việc tồn đọng phải làm bù"
+      example: "A missed day creates no backlog."
+    - term: "self-reported"
+      ipa: "/ˌself rɪˈpɔːrtɪd/"
+      pos: "adjective"
+      meaning: "do chính mình tự khai, không có người kiểm chứng"
+      example: "Done is self-reported habit data."
+    - term: "evidence"
+      ipa: "/ˈevɪdəns/"
+      pos: "noun (uncountable)"
+      meaning: "bằng chứng"
+      example: "A reviewed attempt is stronger evidence."
+    - term: "on-device"
+      ipa: "/ˌɑːn dɪˈvaɪs/"
+      pos: "adjective"
+      meaning: "chạy ngay trên máy của người dùng"
+      example: "On-device transcription keeps the audio private."
+    - term: "metadata"
+      ipa: "/ˈmetədeɪtə/"
+      pos: "noun"
+      meaning: "dữ liệu mô tả dữ liệu, ví dụ ngày hoàn thành một bài"
+      example: "Only completion metadata can sync."
+    - term: "trade-off"
+      ipa: "/ˈtreɪd ɔːf/"
+      pos: "noun"
+      meaning: "sự đánh đổi"
+      example: "The trade-off is a large first download."
+    - term: "fallback"
+      ipa: "/ˈfɔːlbæk/"
+      pos: "noun"
+      meaning: "phương án dự phòng"
+      example: "A 2D board is the fallback."
+    - term: "placeholder"
+      ipa: "/ˈpleɪshoʊldər/"
+      pos: "noun"
+      meaning: "nội dung tạm, sẽ được thay sau"
+      example: "The About page still has placeholder text."
+    - term: "roadmap"
+      ipa: "/ˈroʊdmæp/"
+      pos: "noun"
+      meaning: "lộ trình phát triển"
+      example: "Assessment is next on the roadmap."
+  verbs:
+    - term: "walk through"
+      pos: "phrasal verb"
+      meaning: "dẫn qua từng phần, giải thích lần lượt"
+      example: "This article walks through each part of the site."
+    - term: "merge"
+      pos: "verb"
+      forms: ["merges"]
+      meaning: "gộp lại"
+      example: "The blog merges both sources."
+    - term: "validate"
+      pos: "verb"
+      forms: ["validates"]
+      meaning: "kiểm tra tính hợp lệ"
+      example: "The app validates each packet."
+    - term: "sign in"
+      pos: "phrasal verb"
+      meaning: "đăng nhập"
+      example: "Learners do not need to sign in."
+    - term: "store"
+      pos: "verb"
+      forms: ["stores"]
+      meaning: "lưu trữ"
+      example: "The browser stores drafts and Done records."
+    - term: "count toward"
+      pos: "phrasal verb"
+      meaning: "được tính vào"
+      example: "Only reviewed attempts count toward skill progress."
+    - term: "fall back to"
+      pos: "phrasal verb"
+      meaning: "chuyển sang dùng phương án dự phòng"
+      example: "Players on a weak device can fall back to a 2D board."
+    - term: "deploy"
+      pos: "verb"
+      forms: ["deploys"]
+      meaning: "triển khai (đưa bản mới lên chạy thật)"
+      example: "Vercel deploys each push to master."
+  structures:
+    - term: "The idea is simple: …"
+      meaning: "Ý tưởng rất đơn giản: … (mở đầu phần giải thích)"
+      example: "The idea is simple: one source, one output, five to ten minutes."
+    - term: "Unlike A, B …"
+      meaning: "Không giống A, B thì …"
+      example: "Unlike Done, a reviewed attempt is checked before it counts."
+    - term: "…, so that …"
+      meaning: "…, để mà … (nêu mục đích)"
+      example: "It stays in the browser, so that nothing is uploaded."
+    - term: "As long as …, …"
+      meaning: "Miễn là …, thì …"
+      example: "As long as a packet matches the schema, it needs no new page."
+    - term: "neither … nor …"
+      meaning: "không … cũng không …"
+      example: "The sync sends neither your answers nor your audio."
+    - term: "In short, …"
+      meaning: "Tóm lại, …"
+      example: "In short, it is one small app with two kinds of content."
+---
+
+> Bài đọc luyện tiếng Anh: di chuột (hoặc chạm) vào từ **in đậm** để xem nghĩa và loại từ; nghĩa
+> và ví dụ cũng ở cuối bài. Động từ và cấu trúc câu nằm ở cột bên phải (trên điện thoại: cuối trang).
+
+maxlie-blog is my personal site, but it is more than a blog. It holds a journal, a project
+portfolio, daily practice in three languages, a small farm game and a private workspace. Its goal
+is to be a genuine record of growth, not a **highlight reel**, so the setbacks stay in.
+
+This article will **walk through** what is here, how it works and what is not finished yet.
+
+## 1. The public site
+
+The top menu has four parts:
+
+- Blog is the journal. Articles cover software, work and learning.
+- Projects is the portfolio.
+- Learning is the daily practice space.
+- About is the personal page.
+
+Readers can also change the look of the site with five colour themes: Forest, Ocean, Sunset,
+Sakura and Ink.
+
+English articles like this one double as reading practice. Each bold word opens its meaning and
+part of speech. A side panel lists useful verbs and sentence structures, and links to a practice
+lesson.
+
+## 2. How the content works
+
+Articles come from two places. Some are MDX files in the Git **repository**, which suits long
+pieces that benefit from version history. Others are written in Studio and saved in a database.
+The blog **merges** both sources into one list.
+
+Daily lessons are different. Each day has one JSON file, drafted with the help of an AI assistant
+that follows written teaching rules. A **schema** **validates** every file, so a broken lesson
+cannot appear quietly. As long as a new lesson matches the schema, it needs no new page or new
+code.
+
+## 3. Learning: one small step at a time
+
+The idea is simple: one source, one output, five to ten minutes. Learners do not need to
+**sign in**, because every sign-up form adds **friction** to a five-minute habit.
+
+The page offers one lesson rather than a long catalogue. It resumes an unfinished draft first,
+then offers the next new lesson. Finished lessons come back for review after 1, 3, 7 and 14 days.
+Lessons cover English, Chinese and Japanese through one shared engine, so that a new language
+does not need separate pages.
+
+Progress is shown as a rolling seven-day **rhythm**, with a minimum of three days and a target of
+five. A missed day creates no **backlog**.
+
+## 4. Two kinds of progress
+
+This is the most important rule on the site. Pressing Done records **self-reported** habit data:
+it says that I practised, not that I improved. Unlike Done, a submitted attempt is real
+**evidence** only after it has been reviewed. Only reviewed attempts **count toward** public skill
+progress.
+
+So a long streak never proves a CEFR, HSK or JLPT level, and the site must never present the two
+as the same thing.
+
+## 5. Privacy by default
+
+The browser **stores** drafts and Done records first, on the visitor's own device. When server
+sync is turned on, it sends only completion **metadata** under a hashed random token. It sends
+neither names nor answers nor audio.
+
+Speaking practice follows the same principle. The recorder can turn speech into a text draft with
+**on-device** transcription: a Whisper model runs inside the browser, so that the recording is
+not uploaded. The **trade-off** is a first download of about 100 MB, and a first run that can
+take around a minute.
+
+## 6. The farm and the Studio
+
+At `/learning/world` there is a small farm, fishpond and ranch game with original art built on
+three.js. Players on a weak device can **fall back to** a 2D board, a
+**fallback** that offers the same game. The game can reward practice, but it is a motivation layer. It never measures
+language ability.
+
+Studio is the private workspace. Only the owner can enter it, and it is used to write posts,
+manage lessons, review attempts and update the mountain-shaped learning journey. Those milestones
+are set by hand. Nothing moves them automatically.
+
+## 7. The stack
+
+- Framework: Next.js 16, React 19 and TypeScript
+- Data: Prisma with SQLite-compatible libSQL, plus Neon for optional habit sync
+- Accounts: Clerk, turned on only through environment settings
+- 3D and speech: three.js and Transformers.js
+- Hosting: Vercel, which **deploys** each push to the `master` branch on GitHub
+
+The whole thing is one Next.js app, with no separate CMS or API service. In short, it is one small
+app with two kinds of content and two kinds of progress.
+
+## 8. What is not finished
+
+An honest tour needs this part:
+
+- The About page still has **placeholder** text, and the Atlas project is a sample entry.
+- Levels are still self-assessed, because the weekly checks and four-skill assessment are not
+  complete.
+- Automatic AI feedback does not exist yet. Corrections are still manual, and the cost and privacy
+  design comes first.
+
+Next on the **roadmap** is better assessment, because practice is only useful if I can see what
+has really improved.

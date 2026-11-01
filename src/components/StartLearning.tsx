@@ -85,6 +85,7 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
           <small>Đến hạn ôn: <Link href={`/learning/${dueReview.review.lessonId}`}>{dueReview.title}</Link> (+{dueReview.review.interval} ngày)</small>
         )}
         <small>Muốn đổi bài hoặc học lại? <Link href="/learning/daily">Mở lịch sử bài học</Link>.</small>
+        <small>Hôm nay không làm bài được? <Link href="/learning/practice">Tự luyện từ mới và đọc to</Link>.</small>
       </div>
     </section>
   );

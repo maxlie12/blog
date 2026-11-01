@@ -6,12 +6,12 @@ import type { TranscribeMessage } from "@/lib/transcribe";
 const TRANSCRIBE_STATUS: Record<TranscribeMessage["status"], string> = {
   loading: "Đang tải model chép lời (chỉ lần đầu)…",
   transcribing: "Đang chép lời trên máy…",
-  done: "Đã thêm bản nháp vào ô trả lời. Hãy nghe lại và sửa cho đúng điều bạn nói.",
-  error: "Không chép lời được trên trình duyệt này. Bạn vẫn có thể tự gõ vào ô trả lời.",
+  done: "Đã chép lời xong. Hãy nghe lại để kiểm tra.",
+  error: "Không chép lời được trên trình duyệt này. Bạn vẫn có thể nghe lại bản ghi.",
 };
 
 /** Local-only recording: audio is played back and optionally transcribed on this device, never uploaded. */
-export function SpeakingRecorder({ language, onTranscript }: { language: string; onTranscript: (text: string) => void }) {
+export function SpeakingRecorder({ language, onTranscript, hint }: { language: string; onTranscript: (text: string) => void; hint?: string }) {
   const [recording, setRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [unsupported, setUnsupported] = useState(false);
@@ -79,8 +79,7 @@ export function SpeakingRecorder({ language, onTranscript }: { language: string;
   if (unsupported) {
     return (
       <p className="attempt-form__recorder-hint">
-        Trình duyệt này chưa cho ghi âm (cần quyền micro qua HTTPS hoặc localhost). Hãy gõ lại điều
-        bạn đã nói vào ô trả lời.
+        Trình duyệt này chưa cho ghi âm (cần quyền micro qua HTTPS hoặc localhost).
       </p>
     );
   }
@@ -111,9 +110,9 @@ export function SpeakingRecorder({ language, onTranscript }: { language: string;
           : TRANSCRIBE_STATUS[transcribe.status])}
       </p>
       <p className="attempt-form__recorder-hint">
-        Bản ghi chỉ phát lại trên máy này, không tải lên đâu cả. &ldquo;Chép lời trên máy&rdquo; nhận
+        {hint ?? <>Bản ghi chỉ phát lại trên máy này, không tải lên đâu cả. &ldquo;Chép lời trên máy&rdquo; nhận
         dạng giọng nói ngay trong trình duyệt (lần đầu tải khoảng 100MB, sau đó được lưu sẵn) và chỉ
-        tạo bản nháp — hãy sửa lại, vì chữ trong ô trả lời mới là thứ được lưu.
+        tạo bản nháp — hãy sửa lại, vì chữ trong ô trả lời mới là thứ được lưu.</>}
       </p>
     </div>
   );

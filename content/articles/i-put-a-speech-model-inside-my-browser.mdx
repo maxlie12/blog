@@ -1,0 +1,244 @@
+---
+title: "I Put a Speech Model Inside My Browser"
+date: "2026-11-01"
+summary: "Why my language-learning site turns speech into text on the learner's own device: the decision, the architecture, the real numbers and what I have not tested yet."
+areas: ["dev", "learning"]
+study:
+  lessonId: "daily-2026-11-01-en-blog-speech"
+  words:
+    - term: "transcript"
+      ipa: "/ˈtrænskrɪpt/"
+      pos: "noun"
+      meaning: "bản chép lại lời nói"
+      example: "The learner had to type a transcript."
+    - term: "third party"
+      ipa: "/ˌθɜːrd ˈpɑːrti/"
+      pos: "noun phrase"
+      meaning: "bên thứ ba, dịch vụ bên ngoài"
+      example: "Sending audio to a third party was not acceptable."
+    - term: "privacy"
+      ipa: "/ˈpraɪvəsi/"
+      pos: "noun"
+      meaning: "quyền riêng tư"
+      example: "Privacy was the first requirement."
+    - term: "dependency"
+      ipa: "/dɪˈpendənsi/"
+      pos: "noun"
+      meaning: "thư viện mà dự án phụ thuộc vào"
+      example: "It is a new dependency, so it needs a good reason."
+    - term: "inference"
+      ipa: "/ˈɪnfərəns/"
+      pos: "noun"
+      meaning: "bước chạy model để tạo kết quả"
+      example: "Inference happens inside the browser."
+    - term: "quantized"
+      ipa: "/ˈkwɑːntaɪzd/"
+      pos: "adjective"
+      meaning: "đã lượng tử hóa — lưu số với độ chính xác thấp hơn để nhẹ hơn"
+      example: "I use a quantized version of the model."
+    - term: "bandwidth"
+      ipa: "/ˈbændwɪdθ/"
+      pos: "noun"
+      meaning: "lượng dữ liệu truyền qua mạng"
+      example: "A smaller model saves bandwidth."
+    - term: "thread"
+      ipa: "/θred/"
+      pos: "noun"
+      meaning: "luồng xử lý"
+      example: "The main thread draws the page."
+    - term: "responsive"
+      ipa: "/rɪˈspɑːnsɪv/"
+      pos: "adjective"
+      meaning: "phản hồi nhanh, không bị đơ"
+      example: "The worker keeps the page responsive."
+    - term: "upfront"
+      ipa: "/ˌʌpˈfrʌnt/"
+      pos: "adjective"
+      meaning: "phải trả ngay từ đầu"
+      example: "The upfront cost is a large download."
+    - term: "cache"
+      ipa: "/kæʃ/"
+      pos: "noun"
+      meaning: "bộ nhớ đệm, nơi lưu sẵn để lần sau không tải lại"
+      example: "The model stays in the browser cache."
+    - term: "draft"
+      ipa: "/dræft/"
+      pos: "noun"
+      meaning: "bản nháp"
+      example: "The result is a draft, not a correction."
+    - term: "accuracy"
+      ipa: "/ˈækjərəsi/"
+      pos: "noun"
+      meaning: "độ chính xác"
+      example: "I have not measured accuracy with real voices."
+    - term: "caveat"
+      ipa: "/ˈkæviæt/"
+      pos: "noun"
+      meaning: "điều cần lưu ý, giới hạn đi kèm"
+      example: "That number has one big caveat."
+  verbs:
+    - term: "retype"
+      pos: "verb"
+      forms: ["retyping"]
+      meaning: "gõ lại"
+      example: "Retyping every answer on a phone is slow."
+    - term: "drift from"
+      pos: "phrasal verb"
+      forms: ["drifts from"]
+      meaning: "dần lệch khỏi"
+      example: "A typed transcript often drifts from what was said."
+    - term: "upload"
+      pos: "verb"
+      forms: ["uploaded"]
+      meaning: "tải lên"
+      example: "The recording is never uploaded."
+    - term: "rule out"
+      pos: "phrasal verb"
+      meaning: "loại bỏ (một khả năng)"
+      example: "Those two reasons rule out most server options."
+    - term: "decode"
+      pos: "verb"
+      forms: ["decodes"]
+      meaning: "giải mã"
+      example: "The page decodes the recording."
+    - term: "hand off … to …"
+      pos: "verb pattern"
+      forms: ["hands off"]
+      meaning: "chuyển giao (việc) cho"
+      example: "It hands off the audio to a worker."
+    - term: "shrink"
+      pos: "verb"
+      forms: ["shrinks"]
+      meaning: "làm nhỏ đi (shrink – shrank – shrunk)"
+      example: "Quantization shrinks the files."
+    - term: "double-check"
+      pos: "verb"
+      meaning: "kiểm tra lại"
+      example: "The learner should double-check the text."
+  structures:
+    - term: "What if …?"
+      meaning: "Nếu … thì sao? (nêu một ý tưởng)"
+      example: "What if I added free AI models to support learning?"
+    - term: "The catch is that …"
+      meaning: "Vấn đề là … (điểm trừ bị giấu)"
+      example: "The catch is that speech is personal data."
+    - term: "…, which is why …"
+      meaning: "…, đó là lý do …"
+      example: "Audio is personal, which is why it stays on the device."
+    - term: "It took + time + to + V"
+      meaning: "Mất (bao lâu) để làm gì"
+      example: "It took 61 seconds to finish the first run."
+    - term: "By the time …, …"
+      meaning: "Tính đến lúc …, thì … đã …"
+      example: "By the time the text appears, the model is cached."
+    - term: "Whether … or …, …"
+      meaning: "Dù … hay …, thì …"
+      example: "Whether the draft is right or wrong, the learner decides."
+---
+
+> Bài đọc luyện tiếng Anh: di chuột (hoặc chạm) vào từ **in đậm** để xem nghĩa, phiên âm và loại từ;
+> cuối bài có nút nghe phát âm. Động từ và cấu trúc câu nằm ở cột bên phải.
+
+It started with one question: what if I added Hugging Face and free AI models to support learning
+on this site? I did not want a chatbot or a clever demo. I wanted to find one small problem that a
+free model could really solve.
+
+## 1. The problem
+
+My site has speaking lessons. A learner records an answer, plays it back, and then submits a
+written **transcript**. That last step was the weak point. **Retyping** a whole answer on a phone is
+slow, and a typed **transcript** often **drifts from** what was really said.
+
+The fix sounds easy: send the audio to a speech-to-text service. The catch is that a recording of
+someone's voice is personal data. This site already promises that audio stays in the browser, so
+sending it to a **third party** would break that promise. **Privacy** was not a feature to add later.
+It was the first requirement.
+
+## 2. The options I looked at
+
+A server API was the obvious choice, but it has two problems: the audio is **uploaded**, and every
+minute can cost money on a personal project with no budget. Those two reasons **rule out** most
+server options.
+
+The browser's own Web Speech API sounds perfect, but by default it sends audio to a web service
+for processing ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API/Using_the_Web_Speech_API)).
+MDN now also describes an on-device option, which needs a language pack. I have not tested it, and
+it may be worth another look.
+
+The third option was the strange one: run the model inside the page. Transformers.js runs models
+in the browser with ONNX Runtime, on the CPU through WebAssembly by default
+([Hugging Face](https://huggingface.co/docs/transformers.js/index)). That means **inference** happens
+on the learner's machine. There is no server to pay for and nowhere for the audio to go. It did mean
+one new **dependency**, which is why I load it only when someone asks for it.
+
+## 3. How it works
+
+The flow has five steps:
+
+1. The learner records an answer, and the recording stays in memory.
+2. They press "Chép lời trên máy" (transcribe on this device). The button is optional.
+3. The page **decodes** the recording into 16 kHz audio, the format Whisper expects.
+4. It **hands off** the audio **to** a Web Worker.
+5. The worker runs Whisper and sends back a text **draft**, which goes into the answer field.
+
+The model is `onnx-community/whisper-base`, an ONNX version of OpenAI's Whisper Base
+([model page](https://huggingface.co/onnx-community/whisper-base)). I use a **quantized** version,
+which **shrinks** the files and saves **bandwidth**. The core of the worker is short:
+
+```ts
+pipeline("automatic-speech-recognition", "onnx-community/whisper-base", { dtype: "q8" });
+```
+
+The worker matters because the main **thread** is the one that draws the page and handles input.
+A worker runs in the background, so a heavy job does not block the interface and the page stays
+**responsive** ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers)).
+The audio buffer is also transferred to the worker rather than copied.
+
+## 4. The real numbers
+
+- Encoder and decoder: 23.2 MB and 53.7 MB
+- ONNX Runtime WebAssembly: about 20 MB
+- Total first download: about 100 MB
+- First run, including the download: 61 seconds
+- Requests that were not GET: 0
+- Library code in the first page load: none (about 870 KB, loaded only by the worker)
+
+So the **upfront** cost is real. It took 61 seconds to finish that first run, and 100 MB is not small
+on mobile data. By the time the text appears, though, the model is saved in the browser **cache**,
+so it should not need to download again.
+
+These numbers have one big **caveat**: they come from a single test on a desktop browser at phone
+width, with a fake microphone playing a synthesized English sentence. It is proof that the idea
+works, not a benchmark.
+
+## 5. What it cannot do
+
+The output is a **draft**, not a correction. Whether it is right or wrong, the learner has to
+**double-check** it, because the text in the answer field is what gets saved. It writes no Done
+record, and it changes no level.
+
+It is not a pronunciation test either. A speech model is built to guess the most likely words,
+so it may write the correct word even when my pronunciation was not quite correct.
+
+I have also not tested several things yet:
+
+- **accuracy** with real voices, especially in Chinese and Japanese
+- memory and speed on a real phone
+- Safari and Firefox
+
+## 6. What I took from this
+
+"AI feature" does not have to mean a chatbot or a monthly bill. Here, the useful work was deciding
+the boundary first: the audio stays on the device. That one rule removed most of the options and
+made the design simple. A small, boring job, turning speech into a draft, turned out to be a better
+first use of AI than something more impressive.
+
+I built this with an AI coding assistant, and the same recorder now also powers the read-aloud
+practice on this site.
+
+## Sources
+
+- MDN, "Using the Web Speech API" — [link](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API/Using_the_Web_Speech_API)
+- MDN, "Using Web Workers" — [link](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers)
+- Hugging Face, Transformers.js documentation — [link](https://huggingface.co/docs/transformers.js/index)
+- Hugging Face, `onnx-community/whisper-base` — [link](https://huggingface.co/onnx-community/whisper-base)
