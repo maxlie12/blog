@@ -4,25 +4,14 @@ import { useCallback, useEffect, useRef, useState, type FormEvent, type Keyboard
 import { PronounceButton } from "@/components/PronounceButton";
 import { getActiveLearnerProfileId, readProfileStorage, writeProfileStorage, type LearnerProfileId } from "@/lib/learnerProfiles";
 import {
-  PROGRESS_KEY, SCENE_KEY, STARTER, TOOL, TOOLS, WORDS, WORD_ORDER, isAnswer, parseProgress, parseSavedScene, toolOfWord,
-  type ToolId, type VillageProgress, type WordId,
+  CATEGORIES, PROGRESS_KEY, SCENE_KEY, STARTER, TOOL, TOOLS, WORDS, WORD_ORDER, isAnswer, parseProgress, parseSavedScene, toolOfWord, wordsIn,
+  type Category, type ToolId, type VillageProgress, type WordId,
 } from "@/lib/village/data";
-import type { VillageController } from "@/lib/village/scene";
+import type { Thumbs, VillageController } from "@/lib/village/scene";
 
-type IconName = ToolId | "undo" | "book" | "reset" | "sun" | "moon" | "close" | "lock";
+type IconName = "orbit" | "erase" | "undo" | "book" | "reset" | "sun" | "moon" | "close" | "lock";
 const ICONS: Record<IconName, ReactNode> = {
   orbit: <><path d="M4.5 12a7.5 7.5 0 0 1 13.1-5" /><path d="M19.5 12a7.5 7.5 0 0 1-13.1 5" /><path d="M18 3.5v3.8h-3.8" /><path d="M6 20.5v-3.8h3.8" /></>,
-  path: <path d="M6 21c1-3 4-4 6-5.5S15 12 13 9.5 10 6 13 3" strokeDasharray="2.2 2.6" />,
-  wall: <><path d="M3 20V10h3V7h3v3h2V7h2v3h2V7h3v3h3v10z" /><path d="M3 15h18M8 15v5M16 15v5M12 10v5" /></>,
-  house: <><path d="M3.5 11 12 4.5l8.5 6.5" /><path d="M6 9.5V20h12V9.5" /><path d="M10 20v-5h4v5" /></>,
-  tree: <><path d="M12 21v-5" /><path d="M12 3.5c-3.5 0-6 2.6-6 5.8 0 3.3 2.7 6.2 6 6.2s6-2.9 6-6.2c0-3.2-2.5-5.8-6-5.8z" /></>,
-  tower: <><path d="M7 21V10H5.5V5.5H8V7h2V5.5h4V7h2V5.5h2.5V10H17v11z" /><path d="M10.5 21v-3.5a1.5 1.5 0 0 1 3 0V21" /></>,
-  fence: <><path d="M5 21V7l1.5-2.5L8 7v14M11 21V7l1.5-2.5L14 7v14M17 21V7l1.5-2.5L20 7v14" /><path d="M3 11h18M3 16h18" /></>,
-  well: <><path d="M4 8.5 12 4l8 4.5" /><path d="M6.5 7.2V13M17.5 7.2V13M12 6v5" /><path d="M5 13h14v7H5z" /></>,
-  pond: <><ellipse cx="12" cy="14" rx="9" ry="5.5" /><path d="M7.5 14.5c1.5-1.2 3-1.2 4.5 0s3 1.2 4.5 0" /></>,
-  windmill: <><path d="M12 10 6 4M12 10l6-6M12 10l-6 6M12 10l6 6" /><path d="M10 21l1.2-8.5h1.6L14 21" /></>,
-  lantern: <><path d="M12 2.5v3" /><path d="M8.5 7.5h7l.8 2.5v6l-.8 2.5h-7l-.8-2.5v-6z" /><path d="M10 21h4M12 10.5v4" /></>,
-  sheep: <><path d="M6.5 16.5a3 3 0 0 1-.6-5.9 4 4 0 0 1 7.3-2 3.3 3.3 0 0 1 4.2 3.1 2.7 2.7 0 0 1-1.6 4.8z" /><path d="M9 16.5V20M14.5 16.5V20" /><circle cx="19" cy="10.5" r="1.6" /></>,
   erase: <><path d="M9 20h11" /><path d="m4.5 15.5 9-9.5 5.5 5.2-8.6 8.8H8.5z" /><path d="m9.5 10.8 5.2 5" /></>,
   undo: <><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /></>,
   book: <><path d="M5 4.5h10A2.5 2.5 0 0 1 17.5 7v13.5H7.5A2.5 2.5 0 0 1 5 18z" /><path d="M5 18a2.5 2.5 0 0 1 2.5-2.5h10" /><path d="M20 6.5v14" /><path d="M8.5 8h6" /></>,
@@ -38,6 +27,14 @@ function Icon({ name }: { name: IconName }) {
       {ICONS[name]}
     </svg>
   );
+}
+
+/** A tool's picture: a line icon for orbit/erase, otherwise the small 3D preview the scene rendered. */
+function ToolPic({ id, thumbs }: { id: ToolId; thumbs: Thumbs }) {
+  if (id === "orbit" || id === "erase") return <Icon name={id} />;
+  const src = thumbs[id];
+  // eslint-disable-next-line @next/next/no-img-element -- generated data URL, nothing for next/image to optimise
+  return src ? <img src={src} alt="" width={40} height={40} draggable={false} /> : <span className="vg-pic-wait" aria-hidden="true" />;
 }
 
 type LessonMode = "unlock" | "review";
@@ -71,6 +68,8 @@ export default function VillageGame() {
   const [canUndo, setCanUndo] = useState(false);
   const [toast, setToast] = useState<{ text: string } | null>(null);
   const [sheet, setSheet] = useState<Sheet | null>(null);
+  const [cat, setCat] = useState<Category>("build");
+  const [thumbs, setThumbs] = useState<Thumbs>({});
 
   const say = useCallback((text: string) => {
     setToast({ text });
@@ -121,6 +120,7 @@ export default function VillageGame() {
             onUndoChange: setCanUndo,
             onSave: (raw) => store(SCENE_KEY, raw),
             onReady: () => setStatus("ready"),
+            onThumbs: setThumbs,
           });
           controller.setTool(toolRef.current);
           controllerRef.current = controller;
@@ -156,16 +156,19 @@ export default function VillageGame() {
   }, [sheet]);
 
   const openLesson = useCallback((word: WordId, mode: LessonMode) => {
-    const others = shuffle(WORD_ORDER.filter((w) => w !== word)).slice(0, 3);
+    // Distractors come from the same group (animals with animals…), which makes the choice meaningful.
+    const group = wordsIn(TOOL[word].cat ?? "build").filter((w) => w !== word);
+    const others = shuffle(group.length >= 3 ? group : WORD_ORDER.filter((w) => w !== word)).slice(0, 3);
     setSheet({ kind: "lesson", word, mode, options: shuffle([word, ...others]) });
   }, []);
 
   const selectTool = (id: ToolId) => {
-    const word = TOOL[id].word;
-    if (!progress.unlocked.includes(id) && word) {
-      openLesson(word, "unlock");
+    if (!progress.unlocked.includes(id) && id !== "orbit" && id !== "erase") {
+      openLesson(id, "unlock");
       return;
     }
+    const group = TOOL[id].cat;
+    if (group) setCat(group);
     toolRef.current = id;
     setToolState(id);
     controllerRef.current?.setTool(id);
@@ -192,7 +195,7 @@ export default function VillageGame() {
     }
   };
 
-  const known = WORD_ORDER.filter((w) => progress.unlocked.includes(toolOfWord(w).id)).length;
+  const known = WORD_ORDER.filter((w) => progress.unlocked.includes(w)).length;
   const timeValue = Math.round(progress.time * 100);
 
   return (
@@ -250,29 +253,40 @@ export default function VillageGame() {
                 />
                 <Icon name="moon" />
               </div>
-              <nav className="vg-tools vg-panel" aria-label="Công cụ xây dựng">
-                {TOOLS.map((t, i) => {
-                  const locked = !progress.unlocked.includes(t.id);
-                  const groupStart = i > 0 && (t.id === "tower" || t.id === "erase");
-                  return (
-                    <span key={t.id} className="vg-tool-slot">
-                      {groupStart ? <span className="vg-sep" aria-hidden="true" /> : null}
+              <div className="vg-palette vg-panel">
+                <div className="vg-cats" role="group" aria-label="Nhóm đồ">
+                  {CATEGORIES.map((c) => {
+                    const words = wordsIn(c.id);
+                    const have = words.filter((w) => progress.unlocked.includes(w)).length;
+                    return (
+                      <button key={c.id} type="button" className="vg-cat" aria-pressed={cat === c.id} onClick={() => setCat(c.id)}>
+                        {c.label} <small>{have}/{words.length}</small>
+                      </button>
+                    );
+                  })}
+                </div>
+                <nav className="vg-tools" aria-label={`Công cụ: ${CATEGORIES.find((c) => c.id === cat)?.label}`}>
+                  {TOOLS.filter((t) => t.cat === null || t.cat === cat).map((t) => {
+                    const locked = !progress.unlocked.includes(t.id);
+                    return (
                       <button
+                        key={t.id}
                         type="button"
                         className="vg-tool"
                         aria-pressed={tool === t.id}
-                        aria-label={locked ? `${t.label}: đang khóa. Học từ “${t.word}” để mở.` : undefined}
+                        aria-label={locked ? `${t.label}: đang khóa. Học từ “${t.id}” để mở.` : undefined}
                         data-locked={locked || undefined}
+                        data-pinned={t.cat === null || undefined}
                         onClick={() => selectTool(t.id)}
                       >
-                        <Icon name={t.id} />
+                        <ToolPic id={t.id} thumbs={thumbs} />
                         <span>{t.label}</span>
                         {locked ? <i className="vg-lock"><Icon name="lock" /></i> : null}
                       </button>
-                    </span>
-                  );
-                })}
-              </nav>
+                    );
+                  })}
+                </nav>
+              </div>
             </footer>
           ) : null}
         </div>
@@ -286,7 +300,7 @@ export default function VillageGame() {
           onClick={(event) => { if (event.target === event.currentTarget) setSheet(null); }}
         >
           {sheet?.kind === "book" ? (
-            <WordBook progress={progress} onClose={() => setSheet(null)} onLearn={openLesson} />
+            <WordBook progress={progress} thumbs={thumbs} onClose={() => setSheet(null)} onLearn={openLesson} />
           ) : sheet?.kind === "reset" ? (
             <SheetFrame title="Làm mới làng" onClose={() => setSheet(null)}>
               <p className="vg-muted">Các món đồ đã mở khóa vẫn được giữ lại. Lỡ tay thì bấm Hoàn tác.</p>
@@ -311,6 +325,7 @@ export default function VillageGame() {
                 say(TOOL[id].hint);
               }}
               canUse={status === "ready"}
+              thumbs={thumbs}
             />
           ) : null}
         </dialog>
@@ -337,32 +352,40 @@ function SheetFrame({ title, eyebrow, onClose, children }: { title: string; eyeb
   );
 }
 
-function WordBook({ progress, onClose, onLearn }: { progress: VillageProgress; onClose: () => void; onLearn: (word: WordId, mode: LessonMode) => void }) {
-  const known = WORD_ORDER.filter((w) => progress.unlocked.includes(toolOfWord(w).id)).length;
+function WordBook({ progress, thumbs, onClose, onLearn }: { progress: VillageProgress; thumbs: Thumbs; onClose: () => void; onLearn: (word: WordId, mode: LessonMode) => void }) {
+  const known = WORD_ORDER.filter((w) => progress.unlocked.includes(w)).length;
   return (
     <SheetFrame title="Sổ từ" eyebrow="Học để mở khóa" onClose={onClose}>
       <p className="vg-muted">Đã có <b>{known}/{WORD_ORDER.length}</b> từ. Mỗi từ mới mở một món đồ để xây.</p>
-      <ul className="vg-words">
-        {WORD_ORDER.map((word) => {
-          const t = toolOfWord(word);
-          const status = STARTER.includes(t.id) ? "starter" : progress.unlocked.includes(t.id) ? "learned" : "locked";
-          return (
-            <li key={word} data-status={status}>
-              <span className="vg-words__icon"><Icon name={t.id} /></span>
-              <span className="vg-words__text">
-                <strong lang="en">{word}</strong> <span className="vg-ipa">{WORDS[word].ipa}</span>
-                <small>{WORDS[word].vi} · {t.label} · {status === "starter" ? "Có sẵn" : status === "learned" ? "Đã học" : "Khóa"}</small>
-              </span>
-              <span className="vg-words__acts">
-                <PronounceButton text={word} />
-                <button type="button" className={status === "locked" ? "vg-mini vg-mini--go" : "vg-mini"} aria-label={`${status === "locked" ? "Học" : "Ôn"} từ ${word}`} onClick={() => onLearn(word, status === "locked" ? "unlock" : "review")}>
-                  {status === "locked" ? "Học" : "Ôn"}
-                </button>
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+      {CATEGORIES.map((c) => {
+        const words = wordsIn(c.id);
+        return (
+          <section key={c.id} className="vg-words-group" aria-labelledby={`vg-words-${c.id}`}>
+            <h4 id={`vg-words-${c.id}`}>{c.label} <small>{words.filter((w) => progress.unlocked.includes(w)).length}/{words.length}</small></h4>
+            <ul className="vg-words">
+              {words.map((word) => {
+                const t = toolOfWord(word);
+                const status = STARTER.includes(t.id) ? "starter" : progress.unlocked.includes(t.id) ? "learned" : "locked";
+                return (
+                  <li key={word} data-status={status}>
+                    <span className="vg-words__icon"><ToolPic id={t.id} thumbs={thumbs} /></span>
+                    <span className="vg-words__text">
+                      <strong lang="en">{word}</strong> <span className="vg-ipa">{WORDS[word].ipa}</span>
+                      <small>{WORDS[word].vi} · {t.label} · {status === "starter" ? "Có sẵn" : status === "learned" ? "Đã học" : "Khóa"}</small>
+                    </span>
+                    <span className="vg-words__acts">
+                      <PronounceButton text={word} />
+                      <button type="button" className={status === "locked" ? "vg-mini vg-mini--go" : "vg-mini"} aria-label={`${status === "locked" ? "Học" : "Ôn"} từ ${word}`} onClick={() => onLearn(word, status === "locked" ? "unlock" : "review")}>
+                        {status === "locked" ? "Học" : "Ôn"}
+                      </button>
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        );
+      })}
       <p className="vg-note">
         Đây là ôn từ vựng nhanh để mở đồ chơi, không phải bài kiểm tra trình độ. Không tính vào Done, nhịp học hay bài nộp. Tiến độ lưu trên trình duyệt này, theo hồ sơ học đang chọn.
       </p>
@@ -371,12 +394,13 @@ function WordBook({ progress, onClose, onLearn }: { progress: VillageProgress; o
 }
 
 function Lesson({
-  word, mode, options, canUse, onClose, onComplete, onBook, onUse,
+  word, mode, options, canUse, thumbs, onClose, onComplete, onBook, onUse,
 }: {
   word: WordId;
   mode: LessonMode;
   options: WordId[];
   canUse: boolean;
+  thumbs: Thumbs;
   onClose: () => void;
   onComplete: (word: WordId, mode: LessonMode) => boolean;
   onBook: () => void;
@@ -515,7 +539,7 @@ function Lesson({
 
   return (
     <SheetFrame title={unlockedNow ? `Đã mở khóa ${tool.label}!` : "Ôn xong!"} eyebrow={word} onClose={onClose}>
-      <div className="vg-done"><Icon name={tool.id} /></div>
+      <div className="vg-done"><ToolPic id={tool.id} thumbs={thumbs} /></div>
       <p className="vg-example" lang="en"><Sentence text={data.sentence} fill={<mark>{word}</mark>} /></p>
       <p className="vg-muted">{data.viS}</p>
       <div className="vg-row">

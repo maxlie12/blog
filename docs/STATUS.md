@@ -1,6 +1,20 @@
 # Status
 
-Last verified: 2026-11-02 (Làng Rêu village builder: harness checks and Vercel production build).
+Last verified: 2026-11-02 (Làng Rêu: 42 new pieces and a larger island, harness checks).
+
+## 2026-11-02 — Làng Rêu: 42 new pieces and a larger island
+
+- 53 pieces in five groups (buildings, plants, water, decor, animals), each unlocked by its English
+  word through the same three-step card; quiz choices come from the same group.
+- New mechanics: a stream (a path across it gets a wooden bridge), hedges, brushed plants
+  (instanced), wandering animals that can be petted, lights on the lighthouse and campfire at night.
+- The island is about 2.5× larger by area; the camera still opens on the village and zooms out to
+  the whole island. GAME-001 saves and unlocks load unchanged.
+- The tool dock has group tabs with small 3D previews rendered on the device; the word book is
+  grouped.
+- Checks: 7 village tests, ESLint and `tsc` clean, 41/41 Playwright checks at 390px and 1280px.
+  See `docs/changes/GAME-002-village-more-pieces.md`.
+
 
 ## 2026-11-02 — Làng Rêu village builder
 

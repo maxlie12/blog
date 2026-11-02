@@ -50,3 +50,43 @@ test("typed answers ignore case and outer spaces", () => {
   assert.ok(isAnswer("  Tower ", "tower"));
   assert.ok(!isAnswer("towers", "tower"));
 });
+
+test("every buildable piece has a usable word card and a group", async () => {
+  const { TOOLS, WORDS, WORD_ORDER, CATEGORIES, wordsIn } = await import("./village/data.ts");
+  assert.equal(WORD_ORDER.length, 53);
+  assert.equal(TOOLS.length, 55, "53 pieces plus orbit and erase");
+  assert.equal(CATEGORIES.reduce((n, c) => n + wordsIn(c.id).length, 0), WORD_ORDER.length);
+  for (const word of WORD_ORDER) {
+    const card = WORDS[word];
+    assert.equal(card.sentence.split("___").length, 2, `${word}: one blank`);
+    assert.match(card.ipa, /^\/.+\/$/, `${word}: IPA in slashes`);
+    assert.ok(card.vi && card.viS, `${word}: Vietnamese meaning and sentence`);
+    assert.match(word, /^[a-z]+$/, `${word}: one typeable word`);
+  }
+});
+
+test("older saves without the new lists still load, and new pieces are validated", () => {
+  const old = JSON.stringify({ v: 1, idSeq: 3, scene: { paths: [{ id: 1, pts: [[0, 0], [2, 0]] }], houses: [] } });
+  const parsed = parseSavedScene(old);
+  assert.ok(parsed);
+  assert.deepEqual([parsed.scene.props, parsed.scene.streams, parsed.scene.hedges], [[], [], []]);
+
+  const scene = emptyScene();
+  const raw = JSON.stringify({
+    v: 1,
+    scene: {
+      ...scene,
+      streams: [{ id: 4, pts: [[18, 0], [19, 1]] }],
+      props: [
+        { id: 5, kind: "barn", x: 15, z: 3, r: 0.5, seed: 9 },
+        { id: 6, kind: "dragon", x: 0, z: 0, r: 0, seed: 1 },
+        { id: 7, kind: "cow", x: 30, z: 0, r: 0, seed: 1 },
+      ],
+    },
+  });
+  const next = parseSavedScene(raw);
+  assert.ok(next);
+  assert.equal(next.scene.streams.length, 1, "points out to the larger island are kept");
+  assert.deepEqual(next.scene.props.map((p) => p.kind), ["barn"], "unknown kinds and off-island pieces are dropped");
+  assert.equal(next.idSeq, 6);
+});
