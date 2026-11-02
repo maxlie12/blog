@@ -1,0 +1,308 @@
+---
+title: "Start With One Wall"
+date: "2026-11-02"
+summary: "A game about drawing castles began as a weekend wall generator. What its story really teaches about scope, prototypes and testing early, what it cannot teach, and how to apply it to your own project and your own practice."
+areas: ["dev", "learning"]
+study:
+  lessonId: "daily-2026-11-02-en-blog-wall"
+  words:
+    - term: "scope"
+      ipa: "/skoʊp/"
+      pos: "noun"
+      meaning: "phạm vi công việc của một dự án"
+      example: "A small scope means you can finish."
+    - term: "prototype"
+      ipa: "/ˈproʊtətaɪp/"
+      pos: "noun"
+      forms: ["prototypes"]
+      meaning: "bản thử đầu tiên để kiểm tra ý tưởng"
+      example: "A prototype answers one question."
+    - term: "iteration"
+      ipa: "/ˌɪtəˈreɪʃən/"
+      pos: "noun"
+      forms: ["iterations"]
+      meaning: "một vòng làm lại và cải thiện"
+      example: "Some tools went through many iterations."
+    - term: "playtest"
+      ipa: "/ˈpleɪtest/"
+      pos: "noun"
+      forms: ["playtests", "playtesting"]
+      meaning: "buổi cho người chơi thử để tìm vấn đề"
+      example: "A playtest shows what people really do."
+    - term: "pillar"
+      ipa: "/ˈpɪlər/"
+      pos: "noun"
+      forms: ["pillars"]
+      meaning: "nguyên tắc nền tảng của một sản phẩm"
+      example: "The team set three design pillars."
+    - term: "wishlist"
+      ipa: "/ˈwɪʃlɪst/"
+      pos: "noun"
+      forms: ["wishlists"]
+      meaning: "danh sách mong muốn (đánh dấu game định mua)"
+      example: "The game had many wishlists before launch."
+    - term: "hunch"
+      ipa: "/hʌntʃ/"
+      pos: "noun"
+      meaning: "linh cảm, phỏng đoán chưa có bằng chứng"
+      example: "A hunch is a place to start, not a result."
+    - term: "survivorship bias"
+      ipa: "/sərˈvaɪvərʃɪp ˈbaɪəs/"
+      pos: "noun phrase"
+      meaning: "lỗi chỉ nhìn những người thành công mà quên những người thất bại"
+      example: "Success stories suffer from survivorship bias."
+    - term: "track record"
+      ipa: "/ˈtræk ˌrekərd/"
+      pos: "noun phrase"
+      meaning: "thành tích, kinh nghiệm đã chứng minh"
+      example: "Both developers had a strong track record."
+    - term: "constraint"
+      ipa: "/kənˈstreɪnt/"
+      pos: "noun"
+      forms: ["constraints"]
+      meaning: "giới hạn, ràng buộc"
+      example: "A time limit is a useful constraint."
+    - term: "feature creep"
+      ipa: "/ˈfiːtʃər kriːp/"
+      pos: "noun phrase"
+      meaning: "tính năng cứ thêm dần cho đến khi dự án phình to"
+      example: "Feature creep kills small projects."
+    - term: "tweak"
+      ipa: "/twiːk/"
+      pos: "noun"
+      forms: ["tweaks"]
+      meaning: "chỉnh sửa nhỏ"
+      example: "A small tweak can change how a tool feels."
+    - term: "backlog"
+      ipa: "/ˈbæklɔːɡ/"
+      pos: "noun"
+      meaning: "danh sách việc còn tồn đọng"
+      example: "The idea went into the backlog."
+    - term: "side project"
+      ipa: "/ˈsaɪd ˌprɑːdʒekt/"
+      pos: "noun phrase"
+      forms: ["side projects"]
+      meaning: "dự án phụ làm ngoài công việc chính"
+      example: "It began as a side project at the weekend."
+  verbs:
+    - term: "outgrow"
+      pos: "verb"
+      forms: ["outgrew", "outgrown"]
+      meaning: "lớn vượt khỏi, không còn vừa nữa"
+      example: "The project outgrew its first engine."
+    - term: "ship"
+      pos: "verb"
+      forms: ["shipped", "shipping"]
+      meaning: "phát hành, đưa sản phẩm tới người dùng"
+      example: "They shipped after two years."
+    - term: "scale back"
+      pos: "phrasal verb"
+      forms: ["scaled back"]
+      meaning: "thu nhỏ quy mô"
+      example: "I scaled back the plan to one page."
+    - term: "throw away"
+      pos: "phrasal verb"
+      forms: ["threw away"]
+      meaning: "bỏ đi"
+      example: "Be ready to throw away your first version."
+    - term: "pay off"
+      pos: "phrasal verb"
+      forms: ["paid off", "pays off"]
+      meaning: "mang lại kết quả xứng đáng"
+      example: "Testing early paid off."
+    - term: "pile up"
+      pos: "phrasal verb"
+      forms: ["piles up"]
+      meaning: "chất đống, tích lại nhiều"
+      example: "Unfinished work piles up quickly."
+    - term: "turn out"
+      pos: "phrasal verb"
+      forms: ["turned out"]
+      meaning: "hóa ra là"
+      example: "The feature turned out to be hard to find."
+    - term: "lead to"
+      pos: "phrasal verb"
+      forms: ["led to"]
+      meaning: "dẫn đến"
+      example: "One small test led to a new tool."
+  structures:
+    - term: "What started as … became …"
+      meaning: "Thứ bắt đầu là … đã trở thành …"
+      example: "What started as a wall generator became a full game."
+    - term: "It is tempting to + V"
+      meaning: "Rất dễ bị cuốn vào việc …"
+      example: "It is tempting to plan the whole game first."
+    - term: "The smaller …, the …"
+      meaning: "Càng nhỏ …, càng …"
+      example: "The smaller the test, the sooner you learn."
+    - term: "That does not mean …"
+      meaning: "Điều đó không có nghĩa là …"
+      example: "That does not mean small projects always win."
+    - term: "Before + V-ing, ask whether …"
+      meaning: "Trước khi làm gì, hãy hỏi xem liệu …"
+      example: "Before adding a feature, ask whether anyone will notice."
+    - term: "If I had …, I would have …"
+      meaning: "Nếu tôi đã …, thì tôi đã … (nói về quá khứ không xảy ra)"
+      example: "If I had asked earlier, I would have saved a day."
+---
+
+> Bài đọc luyện tiếng Anh: di chuột (hoặc chạm) vào từ **in đậm** để xem nghĩa, phiên âm và loại từ;
+> cuối bài có nút nghe phát âm. Động từ và cấu trúc câu nằm ở cột bên phải.
+
+Tiny Glade is a game about drawing little castles. In less than a month after its launch in
+September 2024, it sold 616,000 copies on Steam
+([GameDiscoverCo](https://newsletter.gamediscover.co/p/how-tiny-glade-built-its-way-to-600k)). It was
+made by two people.
+
+It did not begin as a castle game. It began as one wall.
+
+That fact is useful to anyone who wants to plan a whole project before starting it. This article is
+about what that wall really teaches, and also about what it does not.
+
+## 1. The story
+
+In 2024, the game's developers, Anastasia Opara and Tomasz Stachowiak, spoke to the site 80 Level.
+Opara said it "started as a hobby weekend project to test rendering," while she still had a
+full-time job at Embark Studios
+([80 Level](https://80.lv/articles/exclusive-tiny-glade-developers-discuss-bevy-proceduralism-publishers-cozy-games/)).
+80 Level had noticed the project back then, when it was only a wall generator made in a game engine
+called Bevy.
+
+So a **side project** tested one narrow thing. It did not need a story, a market or a business
+plan. What started as a weekend wall generator became a full game.
+
+The next step matters most. They did not simply decide it was a game. They
+checked. They posted it on TikTok to see whether people cared, and it "picked up a lot of interest."
+Even they were puzzled. Stachowiak said they were "a bit surprised as to why people wanted to just
+play a game where you draw walls."
+
+In other words, the audience answered a question that the developers could not answer alone.
+
+## 2. Four things that happened next
+
+The story continues with some good lessons about how a small project grows.
+
+*The tools got replaced.* Eventually the game **outgrew** Bevy. Stachowiak said "our needs
+outscaled what Bevy could provide at the time." They wanted prettier graphics and better generation
+on the GPU, and they moved to Vulkan, a lower-level graphics technology. That is a healthy order. They picked an easy tool, proved the idea, and took on the harder work only when
+the project demanded it.
+
+*Tools were rebuilt many times.* Some features went through "five or six iterations" in the 80
+Level interview. In a later newsletter, the developers said "some tools went through 6 or 7 fully
+fleshed out prototypes." The numbers differ a little, but the point is the same. A good result was
+usually not the first version. Every **iteration** meant being willing to **throw away** something
+that already worked.
+
+*Testing changed the plan.* The developers described beginning with "a simple version that we can
+test on ourselves." They also ran five external **playtests** in two years. Bridges were "not
+planned at all in the beginning," but players asked for them, and they grew into a wider system for
+raising buildings. In **playtesting**, people used stairs in an unexpected way, which **led to** a
+new tool. Neither of those could have appeared in a plan.
+
+*They set rules before building.* The team chose design **pillars** early: "a lot from little
+effort," "no wrong answers" and "it's alive." A **pillar** gives you a way to say no. If a new idea
+needs a lot of effort from the player, it fails the first test, however clever it is. That is the
+best defence I know against **feature creep**.
+
+## 3. What this story cannot teach
+
+Now the warning, because it would be easy to get this wrong.
+
+It is tempting to read this story as a recipe: make a small thing, post a video, sell 600,000
+copies. That is **survivorship bias**. We are reading about this wall generator because it
+succeeded. Nobody interviews the developers of the thousand weekend projects that went nowhere.
+
+The numbers show this too. The game launched with 1,375,441 **wishlists**. Very few projects will
+ever have that, and it was not luck alone. Both developers came with a strong **track record** in
+rendering and procedural generation at large studios. A weekend wall by two experts is not the same
+as a weekend wall by a beginner.
+
+They also did not stop at something small. The newsletter describes a two-year development period,
+and the polish of the final game very likely helped it sell.
+
+So "start small" is not a promise of success. That does not mean the advice is useless. It means
+the benefit is different from what the story suggests. Starting small does not make you more likely
+to get famous. It makes you more likely to find out quickly whether you are wrong, and more likely
+to finish something.
+
+## 4. My own wall
+
+I have a smaller example from this site, and it is not a success story.
+
+I built a learning path, an ordered route of lessons, in the style of a language app. It worked. It
+passed its tests, and the screenshots looked good. I put it on its own page, behind a small link.
+
+Then I looked for it as a learner and could not find it. The feature **turned out** to be useless,
+not because the code was bad, but because I had tested the wrong thing. I checked that it worked.
+I had not checked that someone could get to it. The fix was small: I moved it onto the main Learning
+page. If I had opened the site as a normal learner sooner, I would have saved a whole round of work.
+
+There is a good example on this site too. When I added speech recognition, I
+[picked one small job](/blog/i-put-a-speech-model-inside-my-browser): turn a recording into a text
+draft. I **scaled back** from "AI feature" to one button, and that small test **paid off**, because
+it showed the real costs quickly.
+
+## 5. A method you can use
+
+Here is one way to apply this. It works for code, and section 6 shows that it works for language
+practice too.
+
+1. *Write one question.* A **prototype** is an experiment, so it needs a question. "Can a dragged
+   line become a believable wall?" is a question. "Build my game" is not. If you have only a
+   **hunch**, turn it into something that could be proved wrong.
+2. *Set a hard limit.* Give it a weekend, or one page of code. A **constraint** forces you to
+   choose. When the limit is generous, unfinished work **piles up** and every idea feels important.
+3. *Build only the part that is scary.* Skip the login, the settings and the logo. Build the
+   thing you are not sure can work.
+4. *Show a real person.* Watch them, and do not explain. The moment you say "no, click there," you
+   have found a problem.
+5. *Write down what you did not build.* New ideas will come. Put them in a **backlog**, so that
+   you can stop thinking about them. Before adding a feature, ask whether anyone would notice if it
+   were gone.
+6. *Decide: stop, change or continue.* Stopping is a good result. You paid a weekend for an answer
+   that could have cost you a year.
+
+The smaller the test, the sooner you learn. A small **tweak** after one real conversation is often
+worth more than a week of private planning.
+
+## 6. The same rule for learning a language
+
+This is where the wall connects to Learning on this site.
+
+Language learners make the same mistake as developers. We plan the perfect system: every app, a
+colour-coded notebook, one hour a day for a year. It looks great on paper, and it often lasts a week.
+That is a **scope** problem.
+
+The small version looks like a wall. Can you do five minutes today? Can you write one sentence, check
+it, and fix one mistake? That is why the daily lessons here are small, and why a rest day creates no
+debt. [My article on learning science](/blog/how-to-learn-english-with-learning-science) explains
+why spacing and recall matter. Scope explains why you will still be doing them next month.
+
+The method fits too:
+
+- *One question:* "Can I explain a technical decision in five sentences?"
+- *A hard limit:* ten minutes.
+- *A real person:* say it to someone, or record it and listen back.
+- *A decision:* keep the sentence pattern, change it, or drop it.
+
+Your first version will be poor, like every **prototype**. The job of that version is to exist, so
+that you have something to improve. You will never **ship** a perfect plan.
+
+## 7. What I took from this
+
+I do not think the lesson of Tiny Glade is "small things become big." Most do not. The lesson is
+narrower: find the smallest thing that can answer a real question, and then let the answer,
+rather than your plan, choose the next step.
+
+One wall was enough to learn that people liked watching walls. Everything else came after that.
+
+As a test of my own advice, I made
+[a small stone house prototype](/blog/building-a-stone-house-from-a-line) with one question: can a
+dragged line become a house? It has since grown into [Làng Rêu](/learning/village), a small building
+game on this site. Whether people enjoy it is the next question.
+
+## Sources
+
+- 80 Level, "Exclusive: Tiny Glade Developers Discuss Bevy, Proceduralism, Publishers & Cozy Games", interview by Theodore McKenzie, 30 May 2024 — [link](https://80.lv/articles/exclusive-tiny-glade-developers-discuss-bevy-proceduralism-publishers-cozy-games/)
+- Simon Carless, GameDiscoverCo, "How Tiny Glade 'built' its way to >600k sold", 29 October 2024 — [link](https://newsletter.gamediscover.co/p/how-tiny-glade-built-its-way-to-600k)
+- 80 Level, "An Update on Tiny Glade, a Cozy Castle-Building Simulator" — [link](https://80.lv/articles/an-update-on-tiny-glade-a-cozy-castle-building-simulator)

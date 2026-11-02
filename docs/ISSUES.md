@@ -13,6 +13,8 @@ evidence and never proves a CEFR, HSK or JLPT level.
 | ASSESS-001 | P1 | Planned | The product has self-reported levels and milestone UI, but insufficient unseen four-skill evidence to claim progress. | Keep level unchanged; attach weekly checks and a 28-day assessment to evidence records. |
 | LANG-001 | P1 | Active | English, Chinese and Japanese share an engine, but their teaching rules are not yet explicit data. | Ship one Chinese word/chunk and writing slice without splitting the shared lesson flow. |
 | SPEAK-001 | P2 | Active | On-device transcription is live but only proven with one synthetic English test. | Check a real voice on a phone, then zh/ja, Safari and Firefox. See `docs/changes/SPEAK-001-browser-transcription.md`. |
+| LEARN-012 | P2 | Active | The games can only be reached by address from Learning. | Add one quiet row of links. See `docs/changes/LEARN-012-game-entry.md`. |
+| BLOG-005 | P2 | Active | The learner wants deeper English reading on building a small game, connected to Learning. | Publish three study articles with lessons. See `docs/changes/BLOG-005-game-study-articles.md`. |
 | LEARN-011 | P1 | Active | The learner could not find the path, and it hid reviews and finished lessons. | Show it on `/learning`. See `docs/changes/LEARN-011-path-on-learning.md`. |
 | LEARN-010 | P2 | Active | Backup gaps, a dead link, page language and stale docs. | Verified locally; deploy. See `docs/changes/LEARN-010-docs-backup-cleanup.md`. |
 | FEEDBACK-001 | P2 | Blocked | Personal correction is manual; automatic AI feedback is not implemented or cost-controlled. | First collect real attempts and define a one-error feedback contract. |

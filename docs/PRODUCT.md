@@ -71,8 +71,9 @@ A single public site that is a genuine record of growth, not a highlight reel:
 - Blog list + detail pages — **now merges Studio-authored posts (database) with hand-written
   `.mdx` articles.**
 - Learning page: one guest-first start action resumes a draft, opens a due review or selects the
-  next suitable lesson. A compact 7-day rhythm and neutral 28-day history follow it; archive,
-  game and owner-facing evidence tools stay outside this primary surface. Mountain milestones
+  next suitable lesson. A compact 7-day rhythm and neutral 28-day history follow it; archive
+  and owner-facing evidence tools stay outside this primary surface, and the games are one quiet
+  row of links under the start card. Mountain milestones
   remain database-backed and editable in Studio, but activity never moves them automatically.
 - A documented, git-based way to add/edit legacy articles and projects.
 - A documented CLI (`npm run log`) for the original practice-log flow.

@@ -1,0 +1,360 @@
+---
+title: "How a Dragged Line Becomes a Stone House"
+date: "2026-11-02"
+summary: "A step-by-step look inside a small browser prototype: how one mouse movement turns into walls, arches, a tiled roof and a house you can undo, with the real rules, the numbers and what still breaks."
+areas: ["dev", "learning"]
+study:
+  lessonId: "daily-2026-11-02-en-blog-stone"
+  words:
+    - term: "procedural"
+      ipa: "/prəˈsiːdʒərəl/"
+      pos: "adjective"
+      meaning: "được máy tạo ra theo quy tắc, không vẽ tay từng thứ"
+      example: "The walls are procedural: rules place every stone."
+    - term: "stroke"
+      ipa: "/stroʊk/"
+      pos: "noun"
+      forms: ["strokes"]
+      meaning: "một nét kéo liền bằng chuột hoặc ngón tay"
+      example: "One stroke becomes one wall."
+    - term: "diorama"
+      ipa: "/ˌdaɪəˈræmə/"
+      pos: "noun"
+      meaning: "mô hình cảnh thu nhỏ"
+      example: "The island looks like a diorama on a table."
+    - term: "seed"
+      ipa: "/siːd/"
+      pos: "noun"
+      meaning: "số khởi đầu để dãy số ngẫu nhiên lặp lại y hệt"
+      example: "The same seed gives the same stones."
+    - term: "footprint"
+      ipa: "/ˈfʊtprɪnt/"
+      pos: "noun"
+      meaning: "phần diện tích đất mà công trình chiếm"
+      example: "The roof grows from the footprint of the house."
+    - term: "course"
+      ipa: "/kɔːrs/"
+      pos: "noun"
+      forms: ["courses"]
+      meaning: "một hàng đá hoặc gạch nằm ngang trong tường"
+      example: "Each course sits on the one below."
+    - term: "mortar"
+      ipa: "/ˈmɔːrtər/"
+      pos: "noun"
+      meaning: "vữa, lớp kết dính giữa các viên đá"
+      example: "Dark mortar fills the gaps between stones."
+    - term: "arch"
+      ipa: "/ɑːrtʃ/"
+      pos: "noun"
+      forms: ["arches"]
+      meaning: "cổng vòm, phần cong phía trên lối đi"
+      example: "A path through a wall makes an arch."
+    - term: "keystone"
+      ipa: "/ˈkiːstoʊn/"
+      pos: "noun"
+      meaning: "viên đá khóa ở đỉnh vòm"
+      example: "The keystone sits at the top of the arch."
+    - term: "shingle"
+      ipa: "/ˈʃɪŋɡəl/"
+      pos: "noun"
+      forms: ["shingles"]
+      meaning: "tấm ngói mỏng lợp mái"
+      example: "Each shingle overlaps the one below it."
+    - term: "eaves"
+      ipa: "/iːvz/"
+      pos: "noun"
+      meaning: "phần mái chìa ra ngoài tường"
+      example: "The eaves stick out past the wall."
+    - term: "centroid"
+      ipa: "/ˈsentrɔɪd/"
+      pos: "noun"
+      meaning: "tâm hình học của một hình"
+      example: "The roof rises towards the centroid."
+    - term: "instancing"
+      ipa: "/ˈɪnstənsɪŋ/"
+      pos: "noun"
+      meaning: "kỹ thuật vẽ một hình nhiều lần trong một lệnh để đỡ tốn"
+      example: "Instancing lets the GPU draw many stones in one call."
+    - term: "overshoot"
+      ipa: "/ˈoʊvərʃuːt/"
+      pos: "noun"
+      meaning: "đoạn vượt quá một chút rồi quay về, làm chuyển động nảy"
+      example: "A small overshoot makes each stone feel alive."
+    - term: "edge case"
+      ipa: "/ˈedʒ keɪs/"
+      pos: "noun phrase"
+      forms: ["edge cases"]
+      meaning: "tình huống hiếm ở rìa, dễ làm chương trình sai"
+      example: "A star-shaped house is an edge case."
+  verbs:
+    - term: "drag"
+      pos: "verb"
+      forms: ["dragged", "dragging"]
+      meaning: "kéo (bằng chuột hoặc ngón tay)"
+      example: "You drag a line across the grass."
+    - term: "lay"
+      pos: "verb"
+      forms: ["lays", "laid"]
+      meaning: "xếp, đặt (lay – laid – laid)"
+      example: "The code lays one stone at a time."
+    - term: "smooth out"
+      pos: "phrasal verb"
+      forms: ["smooths out"]
+      meaning: "làm mượt, làm phẳng đi"
+      example: "Two passes smooth out the line."
+    - term: "carve out"
+      pos: "phrasal verb"
+      forms: ["carves out"]
+      meaning: "khoét ra, tạo khoảng trống"
+      example: "The rule carves out a doorway."
+    - term: "tilt"
+      pos: "verb"
+      forms: ["tilted", "tilts"]
+      meaning: "nghiêng"
+      example: "Each shingle is tilted to follow the roof."
+    - term: "stagger"
+      pos: "verb"
+      forms: ["staggered"]
+      meaning: "so le, làm lệch nhau (về vị trí hoặc thời gian)"
+      example: "The start times are staggered along the wall."
+    - term: "replay"
+      pos: "verb"
+      forms: ["replays", "replaying"]
+      meaning: "chạy lại từ đầu"
+      example: "The page replays every action."
+    - term: "break down"
+      pos: "phrasal verb"
+      forms: ["breaks down"]
+      meaning: "không còn hoạt động đúng"
+      example: "The simple rule breaks down on unusual shapes."
+  structures:
+    - term: "Instead of + V-ing, …"
+      meaning: "Thay vì làm gì, …"
+      example: "Instead of drawing each stone, I wrote a rule."
+    - term: "Once …, …"
+      meaning: "Một khi … thì …"
+      example: "Once the line closes, it becomes a house."
+    - term: "The idea is to + V"
+      meaning: "Ý tưởng là …"
+      example: "The idea is to make one rule do most of the work."
+    - term: "As long as …, …"
+      meaning: "Miễn là …, thì …"
+      example: "As long as the seed stays the same, the stones stay the same."
+    - term: "…, so that …"
+      meaning: "…, để mà …"
+      example: "The stones are offset, so that no gap runs straight up."
+    - term: "No matter how …, …"
+      meaning: "Dù … thế nào đi nữa, …"
+      example: "No matter how shaky the line is, the wall looks calm."
+---
+
+> Bài đọc luyện tiếng Anh: di chuột (hoặc chạm) vào từ **in đậm** để xem nghĩa, phiên âm và loại từ;
+> cuối bài có nút nghe phát âm. Động từ và cấu trúc câu nằm ở cột bên phải.
+
+I wanted to see one thing with my own eyes: could a person **drag** a single line across the grass
+and get a stone house back? No menus, no grid, no picking parts from a list. Just one **stroke**.
+
+Games such as Tiny Glade made this idea famous, and its developers have talked about how they build
+theirs. This article is not about their code. I have not seen it, and my prototype almost certainly
+works differently. This is about the small version I made with an AI coding assistant: one page of
+JavaScript and three.js, drawing a little island in the browser. Every number below comes from that
+file.
+
+![A small floating island at sunset with two round stone houses, two towers, a low wall with stone arches, a pond and trees.](/images/tiny-valley-dusk.jpg)
+
+*The opening scene of the prototype. It is built by the same steps a player uses, not modelled by hand.*
+
+## 1. What "procedural" means here
+
+**Procedural** art is made by rules. Instead of drawing each stone, I wrote the rule for where a
+stone goes, and the computer follows it a thousand times.
+
+The opening **diorama** has 1,414 stones, and nobody chose where any of them should go. A person
+chose one line. The rules did the rest. That is the whole trick, and it is why the idea feels like
+magic. A small movement of your hand gets a large, detailed answer back.
+
+The rest of this article follows one line from your hand to a finished house, in seven steps.
+
+## 2. Step one: from a shaky hand to a clean line
+
+A real mouse path is messy. It has hundreds of points, it wobbles, and it stops and starts.
+
+The page keeps a new point only when the pointer has moved at least 0.5 units from the last one. On
+this island, one unit is roughly one metre. That removes most of the noise.
+
+Then two passes of an old method called Chaikin's algorithm **smooth out** the corners. For every
+pair of points, it keeps two new points, one quarter and three quarters of the way along. Each
+pass doubles the number of points and cuts every corner a little. No matter how shaky the line is,
+the wall looks calm afterwards.
+
+The code asks one more question: did the line come back to where it began? If the ends are less
+than 1.8 units apart and the line is longer than 7 units, the page treats it as a closed loop. Once
+the line closes, it stops being a garden wall and becomes the **footprint** of a house.
+
+That single test is the most important game design decision in the file. The player never presses
+a "house" button. They just close a shape.
+
+## 3. Step two: stacking the stones
+
+Real walls are built in **courses**, so the code builds them the same way. It walks along the line
+and **lays** one row at a time. Each row is 0.225 units higher than the last, and each stone gets a random
+length between 0.3 and 0.64.
+
+Random lengths do something useful: the joints in one row do not line up with the joints in the
+next. Every row also starts at a slightly different offset, so that no gap runs straight up the
+wall. Builders do this to make walls stronger. Here, it just makes the wall look believable.
+
+Each stone also gets small random changes in size, angle and colour. Without them, the wall looks
+like a printed pattern.
+
+Random numbers create a problem, though. If stones were truly random, the whole wall would change
+every time something nearby was rebuilt. So each wall gets its own **seed**, based on its ID. As
+long as the seed stays the same, the stones stay the same. The wall looks random, but it can be
+rebuilt exactly.
+
+Behind the stones sits a simple core: thin boxes every 0.24 units. In a garden wall, the core is
+dark **mortar**, and you see it in the gaps. In a house, it is cream plaster, and the stones stop
+after the first metre or so. That one change is why the same code gives a stone wall and a white
+cottage.
+
+## 4. Step three: a path that opens the wall
+
+This is the rule that feels most like magic. If you **drag** a path through a wall, the wall opens.
+
+The code checks every segment of every path against every segment of the wall. When two segments
+cross, it records the distance along the wall. That distance becomes a gap. If two crossings are
+closer than 1.5 units, they count as one.
+
+The gap itself comes from one small function. For a point on the wall, it answers a question: where
+does the wall begin here? Far from a gap, the answer is the ground. Inside a gap, the answer follows
+the top of a circle. So the rule **carves out** a doorway with a curved top, and any stone below
+that curve is simply never placed.
+
+An opening is not an **arch** yet, though. Nine lighter stones are then placed around the curve,
+each one **tilted** to point at the centre of the circle. The middle one sits where a **keystone**
+would be. In a garden wall, you can see through. In a house, a wooden door goes in the gap.
+
+Notice what is missing. There is no "arch" object in the code that the player places. The arch
+happens because two things touch. Tiny Glade has a similar behaviour, where a footpath drawn up to
+a wall can grow an arched gateway ([Yahoo](https://malaysia.news.yahoo.com/gorgeous-cozy-castle-doodling-game-191627261.html)).
+Results that appear from simple rules feel better than results chosen from a menu.
+
+## 5. Step four: a roof from any shape
+
+A closed loop can be any shape, so the roof cannot be a fixed model. The idea is to grow it from
+the outline itself.
+
+First, the code finds the **centroid** of the loop. Then it imagines nine rings. The first ring is
+the outline, pushed outward a little to make the **eaves**. Each ring after that is smaller and
+higher, and the last one is a single point above the centroid.
+
+The height follows a curve, `H * t^1.5`. Here, `t` goes from 0 at the edge to 1 at the top. Because of
+that power, the roof starts almost flat and gets steeper as it climbs. The result is the soft bell
+shape of a storybook cottage, and it comes from a single number. If you change 1.5 to 1, you get
+a plain cone.
+
+The size of the house decides the height: the square root of its area, times 0.62, kept between 1.5
+and 3.4 units. A larger **footprint** gets a taller roof with no extra input from the player.
+
+Then the roof is covered in **shingles**. On each ring, the code works out how many fit, and every
+second ring shifts by half a tile, the same way the stones do. Each **shingle** has to lie on the
+slope, so the code takes two points, one on the ring below and one on the ring above, and uses them
+to calculate its angle. The shingles are made 1.42 times longer than the ring spacing, so that each
+one overlaps the row below.
+
+## 6. Step five: drawing thousands of things cheaply
+
+Each stone has 70 corners or so. If every stone were a separate object, the browser would have to
+give the graphics card a separate instruction for each one.
+
+**Instancing** solves that. The code sends the shape of one stone once, plus a long list: position,
+rotation, size and colour for each copy. The graphics card then draws them all from a single call.
+The prototype has eight of these lists, for stones, boxes, **shingles**, leaves, trunks, flowers,
+windows and grass. Room is reserved for 42,000 stones, but the opening scene uses far fewer.
+
+The animation uses the same list. Each stone stores the time it should appear, and those times are
+**staggered** along the wall. A small piece of shader code grows each stone from nothing, with a
+slight **overshoot**, so that it pops up like something alive rather than simply fading in. The wall
+seems to build itself from one end to the other, and the roof follows from the **eaves** upward.
+
+This is the only part of the file that is there just for pleasure, and it may be the most important
+part. Watching your line turn into a wall is the reward.
+
+## 7. Step six: undo for free
+
+The easiest way to write undo would be to save a copy of the world after every action. The prototype
+does something simpler.
+
+It stores only what the player did, as a short list:
+
+```js
+{ type: "wall", closed: true, pts: [[-4.2, -2.2], ...] }
+{ type: "path", pts: [[3.2, 11], ...] }
+```
+
+To show the world, the page **replays** the list from the start: clear everything, then build each
+action again. **Replaying** sounds slow, but it was the simple choice, and because each wall has its
+own **seed**, the result is exactly the same.
+
+One decision then pays for four features:
+
+- *Undo:* remove the last action and rebuild.
+- *Erase:* remove any action near the pointer and rebuild.
+- *Save:* write the list to the browser's storage.
+- *Arches:* add a path, rebuild, and every wall finds its new gaps by itself.
+
+The opening scene is the same kind of list, so it has no special code at all.
+
+## 8. Step seven: light does most of the work
+
+Grey stones on green grass look like a school project. Good light is what changed that.
+
+The time slider blends four settings: morning, noon, sunset and night. Each one sets the sun's
+position, colour and strength, plus the colour of the sky. At sunset, the low sun throws long
+shadows, so every stone in a wall suddenly has shape. At night, the windows glow. There is no image
+of a sky anywhere. It is a colour gradient behind a transparent canvas.
+
+There is one small trick on the ground. A soft dark line is painted under every wall, where light
+would struggle to reach. It costs almost nothing, and it stops buildings from looking as if they
+are floating.
+
+## 9. What I tested, and what still breaks
+
+I played the prototype through an automated browser on my laptop, without a real graphics card:
+
+- Starting scene: 1,414 stones and 2 houses
+- Drawing a closed loop added a house and 102 stones: 1,516 and 3 houses
+- Undo returned to 1,414 stones and 2 houses
+- Dragging a path through a garden wall opened it: 1,466 stones, and a page reload kept the result
+- No page errors, no sideways scrolling at phone width, and no button under 44 pixels
+
+Those checks prove that the idea works. They do not prove that it is fun, and I have not played it on
+a real phone. The simple rules also **break down** in places:
+
+- *Concave houses.* The roof rises towards the **centroid**. On a star or an L shape, that point
+  may fall outside the walls, and the roof folds over itself. This **edge case** needs a different
+  method.
+- *Separate roofs.* Two touching houses do not join. Each one gets its own roof.
+- *Flat walls on hills.* All walls in a house stop at one height, so a house on a slope just has a
+  taller wall on the low side.
+- *No keyboard building.* You can move the camera with the keys, but drawing needs a mouse or a
+  finger.
+
+This test is a private page. A larger version of the idea, [Làng Rêu](/learning/village), now has its
+own page on this site. The numbers in this article describe only the small test.
+
+## 10. What I took from this
+
+The code is about 470 dense lines, and the most interesting thing is what it leaves out. There is no stone model,
+no roof model and no arch object. There are only a few rules that respond to each other.
+
+**Procedural** work moves your effort. You spend less time making things and more time deciding what
+should be true about them: stones should not line up, a closed line means a house, and a path
+through a wall means a door. The player feels those decisions, not the maths.
+
+## Sources
+
+- Three.js documentation, `InstancedMesh` — [link](https://threejs.org/docs/#api/en/objects/InstancedMesh)
+- Yahoo News, "That gorgeous cozy castle doodling game is launching a demo this month" — [link](https://malaysia.news.yahoo.com/gorgeous-cozy-castle-doodling-game-191627261.html)
+- 80 Level, interview with the Tiny Glade developers (May 2024) — [link](https://80.lv/articles/exclusive-tiny-glade-developers-discuss-bevy-proceduralism-publishers-cozy-games/)
+- All numbers on the prototype come from its own code and one automated browser test on 2026-11-02.

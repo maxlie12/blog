@@ -67,6 +67,54 @@
         ],
         "outputPrompt": "Không nhìn mẫu, đổi cả đồ vật lẫn vị trí để tự tạo một cặp hỏi–đáp mới rồi đọc thành tiếng."
       }
+    },
+    {
+      "id": "daily-2026-11-02-en-blog-stone",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 15 phút — mô tả một hệ thống từng bước",
+      "level": "B1+ / B2 source",
+      "instructions": "Bài đọc do trợ lý viết từ code của bản thử, không phải đề thi chính thức. Đọc phần 2, 4 và 7; di chuột hoặc chạm vào từ in đậm để xem nghĩa, phiên âm và loại từ. Đóng bài trước khi viết.",
+      "material": "/blog/building-a-stone-house-from-a-line",
+      "exercises": "Không nhìn bài, viết sáu câu tiếng Anh giải thích một tính năng bạn biết rõ cho người mới: (1) mục tiêu, dùng \"The idea is to …\"; (2) cách làm thường gặp và cách của bạn, dùng \"Instead of + V-ing, …\"; (3) điều xảy ra sau một bước, dùng \"Once …, …\"; (4) một quy tắc, dùng \"As long as …, …\"; (5) lý do của một chi tiết, dùng \"…, so that …\"; (6) một giới hạn thật. Mở lại bài, kiểm tra và chỉ sửa một câu.",
+      "completionCriteria": "Lưu sáu câu nguyên bản, câu đã sửa và số phút thực học rồi bấm Done. Done là thói quen tự ghi nhận, không phải điểm trình độ.",
+      "takeaway": {
+        "phrase": "Once …, …",
+        "pattern": "Instead of + V-ing, … so that …",
+        "reusePrompt": "Giải thích từng bước một tính năng trong công việc cho người không biết code."
+      }
+    },
+    {
+      "id": "daily-2026-11-02-en-blog-wall",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 10 phút — kể lại một dự án thu nhỏ phạm vi",
+      "level": "B1+ / B2 source",
+      "instructions": "Bài đọc do trợ lý viết từ các nguồn được dẫn trong bài, không phải đề thi chính thức. Đọc phần 1, 3 và 5; di chuột hoặc chạm vào từ in đậm để xem nghĩa. Đóng bài trước khi nói.",
+      "material": "/blog/start-with-one-wall",
+      "exercises": "Không nhìn bài, nói bằng tiếng Anh trong 60–90 giây về một dự án hoặc thói quen của bạn: (1) nó bắt đầu thế nào, dùng \"What started as … became …\"; (2) điều dễ làm sai, dùng \"It is tempting to …\"; (3) một việc bạn làm khác đi nếu quay lại, dùng \"If I had …, I would have …\"; (4) bước nhỏ tiếp theo, dùng \"The smaller …, the …\". Ghi âm một lượt, chép lại lời nói, rồi chỉ sửa một câu.",
+      "completionCriteria": "Lưu bản chép lời, một câu đã sửa và số phút thực học rồi bấm Done. Done là thói quen tự ghi nhận, không phải điểm trình độ.",
+      "takeaway": {
+        "phrase": "What started as … became …",
+        "pattern": "If I had …, I would have …",
+        "reusePrompt": "Kể lại trong buổi phỏng vấn một lần bạn thu nhỏ phạm vi dự án và điều bạn học được."
+      }
+    },
+    {
+      "id": "daily-2026-11-02-en-blog-cozy",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 15 phút — tách kết quả nghiên cứu khỏi lời đồn",
+      "level": "B2 source",
+      "instructions": "Bài đọc do trợ lý viết từ các nghiên cứu được dẫn trong bài, không phải đề thi chính thức. Đọc kỹ phần 4; di chuột hoặc chạm vào từ in đậm để xem nghĩa.",
+      "material": "/blog/why-cozy-games-calm-us-down",
+      "exercises": "Đọc phần 4 một lượt rồi đóng bài. Từ trí nhớ, viết ba dòng bằng tiếng Anh: (1) \"The 2021 study found …, but …\"; (2) \"The 2022 study found …\"; (3) một câu bắt đầu bằng \"This suggests that …\". Mở lại bài, gắn mỗi dòng với một cụm bằng chứng ngắn và ghi Supported / Needs correction. Cuối cùng viết một câu vì sao \"correlation\" chưa chứng minh được nguyên nhân.",
+      "completionCriteria": "Lưu ba dòng ban đầu, cụm bằng chứng, nhãn Supported / Needs correction, câu về correlation và số phút thực học rồi bấm Done. Done là thói quen tự ghi nhận, không phải điểm trình độ.",
+      "takeaway": {
+        "phrase": "This suggests that …",
+        "pattern": "Claim → source → how strong is the evidence?",
+        "reusePrompt": "Khi đọc một tin giật gân, viết lại thành một câu thận trọng với \"may\" hoặc \"suggests\"."
+      }
     }
   ]
 }

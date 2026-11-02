@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function VillagePage() {
   return (
     <div className="learning-page">
-      <Link href="/learning/world" className="lesson-detail__back">← Về Learning Farm</Link>
+      <Link href="/learning" className="lesson-detail__back">← Về Learning</Link>
       <header className="section-page__header">
         <h1>Làng Rêu</h1>
         <p>

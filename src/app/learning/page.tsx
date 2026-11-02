@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { LearningPath } from "@/components/LearningPath";
 import { LocalProgressSummary } from "@/components/LocalProgressSummary";
 import { getAllLessons } from "@/lib/lessonsData";
@@ -21,6 +22,11 @@ export default async function LearningPage() {
       </header>
 
       <StartLearning lessons={lessons} />
+      <nav className="learning-games" aria-label="Trò chơi">
+        <p><strong>Góc thư giãn</strong> Không tính vào Done hay trình độ.</p>
+        <Link href="/learning/village" className="button button--ghost">Làng Rêu →</Link>
+        <Link href="/learning/world" className="button button--ghost">Nông trại →</Link>
+      </nav>
       <LearningPath {...path} />
       <LocalProgressSummary />
     </div>
