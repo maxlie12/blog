@@ -1,0 +1,72 @@
+{
+  "date": "2026-11-03",
+  "title": "Khởi động 5 phút — nghe một chi tiết và kiểm chứng",
+  "kind": "restart",
+  "note": "Chưa có bài làm mới hoặc bằng chứng Done được gửi trong chat, nên giữ B1+ tự đánh giá và bước nghe/đọc hiểu của cùng nguồn British Council; chưa chuyển sang shadowing, chưa tăng độ khó và không tạo backlog bắt buộc. Tiếng Trung là tùy chọn.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-03-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Nhiệm vụ chính 5 phút — nghe một chi tiết có thể kiểm tra",
+      "level": "B1+ restart / B1 source",
+      "instructions": "Bài do trợ lý soạn, không phải đề British Council/IELTS/TOEIC chính thức. Nguồn British Council miễn phí có audio, transcript và bài tương tác. Chưa mở transcript; nghe 45–60 giây đầu tối đa hai lượt.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b1/phone-call-customer",
+      "exercises": "Ghi một chi tiết bạn nghe được theo khung “I heard that …”. Thêm mức chắc chắn: Sure / Not sure. Sau đó mở transcript, tìm đúng chỗ liên quan và sửa tối đa một từ hoặc một cụm; chưa cần hiểu toàn bộ cuộc gọi.",
+      "completionCriteria": "Lưu câu ban đầu, nhãn Sure / Not sure, câu sau kiểm chứng, số lượt nghe và số phút thực học rồi bấm Done. Hoàn thành không tự suy ra CEFR hay tiến bộ.",
+      "takeaway": {
+        "phrase": "I heard that …",
+        "pattern": "Detail → confidence → transcript check → one correction",
+        "reusePrompt": "Dùng khung này để xác nhận một yêu cầu bạn vừa nghe trong cuộc họp hoặc cuộc gọi."
+      }
+    },
+    {
+      "id": "daily-2026-11-03-zh-writing",
+      "language": "zh",
+      "skill": "writing",
+      "title": "Tùy chọn 5 phút — nhớ lại rồi tự tạo câu vị trí",
+      "level": "Beginner restart",
+      "instructions": "Bài ôn do trợ lý soạn, không phải bài HelloChinese chính thức. HelloChinese có phần miễn phí và nội dung Premium, với audio người bản ngữ trong ứng dụng nếu bạn muốn nghe lại. Che pinyin và nghĩa trước khi tự nhớ.",
+      "material": "https://www.hellochinese.cc/",
+      "exercises": "Nhìn câu mẫu 20 giây rồi che lại và gõ từ trí nhớ. Tiếp theo chọn hai đồ vật thật, đổi danh từ và vị trí để viết một cặp hỏi–đáp mới. Đọc câu mới một lượt; viết tay một chữ chỉ là tùy chọn, không lưu và không tự chấm.",
+      "completionCriteria": "Chỉ bấm Done sau khi tự gõ một cặp hỏi–đáp mới và đọc thành tiếng không nhìn mẫu. Chép nguyên câu mẫu chưa đủ để ghi Done.",
+      "takeaway": {
+        "phrase": "在……里面",
+        "pattern": "A 在哪儿？A 在 B 里面。",
+        "reusePrompt": "Dùng một đồ vật thật đang nằm trong túi, hộp hoặc ngăn kéo."
+      },
+      "chinesePractice": {
+        "sentence": "勺子在哪儿？勺子在碗里面。",
+        "translation": "Cái thìa ở đâu? Cái thìa ở trong bát.",
+        "tokens": [
+          {
+            "hanzi": "勺子",
+            "pinyin": "sháozi",
+            "meaning": "cái thìa"
+          },
+          {
+            "hanzi": "在哪儿",
+            "pinyin": "zài nǎr",
+            "meaning": "ở đâu"
+          },
+          {
+            "hanzi": "在",
+            "pinyin": "zài",
+            "meaning": "ở / nằm tại"
+          },
+          {
+            "hanzi": "碗",
+            "pinyin": "wǎn",
+            "meaning": "cái bát"
+          },
+          {
+            "hanzi": "里面",
+            "pinyin": "lǐmiàn",
+            "meaning": "bên trong"
+          }
+        ],
+        "outputPrompt": "Không nhìn mẫu, dùng hai đồ vật thật để tự tạo một cặp hỏi–đáp mới rồi đọc thành tiếng."
+      }
+    }
+  ]
+}
