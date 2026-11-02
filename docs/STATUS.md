@@ -13,7 +13,8 @@ Last verified: 2026-11-02 (Làng Rêu: 42 new pieces and a larger island, harnes
 - The tool dock has group tabs with small 3D previews rendered on the device; the word book is
   grouped.
 - Checks: 7 village tests, ESLint and `tsc` clean, 41/41 Playwright checks at 390px and 1280px.
-  See `docs/changes/GAME-002-village-more-pieces.md`.
+  Vercel built and deployed commit `1b2f557` to Production; the live page was not opened from
+  this workspace. See `docs/changes/GAME-002-village-more-pieces.md`.
 
 
 ## 2026-11-02 — Làng Rêu village builder

@@ -57,7 +57,8 @@ after 11 words.
       the sample village shows the new pieces; zoom out shows the whole island; 44px controls,
       no horizontal scroll, reload keeps everything, no console errors.
 - [x] Screenshot sheet of all 53 previews; night view with lit lighthouse and campfire.
-- [ ] Vercel build + production deploy (see `docs/STATUS.md`)
+- [x] Vercel production build of commit `1b2f557` succeeded and was deployed to Production.
+- [ ] Live page check: not possible from this workspace (vercel.app is blocked); owner to open `/learning/village`.
 
 ## Result
 
