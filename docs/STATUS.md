@@ -1,6 +1,22 @@
 # Status
 
-Last verified: 2026-11-01 (study articles, free practice and topic path in production).
+Last verified: 2026-11-02 (Làng Rêu village builder, browser harness; production check pending).
+
+## 2026-11-02 — Làng Rêu village builder
+
+- New `/learning/village`, linked from the Learning Farm: a Tiny Glade-style island where the
+  learner draws paths and walls (a wall over a path opens an arched gate, wall ends and sharp
+  corners grow towers), places houses that face the path, plants trees, erases, undoes and
+  moves the time of day. Seven more pieces unlock after a three-step word card (see/hear,
+  pick the meaning, type it into a sentence).
+- Unlocks are game progress only. The village and unlocks are saved per learner profile on this
+  device; nothing is written to Done, streak, attempts or the server.
+- three.js loads on demand; the island is a few baked draw calls with instanced trees and grass,
+  and slow devices drop shadows and pixel ratio after the first seconds.
+- Checks: 5 new Node tests, ESLint and `tsc` clean for the new files, 44/44 Playwright checks at
+  390px (touch) and 1280px. Local `next build` was not possible without network; see
+  `docs/changes/GAME-001-village-builder.md`.
+- Not verified: real iPhone/Safari, a real low-end GPU, speech voices, screen readers.
 
 ## 2026-11-01 — study articles, free practice and topic path
 

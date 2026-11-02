@@ -147,6 +147,7 @@ export function LearningWorld({
       ) : (
         <FarmGame practiceDays={activity} />
       )}
+      <Link href="/learning/village" className="button button--ghost world-village-link">Sang Làng Rêu: xây làng, học từ để mở đồ →</Link>
 
       <section className="world-learn" aria-labelledby="world-learn-title">
         <div className="world-learn__intro">
