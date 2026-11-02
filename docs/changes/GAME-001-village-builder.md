@@ -3,7 +3,7 @@
 ## Identity
 
 - **Issue:** `GAME-001` (owner request, 2026-11-02; game work stays below the learning issues in `docs/ISSUES.md`)
-- **Status:** done (pending production check)
+- **Status:** done (live page check by owner)
 - **Owner:** Claude
 - **Date:** 2026-11-02
 
@@ -69,15 +69,15 @@ claude.ai page, so the learner cannot reach it from the blog.
       this change because `@neondatabase/serverless` is not installed in this workspace.
 - [x] `npm run lint` scope: ESLint passes on every new or edited file; `tsc --noEmit` reports no
       errors in them (remaining errors come from the missing Prisma client and new packages).
-- [ ] `npm run build`: not run here. The workspace has no network, so `npm ci` cannot install
-      `@clerk/nextjs`, `@neondatabase/serverless` and `@huggingface/transformers`. Vercel's build
-      on push is the build check.
+- [x] Build: not runnable here (no network for `npm ci` to install `@clerk/nextjs`,
+      `@neondatabase/serverless`, `@huggingface/transformers`). Vercel's production build of
+      commit `d6a7d13` succeeded and was deployed to Production.
 - [x] Browser at 390px (touch) and 1280px, React StrictMode harness with the real components:
       44/44 checks. Path + wall gives an arched gate, house, tree, tower unlocked through the
       lesson, erase, undo, night, refresh keeps village and unlock, Enter places a tree and
       Ctrl+Z undoes it, Escape closes the dialog, every control at least 44px, no horizontal
       scroll, no console errors, and only the two village keys are written to storage.
-- [ ] Production route check after deployment
+- [ ] Production route check: not possible from this workspace (vercel.app is blocked); owner to open `/learning/village`.
 
 ## Result
 
@@ -92,5 +92,5 @@ claude.ai page, so the learner cannot reach it from the blog.
   possible without a pointer (paths, walls and fences still need dragging). A start on the grass
   rim is pulled inside the build area instead of being refused.
 - **Commit/deployment:** see `docs/STATUS.md`.
-- **Not checked / remaining risk:** local `next build`; real iPhone/Safari and a real low-end
+- **Not checked / remaining risk:** opening the live page; real iPhone/Safari and a real low-end
   laptop GPU (tests ran on software WebGL); real speech voices; screen-reader output.

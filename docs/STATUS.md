@@ -1,6 +1,6 @@
 # Status
 
-Last verified: 2026-11-02 (Làng Rêu village builder, browser harness; production check pending).
+Last verified: 2026-11-02 (Làng Rêu village builder: harness checks and Vercel production build).
 
 ## 2026-11-02 — Làng Rêu village builder
 
@@ -14,9 +14,11 @@ Last verified: 2026-11-02 (Làng Rêu village builder, browser harness; producti
 - three.js loads on demand; the island is a few baked draw calls with instanced trees and grass,
   and slow devices drop shadows and pixel ratio after the first seconds.
 - Checks: 5 new Node tests, ESLint and `tsc` clean for the new files, 44/44 Playwright checks at
-  390px (touch) and 1280px. Local `next build` was not possible without network; see
+  390px (touch) and 1280px. Local `next build` was not possible without network; Vercel's build
+  of commit `d6a7d13` succeeded and was deployed to Production. See
   `docs/changes/GAME-001-village-builder.md`.
-- Not verified: real iPhone/Safari, a real low-end GPU, speech voices, screen readers.
+- Not verified: the live `/learning/village` page (the workspace cannot reach vercel.app), real
+  iPhone/Safari, a real low-end GPU, speech voices, screen readers.
 
 ## 2026-11-01 — study articles, free practice and topic path
 
