@@ -30,6 +30,8 @@ export interface InspectInfo {
   title: { word: WordId } | { resident: ResidentId } | { part: PartId };
   sentence: { en: string; vi: string; verb: VerbId; highlight: string } | null;
   parts: PartId[];
+  /** The conversation they are in: each line with who says it, and the line being said now. */
+  chat?: { id: string; lines: { speaker: string; en: string; vi: string }[]; index: number } | null;
 }
 export interface VillageOptions {
   saved: SavedScene | null;
@@ -57,9 +59,9 @@ const ROOFS = ["#b65f4a", "#4e7287", "#8a5c47", "#5f6f92", "#9c4a41", "#6c7f55"]
 const PLASTER = ["#efe6d3", "#f3e2c3", "#e8ddcb", "#f0d8c3", "#e3e2d4", "#f2ead9"];
 const STROKE_KEY: Record<StrokeTool, "paths" | "walls" | "fences" | "hedges" | "streams"> = { path: "paths", wall: "walls", fence: "fences", hedge: "hedges", stream: "streams" };
 const LEGACY_TAP = ["tower", "well", "windmill", "lantern", "sheep"] as const;
-const MAX_TREES = 700, MAX_INSTANCES = 900, TUFTS = 760;
+const MAX_TREES = 1000, MAX_INSTANCES = 900, TUFTS = 1200;
 const SPEED: Partial<Record<ToolId, number>> = {
-  sheep: 0.55, chicken: 0.7, duck: 0.45, cow: 0.35, horse: 0.6, pig: 0.45, dog: 0.9, cat: 0.5, rabbit: 0.8, buffalo: 0.3, goat: 0.55, goose: 0.45, frog: 0.7,
+  sheep: 0.55, chicken: 0.7, duck: 0.45, cow: 0.35, horse: 0.6, pig: 0.45, dog: 0.9, cat: 0.5, rabbit: 0.8, buffalo: 0.3, goat: 0.55, goose: 0.45, frog: 0.7, fish: 0.5,
 };
 
 const PREY = new Set<ToolId>(["chicken", "cat", "rabbit", "duck", "goose"]);
@@ -71,6 +73,7 @@ const FLOAT_SINK: Record<DynamicKind, number> = { ball: 0.12, pumpkin: 0.14, bar
 /** Colliders for pieces that are not simple round things. Half sizes along local X and Z. */
 const PROP_BOX: Partial<Record<PropKind, [number, number]>> = {
   barn: [1.25, 1.55], chapel: [0.95, 1.55], stall: [0.95, 0.65], tent: [0.95, 1.12], bakery: [1.25, 0.95], pagoda: [1.3, 1.3], seesaw: [0.18, 1.2],
+  castle: [2.45, 2.45],
 };
 const PROP_RADIUS: Partial<Record<PropKind, number>> = {
   blossom: 0.25, bush: 0.4, rock: 0.5, lighthouse: 1.05, fountain: 1.2, gazebo: 1.25, log: 0.45, stump: 0.36, haystack: 0.72, statue: 0.45,
@@ -733,7 +736,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   const ring = new THREE.Mesh(G.torus, ringMat);
   ring.rotation.x = Math.PI / 2;
   ring.visible = false;
-  let ringT = 1;
+  let ringT = 1, ringSize = 5;
   scene.add(petals, ring);
   tuftMesh.receiveShadow = false;
 
@@ -744,7 +747,8 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       const parts: Part[] = [];
       for (let k = 0; k < 4; k += 1) parts.push({ g: G.ico, c: "#ffffff", m: M(k * 0.9 - 1.3, k === 1 || k === 2 ? 0.35 : 0, (r() - 0.5) * 0.6, 1.4 + r() * 0.6, 1.0 + r() * 0.5, 1.3) });
       const cloud = new THREE.Mesh(bake(parts) ?? undefined, cloudMat);
-      cloud.position.set(-45 + i * 14 + r() * 5, 10 + r() * 5, -22 + r() * 40);
+      // High enough to sit above the camera's usual height, so they drift overhead instead of across the view.
+      cloud.position.set(-60 + i * 18 + r() * 6, 32 + r() * 6, -40 + r() * 80);
       cloud.scale.setScalar(1 + r() * 0.6);
       scene.add(cloud);
       clouds.push(cloud);
@@ -1029,7 +1033,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     goal.theta -= dx * 0.0065;
     goal.phi = clamp(goal.phi - dy * 0.0045, 0.42, 1.22);
   };
-  const zoomBy = (f: number) => { goal.radius = clamp(goal.radius * f, 11, 110); };
+  const zoomBy = (f: number) => { goal.radius = clamp(goal.radius * f, 11, 150); };
   function panBy(dx: number, dy: number) {
     const s = goal.radius * 0.0016;
     const cx = Math.cos(goal.theta), sx = Math.sin(goal.theta);
@@ -1123,13 +1127,16 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       rebuildTrees();
       return true;
     }
-    if (kind === "lotus") {
-      // Lotus grows only on open water, not under a bridge.
-      if (!waterAt(phys, g[0], g[1]) || pathIndex.near(g[0], g[1], 0.9)) { say("Sen chỉ mọc trên mặt nước: chạm hoặc quét trên ao, suối."); return false; }
+    if (kind === "lotus" || kind === "fish") {
+      // Lotus and fish live only on open water, not under a bridge.
+      if (!waterAt(phys, g[0], g[1]) || pathIndex.near(g[0], g[1], 0.9)) {
+        say(kind === "fish" ? "Cá chỉ thả được xuống ao hoặc suối." : "Sen chỉ mọc trên mặt nước: chạm hoặc quét trên ao, suối.");
+        return false;
+      }
     } else if (blocked(g[0], g[1], 0.2) || S.trees.some((t) => Math.hypot(t.x - g[0], t.z - g[1]) < 0.7)) return false;
     const id = newId();
     S.props.push({ id, kind: kind as PropKind, x: +g[0].toFixed(2), z: +g[1].toFixed(2), r: +(Math.random() * Math.PI * 2).toFixed(2), seed: randSeed() });
-    if (isDynamic(kind)) { fresh.add(id); needsBodySync = true; } else plantsDirty = true;
+    if (isDynamic(kind)) { fresh.add(id); needsBodySync = true; } else if (TOOL[kind].animal) { fresh.add(id); rebuildAnimals(); } else plantsDirty = true;
     return true;
   }
 
@@ -1174,7 +1181,8 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     const at = new THREE.Vector3(g[0], 0, g[1]);
     for (const v of animalViews.values()) {
       if (v.mesh.position.distanceTo(at) < TOOL[v.kind].size + 0.5) {
-        v.pet = 1;
+        if (v.kind === "fish") jumpFish(v);
+        else v.pet = 1;
         say(`${TOOL[v.kind].sound ?? ""} (${v.kind} ${WORDS[v.kind as keyof typeof WORDS].ipa})`);
         return true;
       }
@@ -1622,6 +1630,14 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     canvas.style.cursor = "";
   }
 
+  /** An expanding ring on the ground or water: a gust, or a fish landing. */
+  function ripple(x: number, z: number, size: number) {
+    if (reduceMotion) return;
+    ring.position.set(x, 0.08, z);
+    ring.visible = true;
+    ringT = 0;
+    ringSize = size;
+  }
   /** A small puff of wind from the hand: pushes pieces, startles animals and birds. */
   function gustAt(g: Point) {
     const moved = gust(bodyList(), g[0], g[1]);
@@ -1629,7 +1645,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       if (v.state !== "sleep" && Math.hypot(v.mesh.position.x - g[0], v.mesh.position.z - g[1]) < 2.8) startle(v, g[0], g[1], 1.2);
     }
     scareBirds(g[0], g[1], 3.5);
-    if (!reduceMotion) { ring.position.set(g[0], 0.08, g[1]); ring.visible = true; ringT = 0; }
+    ripple(g[0], g[1], 5);
     if (moved.length) pendingCommit = true;
     else before = null;
   }
@@ -1772,9 +1788,63 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     pickTarget(v);
   }
 
+  /* Fish swim just under the surface of their pond or stream and leap out now and then. */
+  const FISH_Y = -0.06;
+  function fishSpot(x: number, z: number): Point | null {
+    for (let tries = 0; tries < 8; tries += 1) {
+      const a = Math.random() * Math.PI * 2, d = 0.6 + Math.random() * 2;
+      const tx = x + Math.cos(a) * d, tz = z + Math.sin(a) * d;
+      if (waterAt(phys, tx, tz)) return [tx, tz];
+    }
+    return null;
+  }
+  function jumpFish(v: AnimalView) {
+    if (v.y > FISH_Y + 0.01) return;
+    v.vy = 3.2 + Math.random() * 0.8;
+    v.home.set(v.mesh.position.x, v.mesh.position.z); // where to fall back to if it lands on grass
+    v.wait = 6 + Math.random() * 10;
+  }
+  function updateFish(v: AnimalView, dt: number, motion: number) {
+    const m = v.mesh, p = m.position;
+    m.rotation.order = "YXZ";
+    const air = v.y > FISH_Y || v.vy > 0;
+    if (air) {
+      v.vy -= GRAVITY * dt;
+      v.y += v.vy * dt;
+      p.x += v.vx * dt * 0.6;
+      p.z += v.vz * dt * 0.6;
+      if (v.y <= FISH_Y) {
+        v.y = FISH_Y;
+        v.vy = 0;
+        if (!waterAt(phys, p.x, p.z)) p.set(v.home.x, FISH_Y, v.home.y);
+        ripple(p.x, p.z, 1.2);
+      }
+    } else if (motion) {
+      v.wait -= dt;
+      if (v.wait <= 0 && timeOfDay < 0.82) jumpFish(v);
+      const dx = v.target.x - p.x, dz = v.target.y - p.z, d = Math.hypot(dx, dz);
+      if (d < 0.15 || !waterAt(phys, v.target.x, v.target.y)) {
+        const spot = fishSpot(p.x, p.z);
+        if (spot) v.target.set(spot[0], spot[1]);
+      } else {
+        const sp = SPEED.fish ?? 0.5, k = Math.min(1, dt * 3);
+        v.vx += ((dx / d) * sp - v.vx) * k;
+        v.vz += ((dz / d) * sp - v.vz) * k;
+        const nx = p.x + v.vx * dt, nz = p.z + v.vz * dt;
+        if (waterAt(phys, nx, nz)) { p.x = nx; p.z = nz; } else { v.vx = v.vz = 0; v.target.set(p.x, p.z); }
+      }
+    }
+    const sp = Math.hypot(v.vx, v.vz);
+    if (sp > 0.05) m.rotation.y += angleDiff(Math.atan2(v.vx, v.vz), m.rotation.y) * Math.min(1, dt * 6);
+    m.rotation.x = air ? -clamp(v.vy * 0.3, -1.1, 1.1) : 0;
+    m.rotation.z = motion && !air ? Math.sin(clock * 9 + v.id) * 0.12 : 0;
+    p.y = v.y;
+  }
+
   function updateAnimals(dt: number, motion: number) {
     const night = timeOfDay > 0.82;
     for (const v of animalViews.values()) {
+      if (v.kind === "fish") { updateFish(v, dt, motion); continue; }
       const m = v.mesh, p = m.position;
       const swim = SWIMMERS.has(v.kind) && !!waterAt(phys, p.x, p.z);
       const ground = swim ? -0.08 : 0;
@@ -1875,7 +1945,20 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     time: () => timeOfDay,
     blocked: (x, z, pad) => blocked(x, z, pad),
     houseDoor: (h) => houseDoors.get(h.id) ?? [h.x + Math.sin(h.r) * 1.5, h.z + Math.cos(h.r) * 1.5],
-    animals: () => [...animalViews.values()].map((v) => ({ kind: v.kind, x: v.mesh.position.x, z: v.mesh.position.z })),
+    animals: () => [...animalViews.values()].map((v) => ({ id: v.id, kind: v.kind, x: v.mesh.position.x, z: v.mesh.position.z })),
+    holdAnimal: (id, from, seconds) => {
+      const v = animalViews.get(id);
+      if (!v || v.kind === "fish") return;
+      if (v.state !== "sleep") v.state = "wander";
+      v.chase = null;
+      v.wait = seconds;
+      v.target.set(v.mesh.position.x, v.mesh.position.z);
+      v.mesh.rotation.y = Math.atan2(from[0] - v.mesh.position.x, from[1] - v.mesh.position.z);
+    },
+    animalTop: (id) => {
+      const v = animalViews.get(id);
+      return v ? v.mesh.position.clone().setY(v.mesh.position.y + TOOL[v.kind].size * 1.3 + 0.45) : null;
+    },
     balls: () => [...bodies.values()].filter((b) => b.kind === "ball"),
   });
   /** Hand tool on a person: they wave back, and the toast says so in both languages. */
@@ -1912,6 +1995,37 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   labelLayer.setAttribute("aria-hidden", "true");
   container.appendChild(labelLayer);
   let labelEls: { dot: HTMLElement; line: HTMLElement; chip: HTMLElement; w: number }[] = [];
+
+  /* Speech bubbles over whoever is talking: the few nearest the camera, English with Vietnamese under it. */
+  const bubbleLayer = document.createElement("div");
+  bubbleLayer.className = "vg-bubbles";
+  bubbleLayer.setAttribute("aria-hidden", "true");
+  container.appendChild(bubbleLayer);
+  const bubbles = new Map<string, HTMLElement>();
+  const _bv = new THREE.Vector3();
+  function updateBubbles() {
+    const W = container.clientWidth, H = container.clientHeight, keep = new Set<string>();
+    const near = people.speech().map((s) => ({ ...s, d: s.at.distanceTo(camera.position) })).filter((s) => s.d < 55).sort((a, b) => a.d - b.d).slice(0, 4);
+    for (const s of near) {
+      _bv.copy(s.at).project(camera);
+      if (_bv.z > 1 || Math.abs(_bv.x) > 1 || Math.abs(_bv.y) > 1) continue;
+      let el = bubbles.get(s.key);
+      if (!el) {
+        el = document.createElement("div");
+        el.className = "vg-bubble";
+        const en = document.createElement("b"), vi = document.createElement("small");
+        en.lang = "en";
+        en.textContent = s.en;
+        vi.textContent = s.vi;
+        el.append(en, vi);
+        bubbleLayer.append(el);
+        bubbles.set(s.key, el);
+      }
+      keep.add(s.key);
+      el.style.transform = `translate(${(_bv.x * 0.5 + 0.5) * W}px, ${(-_bv.y * 0.5 + 0.5) * H}px) translate(-50%, -100%)`;
+    }
+    for (const [key, el] of bubbles) if (!keep.has(key)) { el.remove(); bubbles.delete(key); }
+  }
   const uniqueParts = (marks: { part: PartId }[]) => [...new Set(marks.map((m) => m.part))];
   const anchors = (list: readonly [PartId, number, number, number][] | undefined): Mark[] => (list ?? []).map(([part, x, y, z]) => ({ part, at: new THREE.Vector3(x, y, z) }));
   /** Runs a builder only to collect where its parts are. */
@@ -1961,13 +2075,19 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   }
   const _sel = new THREE.Vector3();
 
+  /** A chat in the shape the card shows, or null. */
+  function chatInfo(c: ReturnType<typeof people.chatOf>): InspectInfo["chat"] {
+    if (!c) return null;
+    return { id: c.chat.id, index: c.index, lines: c.chat.lines.map((l) => ({ speaker: l.who === "a" ? c.a : c.b, en: l.en, vi: l.vi })) };
+  }
   function personInfo(p: Person): InspectInfo {
-    const { who, action } = people.describe(p);
+    const { who, action, target } = people.describe(p);
     return {
       id: `person:${p.id}`,
       title: who.word ? { word: who.word } : { resident: who.resident as ResidentId },
-      sentence: describe(who, action),
+      sentence: describe(who, action, target),
       parts: uniqueParts(personMarks(p.role).map(([part]) => ({ part }))),
+      chat: chatInfo(people.chatOf(p)),
     };
   }
   function personSelection(p: Person): Selection {
@@ -1980,6 +2100,9 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
 
   /** What an animal is doing, read from its state and how it moves. */
   function animalAction(v: AnimalView): { action: ActionId; target?: { en: string; vi: string } } {
+    const chat = people.chatOf(v.id);
+    if (chat) return { action: "talkTo", target: { en: chat.with.en, vi: chat.with.vi } };
+    if (v.kind === "fish") return { action: v.y > FISH_Y + 0.02 ? "jumpWater" : "swim" };
     if (v.state === "sleep") return { action: "sleep" };
     if (v.state === "home") return { action: "goHome" };
     if (v.state === "flee") return { action: "flee" };
@@ -1998,7 +2121,10 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   }
   function animalInfo(v: AnimalView): InspectInfo {
     const word = v.kind as WordId, { action, target } = animalAction(v);
-    return { id: `animal:${v.id}`, title: { word }, sentence: describe({ en: word, vi: viWho(word) }, action, target), parts: uniqueParts(anchors(PROP_MARKS[v.kind as PropKind])) };
+    return {
+      id: `animal:${v.id}`, title: { word }, sentence: describe({ en: word, vi: viWho(word) }, action, target),
+      parts: uniqueParts(anchors(PROP_MARKS[v.kind as PropKind])), chat: chatInfo(people.chatOf(v.id)),
+    };
   }
   function animalSelection(v: AnimalView): Selection {
     return {
@@ -2138,7 +2264,8 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
         selectionCheck = 0.4;
         const info = sel.refresh();
         if (!info) { clearSelection(true); return; }
-        if (info.sentence?.en !== sel.info.sentence?.en) { sel.info = info; options.onInspect?.(info); }
+        const said = (i: InspectInfo) => `${i.sentence?.en}|${i.chat?.id}|${i.chat?.index}`;
+        if (said(info) !== said(sel.info)) { sel.info = info; options.onInspect?.(info); }
       }
     }
     const T = sel.frame();
@@ -2158,11 +2285,15 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       if (!show) return;
       const px = (_lv.x * 0.5 + 0.5) * W, py = (-_lv.y * 0.5 + 0.5) * H;
       if (!el.w) el.w = el.chip.offsetWidth || 56;
-      const cw = el.w, cx = clamp(px, cw / 2 + 4, W - cw / 2 - 4);
-      let cy = py - 30;
-      for (const dy of [-30, -58, 28, -86, 56, -114]) {
-        cy = clamp(py + dy, CH / 2 + 4, H - CH / 2 - 4);
-        if (!placed.some(([x, y, w, h]) => cx - cw / 2 < x + w + 4 && cx + cw / 2 > x - 4 && cy - CH / 2 < y + h + 3 && cy + CH / 2 > y - 3)) break;
+      const cw = el.w;
+      const free = (x: number, y: number) => !placed.some(([bx, by, bw, bh]) => x - cw / 2 < bx + bw + 4 && x + cw / 2 > bx - 4 && y - CH / 2 < by + bh + 3 && y + CH / 2 > by - 3);
+      // Above the part first, then beside it, then further up or down.
+      let cx = clamp(px, cw / 2 + 4, W - cw / 2 - 4), cy = clamp(py - 30, CH / 2 + 4, H - CH / 2 - 4);
+      search: for (const dy of [-30, -58, 28, -86, 56, -114]) {
+        for (const dx of [0, -(cw / 2 + 36), cw / 2 + 36]) {
+          const x = clamp(px + dx, cw / 2 + 4, W - cw / 2 - 4), y = clamp(py + dy, CH / 2 + 4, H - CH / 2 - 4);
+          if (free(x, y)) { cx = x; cy = y; break search; }
+        }
       }
       placed.push([cx - cw / 2, cy - CH / 2, cw, CH]);
       el.chip.style.transform = `translate(${cx - cw / 2}px, ${cy - CH / 2}px)`;
@@ -2186,7 +2317,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     if (ringT < 1) {
       ringT += dt;
       const k = Math.min(1, ringT / 0.45);
-      ring.scale.set(0.5 + k * 5, 0.5 + k * 5, 1);
+      ring.scale.set(0.5 + k * ringSize, 0.5 + k * ringSize, 1);
       ringMat.opacity = 0.55 * (1 - k);
       ring.visible = k < 1;
     }
@@ -2438,8 +2569,10 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     for (const c of clouds) {
       c.position.x += wind.x * dt * 0.8 * motion;
       c.position.z += wind.z * dt * 0.8 * motion;
-      if (Math.abs(c.position.x) > 55) c.position.x = -Math.sign(c.position.x) * 54;
-      if (Math.abs(c.position.z) > 55) c.position.z = -Math.sign(c.position.z) * 54;
+      if (Math.abs(c.position.x) > 70) c.position.x = -Math.sign(c.position.x) * 69;
+      if (Math.abs(c.position.z) > 70) c.position.z = -Math.sign(c.position.z) * 69;
+      // A cloud right in front of the camera would hide the village.
+      c.visible = c.position.distanceTo(camera.position) > 18;
     }
     updateAnimals(dt, motion);
     people.update(dt, motion);
@@ -2448,6 +2581,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     updateLife(dt, motion);
     renderer.render(scene, camera);
     updateSelection(dt);
+    updateBubbles();
     if (firstFrame) { firstFrame = false; options.onReady(); makeThumbnails(); }
 
     frames += 1;
@@ -2524,6 +2658,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       for (const m of [surface, swayMat, glowMat, waterMat, cloudMat, haloMat, starMat, petalMat, ringMat, selMat]) m.dispose();
       haloTex.dispose();
       labelLayer.remove();
+      bubbleLayer.remove();
       renderer.dispose();
       canvas.remove();
     },

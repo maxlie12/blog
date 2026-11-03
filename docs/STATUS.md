@@ -1,6 +1,21 @@
 # Status
 
-Last verified: 2026-11-03 (Làng Rêu countryside pieces and daily review; harness browser checks).
+Last verified: 2026-11-03 (Làng Rêu castle, fish, conversations, running clock; harness browser checks).
+
+## 2026-11-03 — Làng Rêu: castle, fish, conversations, a running day, larger island
+
+- The island is about twice as large; old saves load unchanged.
+- The tool strip and group tabs scroll with the mouse wheel, a mouse drag or arrow buttons
+  (touch swiping still works); before, a mouse could not reach tools past the right edge.
+- New: castle (with keep, turrets and drawbridge), a knight who guards it, and fish released on
+  ponds and streams that swim and jump (91 words).
+- Conversations as speech bubbles (English with Vietnamese): neighbours chat, villagers talk to
+  animals and the animals answer; the Look card lists the conversation and the word book keeps it.
+- The day can run: fast (a day in 6 minutes) or real time from the device clock; villagers go
+  home and lights come on by themselves.
+- Checks: 19 village tests, ESLint and `tsc` clean; Playwright suites for the strip, castle and
+  fish (27/27) and for conversations and the clock (26/26), plus the earlier suites. See
+  `docs/changes/GAME-005-village-castle-fish-map.md` and `GAME-006-village-talk-clock.md`.
 
 ## 2026-11-03 — Làng Rêu: 26 countryside pieces and a daily review
 

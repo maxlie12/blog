@@ -566,6 +566,57 @@ export const PROP_MODELS: Record<PropKind, Model> = {
       p(G.box, WOOD_LIGHT, 0.6, 0.88 + (t - 0.5) * 1.744, 1.0 - (t - 0.5) * 0.446, 0.34, 0.04, 0.05);
     }
   },
+  castle({ p, w }) {
+    // Walls round a courtyard, four corner turrets, a keep at the back, a gatehouse at the front (+Z).
+    const stone = "#d3c9b6", cap = "#ddd5c4", roof = "#5f6f92", B = 0.2, H = 1.7, T = 0.45, E = 2.0;
+    p(G.box, STONE_DARK, 0, B / 2, 0, 4.9, B, 4.9);
+    p(G.box, "#b9a47a", 0, B + 0.01, 0, 3.6, 0.02, 3.6);
+    const wall = (x: number, z: number, lx: number, lz: number) => {
+      p(G.box, stone, x, B + H / 2, z, lx, H, lz);
+      p(G.box, cap, x, B + H + 0.05, z, lx + 0.08, 0.1, lz + 0.08);
+      const along = lx > lz, len = Math.max(lx, lz), n = Math.max(1, Math.round(len));
+      for (let k = 0; k < n; k += 1) {
+        const o = -len / 2 + (len / n) * (k + 0.5);
+        p(G.box, cap, along ? x + o : x, B + H + 0.27, along ? z : z + o, along ? 0.32 : T * 0.85, 0.34, along ? T * 0.85 : 0.32);
+      }
+    };
+    wall(0, -E, 2 * E, T);
+    for (const s of [-1, 1]) {
+      wall(s * E, 0, T, 2 * E);
+      wall(s * 1.4, E, 1.2, T);
+    }
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      p(G.cyl12, stone, sx * E, B + 1.35, sz * E, 1.2, 2.7, 1.2);
+      p(G.cyl12, cap, sx * E, B + 2.75, sz * E, 1.4, 0.12, 1.4);
+      p(G.cone8, roof, sx * E, B + 3.35, sz * E, 1.5, 1.1, 1.5);
+      p(G.sphere, GOLD, sx * E, B + 3.95, sz * E, 0.14, 0.14, 0.14);
+      w(G.box, sx * E, B + 1.9, sz * E + 0.61, 0.16, 0.34, 0.04);
+    }
+    // Gatehouse with an arch, a portcullis and the drawbridge let down.
+    for (const s of [-1, 1]) {
+      p(G.box, stone, s * 0.75, B + 1.15, E, 0.5, 2.3, 0.75);
+      for (const z of [-0.18, 0.18]) p(G.box, cap, s * 0.75, B + 2.45, E + z, 0.5, 0.3, 0.26);
+    }
+    p(G.box, stone, 0, B + 1.85, E, 1.0, 0.9, 0.7);
+    p(G.arch, "#b9ad97", 0, B + 1.0, E + 0.05, 0.5, 0.42, 2.9);
+    p(G.box, "#4f3f33", 0, B + 0.55, E + 0.02, 0.9, 1.05, 0.05);
+    for (let k = 0; k < 4; k += 1) p(G.box, "#3a332d", -0.33 + k * 0.22, B + 0.55, E + 0.06, 0.04, 1.05, 0.03);
+    p(G.box, "#8a6644", 0, 0.1, E + 0.95, 1.0, 0.08, 1.3);
+    for (const s of [-1, 1]) p(G.box, DARK, s * 0.48, B + 0.65, E + 0.55, 0.02, 1.1, 0.02, 0, 0.7);
+    // The keep: a tall square tower with its own battlements and a banner.
+    p(G.box, stone, 0, B + 1.7, -0.7, 1.8, 3.4, 1.6);
+    p(G.box, cap, 0, B + 3.45, -0.7, 1.9, 0.1, 1.7);
+    for (let k = 0; k < 4; k += 1) for (const s of [-1, 1]) {
+      p(G.box, cap, -0.68 + k * 0.45, B + 3.67, -0.7 + s * 0.72, 0.28, 0.34, 0.2);
+      p(G.box, cap, s * 0.82, B + 3.67, -1.38 + k * 0.45, 0.2, 0.34, 0.28);
+    }
+    p(G.box, "#6b4f3a", 0, B + 0.45, 0.11, 0.5, 0.9, 0.04);
+    for (const x of [-0.45, 0.45]) w(G.box, x, B + 2.4, 0.12, 0.22, 0.42, 0.04);
+    w(G.box, 0, B + 2.9, 0.12, 0.22, 0.42, 0.04);
+    p(G.cyl6, "#e8e2d4", 0, B + 4.4, -0.7, 0.05, 1.5, 0.05);
+    p(G.box, RED, 0.32, B + 4.85, -0.7, 0.6, 0.38, 0.03);
+    p(G.box, GOLD, 0.32, B + 4.85, -0.69, 0.18, 0.18, 0.035, 0, 0, Math.PI / 4);
+  },
   bamboo({ p }, r) {
     for (let k = 0; k < 6; k += 1) {
       const a = k * 1.1 + r() * 0.5, d = 0.08 + r() * 0.22, h = 1.7 + r() * 1.0, x = Math.sin(a) * d, z = Math.cos(a) * d;
@@ -795,6 +846,19 @@ export const PROP_MODELS: Record<PropKind, Model> = {
       p(G.box, orange, s * 0.07, 0.01, 0.05, 0.08, 0.02, 0.1);
     }
   },
+  fish({ p }, r) {
+    const c = pick(["#e8823a", "#d9a441", "#8aa7b8", "#c9534a"], r), k = 1.6;
+    const q = (g: THREE.BufferGeometry, col: THREE.ColorRepresentation, x: number, y: number, z: number, sx: number, sy: number, sz: number, ry = 0, rx = 0, rz = 0) =>
+      p(g, col, x * k, y * k, z * k, sx * k, sy * k, sz * k, ry, rx, rz);
+    q(G.sphere, c, 0, 0.06, 0, 0.12, 0.12, 0.3);
+    q(G.sphere, "#f6efe2", 0, 0.045, 0.01, 0.1, 0.07, 0.24);
+    q(G.cone6, shade(c, -0.06), 0, 0.06, -0.2, 0.03, 0.14, 0.16, 0, HALF);
+    q(G.box, shade(c, -0.1), 0, 0.125, -0.02, 0.015, 0.06, 0.1, 0, -0.4);
+    for (const s of [-1, 1]) {
+      q(G.sphere, "#222222", s * 0.045, 0.08, 0.1, 0.025, 0.025, 0.02);
+      q(G.box, shade(c, -0.06), s * 0.06, 0.04, 0.03, 0.06, 0.012, 0.05, 0, 0, s * 0.5);
+    }
+  },
   frog({ p }, r) {
     const skin = pick(["#6aa84f", "#5d8a3a", "#7cbc5c"], r);
     p(G.sphere, skin, 0, 0.12, 0, 0.3, 0.2, 0.34);
@@ -883,4 +947,6 @@ export const PROP_MARKS: Partial<Record<PropKind | "sheep", Anchor[]>> = {
   goat: [["horn", 0.08, 1.02, 0.28], ["beard", 0, 0.44, 0.54], ["hoof", 0.12, 0.02, 0.2], ["tail", 0, 0.72, -0.42]],
   goose: [["beak", 0, 0.78, 0.52], ["wing", 0.25, 0.36, 0], ["tail", 0, 0.42, -0.4]],
   frog: [["eye", 0.1, 0.3, 0.15], ["leg", 0.19, 0.08, -0.08]],
+  fish: [["fin", 0, 0.27, -0.03], ["tail", 0, 0.13, -0.43], ["scale", 0.11, 0.11, 0]],
+  castle: [["keep", 0.92, 2.6, -0.4], ["turret", 2.0, 3.3, 2.0], ["battlement", -1.2, 2.15, 2.1], ["gate", 0, 0.9, 2.12], ["drawbridge", 0, 0.32, 3.1], ["window", 0.45, 2.6, 0.18]],
 };

@@ -43,6 +43,8 @@ export const VERBS = {
   build: { ...e("build", "/bɪld/", "xây, đắp"), ing: "building" },
   bake: { ...e("bake", "/beɪk/", "nướng (bánh)"), ing: "baking" },
   climb: { ...e("climb", "/klaɪm/", "trèo, leo"), ing: "climbing" },
+  guard: { ...e("guard", "/ɡɑːrd/", "canh gác"), ing: "guarding" },
+  jump: { ...e("jump", "/dʒʌmp/", "nhảy"), ing: "jumping" },
 };
 export type VerbId = keyof typeof VERBS;
 
@@ -129,6 +131,14 @@ export const PARTS = {
   button: e("button", "/ˈbʌt.ən/", "cúc áo"),
   beard: e("beard", "/bɪrd/", "chòm râu"),
   eye: e("eye", "/aɪ/", "con mắt"),
+  keep: e("keep", "/kiːp/", "tháp chính của lâu đài"),
+  turret: e("turret", "/ˈtɝː.ɪt/", "tháp canh nhỏ"),
+  drawbridge: e("drawbridge", "/ˈdrɑː.brɪdʒ/", "cầu kéo"),
+  helmet: e("helmet", "/ˈhel.mət/", "mũ sắt"),
+  shield: e("shield", "/ʃiːld/", "cái khiên"),
+  sword: e("sword", "/sɔːrd/", "thanh kiếm"),
+  fin: e("fin", "/fɪn/", "vây cá"),
+  scale: e("scale", "/skeɪl/", "vảy cá"),
 };
 export type PartId = keyof typeof PARTS;
 
@@ -180,6 +190,11 @@ export const ACTIONS = {
   visitPagoda: a("visit", "is visiting the pagoda", "đang đi lễ chùa"),
   fixBike: a("fix", "is fixing the bicycle", "đang sửa xe đạp"),
   bakeBread: a("bake", "is baking bread", "đang nướng bánh mì"),
+  guardGate: a("guard", "is guarding the castle gate", "đang canh cổng lâu đài"),
+  patrolCastle: a("guard", "is guarding the castle", "đang tuần tra quanh lâu đài"),
+  patrolVillage: a("guard", "is guarding the village", "đang tuần tra quanh làng"),
+  jumpWater: a("jump", "is jumping out of the water", "đang nhảy lên khỏi mặt nước"),
+  talkTo: a("talk", "is talking to the {target}", "đang nói chuyện với {target}"),
   // animals
   roam: a("walk", "is walking around", "đang đi loanh quanh"),
   graze: a("eat", "is eating grass", "đang ăn cỏ"),

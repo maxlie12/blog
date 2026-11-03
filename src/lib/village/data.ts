@@ -3,23 +3,24 @@
  * Pure data and functions only — no React, DOM or three.js — so it is cheap to import and test.
  */
 
+import { CHAT } from "./talk.ts";
 import { PARTS, RESIDENTS, VERBS } from "./vocab.ts";
 
-export const ISLAND_R = 22;
-export const BUILD_R = 20.4;
+export const ISLAND_R = 32;
+export const BUILD_R = 30.4;
 export const STEP = 0.5;
 export const SCENE_KEY = "village-scene-v1";
 export const PROGRESS_KEY = "village-progress-v1";
 
 /** Pieces stored in the generic `props` list (everything added after the first 13 tools). */
 export const PROP_KINDS = [
-  "barn", "chapel", "stall", "tent", "lighthouse", "gazebo", "bakery", "pagoda", "hut", "treehouse",
+  "barn", "chapel", "stall", "tent", "lighthouse", "gazebo", "bakery", "pagoda", "hut", "treehouse", "castle",
   "bush", "flower", "blossom", "sunflower", "mushroom", "rock", "log", "stump", "garden", "pumpkin", "haystack", "bamboo", "palm", "fern", "cactus",
   "fountain", "boat", "pier", "lotus", "raft",
   "bench", "signpost", "cart", "barrel", "crate", "flag", "statue", "scarecrow", "swing", "campfire", "beehive", "woodpile", "mailbox", "ball",
   "kite", "bicycle", "umbrella", "table", "ladder", "wheelbarrow", "seesaw", "slide", "snowman", "birdhouse", "lamppost",
-  "chicken", "duck", "cow", "horse", "pig", "dog", "cat", "rabbit", "buffalo", "goat", "goose", "frog",
-  "farmer", "baker", "fisherman", "shepherd", "woodcutter", "postman", "musician", "child",
+  "chicken", "duck", "cow", "horse", "pig", "dog", "cat", "rabbit", "buffalo", "goat", "goose", "frog", "fish",
+  "farmer", "baker", "fisherman", "shepherd", "woodcutter", "postman", "musician", "child", "knight",
 ] as const;
 export type PropKind = (typeof PROP_KINDS)[number];
 export type StrokeTool = "path" | "wall" | "fence" | "hedge" | "stream";
@@ -64,7 +65,32 @@ export interface VillageProgress {
   seen: Record<string, number>;
   review: Record<string, { due: number; step: number }>;
   time: number;
+  /** How the day passes: set by hand, a fast day (see FAST_DAY_SECONDS) or the device's clock. */
+  clock: ClockMode;
+  /** The hour of the fast day, so it carries on where it stopped. */
+  hour: number;
 }
+export type ClockMode = "manual" | "fast" | "real";
+const CLOCK_MODES: ClockMode[] = ["manual", "fast", "real"];
+/** One village day in fast mode lasts this many real seconds. */
+export const FAST_DAY_SECONDS = 360;
+/** Scene time (0 morning, 0.4 noon, 0.72 sunset, 1 night) by hour; at dawn it runs back from night. */
+const DAY_KEYS: [number, number][] = [[0, 1], [4.5, 1], [6, 0], [12, 0.4], [16, 0.55], [18, 0.72], [19.5, 0.9], [21, 1], [24, 1]];
+export function hourToTime(hour: number) {
+  const h = ((hour % 24) + 24) % 24;
+  for (let i = 1; i < DAY_KEYS.length; i += 1) {
+    const [h1, t1] = DAY_KEYS[i];
+    if (h <= h1) {
+      const [h0, t0] = DAY_KEYS[i - 1];
+      return t0 + ((t1 - t0) * (h - h0)) / (h1 - h0);
+    }
+  }
+  return 1;
+}
+export const clockLabel = (hour: number) => {
+  const m = Math.floor((((hour % 24) + 24) % 24) * 60);
+  return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+};
 
 export interface ToolDef {
   id: ToolId;
@@ -124,6 +150,7 @@ const DEFS: Record<ToolId, Omit<ToolDef, "id">> = {
   pagoda: tap("Chùa", "build", 1.7, "Chạm để dựng ngôi chùa hai tầng mái có chuông.", { face: true }),
   hut: tap("Chòi tranh", "build", 1.2, "Chạm để dựng túp lều tròn mái rơm.", { face: true }),
   treehouse: tap("Nhà trên cây", "build", 1.3, "Chạm để dựng nhà trên cây có thang; trẻ con sẽ trèo lên chơi."),
+  castle: tap("Lâu đài", "build", 2.7, "Chạm để xây lâu đài có tháp, tường răng cưa và cầu kéo; cổng quay ra đường. Mời hiệp sĩ đến canh cổng.", { face: true }),
 
   tree: { label: "Cây", cat: "nature", place: "brush", size: 0.6, hint: "Chạm hoặc quét ngón tay để trồng cây." },
   hedge: { label: "Rào cây", cat: "nature", place: "stroke", size: 0, hint: "Kéo để trồng một hàng rào cây xanh." },
@@ -192,6 +219,7 @@ const DEFS: Record<ToolId, Omit<ToolDef, "id">> = {
   goat: animal("Dê", 0.45, "Be be!"),
   goose: animal("Ngỗng", 0.35, "Quác quác!"),
   frog: animal("Ếch", 0.2, "Ộp ộp!"),
+  fish: { ...animal("Cá", 0.25, "Tõm!"), place: "brush", hint: "Chạm hoặc quét trên ao, suối để thả cá. Cá bơi quanh và thỉnh thoảng nhảy lên; dùng Tay chạm vào cá để cá nhảy." },
 
   farmer: person("Nông dân", "bác nông dân", "Chạm để mời bác nông dân đến làng. Bác tưới vườn rau, hái bí ngô."),
   baker: person("Thợ bánh", "chú thợ bánh", "Chạm để mời chú thợ bánh. Có sạp hàng thì chú ra sạp bán bánh."),
@@ -201,6 +229,7 @@ const DEFS: Record<ToolId, Omit<ToolDef, "id">> = {
   postman: person("Đưa thư", "chú đưa thư", "Chạm để mời chú đưa thư. Chú đi lần lượt tới từng hộp thư."),
   musician: person("Nhạc công", "anh nhạc công", "Chạm để mời anh nhạc công. Anh đàn bên lửa trại, đài nước hay chòi nghỉ."),
   child: person("Em bé", "em bé", "Chạm để thêm một em bé. Em đá bóng, chơi xích đu, chạy nhảy khắp nơi."),
+  knight: person("Hiệp sĩ", "chàng hiệp sĩ", "Chạm để mời một hiệp sĩ. Có lâu đài thì hiệp sĩ canh cổng và đi tuần quanh tường; không có thì tuần tra quanh làng."),
 };
 
 export const TOOLS: ToolDef[] = (Object.keys(DEFS) as ToolId[]).map((id) => ({ id, ...DEFS[id] }));
@@ -228,6 +257,7 @@ export const WORDS: Record<WordId, WordDef> = {
   bakery: w("/ˈbeɪ.kɚ.i/", "tiệm bánh", "The ___ smells of fresh bread every morning.", "Tiệm bánh thơm mùi bánh mì mới mỗi sáng.", "baker (thợ bánh) + y → bakery (tiệm bánh)."),
   pagoda: w("/pəˈɡoʊ.də/", "ngôi chùa", "We heard the bell ring at the old ___.", "Chúng tôi nghe tiếng chuông ngân ở ngôi chùa cổ.", "Chùa Một Cột trong tiếng Anh là One Pillar Pagoda."),
   hut: w("/hʌt/", "túp lều, chòi tranh", "The fisherman lives in a small ___ by the river.", "Ông ngư dân sống trong một túp lều nhỏ bên sông."),
+  castle: w("/ˈkæs.əl/", "lâu đài", "The king and queen live in a big stone ___.", "Nhà vua và hoàng hậu sống trong một lâu đài đá lớn.", "Chữ t trong castle không đọc: /ˈkæs.əl/."),
   treehouse: w("/ˈtriː.haʊs/", "nhà trên cây", "The children climb up to their ___ after school.", "Bọn trẻ trèo lên nhà trên cây sau giờ học.", "Từ ghép: tree (cây) + house (nhà)."),
 
   tree: w("/triː/", "cái cây", "We had lunch in the shade of a big ___.", "Chúng tôi ăn trưa dưới bóng một cái cây lớn."),
@@ -297,6 +327,7 @@ export const WORDS: Record<WordId, WordDef> = {
   goat: w("/ɡoʊt/", "con dê", "The ___ likes to climb on rocks.", "Con dê thích trèo lên đá."),
   goose: w("/ɡuːs/", "con ngỗng", "A white ___ is swimming in the pond.", "Một con ngỗng trắng đang bơi trong ao.", "Số nhiều bất quy tắc: geese /ɡiːs/."),
   frog: w("/frɑːɡ/", "con ếch", "The little ___ jumps into the water.", "Chú ếch nhỏ nhảy xuống nước."),
+  fish: w("/fɪʃ/", "con cá", "A little ___ is swimming in the river.", "Một chú cá nhỏ đang bơi trong sông.", "Số nhiều thường vẫn là fish: one fish, two fish."),
 
   farmer: w("/ˈfɑːr.mɚ/", "nông dân", "The ___ gets up early to work in the fields.", "Người nông dân dậy sớm để làm việc ngoài đồng."),
   baker: w("/ˈbeɪ.kɚ/", "thợ làm bánh", "The ___ makes fresh bread every morning.", "Người thợ làm bánh làm bánh mì tươi mỗi sáng.", "bake (nướng bánh) + -er thành baker; tiệm bánh là bakery."),
@@ -305,6 +336,7 @@ export const WORDS: Record<WordId, WordDef> = {
   woodcutter: w("/ˈwʊdˌkʌt̬.ɚ/", "tiều phu, người đốn củi", "The ___ went into the forest with his axe.", "Chú tiều phu vào rừng với cái rìu.", "Từ ghép: wood (gỗ) + cutter (người cắt)."),
   postman: w("/ˈpoʊst.mən/", "người đưa thư", "The ___ brings our letters every afternoon.", "Chú đưa thư mang thư đến cho chúng tôi mỗi chiều.", "Anh-Mỹ hay nói mail carrier."),
   musician: w("/mjuːˈzɪʃ.ən/", "nhạc công", "A ___ played a song by the fire.", "Một nhạc công chơi một bài hát bên đống lửa.", "music (âm nhạc) + -ian chỉ người làm nghề đó."),
+  knight: w("/naɪt/", "hiệp sĩ", "The brave ___ rode his horse to the castle.", "Chàng hiệp sĩ dũng cảm cưỡi ngựa đến lâu đài.", "Chữ k không đọc: knight đọc giống night (ban đêm)."),
   child: w("/tʃaɪld/", "đứa trẻ", "The ___ is laughing on the swing.", "Đứa trẻ đang cười trên xích đu.", "Số nhiều bất quy tắc: children /ˈtʃɪl.drən/."),
 };
 /** Words in dock order: grouped by category. */
@@ -316,7 +348,7 @@ export const wordsIn = (cat: Category) => WORD_ORDER.filter((word) => TOOL[word]
 export const viWho = (word: WordId) => TOOL[word].viWho ?? WORDS[word].vi.split(",")[0].trim();
 const isVocabKey = (key: string) => {
   const [kind, id] = key.split(":");
-  return (kind === "verb" && id in VERBS) || (kind === "part" && id in PARTS) || (kind === "noun" && id in RESIDENTS);
+  return (kind === "verb" && id in VERBS) || (kind === "part" && id in PARTS) || (kind === "noun" && id in RESIDENTS) || (kind === "chat" && id in CHAT);
 };
 
 /* ---------- geometry helpers ---------- */
@@ -452,7 +484,7 @@ export function parseSavedScene(raw: string | null): SavedScene | null {
 }
 
 export function parseProgress(raw: string | null): VillageProgress {
-  const fallback: VillageProgress = { unlocked: [...STARTER], learned: {}, seen: {}, review: {}, time: 0.32 };
+  const fallback: VillageProgress = { unlocked: [...STARTER], learned: {}, seen: {}, review: {}, time: 0.32, clock: "manual", hour: 9 };
   if (!raw) return fallback;
   try {
     const data = JSON.parse(raw) as Record<string, unknown>;
@@ -483,6 +515,8 @@ export function parseProgress(raw: string | null): VillageProgress {
       seen,
       review,
       time: finite(data.time) ? Math.min(1, Math.max(0, data.time as number)) : fallback.time,
+      clock: CLOCK_MODES.includes(data.clock as ClockMode) ? (data.clock as ClockMode) : "manual",
+      hour: finite(data.hour) ? (((data.hour as number) % 24) + 24) % 24 : fallback.hour,
     };
   } catch {
     return fallback;

@@ -4,15 +4,22 @@ import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type
 import { PronounceButton } from "@/components/PronounceButton";
 import { getActiveLearnerProfileId, readProfileStorage, writeProfileStorage, type LearnerProfileId } from "@/lib/learnerProfiles";
 import {
-  CATEGORIES, PROGRESS_KEY, SCENE_KEY, STARTER, TOOL, TOOLS, WORDS, WORD_ORDER, isAnswer, parseProgress, parseSavedScene, toolOfWord, wordsIn,
-  type Category, type ToolId, type VillageProgress, type WordId,
+  CATEGORIES, FAST_DAY_SECONDS, PROGRESS_KEY, SCENE_KEY, STARTER, TOOL, TOOLS, WORDS, WORD_ORDER, clockLabel, hourToTime, isAnswer, parseProgress,
+  parseSavedScene, toolOfWord, wordsIn,
+  type Category, type ClockMode, type ToolId, type VillageProgress, type WordId,
 } from "@/lib/village/data";
+import { ALL_CHATS } from "@/lib/village/talk";
 import type { InspectInfo, Thumbs, VillageController } from "@/lib/village/scene";
 import { choicesFor, dueItems, nextReview, type ReviewItem } from "@/lib/village/review";
 import { PARTS, RESIDENTS, VERBS, vocabKey, type PartId, type ResidentId, type VerbId } from "@/lib/village/vocab";
 
-type IconName = "orbit" | "look" | "hand" | "erase" | "undo" | "book" | "reset" | "sun" | "moon" | "close" | "lock" | "cards";
+type IconName = "orbit" | "look" | "hand" | "erase" | "undo" | "book" | "reset" | "sun" | "moon" | "close" | "lock" | "cards" | "left" | "right" | "manual" | "fast" | "real";
 const ICONS: Record<IconName, ReactNode> = {
+  manual: <><path d="M9 6v12" /><path d="M15 6v12" /></>,
+  fast: <><path d="m4 6 7 6-7 6z" /><path d="m13 6 7 6-7 6z" /></>,
+  real: <><circle cx="12" cy="12" r="8" /><path d="M12 7.5V12l3 2" /></>,
+  left: <path d="m14.5 6-6 6 6 6" />,
+  right: <path d="m9.5 6 6 6-6 6" />,
   cards: <><rect x="4" y="7" width="12" height="13" rx="2" /><path d="M8 4h10a2 2 0 0 1 2 2v12" /><path d="m7.5 13.5 2 2 3.5-4" /></>,
   look: <><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 5 5" /><path d="M8 10.5a2.5 2.5 0 0 1 2.5-2.5" /></>,
   orbit: <><path d="M4.5 12a7.5 7.5 0 0 1 13.1-5" /><path d="M19.5 12a7.5 7.5 0 0 1-13.1 5" /><path d="M18 3.5v3.8h-3.8" /><path d="M6 20.5v-3.8h3.8" /></>,
@@ -42,6 +49,77 @@ function ToolPic({ id, thumbs }: { id: ToolId; thumbs: Thumbs }) {
   return src ? <img src={src} alt="" width={40} height={40} draggable={false} /> : <span className="vg-pic-wait" aria-hidden="true" />;
 }
 
+/**
+ * A row that scrolls sideways. Touch can swipe it; a mouse wheel scrolls it, a mouse drag pulls it
+ * (without picking the tool under the pointer), and arrow buttons show while more is hidden.
+ */
+function Strip({ className, label, role, resetKey, children }: { className: string; label: string; role?: string; resetKey: string; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [edges, setEdges] = useState({ left: false, right: false });
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => setEdges({ left: el.scrollLeft > 2, right: el.scrollLeft + el.clientWidth < el.scrollWidth - 2 });
+    el.scrollLeft = 0;
+    const frame = requestAnimationFrame(update);
+    const resize = new ResizeObserver(update);
+    resize.observe(el);
+    const onWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX) || el.scrollWidth <= el.clientWidth) return;
+      e.preventDefault();
+      el.scrollLeft += e.deltaY;
+    };
+    let drag: { x: number; left: number; moved: boolean } | null = null;
+    const swallowClick = (e: Event) => { e.stopPropagation(); e.preventDefault(); };
+    const onDown = (e: PointerEvent) => { if (e.pointerType === "mouse" && e.button === 0) drag = { x: e.clientX, left: el.scrollLeft, moved: false }; };
+    const onMove = (e: PointerEvent) => {
+      if (!drag) return;
+      const dx = e.clientX - drag.x;
+      if (Math.abs(dx) > 6) drag.moved = true;
+      if (drag.moved) el.scrollLeft = drag.left - dx;
+    };
+    const onUp = () => {
+      if (drag?.moved) {
+        // The click that ends a drag should not pick a tool.
+        el.addEventListener("click", swallowClick, { capture: true, once: true });
+        window.setTimeout(() => el.removeEventListener("click", swallowClick, { capture: true }), 0);
+      }
+      drag = null;
+    };
+    el.addEventListener("scroll", update, { passive: true });
+    el.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      cancelAnimationFrame(frame);
+      resize.disconnect();
+      el.removeEventListener("scroll", update);
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, [resetKey]);
+
+  const page = (dir: number) => {
+    const el = ref.current;
+    if (!el) return;
+    const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollBy({ left: dir * el.clientWidth * 0.75, behavior: smooth ? "smooth" : "auto" });
+  };
+  const Tag = role ? "div" : "nav";
+  return (
+    <div className="vg-strip" data-left={edges.left || undefined} data-right={edges.right || undefined}>
+      {/* Pointer helpers only: Tab already reaches every item and scrolls it into view. */}
+      <button type="button" className="vg-strip__arrow vg-strip__arrow--left" tabIndex={-1} aria-hidden="true" hidden={!edges.left} onClick={() => page(-1)}><Icon name="left" /></button>
+      <Tag ref={ref} className={className} role={role} aria-label={label}>{children}</Tag>
+      <button type="button" className="vg-strip__arrow vg-strip__arrow--right" tabIndex={-1} aria-hidden="true" hidden={!edges.right} onClick={() => page(1)}><Icon name="right" /></button>
+    </div>
+  );
+}
+
 type LessonMode = "unlock" | "review";
 interface Question { item: ReviewItem; choices: ReviewItem[] }
 type Sheet =
@@ -58,12 +136,19 @@ function shuffle<T>(items: T[]) {
   return out;
 }
 
+/** The device's local time as an hour of the day (13.5 = half past one). */
+const nowHour = () => {
+  const d = new Date();
+  return d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600;
+};
+
 /** Vocabulary keys a Look card shows, so the word book can list what was found. */
 function seenKeys(info: InspectInfo) {
   const keys = info.parts.map((id) => vocabKey.part(id));
   if (info.sentence) keys.push(vocabKey.verb(info.sentence.verb));
   if ("resident" in info.title) keys.push(vocabKey.resident(info.title.resident));
   if ("part" in info.title) keys.push(vocabKey.part(info.title.part));
+  if (info.chat) keys.push(`chat:${info.chat.id}`);
   return keys;
 }
 
@@ -96,6 +181,9 @@ export default function VillageGame() {
   const [cat, setCat] = useState<Category>("build");
   const [thumbs, setThumbs] = useState<Thumbs>({});
   const [inspect, setInspect] = useState<InspectInfo | null>(null);
+  // The day can run by itself: fast (one day in a few minutes) or with the device's clock.
+  const hourRef = useRef(9);
+  const [live, setLive] = useState<{ t: number; label: string } | null>(null);
   // Review due dates are compared with this clock, refreshed every minute and when a sheet opens.
   const [now, setNow] = useState(() => Date.now());
   const due = useMemo(() => dueItems(progress, now, 99), [progress, now]);
@@ -135,6 +223,7 @@ export default function VillageGame() {
       profileRef.current = profileId;
       const loaded = parseProgress(progressRaw);
       setProgress(loaded);
+      hourRef.current = loaded.clock === "real" ? nowHour() : loaded.hour;
       const saved = parseSavedScene(sceneRaw);
       const probe = document.createElement("canvas");
       if (!(probe.getContext("webgl2") ?? probe.getContext("webgl"))) {
@@ -146,7 +235,7 @@ export default function VillageGame() {
           if (cancelled) return;
           controller = createVillageScene(mount, {
             saved,
-            time: loaded.time,
+            time: loaded.clock === "manual" ? loaded.time : hourToTime(hourRef.current),
             onToast: say,
             onUndoChange: setCanUndo,
             onSave: (raw) => store(SCENE_KEY, raw),
@@ -197,6 +286,26 @@ export default function VillageGame() {
     return () => window.clearInterval(timer);
   }, []);
 
+  /* A running day: move the clock twice a second and save where it is now and then. */
+  const clockMode = progress.clock;
+  useEffect(() => {
+    if (clockMode === "manual") return;
+    let last = performance.now(), saved = last;
+    const timer = window.setInterval(() => {
+      const at = performance.now();
+      hourRef.current = clockMode === "real" ? nowHour() : (hourRef.current + ((at - last) / 1000) * (24 / FAST_DAY_SECONDS)) % 24;
+      last = at;
+      const t = hourToTime(hourRef.current);
+      controllerRef.current?.setTime(t);
+      setLive({ t, label: clockLabel(hourRef.current) });
+      if (at - saved > 15_000) {
+        saved = at;
+        setProgress((current) => ({ ...current, time: t, hour: hourRef.current }));
+      }
+    }, 500);
+    return () => window.clearInterval(timer);
+  }, [clockMode]);
+
   useEffect(() => {
     if (!toast) return;
     const timer = window.setTimeout(() => setToast(null), toast.text.length > 60 ? 4200 : 2800);
@@ -216,6 +325,21 @@ export default function VillageGame() {
     const others = shuffle(group.length >= 3 ? group : WORD_ORDER.filter((w) => w !== word)).slice(0, 3);
     setSheet({ kind: "lesson", word, mode, options: shuffle([word, ...others]) });
   }, []);
+
+  const CLOCK_NEXT: Record<ClockMode, ClockMode> = { manual: "fast", fast: "real", real: "manual" };
+  const CLOCK_SAY: Record<ClockMode, string> = {
+    manual: "Thời gian đứng yên. Kéo thanh trượt để chỉnh giờ.",
+    fast: `Thời gian chạy nhanh: một ngày trong làng dài ${FAST_DAY_SECONDS / 60} phút. Tối đến người làng về nhà.`,
+    real: "Giờ thật: làng sáng, tối theo đồng hồ trên máy của bạn.",
+  };
+  const setClock = (mode: ClockMode) => {
+    if (mode === "real") hourRef.current = nowHour();
+    const t = mode === "manual" ? (live?.t ?? progress.time) : hourToTime(hourRef.current);
+    controllerRef.current?.setTime(t);
+    setLive(mode === "manual" ? null : { t, label: clockLabel(hourRef.current) });
+    setProgress((current) => ({ ...current, clock: mode, time: t, hour: hourRef.current }));
+    say(CLOCK_SAY[mode]);
+  };
 
   /** Today's review: up to ten due words, each with four choices from its own group. */
   const openReview = () => {
@@ -268,7 +392,8 @@ export default function VillageGame() {
   };
 
   const known = WORD_ORDER.filter((w) => progress.unlocked.includes(w)).length;
-  const timeValue = Math.round(progress.time * 100);
+  const running = progress.clock !== "manual";
+  const timeValue = Math.round((running && live ? live.t : progress.time) * 100);
 
   return (
     <div className="vg">
@@ -323,6 +448,15 @@ export default function VillageGame() {
           {status === "ready" ? (
             <footer className="vg-dock">
               <div className="vg-time vg-panel">
+                <button
+                  type="button"
+                  className="vg-clock-mode"
+                  data-mode={progress.clock}
+                  aria-label={`Thời gian: ${progress.clock === "manual" ? "tự chỉnh" : progress.clock === "fast" ? "chạy nhanh" : "giờ thật"}. Bấm để chuyển sang ${CLOCK_NEXT[progress.clock] === "manual" ? "tự chỉnh" : CLOCK_NEXT[progress.clock] === "fast" ? "chạy nhanh" : "giờ thật"}.`}
+                  onClick={() => setClock(CLOCK_NEXT[progress.clock])}
+                >
+                  <Icon name={progress.clock} />
+                </button>
                 <Icon name="sun" />
                 <label htmlFor="vg-time" className="sr-only">Giờ trong ngày</label>
                 <input
@@ -331,17 +465,20 @@ export default function VillageGame() {
                   min={0}
                   max={100}
                   value={timeValue}
-                  aria-valuetext={timeValue < 60 ? "Ban ngày" : timeValue < 85 ? "Hoàng hôn" : "Ban đêm"}
+                  aria-valuetext={`${running && live ? `${live.label}, ` : ""}${timeValue < 60 ? "ban ngày" : timeValue < 85 ? "hoàng hôn" : "ban đêm"}`}
                   onChange={(event) => {
                     const time = Number(event.target.value) / 100;
                     controllerRef.current?.setTime(time);
-                    setProgress((current) => ({ ...current, time }));
+                    // Moving the slider takes the clock back into your hands.
+                    if (running) { setLive(null); say(CLOCK_SAY.manual); }
+                    setProgress((current) => ({ ...current, time, clock: "manual" }));
                   }}
                 />
                 <Icon name="moon" />
+                {running && live ? <span className="vg-clock" aria-hidden="true">{live.label}</span> : null}
               </div>
               <div className="vg-palette vg-panel">
-                <div className="vg-cats" role="group" aria-label="Nhóm đồ">
+                <Strip className="vg-cats" role="group" label="Nhóm đồ" resetKey="cats">
                   {CATEGORIES.map((c) => {
                     const words = wordsIn(c.id);
                     const have = words.filter((w) => progress.unlocked.includes(w)).length;
@@ -351,8 +488,8 @@ export default function VillageGame() {
                       </button>
                     );
                   })}
-                </div>
-                <nav className="vg-tools" aria-label={`Công cụ: ${CATEGORIES.find((c) => c.id === cat)?.label}`}>
+                </Strip>
+                <Strip className="vg-tools" label={`Công cụ: ${CATEGORIES.find((c) => c.id === cat)?.label}`} resetKey={cat}>
                   {TOOLS.filter((t) => t.cat === null || t.cat === cat).map((t) => {
                     const locked = !progress.unlocked.includes(t.id);
                     return (
@@ -372,7 +509,7 @@ export default function VillageGame() {
                       </button>
                     );
                   })}
-                </nav>
+                </Strip>
               </div>
             </footer>
           ) : null}
@@ -492,6 +629,20 @@ function WordBook({ progress, thumbs, due, onClose, onLearn, onReview }: {
       <Discovered title="Dân làng" id="residents" note="Chạm vào người trong làng bằng công cụ Xem." entries={Object.entries(RESIDENTS).map(([id, e]) => ({ key: vocabKey.resident(id as ResidentId), ...e }))} seen={progress.seen} />
       <Discovered title="Động từ" id="verbs" note="Xem người và con vật đang làm gì để gặp thêm động từ." entries={Object.entries(VERBS).map(([id, e]) => ({ key: vocabKey.verb(id as VerbId), ...e, extra: e.ing }))} seen={progress.seen} />
       <Discovered title="Bộ phận" id="parts" note="Chạm vào nhà, cối xay, con bò… để thấy tên từng bộ phận." entries={Object.entries(PARTS).map(([id, e]) => ({ key: vocabKey.part(id as PartId), ...e }))} seen={progress.seen} />
+      <section className="vg-words-group" aria-labelledby="vg-words-chats">
+        <h4 id="vg-words-chats">Câu giao tiếp <small>{ALL_CHATS.filter((c) => `chat:${c.id}` in progress.seen).length}/{ALL_CHATS.length}</small></h4>
+        {ALL_CHATS.filter((c) => `chat:${c.id}` in progress.seen).map((c) => (
+          <ol key={c.id} className="vg-chat-card">
+            {c.lines.map((line, i) => (
+              <li key={i}>
+                <PronounceButton text={line.en} />
+                <span><span lang="en">{line.en}</span><small className="vg-muted">{line.vi}</small></span>
+              </li>
+            ))}
+          </ol>
+        ))}
+        <p className="vg-muted vg-small">Dùng công cụ Xem chạm vào người đang trò chuyện (có bong bóng lời nói) để lưu câu vào đây.</p>
+      </section>
       <p className="vg-note">
         Đây là ôn từ vựng nhanh để mở đồ chơi, không phải bài kiểm tra trình độ. Không tính vào Done, nhịp học hay bài nộp. Tiến độ lưu trên trình duyệt này, theo hồ sơ học đang chọn.
       </p>
@@ -644,6 +795,19 @@ function InspectCard({ info, progress, onClose, onLearn }: {
             <PronounceButton text={info.sentence.en} label="Nghe câu" />
             <span><span lang="en"><b>{verb.en}</b> → {verb.ing}</span> <span className="vg-ipa">{verb.ipa}</span> · {verb.vi}</span>
           </div>
+        </div>
+      ) : null}
+      {info.chat ? (
+        <div className="vg-inspect__chat">
+          <p className="vg-eyebrow">Đang nói chuyện</p>
+          <ol>
+            {info.chat.lines.map((line, i) => (
+              <li key={i} data-now={i === info.chat?.index || undefined}>
+                <PronounceButton text={line.en} />
+                <span><small lang="en">{line.speaker}:</small> <span lang="en">{line.en}</span><small className="vg-muted">{line.vi}</small></span>
+              </li>
+            ))}
+          </ol>
         </div>
       ) : null}
       {info.parts.length ? (

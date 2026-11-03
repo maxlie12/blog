@@ -53,8 +53,8 @@ test("typed answers ignore case and outer spaces", () => {
 
 test("every buildable piece has a usable word card and a group", async () => {
   const { TOOLS, WORDS, WORD_ORDER, CATEGORIES, wordsIn } = await import("./village/data.ts");
-  assert.equal(WORD_ORDER.length, 88);
-  assert.equal(TOOLS.length, 92, "88 pieces plus orbit, look, hand and erase");
+  assert.equal(WORD_ORDER.length, 91);
+  assert.equal(TOOLS.length, 95, "91 pieces plus orbit, look, hand and erase");
   assert.equal(CATEGORIES.reduce((n, c) => n + wordsIn(c.id).length, 0), WORD_ORDER.length);
   for (const word of WORD_ORDER) {
     const card = WORDS[word];
@@ -80,7 +80,7 @@ test("older saves without the new lists still load, and new pieces are validated
       props: [
         { id: 5, kind: "barn", x: 15, z: 3, r: 0.5, seed: 9 },
         { id: 6, kind: "dragon", x: 0, z: 0, r: 0, seed: 1 },
-        { id: 7, kind: "cow", x: 30, z: 0, r: 0, seed: 1 },
+        { id: 7, kind: "cow", x: 40, z: 0, r: 0, seed: 1 },
       ],
     },
   });
@@ -170,7 +170,7 @@ test("discovery words are complete and every action sentence uses its verb", asy
 
 test("people are words with a Vietnamese name, and seen words survive a reload", async () => {
   const { TOOL, wordsIn, viWho } = await import("./village/data.ts");
-  assert.deepEqual(wordsIn("people"), ["farmer", "baker", "fisherman", "shepherd", "woodcutter", "postman", "musician", "child"]);
+  assert.deepEqual(wordsIn("people"), ["farmer", "baker", "fisherman", "shepherd", "woodcutter", "postman", "musician", "child", "knight"]);
   for (const word of wordsIn("people")) assert.ok(TOOL[word].person && viWho(word).length > 2, `${word}: placeable person with a Vietnamese name`);
   assert.equal(viWho("cow"), "con bò");
   const progress = parseProgress(JSON.stringify({ unlocked: [], seen: { "verb:walk": 5, "part:roof": 6, "noun:grandma": 7, "verb:dance": 1, "part:roof2": 2, "noun:man": "x", junk: 3 } }));
@@ -209,4 +209,50 @@ test("daily review: met words come back after 1, 3, 7 and 14 days, a miss starts
 test("saved review schedules keep only known words", () => {
   const progress = parseProgress(JSON.stringify({ review: { "word:house": { due: 5, step: 1.7 }, "word:rocket": { due: 5, step: 1 }, "part:roof": { due: "x" }, "verb:dance": { due: 1, step: 0 }, "verb:fly": { due: 1, step: 0 } } }));
   assert.deepEqual(progress.review, { "word:house": { due: 5, step: 1 }, "verb:fly": { due: 1, step: 0 } });
+});
+
+test("the island is larger, and fish are animals released on water", async () => {
+  const { BUILD_R, ISLAND_R, TOOL, wordsIn } = await import("./village/data.ts");
+  assert.equal(ISLAND_R, 32);
+  assert.ok(BUILD_R < ISLAND_R);
+  const scene = emptyScene();
+  const raw = JSON.stringify({ v: 1, scene: { ...scene, props: [{ id: 1, kind: "castle", x: 26, z: 0, r: 0, seed: 1 }, { id: 2, kind: "fish", x: 40, z: 0, r: 0, seed: 1 }] } });
+  assert.deepEqual(parseSavedScene(raw)?.scene.props.map((o) => o.kind), ["castle"], "pieces out to the new edge load; past it they are dropped");
+  assert.ok(TOOL.fish.animal && TOOL.fish.place === "brush");
+  assert.ok(wordsIn("build").includes("castle") && wordsIn("animals").includes("fish"));
+});
+
+test("conversations: every line is bilingual, ids are unique, animals answer", async () => {
+  const { ALL_CHATS, animalCanTalk, lineSeconds, pickChat } = await import("./village/talk.ts");
+  const { TOOL } = await import("./village/data.ts");
+  assert.equal(new Set(ALL_CHATS.map((c) => c.id)).size, ALL_CHATS.length);
+  for (const chat of ALL_CHATS) {
+    assert.ok(chat.lines.length >= 2 && chat.lines[0].who === "a", `${chat.id}: starts with the villager`);
+    for (const line of chat.lines) {
+      assert.ok(line.en && line.vi, `${chat.id}: English and Vietnamese`);
+      assert.ok(lineSeconds(line) >= 1.8 && lineSeconds(line) <= 4.2);
+    }
+  }
+  for (const kind of ["dog", "cat", "cow", "chicken", "sheep", "horse", "pig", "duck", "rabbit", "goat", "goose", "buffalo", "frog", "fish"]) {
+    assert.ok(animalCanTalk(kind) && TOOL[kind as "dog"].animal, `${kind} can talk`);
+    assert.ok(pickChat(kind, 0.4).id.startsWith(kind), `${kind} gets its own chat`);
+  }
+  const night = Array.from({ length: 40 }, (_, i) => pickChat("person", 0.75, () => (i % 10) / 10).id);
+  assert.ok(night.includes("evening") && !night.includes("morning"), "evening chats in the evening, never “good morning”");
+});
+
+test("the running clock maps hours onto the day and night light", async () => {
+  const { clockLabel, hourToTime } = await import("./village/data.ts");
+  const near = (a: number, b: number) => Math.abs(a - b) < 1e-9;
+  assert.ok(near(hourToTime(6), 0) && near(hourToTime(12), 0.4) && near(hourToTime(18), 0.72), "morning, noon, sunset");
+  assert.ok(near(hourToTime(23), 1) && near(hourToTime(2), 1), "night");
+  assert.ok(hourToTime(5.25) > 0.4 && hourToTime(5.25) < 0.6, "dawn runs back from night");
+  assert.ok(near(hourToTime(30), hourToTime(6)));
+  assert.equal(clockLabel(13.5), "13:30");
+  assert.equal(clockLabel(-0.5), "23:30");
+  const progress = parseProgress(JSON.stringify({ clock: "fast", hour: 26, seen: { "chat:dog-play": 3, "chat:nope": 4 } }));
+  assert.equal(progress.clock, "fast");
+  assert.equal(progress.hour, 2);
+  assert.deepEqual(progress.seen, { "chat:dog-play": 3 });
+  assert.equal(parseProgress(JSON.stringify({ clock: "warp" })).clock, "manual");
 });

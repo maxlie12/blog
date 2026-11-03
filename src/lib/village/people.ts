@@ -9,12 +9,13 @@
  * context and asks it for movers (to push balls) and for what a tapped person is doing.
  */
 import * as THREE from "three";
-import { BUILD_R, TOOL, rng, type House, type Point, type Prop, type PropKind, type VillageScene, type WordId } from "./data";
+import { BUILD_R, TOOL, rng, viWho, type House, type Point, type Prop, type PropKind, type VillageScene, type WordId } from "./data";
 import { G, M, bake, painter, pick, shade, type Draw, type Part } from "./kit";
 import { pushOut, waterAt, type Body, type Mover, type World } from "./physics";
+import { animalCanTalk, lineSeconds, pickChat, type Chat } from "./talk";
 import { RESIDENTS, type ActionId, type PartId, type ResidentId } from "./vocab";
 
-const PROFESSIONS = ["farmer", "baker", "fisherman", "shepherd", "woodcutter", "postman", "musician", "child"] as const;
+const PROFESSIONS = ["farmer", "baker", "fisherman", "shepherd", "woodcutter", "postman", "musician", "child", "knight"] as const;
 type Profession = (typeof PROFESSIONS)[number];
 type Role = Profession | ResidentId;
 const isProfession = (kind: string): kind is Profession => (PROFESSIONS as readonly string[]).includes(kind);
@@ -32,7 +33,8 @@ function lookFor(role: Role, seed: number): Look {
   const r = rng(seed);
   const young = role === "child" || role === "boy" || role === "girl";
   const old = role === "grandpa" || role === "grandma" || role === "fisherman";
-  return { skin: pick(SKIN, r), shirt: pick(SHIRTS, r), pants: pick(PANTS, r), hair: old ? GRAY : pick(HAIR, r), scale: young ? 0.72 : 1 };
+  const look = { skin: pick(SKIN, r), shirt: pick(SHIRTS, r), pants: pick(PANTS, r), hair: old ? GRAY : pick(HAIR, r), scale: young ? 0.72 : 1 };
+  return role === "knight" ? { ...look, shirt: "#a7b0b5", pants: "#5f676d" } : look;
 }
 
 /** A small person with feet at the origin facing +Z. Legs are optional (the scene animates them separately). */
@@ -83,6 +85,14 @@ function drawPerson({ p }: Draw, role: Role, look: Look, legs: boolean) {
   } else if (role === "musician") {
     p(G.sphere, "#b06a35", 0.04, HIP + 0.06, 0.12, 0.2, 0.24, 0.07, 0, 0, -0.5);
     p(G.box, "#6b4630", -0.08, HIP + 0.22, 0.13, 0.03, 0.3, 0.02, 0, 0, -0.9);
+  } else if (role === "knight") {
+    p(G.dome, "#9aa3a8", 0, 0.74, 0, 0.27, 0.32, 0.27);
+    p(G.box, "#4f575c", 0, 0.73, 0.125, 0.16, 0.025, 0.02);
+    p(G.cone6, "#c94f4f", 0, 0.97, -0.03, 0.07, 0.2, 0.12, 0, -0.3);
+    p(G.box, "#4e7287", -0.21, 0.42, 0.06, 0.04, 0.28, 0.22);
+    p(G.box, "#e3bf55", -0.235, 0.42, 0.06, 0.01, 0.12, 0.05);
+    p(G.box, "#c9d0d4", 0.2, 0.22, 0.06, 0.03, 0.4, 0.05);
+    p(G.box, "#8a6644", 0.2, 0.43, 0.06, 0.12, 0.03, 0.04);
   } else if (role === "child") {
     p(G.cyl12, "#d9453b", 0, 0.82, 0, 0.24, 0.05, 0.24);
     p(G.box, "#d9453b", 0, 0.81, 0.12, 0.14, 0.02, 0.08);
@@ -96,17 +106,18 @@ export const PERSON_MODELS = Object.fromEntries(
   }]),
 ) as Record<Profession, (d: Draw, r: () => number) => void>;
 
-const TRAVEL: ActionId[] = ["walk", "goHome", "carryBread", "deliver", "runAround"];
+const TRAVEL: ActionId[] = ["walk", "goHome", "carryBread", "deliver", "runAround", "patrolCastle", "patrolVillage"];
 const HATS: Role[] = ["farmer", "baker", "fisherman", "shepherd", "woodcutter", "postman", "child"];
 /** Part labels on a person, in the body mesh's frame (feet at the origin, front +Z). */
 export function personMarks(role: Role): [PartId, number, number, number][] {
   const out: [PartId, number, number, number][] = [
-    HATS.includes(role) ? ["hat", 0, 0.95, 0] : ["hair", 0, 0.86, -0.06],
+    role === "knight" ? ["helmet", 0, 0.95, 0] : HATS.includes(role) ? ["hat", 0, 0.95, 0] : ["hair", 0, 0.86, -0.06],
     ["arm", 0.2, 0.5, 0], ["hand", -0.2, 0.3, 0.04], ["leg", 0.07, 0.12, 0.06],
   ];
   if (role === "fisherman") out.push(["pole", 0.22, 0.95, 0.75]);
   if (role === "shepherd" || role === "grandpa") out.push(["pole", 0.2, 0.62, 0.06]);
   if (role === "woodcutter") out.push(["axe", 0.2, 0.5, 0.16]);
+  if (role === "knight") out.push(["shield", -0.24, 0.45, 0.08], ["sword", 0.22, 0.12, 0.08]);
   return out;
 }
 
@@ -124,6 +135,9 @@ interface Task {
   follow?: () => Point | null;
   /** Once there, moves along a fixed route over time (up a ladder, down a slide): x, z, height. */
   ride?: (t: number) => [number, number, number];
+  /** A conversation this job is part of, and what to do on arriving (start it). */
+  convo?: Convo;
+  onArrive?: () => void;
   speed: number;
   night?: boolean;
   giveUp: number;
@@ -144,6 +158,9 @@ export interface Person {
   mailIdx: number;
 }
 
+/** Two neighbours, or a villager (`a`) and an animal, saying the lines of a chat in turn. */
+interface Convo { chat: Chat; t: number; a: Person; b?: Person; animal?: number }
+
 export interface PeopleContext {
   world: THREE.Group;
   scene: THREE.Scene;
@@ -153,7 +170,11 @@ export interface PeopleContext {
   time: () => number;
   blocked: (x: number, z: number, pad: number) => boolean;
   houseDoor: (h: House) => Point;
-  animals: () => { kind: string; x: number; z: number }[];
+  animals: () => { id: number; kind: string; x: number; z: number }[];
+  /** Stops an animal and turns it towards `from` for a while (someone is talking to it). */
+  holdAnimal: (id: number, from: Point, seconds: number) => void;
+  /** Where a bubble over an animal goes. */
+  animalTop: (id: number) => THREE.Vector3 | null;
   balls: () => Body[];
 }
 
@@ -177,6 +198,22 @@ const around = (x: number, z: number, d: number, a = Math.random() * Math.PI * 2
 
 export function createPeople(ctx: PeopleContext) {
   const people = new Map<number, Person>();
+  const convos = new Set<Convo>();
+  const chatLength = (chat: Chat) => chat.lines.reduce((sum, line) => sum + lineSeconds(line), 0) + 0.6;
+  /** Which line is being said, or -1 once it is over. */
+  const lineAt = (c: Convo) => {
+    let t = c.t;
+    for (let i = 0; i < c.chat.lines.length; i += 1) {
+      const d = lineSeconds(c.chat.lines[i]);
+      if (t < d) return i;
+      t -= d;
+    }
+    return -1;
+  };
+  const whoOf = (p: Person) => isProfession(p.role)
+    ? { en: p.role as string, vi: TOOL[p.role].viWho ?? p.role, word: p.role as WordId }
+    : { en: RESIDENTS[p.role].en, vi: RESIDENTS[p.role].vi, resident: p.role };
+  const headOf = (p: Person) => new THREE.Vector3(p.mesh.position.x, p.mesh.position.y + 1.05 * p.look.scale, p.mesh.position.z);
   const geoCache = new Map<string, THREE.BufferGeometry>();
   const legGeo = new THREE.BoxGeometry(0.085, HIP, 0.1).translate(0, -HIP / 2, 0);
   const legs = new THREE.InstancedMesh(legGeo, ctx.material, 400);
@@ -294,11 +331,38 @@ export function createPeople(ctx: PeopleContext) {
   }
   const idle = (o: Person) => !o.hidden && (!o.task || o.task.action === "walk");
 
+  /** Walk up to a nearby animal and talk to it; it stops and turns to listen, then answers. */
+  function animalChat(p: Person, kinds?: string[]): Task | null {
+    const busy = new Set([...convos].map((c) => c.animal));
+    let best: { id: number; kind: string; x: number; z: number } | null = null, bestD = 9;
+    for (const a of ctx.animals()) {
+      if (!animalCanTalk(a.kind) || a.kind === "fish" || busy.has(a.id) || (kinds && !kinds.includes(a.kind))) continue;
+      const d = dist2(a.x, a.z, p.x, p.z);
+      if (d < bestD) { bestD = d; best = a; }
+    }
+    if (!best) return null;
+    const a = best, d = Math.max(bestD, 0.01);
+    const to: Point = [a.x + ((p.x - a.x) / d) * 0.95, a.z + ((p.z - a.z) / d) * 0.95];
+    if (waterAt(ctx.phys(), to[0], to[1])) return null;
+    const chat = pickChat(a.kind, ctx.time()), dur = chatLength(chat);
+    const convo: Convo = { chat, t: 0, a: p, animal: a.id };
+    const t = task("talkTo", to, { face: [a.x, a.z], dur, convo, giveUp: 10 });
+    t.onArrive = () => {
+      const now = ctx.animals().find((o) => o.id === a.id);
+      if (!now) return;
+      t.face = [now.x, now.z];
+      ctx.holdAnimal(a.id, [p.x, p.z], dur);
+      convos.add(convo);
+    };
+    return t;
+  }
+
   function nextTask(p: Person): Task {
     const S = ctx.village();
     const roll = Math.random();
     switch (p.role) {
       case "farmer": {
+        if (roll > 0.85) { const t = animalChat(p, ["chicken", "cow", "pig", "goat", "buffalo", "duck"]); if (t) return t; }
         const garden = nearest(["garden"], p.x, p.z, 16);
         if (garden && roll < 0.7) return task("waterGarden", front(garden, 1.3), { face: [garden.x, garden.z], anim: "water", dur: 8 + Math.random() * 6 });
         const pumpkin = nearest(["pumpkin"], p.x, p.z, 16);
@@ -323,6 +387,7 @@ export function createPeople(ctx: PeopleContext) {
         break;
       }
       case "shepherd": {
+        if (roll < 0.25) { const t = animalChat(p, ["sheep", "dog"]); if (t) return t; }
         const sheep = ctx.animals().filter((a) => a.kind === "sheep");
         if (sheep.length) {
           const spot = (): Point | null => {
@@ -353,6 +418,14 @@ export function createPeople(ctx: PeopleContext) {
         const bench = nearest(["bench"], p.x, p.z, 14);
         if (bench) return task("playGuitar", [bench.x, bench.z], { face: front(bench, 2), pose: "sit", anim: "strum", dur: 14 });
         break;
+      }
+      case "knight": {
+        if (roll > 0.85) { const t = animalChat(p, ["horse"]); if (t) return t; }
+        const castle = nearest(["castle"], p.x, p.z, 26);
+        if (!castle) return wanderTask(p, "patrolVillage", 10);
+        const side = Math.random() < 0.5 ? -1 : 1;
+        if (roll < 0.6) return task("guardGate", local(castle, side * 0.95, 3.6), { face: local(castle, side * 0.95, 8), dur: 12 + Math.random() * 8 });
+        return task("patrolCastle", local(castle, side * 3.4, (Math.random() < 0.5 ? -1 : 1) * 3.4), { dur: 1.5 });
       }
       case "child":
       case "boy":
@@ -395,6 +468,7 @@ export function createPeople(ctx: PeopleContext) {
             return task("climbTreehouse", base, { ride, dur });
           },
           () => { const o = near("snowman"); return o && task("buildSnowman", local(o, 0.45, 0.45), { face: [o.x, o.z], anim: "chop", dur: 8 }); },
+          () => animalChat(p),
         ];
         if (roll < 0.85) {
           for (let tries = 0; tries < 4; tries += 1) {
@@ -416,6 +490,7 @@ export function createPeople(ctx: PeopleContext) {
     const pagoda = nearest(["pagoda"], p.home[0], p.home[1], 18);
     const bike = nearest(["bicycle"], p.home[0], p.home[1], 12);
     const options: (() => Task | null)[] = [
+      () => animalChat(p),
       () => (table ? task("eatTable", local(table, 0, Math.random() < 0.5 ? 0.68 : -0.68), { face: [table.x, table.z], pose: "sit", dur: 12 + Math.random() * 8 }) : null),
       () => (umbrella ? task("restUmbrella", local(umbrella, 0.45, 0.1), { face: local(umbrella, 3, 0.1), dur: 10 + Math.random() * 6 }) : null),
       () => (pagoda ? task("visitPagoda", local(pagoda, (Math.random() - 0.5) * 0.8, 1.95), { face: [pagoda.x, pagoda.z], anim: "water", dur: 8 }) : null),
@@ -429,8 +504,12 @@ export function createPeople(ctx: PeopleContext) {
         const partner = [...people.values()].find((o) => o !== p && idle(o) && dist2(o.x, o.z, p.x, p.z) < 7);
         if (!partner) return null;
         const mx = (p.x + partner.x) / 2, mz = (p.z + partner.z) / 2;
-        partner.task = task("talk", [mx + 0.35, mz], { face: [mx - 1, mz], anim: "talk", dur: 7 });
-        return task("talk", [mx - 0.35, mz], { face: [mx + 1, mz], anim: "talk", dur: 7 });
+        const chat = pickChat("person", ctx.time()), dur = chatLength(chat);
+        const convo: Convo = { chat, t: 0, a: p, b: partner };
+        // The chat starts when the first of the two arrives.
+        const start = () => { convos.add(convo); };
+        partner.task = task("talk", [mx + 0.35, mz], { face: [mx - 1, mz], anim: "talk", dur, convo, onArrive: start });
+        return task("talk", [mx - 0.35, mz], { face: [mx + 1, mz], anim: "talk", dur, convo, onArrive: start });
       },
     ];
     for (let tries = 0; tries < 6; tries += 1) {
@@ -487,6 +566,12 @@ export function createPeople(ctx: PeopleContext) {
         t.giveUp -= dt;
         // Seats are solid, so sitting starts beside them and slides on.
         if (!t.arrived && (d < (t.pose === "sit" || t.ride ? 0.9 : 0.15) || t.giveUp <= 0) && !t.follow) t.arrived = true;
+        if (t.arrived && t.onArrive) { const go = t.onArrive; t.onArrive = undefined; go(); }
+        // A fisherman sometimes says hello to a fish that swims close.
+        if (p.role === "fisherman" && t.action === "fish" && t.arrived && !t.convo && Math.random() < dt * 0.06) {
+          const fish = ctx.animals().find((a) => a.kind === "fish" && dist2(a.x, a.z, p.x, p.z) < 4 && ![...convos].some((c) => c.animal === a.id));
+          if (fish) { t.convo = { chat: pickChat("fish", ctx.time()), t: 0, a: p, animal: fish.id }; convos.add(t.convo); }
+        }
         if (t.follow && t.action === "kickBall") t.arrived = false;
         if (!t.arrived && d > 0.05) { const s = Math.min(t.speed, d * 3); wx = ((t.to[0] - p.x) / d) * s; wz = ((t.to[1] - p.z) / d) * s; }
         if (t.arrived || t.follow) {
@@ -561,6 +646,14 @@ export function createPeople(ctx: PeopleContext) {
     legs.count = legCount;
     legs.instanceMatrix.needsUpdate = true;
     if (legs.instanceColor) legs.instanceColor.needsUpdate = true;
+
+    // Conversations end when the last line is said or someone leaves.
+    const ids = new Set(animals.map((a) => a.id));
+    const left = (q?: Person, c?: Convo) => !!q && (people.get(q.id) !== q || q.hidden || q.task?.convo !== c);
+    for (const c of convos) {
+      c.t += dt;
+      if (lineAt(c) < 0 || left(c.a, c) || left(c.b, c) || (c.animal !== undefined && !ids.has(c.animal))) convos.delete(c);
+    }
   }
 
   return {
@@ -581,19 +674,40 @@ export function createPeople(ctx: PeopleContext) {
       return hit ? people.get(hit.object.userData.personId as number) ?? null : null;
     },
     /** Who this is and what they are doing, for the Look card. */
-    describe(p: Person): { who: { en: string; vi: string; word?: WordId; resident?: ResidentId }; action: ActionId } {
-      const who = isProfession(p.role)
-        ? { en: p.role, vi: TOOL[p.role].viWho ?? p.role, word: p.role as WordId }
-        : { en: RESIDENTS[p.role].en, vi: RESIDENTS[p.role].vi, resident: p.role };
+    describe(p: Person): { who: { en: string; vi: string; word?: WordId; resident?: ResidentId }; action: ActionId; target?: { en: string; vi: string } } {
+      const who = whoOf(p);
       const t = p.task;
+      const kind = t?.convo?.animal !== undefined ? ctx.animals().find((a) => a.id === t.convo?.animal)?.kind : undefined;
+      if (t?.arrived && t.action === "talkTo" && kind) return { who, action: "talkTo", target: { en: kind, vi: viWho(kind as WordId) } };
       // On the way somewhere most jobs read as walking; a few describe the trip itself.
-      const action: ActionId = p.waveT > 0 ? "wave"
+      let action: ActionId = p.waveT > 0 ? "wave"
         : !t ? "lookAround"
         : t.arrived || t.follow || TRAVEL.includes(t.action) ? t.action
         : t.speed > WALK ? "runAround" : "walk";
+      // A knight on the move or between posts is still on guard.
+      if (p.role === "knight" && (action === "walk" || action === "lookAround")) action = t?.action === "guardGate" ? "patrolCastle" : "patrolVillage";
       return { who, action };
     },
     isAlive: (p: Person) => people.get(p.id) === p && !p.hidden,
+    /** Lines being said right now and where each bubble goes. */
+    speech() {
+      const out: { key: string; en: string; vi: string; at: THREE.Vector3 }[] = [];
+      for (const c of convos) {
+        const i = lineAt(c);
+        if (i < 0) continue;
+        const line = c.chat.lines[i];
+        const at = line.who === "a" ? headOf(c.a) : c.b ? headOf(c.b) : c.animal !== undefined ? ctx.animalTop(c.animal) : null;
+        if (at) out.push({ key: `${c.chat.id}:${c.a.id}:${i}`, en: line.en, vi: line.vi, at });
+      }
+      return out;
+    },
+    /** The chat a person (or an animal, by id) is in, with names for each side. */
+    chatOf(who: Person | number) {
+      const c = [...convos].find((x) => (typeof who === "number" ? x.animal === who : x.a === who || x.b === who));
+      if (!c) return null;
+      const kind = c.animal !== undefined ? ctx.animals().find((a) => a.id === c.animal)?.kind ?? "" : "";
+      return { chat: c.chat, index: lineAt(c), a: whoOf(c.a).en, b: c.b ? whoOf(c.b).en : kind, with: whoOf(c.a) };
+    },
     /** Where a saved professional is standing now (erasing uses it). */
     where: (id: number) => people.get(id) ?? null,
     wave(p: Person) { p.waveT = 2.2; },
