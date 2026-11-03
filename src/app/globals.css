@@ -3575,6 +3575,10 @@ a.path-node--done:hover .path-node__circle { color: var(--surface); }
 .vg-inspect__head h3 { flex: 1; min-width: 0; margin: 0; font-family: var(--font-serif), Georgia, serif; font-size: 1.45rem; line-height: 1.1; overflow-wrap: anywhere; }
 .vg-inspect__head .vg-ipa { font-family: inherit; font-size: .85rem; font-weight: 500; }
 .vg-inspect__vi { margin: 0 0 .35rem; font-size: .9rem; font-weight: 600; }
+.vg-inspect__view { margin: 0 0 .4rem; }
+.vg-inspect__view .vg-mini { display: inline-flex; align-items: center; gap: .35rem; }
+.vg-inspect__view .vg-mini svg { width: 18px; height: 18px; }
+.vg-inspect__view .vg-mini[aria-pressed="true"] { color: var(--forest); background: var(--sage); border-color: var(--forest); }
 .vg-inspect__say { margin-top: .4rem; padding: .55rem .7rem .4rem; background: var(--sage); border-radius: 12px; }
 .vg-inspect__say p { margin: 0; line-height: 1.45; }
 .vg-inspect__say p[lang] { font-size: 1rem; font-weight: 600; }

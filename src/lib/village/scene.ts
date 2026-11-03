@@ -51,6 +51,8 @@ export interface VillageOptions {
   onQuality?: (quality: Quality) => void;
   /** "auto" changes the weather now and then. */
   weather: Weather;
+  /** The view moved away from (or back to) the middle, or started or stopped following someone. */
+  onView?: (view: { away: boolean; following: boolean }) => void;
 }
 export interface VillageController {
   setTool(id: ToolId): void;
@@ -61,6 +63,10 @@ export interface VillageController {
   clearInspect(): void;
   setQuality(q: Quality, auto: boolean): void;
   setWeather(w: Weather): void;
+  /** Back to the middle of the island at the usual distance. */
+  resetView(): void;
+  /** Brings what the Look tool selected to the middle; people and animals are then followed (`false` stops). */
+  focusInspect(follow: boolean): void;
   dispose(): void;
 }
 
@@ -104,7 +110,7 @@ const angleDiff = (a: number, b: number) => {
 
 type TowerSpot = [number, number, number?];
 type Drag =
-  | { mode: "orbit" | "pan"; x: number; y: number }
+  | { mode: "orbit" | "pan"; x: number; y: number; tap?: boolean }
   | { mode: "stroke"; kind: StrokeTool; raw: Point[] }
   | { mode: "house"; start: Point; end: Point; moved: boolean; len: number; r: number; seed: number }
   | { mode: "pond"; start: Point; r: number }
@@ -200,7 +206,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   canvas.setAttribute("aria-roledescription", "khung xây làng 3D");
   canvas.setAttribute(
     "aria-label",
-    "Hòn đảo 3D để xây làng. Kéo để vẽ hoặc đặt đồ theo công cụ đang chọn. Bàn phím: mũi tên để xoay, Shift cùng mũi tên để dời khung nhìn, cộng trừ để phóng to thu nhỏ, Enter để đặt đồ vào giữa khung nhìn.",
+    "Hòn đảo 3D để xây làng. Kéo để vẽ hoặc đặt đồ theo công cụ đang chọn. Bàn phím: mũi tên hoặc Q, E để xoay, W A S D hoặc Shift cùng mũi tên để dời khung nhìn, Home để về giữa làng, cộng trừ để phóng to thu nhỏ, Enter để đặt đồ vào giữa khung nhìn.",
   );
   container.appendChild(canvas);
 
@@ -1171,12 +1177,69 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     goal.theta -= dx * 0.0065;
     goal.phi = clamp(goal.phi - dy * 0.0045, 0.42, 1.22);
   };
-  const zoomBy = (f: number) => { goal.radius = clamp(goal.radius * f, 11, 150); };
+  /** Following someone keeps them in the middle until the view is dragged away. */
+  let following = false;
+  /** How far the middle of the view may go: the whole island when close, back to the middle when zoomed far out. */
+  function clampTarget() {
+    const lim = PAN * clamp((120 - goal.radius) / 60, 0, 1), r = Math.hypot(goal.tx, goal.tz);
+    if (r > lim) { goal.tx *= lim / r; goal.tz *= lim / r; }
+  }
+  /** Zooms; with a screen point, the ground under it stays where it is (like a map). */
+  function zoomBy(f: number, cx?: number, cy?: number) {
+    const r0 = goal.radius;
+    goal.radius = clamp(r0 * f, 11, 150);
+    const g = cx === undefined || cy === undefined || following ? null : groundAt(cx, cy);
+    if (g && Math.hypot(g[0], g[1]) < ISLAND_R + 12) {
+      const k = 1 - goal.radius / r0;
+      goal.tx += (g[0] - goal.tx) * k;
+      goal.tz += (g[1] - goal.tz) * k;
+    }
+    clampTarget();
+  }
+  /** Drags the ground with the pointer: screen pixels to ground units at the middle of the view. */
   function panBy(dx: number, dy: number) {
-    const s = goal.radius * 0.0016;
+    following = false;
+    const s = (2 * goal.radius * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))) / Math.max(1, container.clientHeight);
+    const sy = s / Math.max(0.35, Math.cos(goal.phi));
     const cx = Math.cos(goal.theta), sx = Math.sin(goal.theta);
-    goal.tx = clamp(goal.tx - (dx * cx - dy * sx) * s, -PAN, PAN);
-    goal.tz = clamp(goal.tz - (-dx * sx - dy * cx) * s, -PAN, PAN);
+    goal.tx -= dx * cx * s - dy * sx * sy;
+    goal.tz -= -dx * sx * s - dy * cx * sy;
+    clampTarget();
+  }
+  /** Puts a ground point in the middle of the view; on a phone a little low, so the Look card does not cover it. */
+  function aimAt(x: number, z: number, under = false) {
+    const ahead = under && container.clientWidth < 640 ? goal.radius * 0.12 : 0;
+    goal.tx = x - Math.sin(goal.theta) * ahead;
+    goal.tz = z - Math.cos(goal.theta) * ahead;
+    clampTarget();
+  }
+  /** Glides the view to a ground point, a little closer. */
+  function focusOn(x: number, z: number, radius: number, under = false) {
+    goal.radius = Math.min(goal.radius, radius);
+    aimAt(x, z, under);
+  }
+  function resetView() {
+    following = false;
+    const fit = fitView();
+    Object.assign(goal, { tx: 0, tz: 0, radius: fit.radius, phi: fit.phi });
+  }
+  let viewSent = { away: false, following: false }, viewCheck = 0;
+  /** Tells the page when the view leaves the middle (to offer the way back) and when following ends. */
+  function reportView(dt: number) {
+    if (selection === null) following = false;
+    if (following && selection) {
+      const at = selection.center ?? _sel.setFromMatrixPosition(selection.frame() ?? IDENTITY);
+      aimAt(at.x, at.z, true);
+    }
+    viewCheck -= dt;
+    if (viewCheck > 0 && following === viewSent.following) return;
+    viewCheck = 0.25;
+    const fit = fitView();
+    const away = following || Math.hypot(goal.tx, goal.tz) > 3 || goal.radius < fit.radius * 0.6;
+    if (away !== viewSent.away || following !== viewSent.following) {
+      viewSent = { away, following };
+      options.onView?.(viewSent);
+    }
   }
 
   /* ───────────── time of day ───────────── */
@@ -1377,7 +1440,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
 
   function startTool(e: PointerEvent) {
     const place = TOOL[tool].place;
-    if (place === "orbit" || e.button === 2) { drag = { mode: "orbit", x: e.clientX, y: e.clientY }; return; }
+    if (place === "orbit" || e.button === 2) { drag = { mode: "orbit", x: e.clientX, y: e.clientY, tap: place === "orbit" && e.button === 0 }; return; }
     if (e.button === 1) { drag = { mode: "pan", x: e.clientX, y: e.clientY }; return; }
     // Look: a tap inspects, a drag turns the view.
     if (place === "look") { drag = { mode: "look", x: e.clientX, y: e.clientY, moved: false }; return; }
@@ -1419,6 +1482,9 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   function moveTool(e: PointerEvent) {
     if (!drag) return;
     if (drag.mode === "orbit" || drag.mode === "pan") {
+      // A Xoay tap moves the view there; it only turns once the pointer really moves.
+      if (drag.tap && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 8) return;
+      drag.tap = false;
       (drag.mode === "orbit" ? orbitBy : panBy)(e.clientX - drag.x, e.clientY - drag.y);
       drag.x = e.clientX;
       drag.y = e.clientY;
@@ -1465,7 +1531,11 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     const d = drag;
     drag = null;
     previewDirty = true;
-    if (d.mode === "orbit" || d.mode === "pan") return;
+    if (d.mode === "orbit" || d.mode === "pan") {
+      const g = d.tap ? groundAt(e.clientX, e.clientY) : null;
+      if (g && Math.hypot(g[0], g[1]) < ISLAND_R + 2) { following = false; focusOn(g[0], g[1], 24); }
+      return;
+    }
     if (d.mode === "look") { if (!d.moved) inspectAt(e.clientX, e.clientY); return; }
     if (d.mode === "hold") { release(d, true); return; }
     if (d.mode === "nudge") {
@@ -2198,6 +2268,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   /** Shows a selection's labels and card; `focus` (keyboard) also brings it to the middle of the view. */
   function select(sel: Selection, focus = false) {
     selection = sel;
+    following = false;
     selectionCheck = 0.4;
     labelLayer.replaceChildren();
     labelEls = sel.marks.map((m) => {
@@ -2218,9 +2289,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     if (focus || narrow) {
       const at = sel.center ?? _sel.setFromMatrixPosition(sel.frame() ?? IDENTITY);
       if (focus) goal.radius = Math.min(goal.radius, sel.refresh ? 14 : 22);
-      const ahead = narrow ? goal.radius * 0.1 : 0;
-      goal.tx = clamp(at.x - Math.sin(goal.theta) * ahead, -PAN, PAN);
-      goal.tz = clamp(at.z - Math.cos(goal.theta) * ahead, -PAN, PAN);
+      aimAt(at.x, at.z, true);
     }
     selRing.visible = true;
     options.onInspect?.(sel.info);
@@ -2402,7 +2471,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     cycleFrom = null;
     const found = thingAt(goal.tx, goal.tz);
     if (found) select(found, true);
-    else say("Giữa khung nhìn không có gì. Dời khung nhìn bằng Shift + mũi tên rồi bấm Enter lại.");
+    else say("Giữa khung nhìn không có gì. Dời khung nhìn bằng W A S D (hoặc Shift + mũi tên) rồi bấm Enter lại.");
   }
 
   const _lv = new THREE.Vector3();
@@ -2647,13 +2716,14 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       const [a, b] = [...pointers.values()];
       const d = Math.hypot(a.x - b.x, a.y - b.y), ang = Math.atan2(b.y - a.y, b.x - a.x);
       const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-      if (gesture.d > 10 && d > 10) zoomBy(gesture.d / d);
+      // Pinch zooms towards the fingers, twisting turns, and moving both fingers drags the view.
+      if (gesture.d > 10 && d > 10) zoomBy(gesture.d / d, mx, my);
       let da = ang - gesture.ang;
       if (da > Math.PI) da -= Math.PI * 2;
       if (da < -Math.PI) da += Math.PI * 2;
       goal.theta -= da;
-      panBy(mx - gesture.mx, 0);
-      orbitBy(0, my - gesture.my);
+      // While following someone, the small drift of a pinch should not stop it; a real drag does.
+      if (Math.hypot(mx - gesture.mx, my - gesture.my) > (following ? 6 : 0.5)) panBy(mx - gesture.mx, my - gesture.my);
       Object.assign(gesture, { d, ang, mx, my });
       return;
     }
@@ -2667,10 +2737,19 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     else endTool(e);
   };
   const onContextMenu = (e: Event) => e.preventDefault();
-  const onWheel = (e: WheelEvent) => { e.preventDefault(); zoomBy(Math.exp(e.deltaY * 0.0012)); };
+  const onWheel = (e: WheelEvent) => {
+    e.preventDefault();
+    // A trackpad pinch arrives as a wheel with Ctrl and small steps.
+    zoomBy(Math.exp(e.deltaY * (e.ctrlKey ? 0.01 : 0.0012)), e.clientX, e.clientY);
+  };
+  const PAN_KEYS: Record<string, [number, number]> = { w: [0, -60], a: [-60, 0], s: [0, 60], d: [60, 0] };
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
-    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+    const key = e.key.toLowerCase();
+    if (key in PAN_KEYS) panBy(...PAN_KEYS[key]);
+    else if (key === "q" || key === "e") goal.theta += key === "q" ? 0.15 : -0.15;
+    else if (e.key === "Home") resetView();
+    else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
       if (e.shiftKey) panBy(e.key === "ArrowLeft" ? -60 : 60, 0);
       else goal.theta += e.key === "ArrowLeft" ? 0.15 : -0.15;
     } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
@@ -2716,6 +2795,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     if (needsRebuild) { needsRebuild = false; plantsDirty = false; rebuildAll(); }
     if (plantsDirty) { plantsDirty = false; rebuildPlants(); }
     if (previewDirty) { previewDirty = false; rebuildPreview(); }
+    reportView(dt);
     applyCamera(dt);
     const motion = reduceMotion ? 0 : 1;
     clock += dt;
@@ -2779,6 +2859,15 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       if (id !== "look" && selection) clearSelection(true);
     },
     clearInspect: () => clearSelection(false),
+    resetView,
+    focusInspect(follow) {
+      following = false;
+      if (!follow || !selection) { reportView(0); return; }
+      const at = selection.center ?? _sel.setFromMatrixPosition(selection.frame() ?? IDENTITY);
+      focusOn(at.x, at.z, selection.refresh ? 14 : 20, true);
+      following = !!selection.refresh;
+      reportView(0);
+    },
     setQuality(q, auto) {
       autoQ = auto;
       perfFrom = frames + 90;

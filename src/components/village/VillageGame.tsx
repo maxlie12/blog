@@ -13,8 +13,10 @@ import type { InspectInfo, Thumbs, VillageController } from "@/lib/village/scene
 import { choicesFor, dueItems, nextReview, type ReviewItem } from "@/lib/village/review";
 import { PARTS, RESIDENTS, VERBS, vocabKey, type PartId, type ResidentId, type VerbId } from "@/lib/village/vocab";
 
-type IconName = "orbit" | "look" | "hand" | "erase" | "undo" | "book" | "reset" | "sun" | "moon" | "close" | "lock" | "cards" | "left" | "right" | "manual" | "fast" | "real" | "tune";
+type IconName = "orbit" | "look" | "hand" | "erase" | "undo" | "book" | "reset" | "sun" | "moon" | "close" | "lock" | "cards" | "left" | "right" | "manual" | "fast" | "real" | "tune" | "target" | "follow";
 const ICONS: Record<IconName, ReactNode> = {
+  target: <><circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="2.2" /><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" /></>,
+  follow: <><path d="M12 21s-6-5.6-6-10.5a6 6 0 0 1 12 0C18 15.4 12 21 12 21z" /><circle cx="12" cy="10.5" r="2.2" /></>,
   tune: <><path d="M4 7h9M17 7h3M4 17h3M11 17h9" /><circle cx="15" cy="7" r="2" /><circle cx="9" cy="17" r="2" /></>,
   manual: <><path d="M9 6v12" /><path d="M15 6v12" /></>,
   fast: <><path d="m4 6 7 6-7 6z" /><path d="m13 6 7 6-7 6z" /></>,
@@ -224,6 +226,8 @@ export default function VillageGame() {
   const due = useMemo(() => dueItems(progress, now, 99), [progress, now]);
   const [announce, setAnnounce] = useState("");
   const inspectIdRef = useRef<string | null>(null);
+  // Whether the view has left the middle (offer the way back) and is following someone.
+  const [view, setView] = useState({ away: false, following: false });
   // The level "auto" picked for this device (lowered if frames were slow).
   const [autoLevel, setAutoLevel] = useState<Quality>("medium");
 
@@ -287,6 +291,7 @@ export default function VillageGame() {
               say(`Máy đang hơi chậm nên đồ họa tự giảm xuống mức ${QUALITY_TEXT[level].label}.`);
             },
             weather: loaded.weather,
+            onView: setView,
             onInspect: (info) => {
               setInspect(info);
               // Words met with the Look tool go into the word book.
@@ -467,6 +472,8 @@ export default function VillageGame() {
               <InspectCard
                 info={inspect}
                 progress={progress}
+                following={view.following}
+                onFocus={(follow) => controllerRef.current?.focusInspect(follow)}
                 onClose={() => { setInspect(null); inspectIdRef.current = null; controllerRef.current?.clearInspect(); }}
                 onLearn={(word) => openLesson(word, "unlock")}
               />
@@ -477,6 +484,11 @@ export default function VillageGame() {
               </div>
             )}
             <div className="vg-actions">
+              {status === "ready" && view.away ? (
+                <button className="vg-icon" type="button" aria-label="Về giữa làng" onClick={() => controllerRef.current?.resetView()}>
+                  <Icon name="target" />
+                </button>
+              ) : null}
               {due.length ? (
                 <button className="vg-icon" type="button" aria-label={`Ôn từ hôm nay: ${due.length} từ đến hạn`} onClick={openReview}>
                   <Icon name="cards" />
@@ -646,7 +658,7 @@ export default function VillageGame() {
         </dialog>
       </div>
       <p className="vg-foot">
-        Kéo bằng chuột hoặc một ngón tay để xây; hai ngón tay hoặc con lăn để xoay và phóng to. Công cụ Xem cho biết người và con vật đang làm gì (bằng câu tiếng Anh) và gắn nhãn tên từng bộ phận. Công cụ Tay kéo và ném bóng, thùng, bí ngô, thuyền; chạm vào người thì họ vẫy tay chào. Bàn phím: chọn khung đảo bằng Tab, mũi tên để xoay, Enter để đặt đồ (với Tay là thổi gió, với Xem là lần lượt xem người và con vật gần giữa khung nhìn), Ctrl + Z để hoàn tác.
+        Kéo bằng chuột hoặc một ngón tay để xây; hai ngón tay để dời, xoay và phóng to; chuột phải kéo để xoay. Công cụ Xem cho biết người và con vật đang làm gì (bằng câu tiếng Anh) và gắn nhãn tên từng bộ phận. Công cụ Tay kéo và ném bóng, thùng, bí ngô, thuyền; chạm vào người thì họ vẫy tay chào. Công cụ Xoay: chạm một điểm để đưa khung nhìn tới đó; con lăn chuột và hai ngón tay phóng to về chỗ đang trỏ. Bàn phím: chọn khung đảo bằng Tab, mũi tên hoặc Q, E để xoay, W A S D để dời khung nhìn, Home để về giữa làng, Enter để đặt đồ (với Tay là thổi gió, với Xem là lần lượt xem người và con vật gần giữa khung nhìn), Ctrl + Z để hoàn tác.
       </p>
     </div>
   );
@@ -855,13 +867,16 @@ function Highlighted({ text, word }: { text: string; word: string }) {
 }
 
 /** The Look tool's card: the name, what they are doing, and the parts labelled on the model. */
-function InspectCard({ info, progress, onClose, onLearn }: {
+function InspectCard({ info, progress, following, onFocus, onClose, onLearn }: {
   info: InspectInfo;
   progress: VillageProgress;
+  following: boolean;
+  onFocus: (follow: boolean) => void;
   onClose: () => void;
   onLearn: (word: WordId) => void;
 }) {
   const title = titleOf(info);
+  const being = /^(person|animal):/.test(info.id);
   const locked = title.word !== null && !progress.unlocked.includes(title.word);
   const verb = info.sentence ? VERBS[info.sentence.verb] : null;
   return (
@@ -872,6 +887,17 @@ function InspectCard({ info, progress, onClose, onLearn }: {
         <button type="button" className="vg-close" aria-label="Đóng thẻ xem" onClick={onClose}><Icon name="close" /></button>
       </div>
       <p className="vg-inspect__vi">{title.vi}</p>
+      <div className="vg-inspect__view">
+        {being ? (
+          <button type="button" className="vg-mini" aria-pressed={following} onClick={() => onFocus(!following)}>
+            <Icon name="follow" /> {following ? "Đang đi theo" : "Đi theo"}
+          </button>
+        ) : (
+          <button type="button" className="vg-mini" onClick={() => onFocus(true)}>
+            <Icon name="target" /> Lại gần
+          </button>
+        )}
+      </div>
       {locked && title.word ? (
         <button type="button" className="vg-mini vg-mini--go" onClick={() => onLearn(title.word as WordId)}>Học từ này để mở {TOOL[title.word].label.toLowerCase()}</button>
       ) : null}

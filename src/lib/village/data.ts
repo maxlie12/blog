@@ -155,7 +155,7 @@ const person = (label: string, viWho: string, hint: string) => ({ label, viWho, 
 
 const DEFS: Record<ToolId, Omit<ToolDef, "id">> = {
   look: { label: "Xem", cat: null, place: "look", size: 0, hint: "Chạm vào người, con vật hay công trình để xem họ đang làm gì và tên từng bộ phận bằng tiếng Anh." },
-  orbit: { label: "Xoay", cat: null, place: "orbit", size: 0, hint: "Kéo để xoay đảo. Hai ngón tay hoặc con lăn chuột để phóng to, thu nhỏ." },
+  orbit: { label: "Xoay", cat: null, place: "orbit", size: 0, hint: "Kéo để xoay đảo, chạm một điểm để đưa khung nhìn tới đó. Hai ngón tay hoặc con lăn chuột để dời và phóng to." },
   hand: { label: "Tay", cat: null, place: "hand", size: 0, hint: "Kéo bóng, thùng, bí ngô hay thuyền rồi thả tay để ném. Chạm cỏ để thổi gió nhỏ, chạm con vật để vuốt ve, chạm người để chào." },
   erase: { label: "Xóa", cat: null, place: "erase", size: 0, hint: "Kéo qua thứ muốn xóa. Lỡ tay thì bấm Hoàn tác." },
 

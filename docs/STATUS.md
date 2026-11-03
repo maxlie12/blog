@@ -1,6 +1,15 @@
 # Status
 
-Last verified: 2026-11-03 (Làng Rêu graphics and weather; harness browser checks).
+Last verified: 2026-11-03 (Làng Rêu camera: move, zoom to a point, follow; harness browser checks).
+
+## 2026-11-03 — Làng Rêu: move the view and focus on a spot
+
+- Wheel, trackpad pinch and two-finger pinch zoom towards the pointer or fingers; two fingers drag
+  the view; the Xoay tool's tap glides the view to that spot; W A S D move, Q E turn, Home
+  recentres; a “Về giữa làng” button appears when the view is away from the middle.
+- The Look card can follow a villager or animal (“Đi theo”) or bring a piece closer (“Lại gần”).
+- Checks: ESLint, `tsc`, `npm test`; Playwright camera suite 30/30 (desktop and phone) plus the
+  earlier suites. See `docs/changes/GAME-008-village-camera.md`.
 
 ## 2026-11-03 — Làng Rêu: better graphics, weather and a quality setting
 
