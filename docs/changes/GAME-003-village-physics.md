@@ -61,7 +61,8 @@ place where things happen.
       dropped, thrown, its resting place saved, undo puts it back; a hand tap on grass blows it
       away; birds come to a garden and a scarecrow sends them off (none with reduced motion);
       beehive with flowers, dog with chickens and a night by the barn run with no errors.
-- [ ] Vercel build + production deploy (see `docs/STATUS.md`)
+- [x] Vercel production build of commit `52d68f5` succeeded and was deployed to Production.
+- [ ] Live page check: not possible from this workspace (vercel.app is blocked); owner to open `/learning/village`.
 
 ## Result
 

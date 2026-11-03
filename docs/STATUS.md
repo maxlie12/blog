@@ -17,7 +17,8 @@ Last verified: 2026-11-03 (Làng Rêu light physics and interactions, harness ch
 - Physics is a small in-house solver (`src/lib/village/physics.ts`), no new dependency.
 - Checks: 12 village tests (5 physics), ESLint and `tsc` clean, Playwright 41/41 (previous suite)
   and 18/18 (physics suite, with and without reduced motion). See
-  `docs/changes/GAME-003-village-physics.md`.
+  `docs/changes/GAME-003-village-physics.md`. Vercel built and deployed commit `52d68f5` to
+  Production; the live page was not opened from this workspace.
 
 ## 2026-11-02 — Làng Rêu: 42 new pieces and a larger island
 
