@@ -9,9 +9,10 @@ import {
 } from "@/lib/village/data";
 import type { Thumbs, VillageController } from "@/lib/village/scene";
 
-type IconName = "orbit" | "erase" | "undo" | "book" | "reset" | "sun" | "moon" | "close" | "lock";
+type IconName = "orbit" | "hand" | "erase" | "undo" | "book" | "reset" | "sun" | "moon" | "close" | "lock";
 const ICONS: Record<IconName, ReactNode> = {
   orbit: <><path d="M4.5 12a7.5 7.5 0 0 1 13.1-5" /><path d="M19.5 12a7.5 7.5 0 0 1-13.1 5" /><path d="M18 3.5v3.8h-3.8" /><path d="M6 20.5v-3.8h3.8" /></>,
+  hand: <><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12" /><path d="M11 11.5V4a1.5 1.5 0 0 1 3 0v7.5" /><path d="M14 11.5V5.5a1.5 1.5 0 0 1 3 0V13" /><path d="M17 9.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1.5a6 6 0 0 1-4.6-2.2L4.4 15a1.6 1.6 0 0 1 2.4-2.1L8 14" /></>,
   erase: <><path d="M9 20h11" /><path d="m4.5 15.5 9-9.5 5.5 5.2-8.6 8.8H8.5z" /><path d="m9.5 10.8 5.2 5" /></>,
   undo: <><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /></>,
   book: <><path d="M5 4.5h10A2.5 2.5 0 0 1 17.5 7v13.5H7.5A2.5 2.5 0 0 1 5 18z" /><path d="M5 18a2.5 2.5 0 0 1 2.5-2.5h10" /><path d="M20 6.5v14" /><path d="M8.5 8h6" /></>,
@@ -31,7 +32,7 @@ function Icon({ name }: { name: IconName }) {
 
 /** A tool's picture: a line icon for orbit/erase, otherwise the small 3D preview the scene rendered. */
 function ToolPic({ id, thumbs }: { id: ToolId; thumbs: Thumbs }) {
-  if (id === "orbit" || id === "erase") return <Icon name={id} />;
+  if (id === "orbit" || id === "hand" || id === "erase") return <Icon name={id} />;
   const src = thumbs[id];
   // eslint-disable-next-line @next/next/no-img-element -- generated data URL, nothing for next/image to optimise
   return src ? <img src={src} alt="" width={40} height={40} draggable={false} /> : <span className="vg-pic-wait" aria-hidden="true" />;
@@ -163,8 +164,8 @@ export default function VillageGame() {
   }, []);
 
   const selectTool = (id: ToolId) => {
-    if (!progress.unlocked.includes(id) && id !== "orbit" && id !== "erase") {
-      openLesson(id, "unlock");
+    if (!progress.unlocked.includes(id) && TOOL[id].cat !== null) {
+      openLesson(id as WordId, "unlock");
       return;
     }
     const group = TOOL[id].cat;
@@ -331,7 +332,7 @@ export default function VillageGame() {
         </dialog>
       </div>
       <p className="vg-foot">
-        Kéo bằng chuột hoặc một ngón tay để xây; hai ngón tay hoặc con lăn để xoay và phóng to. Bàn phím: chọn khung đảo bằng Tab, mũi tên để xoay, Enter để đặt đồ, Ctrl + Z để hoàn tác.
+        Kéo bằng chuột hoặc một ngón tay để xây; hai ngón tay hoặc con lăn để xoay và phóng to. Công cụ Tay kéo và ném bóng, thùng, bí ngô, thuyền. Bàn phím: chọn khung đảo bằng Tab, mũi tên để xoay, Enter để đặt đồ (với Tay là thổi gió), Ctrl + Z để hoàn tác.
       </p>
     </div>
   );

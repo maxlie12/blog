@@ -219,13 +219,13 @@ export const PROP_MODELS: Record<PropKind, Model> = {
       }
     }
   },
+  // Movable pieces (ball, pumpkin, barrel, crate, boat) are single objects centred on the
+  // origin so they can roll and slide; rolling ones turn about their centre at y = radius.
   pumpkin({ p }) {
-    for (const [x, z, s] of [[0, 0, 1], [0.42, -0.2, 0.7]]) {
-      p(G.sphere, "#e88a2a", x, 0.2 * s, z, 0.52 * s, 0.38 * s, 0.52 * s);
-      p(G.cyl6, "#5d6b2f", x, 0.42 * s, z, 0.05, 0.12 * s, 0.05);
-    }
-    p(G.ico0, LEAF, 0.3, 0.04, 0.24, 0.38, 0.05, 0.3);
-    p(G.ico0, LEAF, -0.3, 0.04, -0.1, 0.32, 0.05, 0.28);
+    p(G.sphere, "#e88a2a", 0, 0.27, 0, 0.6, 0.54, 0.6);
+    for (let k = 0; k < 4; k += 1) p(G.sphere, "#d9781f", 0, 0.27, 0, 0.18, 0.55, 0.61, (k * Math.PI) / 4);
+    p(G.cyl6, "#5d6b2f", 0, 0.56, 0, 0.06, 0.12, 0.06);
+    p(G.ico0, LEAF, 0.1, 0.55, 0.05, 0.22, 0.04, 0.14);
   },
   haystack({ p }) {
     p(G.cyl12, "#d9bb5c", 0, 0.3, 0, 1.45, 0.6, 1.45);
@@ -285,19 +285,22 @@ export const PROP_MODELS: Record<PropKind, Model> = {
     for (let k = 0; k < 12; k += 1) p(G.ico0, r() < 0.7 ? "#d9453b" : "#8cbc5c", -0.32 + (k % 3) * 0.32, 0.86 + (r() * 0.06), -0.5 + Math.floor(k / 3) * 0.33, 0.24, 0.22, 0.24);
   },
   barrel({ p }) {
-    for (const [x, z, s] of [[0, 0, 1], [0.58, 0.28, 0.8]]) {
-      p(G.cyl12, "#8a6644", x, 0.36 * s, z, 0.6 * s, 0.72 * s, 0.6 * s);
-      p(G.cyl12, "#9a744d", x, 0.36 * s, z, 0.66 * s, 0.36 * s, 0.66 * s);
-      for (const y of [0.1, 0.62]) p(G.cyl12, DARK, x, y * s, z, 0.64 * s, 0.05, 0.64 * s);
-      p(G.cyl12, WOOD_LIGHT, x, 0.725 * s, z, 0.52 * s, 0.02, 0.52 * s);
-    }
+    p(G.cyl12, "#8a6644", 0, 0.36, 0, 0.6, 0.72, 0.6);
+    p(G.cyl12, "#9a744d", 0, 0.36, 0, 0.66, 0.36, 0.66);
+    for (const y of [0.1, 0.62]) p(G.cyl12, DARK, 0, y, 0, 0.64, 0.05, 0.64);
+    p(G.cyl12, WOOD_LIGHT, 0, 0.725, 0, 0.52, 0.02, 0.52);
   },
   crate({ p }) {
-    for (const [x, y, z, s] of [[0, 0, 0, 0.6], [0.64, 0, 0.06, 0.55], [0.3, 0.6, 0.02, 0.5]]) {
-      p(G.box, "#c49a66", x, y + s / 2, z, s, s, s);
-      for (const yy of [y + 0.05, y + s - 0.05]) p(G.box, "#8a6644", x, yy, z, s + 0.03, 0.08, s + 0.03);
-      for (const sx of [-1, 1]) for (const sz of [-1, 1]) p(G.box, "#8a6644", x + (sx * s) / 2, y + s / 2, z + (sz * s) / 2, 0.07, s, 0.07);
-    }
+    const s = 0.6;
+    p(G.box, "#c49a66", 0, s / 2, 0, s, s, s);
+    for (const y of [0.05, s - 0.05]) p(G.box, "#8a6644", 0, y, 0, s + 0.03, 0.08, s + 0.03);
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) p(G.box, "#8a6644", (sx * s) / 2, s / 2, (sz * s) / 2, 0.07, s, 0.07);
+    for (const sz of [-1, 1]) p(G.box, "#8a6644", 0, s / 2, (sz * s) / 2, 0.75, 0.07, 0.03, 0, 0, 0.78);
+  },
+  ball({ p }) {
+    p(G.sphere, "#f6f1e6", 0, 0.26, 0, 0.52, 0.52, 0.52);
+    p(G.torus, RED, 0, 0.26, 0, 0.52, 0.52, 0.55);
+    p(G.torus, BLUE, 0, 0.26, 0, 0.52, 0.52, 0.55, HALF);
   },
   flag({ p }, r) {
     const c = pick([RED, BLUE, GOLD, "#6c7f55", "#8a5c9e"], r);

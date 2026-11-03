@@ -15,6 +15,10 @@ import {
 } from "./data";
 import { G, M, bake, painter, pick, ribbon, shade, type Part } from "./kit";
 import { PROP_GEOMETRIES, PROP_MODELS } from "./props";
+import {
+  BODY, GRAVITY, MAX_SPEED, bodyAt, gust, isDynamic, makeBody, makeWorld, pushOut, stepBodies, waterAt,
+  type Body, type Box, type Circle, type DynamicKind, type Mover, type World,
+} from "./physics";
 
 export type Thumbs = Partial<Record<ToolId, string>>;
 export interface VillageOptions {
@@ -42,6 +46,26 @@ const LEGACY_TAP = ["tower", "well", "windmill", "lantern", "sheep"] as const;
 const MAX_TREES = 700, MAX_INSTANCES = 900, TUFTS = 760;
 const SPEED: Partial<Record<ToolId, number>> = { sheep: 0.55, chicken: 0.7, duck: 0.45, cow: 0.35, horse: 0.6, pig: 0.45, dog: 0.9, cat: 0.5, rabbit: 0.8 };
 
+const PREY = new Set<ToolId>(["chicken", "cat", "rabbit", "duck"]);
+/** How far each movable piece sits in the water when floating. */
+const FLOAT_SINK: Record<DynamicKind, number> = { ball: 0.12, pumpkin: 0.14, barrel: 0.22, crate: 0.22, boat: 0.03 };
+/** Colliders for pieces that are not simple round things. Half sizes along local X and Z. */
+const PROP_BOX: Partial<Record<PropKind, [number, number]>> = { barn: [1.25, 1.55], chapel: [0.95, 1.55], stall: [0.95, 0.65], tent: [0.95, 1.12] };
+const PROP_RADIUS: Partial<Record<PropKind, number>> = {
+  blossom: 0.25, bush: 0.4, rock: 0.5, lighthouse: 1.05, fountain: 1.2, gazebo: 1.25, log: 0.45, stump: 0.36, haystack: 0.72, statue: 0.45,
+  bench: 0.5, cart: 0.7, flag: 0.12, signpost: 0.1, mailbox: 0.12, scarecrow: 0.12, swing: 0.5, campfire: 0.5, beehive: 0.3, woodpile: 0.55,
+};
+/** Pieces balls roll over and animals walk through. */
+const NO_COLLIDE = new Set<PropKind>(["flower", "mushroom", "sunflower", "garden"]);
+const FLOWER_HEIGHT: Partial<Record<PropKind, number>> = { flower: 0.35, sunflower: 1.2, blossom: 1.6, garden: 0.3 };
+const MAX_BODIES = 400, MAX_BEES = 80, MAX_BIRDS = 48, PETALS = 160;
+const angleDiff = (a: number, b: number) => {
+  let d = (a - b) % (Math.PI * 2);
+  if (d > Math.PI) d -= Math.PI * 2;
+  if (d < -Math.PI) d += Math.PI * 2;
+  return d;
+};
+
 type TowerSpot = [number, number, number?];
 type Drag =
   | { mode: "orbit" | "pan"; x: number; y: number }
@@ -50,8 +74,30 @@ type Drag =
   | { mode: "pond"; start: Point; r: number }
   | { mode: "brush"; kind: ToolId; last: Point | null }
   | { mode: "erase" }
-  | { mode: "tap"; kind: ToolId; x: number; y: number; moved: boolean };
-interface AnimalView { kind: ToolId; mesh: THREE.Mesh; home: THREE.Vector2; target: THREE.Vector2; wait: number; hop: number; pet: number }
+  | { mode: "tap"; kind: ToolId; x: number; y: number; moved: boolean }
+  | { mode: "hold"; body: Body; target: Point; trail: { t: number; x: number; z: number }[] }
+  | { mode: "nudge"; x: number; y: number; moved: boolean };
+interface AnimalView {
+  id: number;
+  kind: ToolId;
+  mesh: THREE.Mesh;
+  home: THREE.Vector2;
+  target: THREE.Vector2;
+  threat: THREE.Vector2;
+  wait: number;
+  hop: number;
+  pet: number;
+  vx: number;
+  vz: number;
+  y: number;
+  vy: number;
+  state: "wander" | "chase" | "flee" | "home" | "sleep";
+  stateT: number;
+  cool: number;
+  chase: AnimalView | Body | null;
+}
+interface Bee { hive: THREE.Vector3; flowers: THREE.Vector3[]; from: THREE.Vector3; to: THREE.Vector3; t: number; dur: number; atFlower: boolean; phase: number }
+interface Bird { garden: number; pos: THREE.Vector3; vel: THREE.Vector3; spot: THREE.Vector3; state: "arrive" | "peck" | "leave"; t: number; yaw: number }
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -97,6 +143,10 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   const undoStack: string[] = [];
   const say = options.onToast;
   let disposed = false;
+  let timeOfDay = options.time, clock = 0;
+  /** Ids placed this moment: they drop in from a little height. */
+  const fresh = new Set<number>();
+  const wind = { x: 0.5, z: 0.3, strength: 0.6 };
 
   /* ───────────── renderer, camera, lights ───────────── */
   let dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -156,6 +206,27 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   const cloudMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, flatShading: true, transparent: true, opacity: 0.92 });
   const haloMat = new THREE.SpriteMaterial({ map: haloTex, color: "#ffc46b", transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
   const starMat = new THREE.PointsMaterial({ color: "#ffffff", size: 1.6, sizeAttenuation: false, transparent: true, opacity: 0, fog: false, depthWrite: false });
+  /** Same look as `surface`, but instanced plants bend with the wind (taller parts move more). */
+  const swayUniforms = { uTime: { value: 0 }, uWind: { value: new THREE.Vector2() } };
+  const swayMat = surface.clone();
+  swayMat.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, swayUniforms);
+    shader.vertexShader = `uniform float uTime;\nuniform vec2 uWind;\n${shader.vertexShader}`.replace(
+      "#include <begin_vertex>",
+      `#include <begin_vertex>
+      #ifdef USE_INSTANCING
+        vec3 swayAt = instanceMatrix[3].xyz;
+        float swayPhase = uTime * 1.6 + swayAt.x * 0.35 + swayAt.z * 0.27;
+        float swayAmt = 0.65 + sin(swayPhase) * 0.35 + sin(swayPhase * 2.7) * 0.15;
+        float swayH = max(position.y, 0.0);
+        vec3 swayDir = inverse(mat3(instanceMatrix)) * vec3(uWind.x, 0.0, uWind.y);
+        transformed += swayDir * swayAmt * (swayH * swayH * 0.03 + swayH * 0.1);
+      #endif`,
+    );
+  };
+  swayMat.customProgramCacheKey = () => "village-sway";
+  const petalMat = new THREE.PointsMaterial({ color: "#f7c9d6", size: 0.12, transparent: true, opacity: 0.95, depthWrite: false });
+  const ringMat = new THREE.MeshBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0, depthWrite: false });
 
   /* ───────────── island ───────────── */
   {
@@ -542,11 +613,23 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       if (t.animal && t.id !== "sheep") animals.set(t.id, cast(modelParts(t.id as PropKind, 3)));
     }
     for (const kind of INSTANCED) plants.set(kind, cast(modelParts(kind, 7)));
-    return { blade: cast(bladeParts), trees: [cast(leafy), cast(pine)], tuft: cast(tuft), animals, plants };
+    const bodies = new Map<DynamicKind, THREE.BufferGeometry>();
+    for (const kind of Object.keys(BODY) as DynamicKind[]) bodies.set(kind, cast(modelParts(kind, 7)));
+
+    const bee: Part[] = [], bird: Part[] = [];
+    const bp = at(bee), dp = at(bird);
+    bp(G.sphere, "#f2c94c", 0, 0, 0, 0.13, 0.12, 0.17);
+    bp(G.box, "#3a332d", 0, 0, -0.01, 0.132, 0.122, 0.035);
+    for (const s of [-1, 1]) bp(G.box, "#ffffff", s * 0.07, 0.06, -0.01, 0.1, 0.01, 0.06, 0, 0, s * 0.3);
+    dp(G.ico, "#4a4a52", 0, 0.1, 0, 0.17, 0.14, 0.26);
+    dp(G.sphere, "#4a4a52", 0, 0.18, 0.12, 0.12, 0.12, 0.12);
+    dp(G.cone6, "#f2a53a", 0, 0.18, 0.2, 0.04, 0.08, 0.04, 0, Math.PI / 2);
+    for (const s of [-1, 1]) dp(G.box, "#3a3a42", s * 0.12, 0.13, -0.01, 0.2, 0.02, 0.12, 0, 0, s * 0.25);
+    return { blade: cast(bladeParts), trees: [cast(leafy), cast(pine)], tuft: cast(tuft), animals, plants, bodies, bee: cast(bee), bird: cast(bird) };
   })();
 
-  function instancedMesh(geo: THREE.BufferGeometry, max: number, shadows: boolean) {
-    const mesh = new THREE.InstancedMesh(geo, surface, max);
+  function instancedMesh(geo: THREE.BufferGeometry, max: number, shadows: boolean, material: THREE.Material = swayMat) {
+    const mesh = new THREE.InstancedMesh(geo, material, max);
     mesh.castShadow = shadows;
     mesh.receiveShadow = true;
     mesh.frustumCulled = false;
@@ -558,6 +641,21 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   const treeMeshes = templates.trees.map((geo) => instancedMesh(geo, MAX_TREES, true));
   const plantMeshes = new Map([...templates.plants].map(([kind, geo]) => [kind, instancedMesh(geo, MAX_INSTANCES, kind !== "flower")]));
   const tuftMesh = instancedMesh(templates.tuft, TUFTS, false);
+  const bodyMeshes = new Map([...templates.bodies].map(([kind, geo]) => [kind, instancedMesh(geo, MAX_BODIES, true, surface)]));
+  const beeMesh = instancedMesh(templates.bee, MAX_BEES, false, surface);
+  const birdMesh = instancedMesh(templates.bird, MAX_BIRDS, true, surface);
+  const petalPos = new Float32Array(PETALS * 3);
+  const petalGeo = new THREE.BufferGeometry();
+  petalGeo.setAttribute("position", new THREE.BufferAttribute(petalPos, 3));
+  petalGeo.setDrawRange(0, 0);
+  const petals = new THREE.Points(petalGeo, petalMat);
+  petals.frustumCulled = false;
+  const petalLife = Array.from({ length: PETALS }, () => ({ life: 0, phase: Math.random() * 6 }));
+  const ring = new THREE.Mesh(G.torus, ringMat);
+  ring.rotation.x = Math.PI / 2;
+  ring.visible = false;
+  let ringT = 1;
+  scene.add(petals, ring);
   tuftMesh.receiveShadow = false;
 
   const clouds: THREE.Mesh[] = [];
@@ -623,7 +721,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     for (const o of S.wells) wellParts(o, parts);
     for (const o of S.lanterns) lanternParts(o, parts, glow, halos);
     for (const o of S.props) {
-      if (TOOL[o.kind].animal || plantMeshes.has(o.kind)) continue;
+      if (TOOL[o.kind].animal || plantMeshes.has(o.kind) || isDynamic(o.kind) || drops.has(o.id)) continue;
       PROP_MODELS[o.kind](painter(M(o.x, 0, o.z, 1, 1, 1, o.r), parts, glow, halos), rng(o.seed));
     }
 
@@ -662,6 +760,10 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     rebuildPlants();
     rebuildTufts();
     rebuildAnimals();
+    buildWorld(towerSpots);
+    syncBodies();
+    rebuildBees();
+    fresh.clear();
   }
 
   function rebuildTrees() {
@@ -745,10 +847,14 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       if (!geo) continue;
       const mesh = new THREE.Mesh(geo, surface);
       mesh.castShadow = true;
-      mesh.position.set(a.x, 0, a.z);
+      const y = fresh.has(a.id) && !reduceMotion ? 1.2 : 0;
+      mesh.position.set(a.x, y, a.z);
       mesh.rotation.y = Math.random() * Math.PI * 2;
       world.add(mesh);
-      animalViews.set(a.id, { kind: a.kind, mesh, home: new THREE.Vector2(a.x, a.z), target: new THREE.Vector2(a.x, a.z), wait: Math.random() * 3, hop: 0, pet: 0 });
+      animalViews.set(a.id, {
+        id: a.id, kind: a.kind, mesh, home: new THREE.Vector2(a.x, a.z), target: new THREE.Vector2(a.x, a.z), threat: new THREE.Vector2(),
+        wait: Math.random() * 3, hop: 0, pet: 0, vx: 0, vz: 0, y, vy: 0, state: "wander", stateT: 0, cool: 3 + Math.random() * 5, chase: null,
+      });
     }
   }
 
@@ -854,6 +960,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   ];
   const _a = new THREE.Color(), _b = new THREE.Color();
   function applyTime(t: number) {
+    timeOfDay = t;
     let i = 0;
     while (i < KEYS.length - 2 && t > KEYS[i + 1].t) i += 1;
     const A = KEYS[i], B = KEYS[i + 1], k = clamp((t - A.t) / (B.t - A.t), 0, 1);
@@ -873,6 +980,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     haloMat.opacity = glow * 0.85;
     starMat.opacity = clamp((t - 0.8) / 0.2, 0, 1);
     cloudMat.color.setScalar(lerp(1, 0.55, clamp((t - 0.72) / 0.28, 0, 1)));
+    petalMat.color.set("#f7c9d6").multiplyScalar(lerp(1, 0.3, clamp((t - 0.72) / 0.28, 0, 1)));
   }
 
   /* ───────────── editing ───────────── */
@@ -930,8 +1038,9 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       return true;
     }
     if (blocked(g[0], g[1], 0.2) || S.trees.some((t) => Math.hypot(t.x - g[0], t.z - g[1]) < 0.7)) return false;
-    S.props.push({ id: newId(), kind: kind as PropKind, x: +g[0].toFixed(2), z: +g[1].toFixed(2), r: +(Math.random() * Math.PI * 2).toFixed(2), seed: randSeed() });
-    plantsDirty = true;
+    const id = newId();
+    S.props.push({ id, kind: kind as PropKind, x: +g[0].toFixed(2), z: +g[1].toFixed(2), r: +(Math.random() * Math.PI * 2).toFixed(2), seed: randSeed() });
+    if (isDynamic(kind)) { fresh.add(id); needsBodySync = true; } else plantsDirty = true;
     return true;
   }
 
@@ -988,6 +1097,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     const def = TOOL[kind];
     if (def.animal && petAnimal(g)) return;
     const base = { id: newId(), x: +g[0].toFixed(2), z: +g[1].toFixed(2), seed: randSeed() };
+    fresh.add(base.id);
     if (isLegacyTap(kind)) {
       if (kind === "tower") S.towers.push(base);
       else if (kind === "well") S.wells.push(base);
@@ -997,7 +1107,9 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       return;
     }
     const r = def.face ? facePath(g[0], g[1]) : Math.random() * Math.PI * 2;
-    S.props.push({ ...base, kind: kind as PropKind, r: +r.toFixed(3) } satisfies Prop);
+    const prop = { ...base, kind: kind as PropKind, r: +r.toFixed(3) } satisfies Prop;
+    S.props.push(prop);
+    if (!def.animal && !isDynamic(kind) && !INSTANCED.includes(prop.kind)) startDrop(prop);
   }
 
   function commit() {
@@ -1033,6 +1145,15 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       drag = { mode: "pond", start: g, r: 1.2 };
     } else if (place === "brush") {
       drag = { mode: "brush", kind: tool, last: scatterAt(tool, g) ? g : null };
+    } else if (place === "hand") {
+      const b = bodyUnderPointer(e.clientX, e.clientY);
+      if (b) {
+        b.held = true;
+        b.awake = true;
+        b.rest = 0;
+        drag = { mode: "hold", body: b, target: [b.x, b.z], trail: [{ t: performance.now(), x: b.x, z: b.z }] };
+        canvas.style.cursor = "grabbing";
+      } else drag = { mode: "nudge", x: e.clientX, y: e.clientY, moved: false };
     } else if (place === "erase") {
       drag = { mode: "erase" };
       eraseAt(g);
@@ -1050,7 +1171,17 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       drag.y = e.clientY;
       return;
     }
-    if (drag.mode === "tap") { drag.moved = drag.moved || Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 12; return; }
+    if (drag.mode === "tap" || drag.mode === "nudge") { drag.moved = drag.moved || Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 12; return; }
+    if (drag.mode === "hold") {
+      const g = groundAt(e.clientX, e.clientY);
+      if (!g) return;
+      const r = Math.hypot(g[0], g[1]), lim = ISLAND_R + 2;
+      drag.target = r > lim ? [(g[0] / r) * lim, (g[1] / r) * lim] : g;
+      const now = performance.now();
+      drag.trail.push({ t: now, x: drag.target[0], z: drag.target[1] });
+      while (drag.trail.length > 2 && now - drag.trail[0].t > 120) drag.trail.shift();
+      return;
+    }
     const g = groundAt(e.clientX, e.clientY);
     if (!g) return;
     if (drag.mode === "stroke") {
@@ -1077,6 +1208,13 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     drag = null;
     previewDirty = true;
     if (d.mode === "orbit" || d.mode === "pan") return;
+    if (d.mode === "hold") { release(d, true); return; }
+    if (d.mode === "nudge") {
+      const g = d.moved ? null : groundAt(e.clientX, e.clientY);
+      if (g && !petAnimal(g)) gustAt(g);
+      else before = null;
+      return;
+    }
     if (d.mode === "stroke") {
       if (lineLength(d.raw) < 0.9) {
         say(`Kéo dài hơn một chút để vẽ ${TOOL[d.kind].label.toLowerCase()}.`);
@@ -1105,6 +1243,12 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
 
   function cancelTool() {
     if (!drag) return;
+    if (drag.mode === "hold") {
+      release(drag, false);
+      drag = null;
+      previewDirty = true;
+      return;
+    }
     if (before !== null && (drag.mode === "brush" || drag.mode === "erase")) {
       S = JSON.parse(before) as VillageScene;
       needsRebuild = true;
@@ -1118,6 +1262,11 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   function placeByKeyboard() {
     const def = TOOL[tool];
     if (def.place === "stroke") { say(`${def.label} cần kéo bằng chuột hoặc ngón tay. Bàn phím đặt được nhà, cây, ao và các món đồ chạm.`); return; }
+    if (def.place === "hand") {
+      before = serialize();
+      gustAt([goal.tx, goal.tz]);
+      return;
+    }
     if (def.place === "orbit" || def.place === "erase") { say("Chọn nhà, cây hoặc một món đồ rồi bấm Enter để đặt vào giữa khung nhìn."); return; }
     const g = clampToIsland([goal.tx + (Math.random() - 0.5) * 3, goal.tz + (Math.random() - 0.5) * 3]);
     before = serialize();
@@ -1151,6 +1300,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     } else if (id === "lantern") lanternParts({ id: 0, x: 0, z: 0, seed: 2 }, parts, glow, []);
     else if (templates.animals.has(id)) parts.push({ g: templates.animals.get(id) as THREE.BufferGeometry, c: null, m: null });
     else if (templates.plants.has(id as PropKind)) parts.push({ g: templates.plants.get(id as PropKind) as THREE.BufferGeometry, c: null, m: null });
+    else if (isDynamic(id)) parts.push({ g: templates.bodies.get(id) as THREE.BufferGeometry, c: null, m: null });
     else parts.push(...modelParts(id as PropKind, 7, glow));
     for (const part of glow) parts.push({ ...part, c: "#2f4250" });
     return parts;
@@ -1178,7 +1328,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, flatShading: true });
     const cam = new THREE.PerspectiveCamera(28, 1, 0.1, 200);
     const dir = new THREE.Vector3(1, 0.9, 1.4).normalize();
-    const ids = TOOLS.filter((t) => t.place !== "orbit" && t.place !== "erase").map((t) => t.id);
+    const ids = TOOLS.filter((t) => t.cat !== null).map((t) => t.id);
     const out: Thumbs = {};
     let i = 0;
     const finish = () => { mat.dispose(); tr.dispose(); tr.forceContextLoss(); };
@@ -1205,6 +1355,575 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       else { finish(); options.onThumbs(out); }
     };
     thumbTimer = window.setTimeout(step, 120);
+  }
+
+  /* ───────────── movable pieces (physics.ts does the maths) ───────────── */
+  let phys: World = makeWorld({ islandR: ISLAND_R });
+  const bodies = new Map<number, Body>();
+  const bodyQuat = new Map<number, THREE.Quaternion>();
+  let pendingCommit = false, needsBodySync = false, floatSync = 0;
+  const UP = new THREE.Vector3(0, 1, 0), ONE = new THREE.Vector3(1, 1, 1);
+  const _bm = new THREE.Matrix4(), _bt = new THREE.Matrix4(), _bp = new THREE.Vector3(), _bq = new THREE.Quaternion(), _bs = new THREE.Vector3(), _hit = new THREE.Vector3();
+  const _sphere = new THREE.Sphere(), _eul = new THREE.Euler();
+  const bodyList = () => [...bodies.values()];
+
+  /** Static colliders and water for this layout: walls (minus gates), fences, hedges, towers, buildings, trees. */
+  function buildWorld(towerSpots: TowerSpot[]) {
+    const circles: Circle[] = [], boxes: Box[] = [];
+    for (const s of S.walls) for (const [x, z] of s.pts) if (!pathIndex.near(x, z, GATE_DIST + 0.35)) circles.push({ x, z, r: 0.3 });
+    for (const s of S.fences) for (const [x, z] of s.pts) circles.push({ x, z, r: 0.16 });
+    for (const s of S.hedges) for (const [x, z] of s.pts) circles.push({ x, z, r: 0.42 });
+    for (const [x, z] of towerSpots) circles.push({ x, z, r: 0.85 });
+    for (const o of S.wells) circles.push({ x: o.x, z: o.z, r: 0.7 });
+    for (const o of S.mills) circles.push({ x: o.x, z: o.z, r: 0.95 });
+    for (const o of S.lanterns) circles.push({ x: o.x, z: o.z, r: 0.12 });
+    for (const t of S.trees) circles.push({ x: t.x, z: t.z, r: 0.18 * t.s + 0.08 });
+    for (const h of S.houses) boxes.push({ x: h.x, z: h.z, hx: h.len / 2 + 0.05, hz: 0.83, rot: h.r });
+    for (const o of S.props) {
+      if (TOOL[o.kind].animal || isDynamic(o.kind) || NO_COLLIDE.has(o.kind)) continue;
+      const box = PROP_BOX[o.kind];
+      if (box) boxes.push({ x: o.x, z: o.z, hx: box[0], hz: box[1], rot: o.r });
+      else circles.push({ x: o.x, z: o.z, r: PROP_RADIUS[o.kind] ?? TOOL[o.kind].size * 0.75 });
+    }
+    phys = makeWorld({
+      islandR: ISLAND_R, circles, boxes,
+      ponds: S.ponds.map((p) => ({ x: p.x, z: p.z, r: p.r })),
+      streams: S.streams.map((s) => s.pts),
+      dry: (x, z) => pathIndex.near(x, z, 0.8), // bridges
+    });
+  }
+
+  function syncBodies() {
+    const ids = new Set<number>();
+    for (const o of S.props) {
+      if (!isDynamic(o.kind)) continue;
+      ids.add(o.id);
+      if (bodies.has(o.id)) continue;
+      bodies.set(o.id, makeBody({ id: o.id, kind: o.kind, x: o.x, z: o.z, r: o.r }, fresh.has(o.id) && !reduceMotion ? 1.2 : 0));
+      bodyQuat.set(o.id, new THREE.Quaternion().setFromAxisAngle(UP, o.r));
+    }
+    for (const id of [...bodies.keys()]) if (!ids.has(id)) { bodies.delete(id); bodyQuat.delete(id); }
+    renderBodies();
+  }
+
+  function renderBodies() {
+    const counts = new Map<DynamicKind, number>();
+    for (const b of bodies.values()) {
+      const mesh = bodyMeshes.get(b.kind), n = counts.get(b.kind) ?? 0;
+      if (!mesh || b.gone || n >= MAX_BODIES) continue;
+      const spec = BODY[b.kind], q = bodyQuat.get(b.id) as THREE.Quaternion;
+      const sink = b.floating ? FLOAT_SINK[b.kind] - Math.sin(clock * 2.2 + b.id) * 0.025 : 0;
+      if (spec.rolls) {
+        _bm.makeTranslation(b.x, b.y - sink + spec.r, b.z).multiply(_bt.makeRotationFromQuaternion(q)).multiply(_bt.makeTranslation(0, -spec.r, 0));
+      } else {
+        _bq.setFromAxisAngle(UP, b.yaw);
+        _bm.compose(_bp.set(b.x, b.y - sink, b.z), _bq, ONE);
+      }
+      mesh.setMatrixAt(n, _bm);
+      counts.set(b.kind, n + 1);
+    }
+    for (const [kind, mesh] of bodyMeshes) {
+      mesh.count = counts.get(kind) ?? 0;
+      mesh.instanceMatrix.needsUpdate = true;
+    }
+  }
+
+  /** Copies a body's resting place into the save. */
+  function syncProp(b: Body) {
+    const o = S.props.find((p) => p.id === b.id);
+    if (!o) return false;
+    const x = +b.x.toFixed(2), z = +b.z.toFixed(2), r = +b.yaw.toFixed(3);
+    if (o.x === x && o.z === z && o.r === r) return false;
+    Object.assign(o, { x, z, r });
+    return true;
+  }
+
+  function stepPhysics(dt: number) {
+    if (needsBodySync) { needsBodySync = false; syncBodies(); fresh.clear(); }
+    if (drag?.mode === "hold") {
+      const b = drag.body;
+      b.vx = clamp((drag.target[0] - b.x) * 14, -MAX_SPEED, MAX_SPEED);
+      b.vz = clamp((drag.target[1] - b.z) * 14, -MAX_SPEED, MAX_SPEED);
+      b.awake = true;
+    }
+    const movers: Mover[] = [];
+    for (const v of animalViews.values()) {
+      if (Math.hypot(v.vx, v.vz) > 0.05) movers.push({ x: v.mesh.position.x, z: v.mesh.position.z, vx: v.vx, vz: v.vz, r: Math.max(0.22, TOOL[v.kind].size * 0.8) });
+    }
+    const list = bodyList();
+    if (!movers.length && !list.some((b) => b.awake)) return;
+    const { settled, fell } = stepBodies(phys, list, movers, dt);
+    for (const b of list) {
+      if (!b.awake || b.gone || b.held) continue;
+      const spec = BODY[b.kind], speed = Math.hypot(b.vx, b.vz);
+      if (spec.rolls && speed > 0.01 && !b.floating) {
+        _bp.set(b.vz / speed, 0, -b.vx / speed);
+        (bodyQuat.get(b.id) as THREE.Quaternion).premultiply(_bq.setFromAxisAngle(_bp, (speed * dt) / spec.r));
+      } else if (b.kind === "boat" && b.floating && speed > 0.1) b.yaw += angleDiff(Math.atan2(b.vx, b.vz), b.yaw) * Math.min(1, dt * 2);
+      else if (!spec.rolls && speed > 0.4) b.yaw += speed * dt * 0.5 * (b.id % 2 ? 1 : -1);
+    }
+    let changed = false;
+    for (const b of settled) changed = syncProp(b) || changed;
+    for (const b of fell) {
+      S.props = S.props.filter((o) => o.id !== b.id);
+      bodies.delete(b.id);
+      bodyQuat.delete(b.id);
+      changed = true;
+      say(`Ối, ${TOOL[b.kind].label.toLowerCase()} rơi khỏi đảo! Bấm Hoàn tác để lấy lại.`);
+    }
+    floatSync += dt;
+    if (floatSync > 3) {
+      floatSync = 0;
+      for (const b of list) if (b.floating && b.awake) changed = syncProp(b) || changed;
+    }
+    renderBodies();
+    const busy = list.some((b) => b.awake && !b.floating && !b.gone);
+    if (pendingCommit && !busy && drag?.mode !== "hold") {
+      for (const b of list) if (b.floating) syncProp(b);
+      pendingCommit = false;
+      commit();
+    } else if (changed && !pendingCommit) saveSoon();
+  }
+
+  /** The movable piece under the pointer, tested against a sphere around each one. */
+  function bodyUnderPointer(cx: number, cy: number) {
+    if (!groundAt(cx, cy)) return null;
+    let best: Body | null = null, bestD = Infinity;
+    for (const b of bodies.values()) {
+      if (b.gone) continue;
+      const r = BODY[b.kind].r;
+      _sphere.set(_bp.set(b.x, b.y + r, b.z), r + 0.3);
+      if (!ray.ray.intersectSphere(_sphere, _hit)) continue;
+      const d = _hit.distanceTo(ray.ray.origin);
+      if (d < bestD) { bestD = d; best = b; }
+    }
+    return best ?? bodyAt(bodyList(), hit.x, hit.z, 0.2);
+  }
+
+  /** Lets go of a held piece; a quick flick throws it with the pointer's last velocity. */
+  function release(d: Extract<Drag, { mode: "hold" }>, throwIt: boolean) {
+    const b = d.body, now = performance.now();
+    const first = d.trail[0], last = d.trail[d.trail.length - 1];
+    const span = Math.max(16, last.t - first.t) / 1000;
+    let vx = 0, vz = 0;
+    if (throwIt && now - last.t < 120) { vx = (last.x - first.x) / span; vz = (last.z - first.z) / span; }
+    const speed = Math.hypot(vx, vz);
+    if (speed > 12) { vx *= 12 / speed; vz *= 12 / speed; }
+    Object.assign(b, { held: false, awake: true, rest: 0, vx, vz, vy: throwIt ? Math.min(3.5, 0.6 + Math.hypot(vx, vz) * 0.25) : 0 });
+    pendingCommit = true;
+    canvas.style.cursor = "";
+  }
+
+  /** A small puff of wind from the hand: pushes pieces, startles animals and birds. */
+  function gustAt(g: Point) {
+    const moved = gust(bodyList(), g[0], g[1]);
+    for (const v of animalViews.values()) {
+      if (v.state !== "sleep" && Math.hypot(v.mesh.position.x - g[0], v.mesh.position.z - g[1]) < 2.8) startle(v, g[0], g[1], 1.2);
+    }
+    scareBirds(g[0], g[1], 3.5);
+    if (!reduceMotion) { ring.position.set(g[0], 0.08, g[1]); ring.visible = true; ringT = 0; }
+    if (moved.length) pendingCommit = true;
+    else before = null;
+  }
+
+  /** Forgets in-flight motion, used before undo and reset rebuild everything from the save. */
+  function clearMotion() {
+    bodies.clear();
+    bodyQuat.clear();
+    pendingCommit = false;
+    for (const d of drops.values()) { d.mesh.geometry.dispose(); d.mesh.removeFromParent(); }
+    drops.clear();
+    birds = [];
+  }
+
+  /* ───────────── placing: pieces drop in with a small bounce ───────────── */
+  const drops = new Map<number, { mesh: THREE.Mesh; t: number }>();
+  function startDrop(o: Prop) {
+    if (reduceMotion) return;
+    const glow: Part[] = [];
+    const parts = modelParts(o.kind, o.seed, glow);
+    const geo = bake([...parts, ...glow.map((g) => ({ ...g, c: "#2f4250" }))]);
+    if (!geo) return;
+    const mesh = new THREE.Mesh(geo, surface);
+    mesh.castShadow = true;
+    mesh.position.set(o.x, 1.4, o.z);
+    mesh.rotation.y = o.r;
+    world.add(mesh);
+    drops.set(o.id, { mesh, t: 0 });
+  }
+  function updateDrops(dt: number) {
+    for (const [id, d] of drops) {
+      d.t += dt;
+      const fall = 0.38, tb = d.t - fall;
+      d.mesh.position.y = d.t < fall ? 1.4 * (1 - (d.t / fall) ** 2) : Math.max(0, 2.2 * tb - 9 * tb * tb);
+      const squash = Math.exp(-((tb * 12) ** 2));
+      d.mesh.scale.set(1 + 0.1 * squash, 1 - 0.18 * squash, 1 + 0.1 * squash);
+      if (d.t > 0.7) {
+        d.mesh.geometry.dispose();
+        d.mesh.removeFromParent();
+        drops.delete(id);
+        needsRebuild = true;
+      }
+    }
+  }
+
+  /* ───────────── animals: wander, flock, chase, flee, swim, sleep ───────────── */
+  const _avoid = { x: 0, z: 0, vx: 0, vz: 0 };
+  function startle(v: AnimalView, x: number, z: number, time: number) {
+    v.state = "flee";
+    v.stateT = time;
+    v.threat.set(x, z);
+    v.wait = 0;
+    v.chase = null;
+  }
+  function waterSpot(x: number, z: number, range: number): Point | null {
+    let best: Point | null = null, bestD = range;
+    for (const p of S.ponds) {
+      const d = Math.hypot(p.x - x, p.z - z);
+      if (d >= bestD) continue;
+      const a = Math.random() * Math.PI * 2, r = Math.random() * p.r * 0.6;
+      bestD = d;
+      best = [p.x + Math.cos(a) * r, p.z + Math.sin(a) * r];
+    }
+    for (const s of S.streams) for (let i = 0; i < s.pts.length; i += 3) {
+      const [px, pz] = s.pts[i], d = Math.hypot(px - x, pz - z);
+      if (d < bestD && !pathIndex.near(px, pz, 1)) { bestD = d; best = [px, pz]; }
+    }
+    return best;
+  }
+  function pickTarget(v: AnimalView) {
+    if (v.kind === "duck") {
+      const spot = waterSpot(v.home.x, v.home.y, 8);
+      if (spot) { v.target.set(spot[0], spot[1]); return; }
+    }
+    let cx = v.home.x, cz = v.home.y;
+    if (v.kind === "sheep") {
+      // Sheep drift towards the middle of their flock.
+      let n = 0, sx = 0, sz = 0;
+      for (const o of animalViews.values()) {
+        if (o === v || o.kind !== "sheep" || o.mesh.position.distanceTo(v.mesh.position) > 10) continue;
+        sx += o.mesh.position.x; sz += o.mesh.position.z; n += 1;
+      }
+      if (n) { cx = sx / n; cz = sz / n; }
+    }
+    const roam = v.kind === "dog" ? 3.6 : v.kind === "sheep" ? 1.8 : 2.6;
+    for (let tries = 0; tries < 6; tries += 1) {
+      const a = Math.random() * Math.PI * 2, r = Math.random() * roam;
+      const x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r;
+      if (Math.hypot(x, z) < BUILD_R && !blocked(x, z, 0.4) && !waterAt(phys, x, z)) { v.target.set(x, z); return; }
+    }
+  }
+  /** At night animals gather in front of a barn or around a campfire near home. */
+  function nightSpot(v: AnimalView): Point | null {
+    const prefer: PropKind[] = v.kind === "dog" || v.kind === "cat" ? ["campfire", "barn"] : ["barn", "campfire"];
+    for (const kind of prefer) {
+      let best: Prop | null = null, bestD = kind === "barn" ? 16 : 12;
+      for (const o of S.props) {
+        if (o.kind !== kind) continue;
+        const d = Math.hypot(o.x - v.home.x, o.z - v.home.y);
+        if (d < bestD) { bestD = d; best = o; }
+      }
+      if (!best) continue;
+      const a = v.id * 2.39996;
+      if (kind === "barn") {
+        const r = 0.35 + (v.id % 4) * 0.32;
+        return [best.x + Math.sin(best.r) * 2.4 + Math.cos(a) * r, best.z + Math.cos(best.r) * 2.4 + Math.sin(a) * r];
+      }
+      const r = 1.35 + (v.id % 2) * 0.45;
+      return [best.x + Math.cos(a) * r, best.z + Math.sin(a) * r];
+    }
+    return null;
+  }
+  function startChase(v: AnimalView) {
+    const p = v.mesh.position;
+    let ball: Body | null = null, bd = 9;
+    for (const b of bodies.values()) {
+      if (b.kind !== "ball" || b.gone || b.held) continue;
+      const d = Math.hypot(b.x - p.x, b.z - p.z);
+      if (d < bd) { bd = d; ball = b; }
+    }
+    let prey: AnimalView | null = null, pd = 6;
+    for (const o of animalViews.values()) {
+      if (!PREY.has(o.kind) || o.state === "sleep") continue;
+      const d = o.mesh.position.distanceTo(p);
+      if (d < pd) { pd = d; prey = o; }
+    }
+    const target = ball && (!prey || Math.random() < 0.6) ? ball : prey;
+    if (!target) { v.cool = 3; return; }
+    v.state = "chase";
+    v.chase = target;
+    v.stateT = 4.5;
+  }
+  function endChase(v: AnimalView, cool: number) {
+    v.state = "wander";
+    v.chase = null;
+    v.cool = cool;
+    v.wait = 0.4;
+    pickTarget(v);
+  }
+
+  function updateAnimals(dt: number, motion: number) {
+    const night = timeOfDay > 0.82;
+    for (const v of animalViews.values()) {
+      const m = v.mesh, p = m.position;
+      const swim = v.kind === "duck" && !!waterAt(phys, p.x, p.z);
+      const ground = swim ? -0.08 : 0;
+      if (v.y > ground || v.vy > 0) { v.vy -= GRAVITY * dt; v.y += v.vy * dt; }
+      if (v.y <= ground) { v.y = ground; v.vy = v.vy < -2 ? -v.vy * 0.3 : 0; }
+      if (v.pet > 0) { v.pet = Math.max(0, v.pet - dt * 1.6); p.y = v.y + Math.sin(v.pet * Math.PI) * 0.45 * motion; continue; }
+      if (!motion) { v.vx = v.vz = 0; p.y = v.y; continue; }
+      v.stateT -= dt;
+      v.cool -= dt;
+      let speed = SPEED[v.kind] ?? 0.5;
+
+      if (night && v.state !== "flee") {
+        const spot = nightSpot(v);
+        if (spot) {
+          v.target.set(spot[0], spot[1]);
+          if (v.state !== "sleep") v.state = "home";
+        }
+      } else if (v.state === "sleep" || v.state === "home") {
+        v.state = "wander";
+        pickTarget(v);
+      }
+      if (v.state === "flee") {
+        if (v.stateT <= 0) { v.state = "wander"; v.wait = 0.5 + Math.random(); }
+        else {
+          const dx = p.x - v.threat.x, dz = p.z - v.threat.y, d = Math.hypot(dx, dz) || 1;
+          v.target.set(p.x + (dx / d) * 2, p.z + (dz / d) * 2);
+          speed *= 2.6;
+        }
+      } else if (v.state === "chase") {
+        const prey = v.chase;
+        if (!prey || v.stateT <= 0 || ("gone" in prey && prey.gone)) endChase(v, 4);
+        else {
+          const isAnimal = "mesh" in prey;
+          const tx = isAnimal ? prey.mesh.position.x : prey.x, tz = isAnimal ? prey.mesh.position.z : prey.z;
+          v.target.set(tx, tz);
+          speed = 2.6;
+          const d = Math.hypot(tx - p.x, tz - p.z);
+          if (isAnimal) {
+            if (d < 3.2) startle(prey, p.x, p.z, 1.4);
+            if (d < 0.6) endChase(v, 5 + Math.random() * 5);
+          } else if (d < BODY[prey.kind].r + 0.45) endChase(v, 2.5 + Math.random() * 3);
+        }
+      } else if (v.state === "wander") {
+        if (v.kind === "dog" && v.cool <= 0 && !night && Math.random() < dt * 0.3) startChase(v);
+        if (v.state === "wander") {
+          if (v.wait > 0) { v.wait -= dt; speed = 0; }
+          else if (Math.hypot(v.target.x - p.x, v.target.y - p.z) < 0.1) { v.wait = 1.5 + Math.random() * 4; pickTarget(v); speed = 0; }
+        }
+      }
+
+      let wx = 0, wz = 0;
+      const dx = v.target.x - p.x, dz = v.target.y - p.z, d = Math.hypot(dx, dz);
+      if (v.state !== "sleep") {
+        if (d > 0.08 && speed > 0) { const sp = Math.min(speed, d * 3); wx = (dx / d) * sp; wz = (dz / d) * sp; }
+        else if (v.state === "home") v.state = "sleep";
+      }
+      for (const o of animalViews.values()) {
+        if (o === v) continue;
+        const ox = p.x - o.mesh.position.x, oz = p.z - o.mesh.position.z, od = Math.hypot(ox, oz);
+        const min = TOOL[v.kind].size + TOOL[o.kind].size + 0.1;
+        if (od < min && od > 1e-4) { wx += (ox / od) * (min - od) * 4; wz += (oz / od) * (min - od) * 4; }
+      }
+      if (swim) {
+        const f = waterAt(phys, p.x, p.z);
+        if (f) { wx += f.fx * 0.5; wz += f.fz * 0.5; }
+      }
+      const k = Math.min(1, dt * 5);
+      v.vx += (wx - v.vx) * k;
+      v.vz += (wz - v.vz) * k;
+      const px = p.x, pz = p.z;
+      Object.assign(_avoid, { x: p.x + v.vx * dt, z: p.z + v.vz * dt, vx: v.vx, vz: v.vz });
+      pushOut(phys, _avoid, TOOL[v.kind].size * 0.7, 0);
+      p.x = _avoid.x;
+      p.z = _avoid.z;
+      const rr = Math.hypot(p.x, p.z);
+      if (rr > BUILD_R) { p.x *= BUILD_R / rr; p.z *= BUILD_R / rr; }
+      if (v.kind !== "duck" && waterAt(phys, p.x, p.z)) {
+        p.x = px; p.z = pz; v.vx = v.vz = 0;
+        if (v.state === "wander") pickTarget(v);
+      }
+      const sp = Math.hypot(v.vx, v.vz);
+      if (sp > 0.05) m.rotation.y += angleDiff(Math.atan2(v.vx, v.vz), m.rotation.y) * Math.min(1, dt * 8);
+      m.scale.y += ((v.state === "sleep" ? 0.86 : 1) - m.scale.y) * Math.min(1, dt * 3);
+      let hop = 0;
+      if (sp > 0.08 && !swim && v.vy === 0) {
+        v.hop += dt * (v.kind === "rabbit" ? 7 : 10) * Math.max(1, sp / (SPEED[v.kind] ?? 0.5));
+        hop = Math.abs(Math.sin(v.hop)) * (v.kind === "rabbit" ? 0.16 : 0.06) * Math.min(1, sp * 2);
+      }
+      p.y = v.y + hop + (swim ? Math.sin(clock * 2 + v.id) * 0.02 : 0);
+    }
+  }
+
+  /* ───────────── wind, petals, bees, birds ───────────── */
+  function updateWind(dt: number, motion: number) {
+    const t = clock;
+    const a = 0.6 + Math.sin(t * 0.05) * 0.9 + Math.sin(t * 0.013) * 0.6;
+    const s = (0.35 + 0.4 * (0.5 + 0.5 * Math.sin(t * 0.11)) + 0.25 * Math.max(0, Math.sin(t * 0.53)) * Math.sin(t * 0.29)) * motion;
+    wind.x = Math.cos(a) * s;
+    wind.z = Math.sin(a) * s;
+    wind.strength = s;
+    swayUniforms.uTime.value = t;
+    swayUniforms.uWind.value.set(wind.x, wind.z);
+    if (ringT < 1) {
+      ringT += dt;
+      const k = Math.min(1, ringT / 0.45);
+      ring.scale.set(0.5 + k * 5, 0.5 + k * 5, 1);
+      ringMat.opacity = 0.55 * (1 - k);
+      ring.visible = k < 1;
+    }
+  }
+
+  let bees: Bee[] = [];
+  function rebuildBees() {
+    bees = [];
+    const flowers = S.props.filter((o) => o.kind in FLOWER_HEIGHT);
+    for (const hive of S.props) {
+      if (hive.kind !== "beehive") continue;
+      const h = new THREE.Vector3(hive.x, 1.0, hive.z);
+      const near = flowers.filter((f) => Math.hypot(f.x - hive.x, f.z - hive.z) < 7).map((f) => new THREE.Vector3(f.x, FLOWER_HEIGHT[f.kind] as number, f.z));
+      for (let k = 0; k < (near.length ? 5 : 2) && bees.length < MAX_BEES; k += 1) {
+        bees.push({ hive: h, flowers: near, from: h.clone(), to: h.clone(), t: Math.random(), dur: 0.1, atFlower: false, phase: Math.random() * 6 });
+      }
+    }
+  }
+
+  let birds: Bird[] = [];
+  const birdTimer = new Map<number, number>();
+  let toldScarecrow = false;
+  function leave(b: Bird) {
+    b.state = "leave";
+    b.t = 0;
+    const a = Math.random() * Math.PI * 2;
+    b.vel.set(Math.cos(a) * 3.2, 2.6, Math.sin(a) * 3.2);
+    b.yaw = Math.atan2(b.vel.x, b.vel.z);
+    birdTimer.set(b.garden, 12 + Math.random() * 6);
+  }
+  function scareBirds(x: number, z: number, radius: number) {
+    for (const b of birds) if (b.state !== "leave" && Math.hypot(b.pos.x - x, b.pos.z - z) < radius) leave(b);
+  }
+  /** A random point on a vegetable garden's bed. */
+  function spotIn(g: Prop) {
+    const lx = (Math.random() - 0.5) * 2, lz = (Math.random() - 0.5) * 1.4, c = Math.cos(g.r), s = Math.sin(g.r);
+    return new THREE.Vector3(g.x + lx * c + lz * s, 0.14, g.z - lx * s + lz * c);
+  }
+  function gardenThreat(g: Prop) {
+    for (const o of S.props) if (o.kind === "scarecrow" && Math.hypot(o.x - g.x, o.z - g.z) < 4.5) return "scarecrow";
+    for (const v of animalViews.values()) {
+      if ((v.kind === "cat" || v.kind === "dog") && Math.hypot(v.mesh.position.x - g.x, v.mesh.position.z - g.z) < 2.4) return "animal";
+    }
+    return null;
+  }
+
+  function updateLife(dt: number, motion: number) {
+    const night = timeOfDay > 0.82;
+    // Petals blow off blossom trees with the wind.
+    const blossoms = motion ? S.props.filter((o) => o.kind === "blossom") : [];
+    const live = Math.min(PETALS, blossoms.length * 14);
+    petalGeo.setDrawRange(0, live);
+    for (let i = 0; i < live; i += 1) {
+      const st = petalLife[i], j = i * 3;
+      if (st.life <= 0) {
+        const o = blossoms[i % blossoms.length], s = 0.8 + rng(o.seed)() * 0.45;
+        petalPos[j] = o.x + (Math.random() - 0.5) * 1.4 * s;
+        petalPos[j + 1] = (1.2 + Math.random() * 0.8) * s;
+        petalPos[j + 2] = o.z + (Math.random() - 0.5) * 1.4 * s;
+        st.life = 1 + Math.random();
+        continue;
+      }
+      if (petalPos[j + 1] > 0.03) {
+        petalPos[j] += (wind.x * 0.8 + Math.sin(clock * 2 + st.phase) * 0.25) * dt;
+        petalPos[j + 1] -= (0.22 + Math.sin(clock * 3 + st.phase) * 0.08) * dt;
+        petalPos[j + 2] += (wind.z * 0.8 + Math.cos(clock * 1.7 + st.phase) * 0.2) * dt;
+      } else st.life -= dt * 0.6;
+    }
+    petalGeo.attributes.position.needsUpdate = true;
+
+    // Bees fly between their hive and flowers nearby; at night they stay home.
+    let n = 0;
+    if (motion && !night) {
+      for (const b of bees) {
+        b.t += dt / b.dur;
+        if (b.t >= 1) {
+          b.from.copy(b.to);
+          if (b.flowers.length && !b.atFlower) {
+            b.to.copy(pick(b.flowers, Math.random)).add(_bs.set((Math.random() - 0.5) * 0.5, 0.15, (Math.random() - 0.5) * 0.5));
+            b.atFlower = true;
+          } else if (b.flowers.length) { b.to.copy(b.hive); b.atFlower = false; }
+          else {
+            const a = Math.random() * Math.PI * 2;
+            b.to.copy(b.hive).add(_bs.set(Math.cos(a) * 0.9, Math.random() * 0.6 - 0.1, Math.sin(a) * 0.9));
+          }
+          b.dur = Math.max(0.6, b.from.distanceTo(b.to) / 1.4);
+          b.t = 0;
+        }
+        const t = b.t, e = t * t * (3 - 2 * t);
+        _bp.lerpVectors(b.from, b.to, e);
+        _bp.x += Math.sin(clock * 9 + b.phase) * 0.06;
+        _bp.y += Math.sin(Math.PI * t) * Math.min(1.2, b.from.distanceTo(b.to) * 0.25) + Math.sin(clock * 13 + b.phase) * 0.03;
+        _bp.z += Math.cos(clock * 7 + b.phase) * 0.06;
+        _bq.setFromAxisAngle(UP, Math.atan2(b.to.x - b.from.x, b.to.z - b.from.z));
+        beeMesh.setMatrixAt(n, _bm.compose(_bp, _bq, ONE));
+        n += 1;
+      }
+    }
+    beeMesh.count = n;
+    beeMesh.instanceMatrix.needsUpdate = true;
+
+    // Birds peck at vegetable gardens unless a scarecrow (or a cat or dog) is close.
+    if (!motion) { birds = []; birdMesh.count = 0; return; }
+    const gardens = S.props.filter((o) => o.kind === "garden");
+    for (const g of gardens) {
+      const threat = night ? "night" : gardenThreat(g);
+      const mine = birds.filter((b) => b.garden === g.id && b.state !== "leave");
+      if (threat) {
+        if (threat === "scarecrow" && mine.length && !toldScarecrow) {
+          toldScarecrow = true;
+          say("Bù nhìn đuổi lũ chim khỏi vườn rau! (scarecrow /ˈsker.kroʊ/)");
+        }
+        mine.forEach(leave);
+        continue;
+      }
+      const wait = (birdTimer.get(g.id) ?? 2) - dt;
+      birdTimer.set(g.id, wait);
+      if (wait <= 0 && mine.length < 3 && birds.length < MAX_BIRDS) {
+        const a = Math.random() * Math.PI * 2;
+        birds.push({ garden: g.id, pos: new THREE.Vector3(g.x + Math.cos(a) * 16, 8, g.z + Math.sin(a) * 16), vel: new THREE.Vector3(), spot: spotIn(g), state: "arrive", t: 0, yaw: 0 });
+        birdTimer.set(g.id, 3 + Math.random() * 4);
+      }
+    }
+    const ids = new Set(gardens.map((g) => g.id));
+    n = 0;
+    birds = birds.filter((b) => {
+      b.t += dt;
+      if (b.state !== "leave" && !ids.has(b.garden)) leave(b);
+      if (b.state === "arrive") {
+        _bp.subVectors(b.spot, b.pos);
+        const d = _bp.length();
+        b.yaw = Math.atan2(_bp.x, _bp.z);
+        if (d < 0.1) { b.state = "peck"; b.pos.copy(b.spot); }
+        else b.pos.addScaledVector(_bp, Math.min(d, dt * 6) / d);
+      } else if (b.state === "peck") {
+        _bp.subVectors(b.spot, b.pos).setY(0);
+        const d = _bp.length();
+        if (d > 0.02) { b.pos.addScaledVector(_bp, Math.min(1, (dt * 1.5) / d)); b.yaw = Math.atan2(_bp.x, _bp.z); }
+        else if (Math.random() < dt * 0.6) b.spot.set(b.pos.x + (Math.random() - 0.5) * 0.6, 0.14, b.pos.z + (Math.random() - 0.5) * 0.6);
+        b.pos.y = 0.14 + (d > 0.02 ? Math.abs(Math.sin(b.t * 12)) * 0.06 : 0);
+      } else {
+        b.vel.y += dt * 1.5;
+        b.pos.addScaledVector(b.vel, dt);
+        if (b.pos.y > 16 || b.t > 7) return false;
+      }
+      const flying = b.state !== "peck";
+      _bq.setFromEuler(_eul.set(flying ? -0.2 : Math.sin(b.t * 5) * 0.3, b.yaw, 0, "YXZ"));
+      birdMesh.setMatrixAt(n, _bm.compose(b.pos, _bq, _bs.set(1, flying ? 0.55 + Math.abs(Math.sin(clock * 22 + n)) * 0.6 : 1, 1)));
+      n += 1;
+      return true;
+    });
+    birdMesh.count = n;
+    birdMesh.instanceMatrix.needsUpdate = true;
   }
 
   /* ───────────── input ───────────── */
@@ -1287,7 +2006,6 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   intersection.observe(container);
 
   let raf = 0, last = performance.now(), frames = 0, perfStart = 0, downgraded = false, firstFrame = true;
-  const tmpV = new THREE.Vector3();
   function frame(now: number) {
     raf = requestAnimationFrame(frame);
     const dt = Math.min(0.1, (now - last) / 1000);
@@ -1298,32 +2016,19 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     if (previewDirty) { previewDirty = false; rebuildPreview(); }
     applyCamera(dt);
     const motion = reduceMotion ? 0 : 1;
-    for (const b of mills) b.rotation.z += dt * 0.9 * motion;
-    for (const c of clouds) { c.position.x += dt * 0.35 * motion; if (c.position.x > 55) c.position.x = -55; }
-    for (const v of animalViews.values()) {
-      const m = v.mesh;
-      if (v.pet > 0) { v.pet = Math.max(0, v.pet - dt * 1.6); m.position.y = Math.sin(v.pet * Math.PI) * 0.45 * motion; continue; }
-      if (!motion) continue;
-      if (v.wait > 0) { v.wait -= dt; m.position.y = 0; continue; }
-      tmpV.set(v.target.x - m.position.x, 0, v.target.y - m.position.z);
-      const d = tmpV.length();
-      if (d < 0.08) {
-        v.wait = 1.5 + Math.random() * 4;
-        const roam = v.kind === "dog" ? 3.6 : 2.6;
-        for (let tries = 0; tries < 6; tries += 1) {
-          const a = Math.random() * Math.PI * 2, r = Math.random() * roam;
-          const x = v.home.x + Math.cos(a) * r, z = v.home.y + Math.sin(a) * r;
-          if (Math.hypot(x, z) < BUILD_R && !blocked(x, z, 0.4)) { v.target.set(x, z); break; }
-        }
-        continue;
-      }
-      const step = Math.min(d, dt * (SPEED[v.kind] ?? 0.5));
-      m.position.x += (tmpV.x / d) * step;
-      m.position.z += (tmpV.z / d) * step;
-      m.rotation.y = Math.atan2(tmpV.x, tmpV.z);
-      v.hop += dt * (v.kind === "rabbit" ? 7 : 10);
-      m.position.y = Math.abs(Math.sin(v.hop)) * (v.kind === "rabbit" ? 0.16 : 0.06);
+    clock += dt;
+    updateWind(dt, motion);
+    for (const b of mills) b.rotation.z += dt * (0.3 + wind.strength * 1.4) * motion;
+    for (const c of clouds) {
+      c.position.x += wind.x * dt * 0.8 * motion;
+      c.position.z += wind.z * dt * 0.8 * motion;
+      if (Math.abs(c.position.x) > 55) c.position.x = -Math.sign(c.position.x) * 54;
+      if (Math.abs(c.position.z) > 55) c.position.z = -Math.sign(c.position.z) * 54;
     }
+    updateAnimals(dt, motion);
+    stepPhysics(dt);
+    updateDrops(dt);
+    updateLife(dt, motion);
     renderer.render(scene, camera);
     if (firstFrame) { firstFrame = false; options.onReady(); makeThumbnails(); }
 
@@ -1361,6 +2066,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       const prev = undoStack.pop();
       if (prev === undefined) return;
       cancelTool();
+      clearMotion();
       S = JSON.parse(prev) as VillageScene;
       options.onUndoChange(undoStack.length > 0);
       needsRebuild = true;
@@ -1369,6 +2075,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     },
     reset(kind) {
       cancelTool();
+      clearMotion();
       undoStack.push(serialize());
       options.onUndoChange(true);
       if (kind === "sample") sampleVillage();
@@ -1387,10 +2094,11 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       window.removeEventListener("pagehide", flushSave);
       const geometries = new Set<THREE.BufferGeometry>([
         ...Object.values(G), ...PROP_GEOMETRIES, templates.blade, templates.tuft, ...templates.trees, ...templates.animals.values(), ...templates.plants.values(),
+        ...templates.bodies.values(), templates.bee, templates.bird,
       ]);
       scene.traverse((obj) => { const g = (obj as THREE.Mesh).geometry; if (g) geometries.add(g); });
       geometries.forEach((g) => g.dispose());
-      for (const m of [surface, glowMat, waterMat, cloudMat, haloMat, starMat]) m.dispose();
+      for (const m of [surface, swayMat, glowMat, waterMat, cloudMat, haloMat, starMat, petalMat, ringMat]) m.dispose();
       haloTex.dispose();
       renderer.dispose();
       canvas.remove();

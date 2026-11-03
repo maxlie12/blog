@@ -14,16 +14,16 @@ export const PROP_KINDS = [
   "barn", "chapel", "stall", "tent", "lighthouse", "gazebo",
   "bush", "flower", "blossom", "sunflower", "mushroom", "rock", "log", "stump", "garden", "pumpkin", "haystack",
   "fountain", "boat",
-  "bench", "signpost", "cart", "barrel", "crate", "flag", "statue", "scarecrow", "swing", "campfire", "beehive", "woodpile", "mailbox",
+  "bench", "signpost", "cart", "barrel", "crate", "flag", "statue", "scarecrow", "swing", "campfire", "beehive", "woodpile", "mailbox", "ball",
   "chicken", "duck", "cow", "horse", "pig", "dog", "cat", "rabbit",
 ] as const;
 export type PropKind = (typeof PROP_KINDS)[number];
 export type StrokeTool = "path" | "wall" | "fence" | "hedge" | "stream";
-export type ToolId = "orbit" | "erase" | "house" | "tree" | "tower" | "well" | "pond" | "windmill" | "lantern" | "sheep" | StrokeTool | PropKind;
-export type WordId = Exclude<ToolId, "orbit" | "erase">;
+export type ToolId = "orbit" | "hand" | "erase" | "house" | "tree" | "tower" | "well" | "pond" | "windmill" | "lantern" | "sheep" | StrokeTool | PropKind;
+export type WordId = Exclude<ToolId, "orbit" | "hand" | "erase">;
 export type Category = "build" | "nature" | "water" | "decor" | "animals";
 /** How a tool is used: drag a line, tap once, brush (scatter while dragging), or its own gesture. */
-export type Place = "orbit" | "erase" | "stroke" | "house" | "pond" | "brush" | "tap";
+export type Place = "orbit" | "hand" | "erase" | "stroke" | "house" | "pond" | "brush" | "tap";
 
 export type Point = [number, number];
 export interface Stroke { id: number; pts: Point[] }
@@ -83,6 +83,7 @@ const animal = (label: string, size: number, sound: string) => ({
 
 const DEFS: Record<ToolId, Omit<ToolDef, "id">> = {
   orbit: { label: "Xoay", cat: null, place: "orbit", size: 0, hint: "Kéo để xoay đảo. Hai ngón tay hoặc con lăn chuột để phóng to, thu nhỏ." },
+  hand: { label: "Tay", cat: null, place: "hand", size: 0, hint: "Kéo bóng, thùng, bí ngô hay thuyền rồi thả tay để ném. Chạm cỏ để thổi một cơn gió nhỏ, chạm con vật để vuốt ve." },
   erase: { label: "Xóa", cat: null, place: "erase", size: 0, hint: "Kéo qua thứ muốn xóa. Lỡ tay thì bấm Hoàn tác." },
 
   path: { label: "Đường", cat: "build", place: "stroke", size: 0, hint: "Kéo để vẽ đường đi. Đường xuyên qua tường thành cổng, băng qua suối thành cầu." },
@@ -109,21 +110,21 @@ const DEFS: Record<ToolId, Omit<ToolDef, "id">> = {
   log: tap("Khúc gỗ", "nature", 0.7, "Chạm để đặt một khúc gỗ."),
   stump: tap("Gốc cây", "nature", 0.45, "Chạm để đặt gốc cây."),
   garden: tap("Vườn rau", "nature", 1.6, "Chạm để làm luống rau cạnh đường.", { face: true }),
-  pumpkin: brush("Bí ngô", 0.4, "Chạm hoặc quét để trồng bí ngô."),
+  pumpkin: brush("Bí ngô", 0.4, "Chạm hoặc quét để trồng bí ngô. Dùng Tay để lăn chúng."),
   haystack: tap("Đống rơm", "nature", 0.8, "Chạm để chất đống rơm."),
 
   pond: { label: "Ao", cat: "water", place: "pond", size: 0, hint: "Đặt ngón tay ở tâm rồi kéo ra để đào ao." },
   stream: { label: "Suối", cat: "water", place: "stroke", size: 0, hint: "Kéo để vẽ suối. Đường đi băng qua suối sẽ tự có cầu gỗ." },
   well: tap("Giếng", "water", 0.8, "Chạm để đặt giếng nước."),
   fountain: tap("Đài nước", "water", 1.3, "Chạm để đặt đài phun nước."),
-  boat: tap("Thuyền", "water", 1.1, "Chạm để đặt thuyền; đặt trên ao để thuyền nổi."),
+  boat: tap("Thuyền", "water", 1.1, "Chạm để đặt thuyền. Thả xuống suối thì thuyền trôi theo dòng; dùng Tay để kéo."),
 
   lantern: tap("Đèn", "decor", 0.3, "Chạm để dựng đèn lồng. Kéo thanh giờ về đêm để thấy đèn sáng."),
   bench: tap("Ghế", "decor", 0.7, "Chạm để đặt ghế băng quay ra đường.", { face: true }),
   signpost: tap("Biển chỉ", "decor", 0.35, "Chạm để cắm cột biển chỉ đường."),
   cart: tap("Xe kéo", "decor", 0.9, "Chạm để đặt xe kéo chở táo.", { face: true }),
-  barrel: tap("Thùng tròn", "decor", 0.45, "Chạm để đặt thùng gỗ tròn."),
-  crate: tap("Thùng thưa", "decor", 0.45, "Chạm để chồng thùng gỗ thưa."),
+  barrel: tap("Thùng tròn", "decor", 0.45, "Chạm để đặt thùng gỗ tròn. Dùng Tay để đẩy."),
+  crate: tap("Thùng thưa", "decor", 0.45, "Chạm để đặt thùng gỗ thưa. Dùng Tay để đẩy."),
   flag: tap("Cờ", "decor", 0.3, "Chạm để cắm cờ."),
   statue: tap("Tượng", "decor", 0.6, "Chạm để dựng tượng đá.", { face: true }),
   scarecrow: tap("Bù nhìn", "decor", 0.5, "Chạm để dựng bù nhìn, hợp đặt cạnh vườn rau."),
@@ -132,6 +133,7 @@ const DEFS: Record<ToolId, Omit<ToolDef, "id">> = {
   beehive: tap("Tổ ong", "decor", 0.4, "Chạm để đặt tổ ong, hợp cạnh hoa."),
   woodpile: tap("Đống củi", "decor", 0.7, "Chạm để chất đống củi."),
   mailbox: tap("Hộp thư", "decor", 0.3, "Chạm để cắm hộp thư cạnh đường.", { face: true }),
+  ball: tap("Bóng", "decor", 0.3, "Chạm để thả quả bóng. Dùng Tay để ném; chó sẽ chạy theo."),
 
   sheep: animal("Cừu", 0.5, "Be-e-e!"),
   chicken: animal("Gà", 0.3, "Cục tác!"),
@@ -146,10 +148,10 @@ const DEFS: Record<ToolId, Omit<ToolDef, "id">> = {
 
 export const TOOLS: ToolDef[] = (Object.keys(DEFS) as ToolId[]).map((id) => ({ id, ...DEFS[id] }));
 export const TOOL = Object.fromEntries(TOOLS.map((t) => [t.id, t])) as Record<ToolId, ToolDef>;
-export const STARTER: ToolId[] = ["orbit", "path", "wall", "house", "tree", "erase"];
+export const STARTER: ToolId[] = ["orbit", "hand", "path", "wall", "house", "tree", "erase"];
 export const isPropKind = (value: unknown): value is PropKind => typeof value === "string" && (PROP_KINDS as readonly string[]).includes(value);
 /** Brushed plants are drawn as instanced meshes, so thousands stay cheap. */
-export const INSTANCED: PropKind[] = ["bush", "flower", "blossom", "sunflower", "mushroom", "rock", "pumpkin"];
+export const INSTANCED: PropKind[] = ["bush", "flower", "blossom", "sunflower", "mushroom", "rock"];
 
 export interface WordDef { ipa: string; vi: string; sentence: string; viS: string; tip?: string }
 const w = (ipa: string, vi: string, sentence: string, viS: string, tip?: string): WordDef => ({ ipa, vi, sentence, viS, ...(tip ? { tip } : {}) });
@@ -201,6 +203,7 @@ export const WORDS: Record<WordId, WordDef> = {
   beehive: w("/ˈbiː.haɪv/", "tổ ong", "Hundreds of bees live in the ___ near the flowers.", "Hàng trăm con ong sống trong tổ ong gần những bông hoa.", "Từ ghép: bee (con ong) + hive (tổ)."),
   woodpile: w("/ˈwʊd.paɪl/", "đống củi", "He took some wood from the ___ to light the stove.", "Anh ấy lấy ít củi từ đống củi để nhóm bếp."),
   mailbox: w("/ˈmeɪl.bɑːks/", "hộp thư", "There's a letter for you in the ___.", "Có một lá thư cho bạn trong hộp thư.", "Anh-Anh hay nói letterbox hoặc postbox."),
+  ball: w("/bɑːl/", "quả bóng", "The dog ran across the field to catch the ___.", "Con chó chạy băng qua cánh đồng để bắt quả bóng.", "Thành ngữ: on the ball nghĩa là nhanh nhạy, nắm bắt tốt."),
 
   sheep: w("/ʃiːp/", "con cừu", "The ___ are eating grass near the river.", "Đàn cừu đang ăn cỏ gần bờ sông.", "Số nhiều vẫn là sheep: one sheep, two sheep."),
   chicken: w("/ˈtʃɪk.ɪn/", "con gà", "The ___ lays an egg every morning.", "Con gà đẻ một quả trứng mỗi sáng.", "chicken vừa là con gà vừa là thịt gà."),

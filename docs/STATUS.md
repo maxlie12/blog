@@ -1,6 +1,23 @@
 # Status
 
-Last verified: 2026-11-02 (Làng Rêu: 42 new pieces and a larger island, harness checks).
+Last verified: 2026-11-03 (Làng Rêu light physics and interactions, harness checks).
+
+## 2026-11-03 — Làng Rêu: light physics and interactions
+
+- New pinned **Tay** (hand) tool: grab a ball, barrel, crate, pumpkin or boat and flick to throw.
+  Pieces roll or slide, bounce off walls, houses and each other, float and drift down streams,
+  and can fall off the island (undo brings them back). A tap on grass blows a small gust.
+- New piece: ball (54 words). Barrel, crate and pumpkin are now single movable pieces.
+- Animals: the dog chases chickens, cats, rabbits, ducks and balls; prey runs; sheep keep
+  together; ducks swim; animals keep apart, walk around buildings, nudge loose pieces and gather
+  by a barn or campfire at night.
+- Wind sways trees, plants and grass, blows blossom petals, moves clouds and the windmill. Bees fly
+  between a hive and nearby flowers; a scarecrow keeps birds off a vegetable garden; placed
+  pieces drop in with a small bounce. Reduced motion turns ambient movement off.
+- Physics is a small in-house solver (`src/lib/village/physics.ts`), no new dependency.
+- Checks: 12 village tests (5 physics), ESLint and `tsc` clean, Playwright 41/41 (previous suite)
+  and 18/18 (physics suite, with and without reduced motion). See
+  `docs/changes/GAME-003-village-physics.md`.
 
 ## 2026-11-02 — Làng Rêu: 42 new pieces and a larger island
 
