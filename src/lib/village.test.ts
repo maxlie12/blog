@@ -283,3 +283,30 @@ test("graphics level: picked from the device, steps down, saved with the weather
   assert.equal(odd.quality, "auto");
   assert.equal(odd.weather, "auto");
 });
+
+test("new walls, fences and hedges join the lines already built", async () => {
+  const { joinLine } = await import("./village/data.ts");
+  const near = (a: Point, b: Point, e = 1e-6) => Math.hypot(a[0] - b[0], a[1] - b[1]) < e;
+  const line = (a: Point, b: Point): Point[] => resample([a, b], 0.5);
+  const old = line([0, 0], [6, 0]);
+  // End to end: a start 1.2 from the old end joins it.
+  const e2e = joinLine(line([7, 0.6], [10, 3]), [old], 1.5);
+  assert.ok(near(e2e[0], [6, 0]), "starts on the old end");
+  assert.ok(near(e2e[e2e.length - 1], [10, 3]), "the far end is untouched");
+  // T-joint: an end near the side of a line lands on it, and points past it are dropped.
+  const tee = joinLine(line([3, 4], [3.2, -0.6]), [old], 1.2);
+  assert.ok(near(tee[tee.length - 1], [3.2, 0], 0.05), `ends on the side, got ${tee[tee.length - 1]}`);
+  assert.ok(tee.every((p) => p[1] >= -1e-9), "does not poke through");
+  // A tower counts as an end.
+  const tower = joinLine(line([20, 0], [12.7, 0.4]), [], 1.2, [[12, 0]]);
+  assert.ok(near(tower[tower.length - 1], [12, 0]));
+  // A line drawn back round to its own start closes.
+  const ring = joinLine(resample([[0, 10], [5, 10], [5, 15], [0, 15], [0.4, 10.8]], 0.5), [], 1.2);
+  assert.ok(near(ring[0], ring[ring.length - 1]), "closed");
+  // Nothing near: unchanged; joining that would leave a stub: unchanged.
+  const far = line([0, 8], [4, 8]);
+  assert.deepEqual(joinLine(far, [old], 1.2), far);
+  const stub = line([2, 0.5], [2.8, 0.6]);
+  assert.deepEqual(joinLine(stub, [old], 1.2), stub);
+  assert.ok(lineLength(e2e) > 4);
+});

@@ -1,6 +1,14 @@
 # Status
 
-Last verified: 2026-11-03 (Làng Rêu camera: move, zoom to a point, follow; harness browser checks).
+Last verified: 2026-11-03 (Làng Rêu joins for walls, fences and hedges; harness browser checks).
+
+## 2026-11-03 — Làng Rêu: walls, fences and hedges join what is already there
+
+- A new wall, fence or hedge that starts or ends near one already built joins it: end to end, onto
+  its side (T-joint), or onto a tower; drawn back round to its start it closes. The preview shows
+  the join while dragging. Tapping an animal as it drops in now pets it instead of adding another.
+- Checks: 21 village tests, ESLint, `tsc`; harness before/after screenshots and saved points;
+  main 41/41, physics 18/18, strip/castle/fish 27/27. See `docs/changes/GAME-009-village-joins.md`.
 
 ## 2026-11-03 — Làng Rêu: move the view and focus on a spot
 

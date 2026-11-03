@@ -431,6 +431,48 @@ export function resample(pts: Point[], step: number): Point[] {
   return out;
 }
 
+function nearestOnSegment(p: Point, a: Point, b: Point): Point {
+  const dx = b[0] - a[0], dz = b[1] - a[1], L = dx * dx + dz * dz;
+  const t = L ? Math.min(1, Math.max(0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / L)) : 0;
+  return [a[0] + dx * t, a[1] + dz * t];
+}
+
+/**
+ * Joins a newly drawn line to the lines already built. Each end moves onto a nearby end or `extra`
+ * point (a tower), or else onto the side of a line, within `tol`; a line drawn back to its own start
+ * closes. Points past the joint are dropped so the line does not poke through. A line that would
+ * end up too short is returned as drawn.
+ */
+export function joinLine(pts: Point[], lines: Point[][], tol: number, extra: Point[] = []): Point[] {
+  if (pts.length < 2) return pts;
+  const ends = [...lines.flatMap((l) => (l.length ? [l[0], l[l.length - 1]] : [])), ...extra];
+  const target = (p: Point): Point | null => {
+    let best: Point | null = null, bd = tol;
+    for (const q of ends) if (dist(p, q) < bd) { bd = dist(p, q); best = q; }
+    if (best) return [best[0], best[1]];
+    for (const l of lines) for (let i = 0; i < l.length - 1; i += 1) {
+      const q = nearestOnSegment(p, l[i], l[i + 1]);
+      if (dist(p, q) < bd) { bd = dist(p, q); best = q; }
+    }
+    return best;
+  };
+  const out = pts.map((p): Point => [p[0], p[1]]);
+  const a = target(out[0]);
+  if (a) {
+    while (out.length > 2 && dist(out[1], a) < tol) out.shift();
+    out[0] = a;
+  }
+  const end = out[out.length - 1];
+  const closes = lineLength(pts) > tol * 4 && dist(end, out[0]) < tol;
+  const b = closes ? out[0] : target(end);
+  if (b) {
+    while (out.length > 2 && dist(out[out.length - 2], b) < tol) out.pop();
+    out[out.length - 1] = [b[0], b[1]];
+  }
+  const joined = resample(out, STEP);
+  return lineLength(joined) >= 0.9 ? joined : pts;
+}
+
 export function clampToIsland([x, z]: Point): Point {
   const r = Math.hypot(x, z);
   return r > BUILD_R ? [(x / r) * BUILD_R, (z / r) * BUILD_R] : [x, z];

@@ -10,7 +10,7 @@
  */
 import * as THREE from "three";
 import {
-  BUILD_R, INSTANCED, ISLAND_R, QUALITY, STEP, TOOL, TOOLS, WORDS, lowerQuality, type Quality, type Weather, chaikin, clampToIsland, dist, emptyScene, hash2, lineLength, resample, rng, round2, viWho,
+  BUILD_R, INSTANCED, ISLAND_R, QUALITY, STEP, TOOL, TOOLS, WORDS, lowerQuality, type Quality, type Weather, chaikin, joinLine, clampToIsland, dist, emptyScene, hash2, lineLength, resample, rng, round2, viWho,
   type House, type Placed, type Point, type Prop, type PropKind, type SavedScene, type Stroke, type StrokeTool, type ToolId, type VillageScene, type WordId,
 } from "./data";
 import { G, M, bake, painter, pick, ribbon, shade, type Mark, type Part } from "./kit";
@@ -111,7 +111,7 @@ const angleDiff = (a: number, b: number) => {
 type TowerSpot = [number, number, number?];
 type Drag =
   | { mode: "orbit" | "pan"; x: number; y: number; tap?: boolean }
-  | { mode: "stroke"; kind: StrokeTool; raw: Point[] }
+  | { mode: "stroke"; kind: StrokeTool; raw: Point[]; tol: number }
   | { mode: "house"; start: Point; end: Point; moved: boolean; len: number; r: number; seed: number }
   | { mode: "pond"; start: Point; r: number }
   | { mode: "brush"; kind: ToolId; last: Point | null }
@@ -1092,7 +1092,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     for (const child of [...preview.children]) { (child as THREE.Mesh).geometry?.dispose(); child.removeFromParent(); }
     if (!drag) return;
     const parts: Part[] = [], glow: Part[] = [];
-    if (drag.mode === "stroke" && drag.raw.length >= 2) strokeParts(drag.kind, { id: 0, pts: resample(chaikin(drag.raw, 1), STEP) }, parts, glow, pathIndex);
+    if (drag.mode === "stroke" && drag.raw.length >= 2) strokeParts(drag.kind, { id: 0, pts: joined(drag.kind, resample(chaikin(drag.raw, 1), STEP), drag.tol) }, parts, glow, pathIndex);
     else if (drag.mode === "house") houseParts(houseFromDrag(drag), parts, glow);
     else if (drag.mode === "pond") {
       pondParts({ x: drag.start[0], z: drag.start[1], r: drag.r, seed: 3 }, parts);
@@ -1102,6 +1102,12 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     if (g) { const m = new THREE.Mesh(g, surface); m.castShadow = true; preview.add(m); }
     const gg = bake(glow);
     if (gg) preview.add(new THREE.Mesh(gg, glowMat));
+  }
+
+  /** Walls, fences and hedges join the same kind already built (walls also join towers); paths and streams overlap anyway. */
+  function joined(kind: StrokeTool, pts: Point[], tol: number) {
+    if (kind === "path" || kind === "stream") return pts;
+    return joinLine(pts, S[STROKE_KEY[kind]].map((l) => l.pts), tol, kind === "wall" ? S.towers.map((t): Point => [t.x, t.z]) : []);
   }
 
   /** Any drawn line as finished geometry; streams show their water as coloured ground here. */
@@ -1393,9 +1399,9 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   }
 
   function petAnimal(g: Point) {
-    const at = new THREE.Vector3(g[0], 0, g[1]);
     for (const v of animalViews.values()) {
-      if (v.mesh.position.distanceTo(at) < TOOL[v.kind].size + 0.5) {
+      // Measured on the ground, so an animal still dropping in (or jumping) can be petted too.
+      if (Math.hypot(v.mesh.position.x - g[0], v.mesh.position.z - g[1]) < TOOL[v.kind].size + 0.5) {
         if (v.kind === "fish") jumpFish(v);
         else v.pet = 1;
         say(`${TOOL[v.kind].sound ?? ""} (${v.kind} ${WORDS[v.kind as keyof typeof WORDS].ipa})`);
@@ -1452,7 +1458,11 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     before = serialize();
     if (place === "stroke") {
       if (!inside) { say("Hãy bắt đầu vẽ trên đảo cỏ."); before = null; return; }
-      drag = { mode: "stroke", kind: tool as StrokeTool, raw: [g] };
+      // How close counts as "joined": about a fingertip on screen; for walls at least a tower's width,
+      // since two wall ends closer than that would stand as two towers side by side.
+      const perPx = (2 * rig.radius * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))) / Math.max(1, container.clientHeight);
+      const reach = (e.pointerType === "touch" ? 34 : 24) * perPx;
+      drag = { mode: "stroke", kind: tool as StrokeTool, raw: [g], tol: clamp(reach, tool === "wall" ? 1.6 : 0.9, 2.4) };
     } else if (place === "house") {
       if (!inside) { say("Hãy đặt nhà trên đảo cỏ."); before = null; return; }
       drag = { mode: "house", start: g, end: g, moved: false, len: 1.6 + Math.random() * 1.2, r: Math.random() * 6, seed: randSeed() };
@@ -1550,15 +1560,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       if (lineLength(d.raw) < 0.9) {
         say(`Kéo dài hơn một chút để vẽ ${TOOL[d.kind].label.toLowerCase()}.`);
       } else {
-        const pts = resample(chaikin(d.raw, 2), STEP);
-        if (d.kind === "wall") {
-          // Snap to nearby wall ends so drawn walls join up instead of leaving gaps.
-          const ends = S.walls.flatMap((w) => [w.pts[0], w.pts[w.pts.length - 1]]);
-          for (const idx of [0, pts.length - 1]) {
-            const snap = ends.find((q) => dist(q, pts[idx]) < 0.9);
-            if (snap) pts[idx] = [snap[0], snap[1]];
-          }
-        }
+        const pts = joined(d.kind, resample(chaikin(d.raw, 2), STEP), d.tol);
         S[STROKE_KEY[d.kind]].push({ id: newId(), pts: round2(pts) });
       }
     } else if (d.mode === "house") {
