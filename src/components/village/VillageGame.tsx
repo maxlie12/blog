@@ -7,10 +7,12 @@ import {
   CATEGORIES, PROGRESS_KEY, SCENE_KEY, STARTER, TOOL, TOOLS, WORDS, WORD_ORDER, isAnswer, parseProgress, parseSavedScene, toolOfWord, wordsIn,
   type Category, type ToolId, type VillageProgress, type WordId,
 } from "@/lib/village/data";
-import type { Thumbs, VillageController } from "@/lib/village/scene";
+import type { InspectInfo, Thumbs, VillageController } from "@/lib/village/scene";
+import { PARTS, RESIDENTS, VERBS, vocabKey, type PartId, type ResidentId, type VerbId } from "@/lib/village/vocab";
 
-type IconName = "orbit" | "hand" | "erase" | "undo" | "book" | "reset" | "sun" | "moon" | "close" | "lock";
+type IconName = "orbit" | "look" | "hand" | "erase" | "undo" | "book" | "reset" | "sun" | "moon" | "close" | "lock";
 const ICONS: Record<IconName, ReactNode> = {
+  look: <><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 5 5" /><path d="M8 10.5a2.5 2.5 0 0 1 2.5-2.5" /></>,
   orbit: <><path d="M4.5 12a7.5 7.5 0 0 1 13.1-5" /><path d="M19.5 12a7.5 7.5 0 0 1-13.1 5" /><path d="M18 3.5v3.8h-3.8" /><path d="M6 20.5v-3.8h3.8" /></>,
   hand: <><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12" /><path d="M11 11.5V4a1.5 1.5 0 0 1 3 0v7.5" /><path d="M14 11.5V5.5a1.5 1.5 0 0 1 3 0V13" /><path d="M17 9.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1.5a6 6 0 0 1-4.6-2.2L4.4 15a1.6 1.6 0 0 1 2.4-2.1L8 14" /></>,
   erase: <><path d="M9 20h11" /><path d="m4.5 15.5 9-9.5 5.5 5.2-8.6 8.8H8.5z" /><path d="m9.5 10.8 5.2 5" /></>,
@@ -30,9 +32,9 @@ function Icon({ name }: { name: IconName }) {
   );
 }
 
-/** A tool's picture: a line icon for orbit/erase, otherwise the small 3D preview the scene rendered. */
+/** A tool's picture: a line icon for the pinned tools, otherwise the small 3D preview the scene rendered. */
 function ToolPic({ id, thumbs }: { id: ToolId; thumbs: Thumbs }) {
-  if (id === "orbit" || id === "hand" || id === "erase") return <Icon name={id} />;
+  if (id === "orbit" || id === "look" || id === "hand" || id === "erase") return <Icon name={id} />;
   const src = thumbs[id];
   // eslint-disable-next-line @next/next/no-img-element -- generated data URL, nothing for next/image to optimise
   return src ? <img src={src} alt="" width={40} height={40} draggable={false} /> : <span className="vg-pic-wait" aria-hidden="true" />;
@@ -48,6 +50,22 @@ function shuffle<T>(items: T[]) {
     [out[i], out[j]] = [out[j], out[i]];
   }
   return out;
+}
+
+/** Vocabulary keys a Look card shows, so the word book can list what was found. */
+function seenKeys(info: InspectInfo) {
+  const keys = info.parts.map((id) => vocabKey.part(id));
+  if (info.sentence) keys.push(vocabKey.verb(info.sentence.verb));
+  if ("resident" in info.title) keys.push(vocabKey.resident(info.title.resident));
+  if ("part" in info.title) keys.push(vocabKey.part(info.title.part));
+  return keys;
+}
+
+/** English, IPA and Vietnamese for whatever the Look card is about. */
+function titleOf(info: InspectInfo): { en: string; ipa: string; vi: string; word: WordId | null } {
+  if ("word" in info.title) return { en: info.title.word, ipa: WORDS[info.title.word].ipa, vi: WORDS[info.title.word].vi, word: info.title.word };
+  if ("resident" in info.title) return { ...RESIDENTS[info.title.resident], word: null };
+  return { ...PARTS[info.title.part], word: null };
 }
 
 /** Renders a sentence with its blank replaced by `fill`. */
@@ -71,6 +89,9 @@ export default function VillageGame() {
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [cat, setCat] = useState<Category>("build");
   const [thumbs, setThumbs] = useState<Thumbs>({});
+  const [inspect, setInspect] = useState<InspectInfo | null>(null);
+  const [announce, setAnnounce] = useState("");
+  const inspectIdRef = useRef<string | null>(null);
 
   const say = useCallback((text: string) => {
     setToast({ text });
@@ -122,6 +143,25 @@ export default function VillageGame() {
             onSave: (raw) => store(SCENE_KEY, raw),
             onReady: () => setStatus("ready"),
             onThumbs: setThumbs,
+            onInspect: (info) => {
+              setInspect(info);
+              // Words met with the Look tool go into the word book.
+              if (info) {
+                const keys = seenKeys(info);
+                setProgress((current) => {
+                  const fresh = keys.filter((key) => !(key in current.seen));
+                  if (!fresh.length) return current;
+                  const at = Date.now();
+                  return { ...current, seen: { ...current.seen, ...Object.fromEntries(fresh.map((key) => [key, at])) } };
+                });
+              }
+              // Screen readers hear a new selection once, not every change of what someone is doing.
+              if (info && info.id !== inspectIdRef.current) {
+                const t = titleOf(info);
+                setAnnounce(`${t.en}, ${t.vi}. ${info.sentence ? `${info.sentence.en} ${info.sentence.vi}` : ""}`);
+              }
+              inspectIdRef.current = info?.id ?? null;
+            },
           });
           controller.setTool(toolRef.current);
           controllerRef.current = controller;
@@ -212,10 +252,19 @@ export default function VillageGame() {
 
         <div className="vg-hud">
           <header className="vg-top">
-            <div className="vg-brand vg-panel">
-              <h2>Làng <em>Rêu</em></h2>
-              <p>{TOOL[tool].hint}</p>
-            </div>
+            {inspect ? (
+              <InspectCard
+                info={inspect}
+                progress={progress}
+                onClose={() => { setInspect(null); inspectIdRef.current = null; controllerRef.current?.clearInspect(); }}
+                onLearn={(word) => openLesson(word, "unlock")}
+              />
+            ) : (
+              <div className="vg-brand vg-panel">
+                <h2>Làng <em>Rêu</em></h2>
+                <p>{TOOL[tool].hint}</p>
+              </div>
+            )}
             <div className="vg-actions">
               {status === "ready" ? (
                 <button className="vg-icon" type="button" aria-label="Hoàn tác" disabled={!canUndo} onClick={() => controllerRef.current?.undo()}>
@@ -292,6 +341,7 @@ export default function VillageGame() {
           ) : null}
         </div>
         <p className="vg-toast" role="status">{toast?.text}</p>
+        <p className="sr-only" aria-live="polite">{announce}</p>
 
         <dialog
           ref={dialogRef}
@@ -332,7 +382,7 @@ export default function VillageGame() {
         </dialog>
       </div>
       <p className="vg-foot">
-        Kéo bằng chuột hoặc một ngón tay để xây; hai ngón tay hoặc con lăn để xoay và phóng to. Công cụ Tay kéo và ném bóng, thùng, bí ngô, thuyền. Bàn phím: chọn khung đảo bằng Tab, mũi tên để xoay, Enter để đặt đồ (với Tay là thổi gió), Ctrl + Z để hoàn tác.
+        Kéo bằng chuột hoặc một ngón tay để xây; hai ngón tay hoặc con lăn để xoay và phóng to. Công cụ Xem cho biết người và con vật đang làm gì (bằng câu tiếng Anh) và gắn nhãn tên từng bộ phận. Công cụ Tay kéo và ném bóng, thùng, bí ngô, thuyền; chạm vào người thì họ vẫy tay chào. Bàn phím: chọn khung đảo bằng Tab, mũi tên để xoay, Enter để đặt đồ (với Tay là thổi gió, với Xem là lần lượt xem người và con vật gần giữa khung nhìn), Ctrl + Z để hoàn tác.
       </p>
     </div>
   );
@@ -387,10 +437,95 @@ function WordBook({ progress, thumbs, onClose, onLearn }: { progress: VillagePro
           </section>
         );
       })}
+      <Discovered title="Dân làng" id="residents" note="Chạm vào người trong làng bằng công cụ Xem." entries={Object.entries(RESIDENTS).map(([id, e]) => ({ key: vocabKey.resident(id as ResidentId), ...e }))} seen={progress.seen} />
+      <Discovered title="Động từ" id="verbs" note="Xem người và con vật đang làm gì để gặp thêm động từ." entries={Object.entries(VERBS).map(([id, e]) => ({ key: vocabKey.verb(id as VerbId), ...e, extra: e.ing }))} seen={progress.seen} />
+      <Discovered title="Bộ phận" id="parts" note="Chạm vào nhà, cối xay, con bò… để thấy tên từng bộ phận." entries={Object.entries(PARTS).map(([id, e]) => ({ key: vocabKey.part(id as PartId), ...e }))} seen={progress.seen} />
       <p className="vg-note">
         Đây là ôn từ vựng nhanh để mở đồ chơi, không phải bài kiểm tra trình độ. Không tính vào Done, nhịp học hay bài nộp. Tiến độ lưu trên trình duyệt này, theo hồ sơ học đang chọn.
       </p>
     </SheetFrame>
+  );
+}
+
+/** Words found with the Look tool: listed once seen, the rest only counted. */
+function Discovered({ title, id, note, entries, seen }: {
+  title: string;
+  id: string;
+  note: string;
+  entries: { key: string; en: string; ipa: string; vi: string; extra?: string }[];
+  seen: Record<string, number>;
+}) {
+  const found = entries.filter((e) => e.key in seen);
+  return (
+    <section className="vg-words-group" aria-labelledby={`vg-words-${id}`}>
+      <h4 id={`vg-words-${id}`}>{title} <small>{found.length}/{entries.length}</small></h4>
+      {found.length ? (
+        <ul className="vg-words vg-words--found">
+          {found.map((e) => (
+            <li key={e.key}>
+              <span className="vg-words__text">
+                <strong lang="en">{e.en}</strong> <span className="vg-ipa">{e.ipa}</span>
+                <small>{e.vi}{e.extra ? <> · <span lang="en">{e.extra}</span></> : null}</small>
+              </span>
+              <span className="vg-words__acts"><PronounceButton text={e.en} /></span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {found.length < entries.length ? <p className="vg-muted vg-small">{note} Còn {entries.length - found.length} từ chưa gặp.</p> : null}
+    </section>
+  );
+}
+
+/** “The farmer is watering the vegetables.” with the -ing verb marked. */
+function Highlighted({ text, word }: { text: string; word: string }) {
+  const at = text.indexOf(` ${word}`);
+  if (at < 0) return <>{text}</>;
+  return <>{text.slice(0, at + 1)}<mark>{word}</mark>{text.slice(at + 1 + word.length)}</>;
+}
+
+/** The Look tool's card: the name, what they are doing, and the parts labelled on the model. */
+function InspectCard({ info, progress, onClose, onLearn }: {
+  info: InspectInfo;
+  progress: VillageProgress;
+  onClose: () => void;
+  onLearn: (word: WordId) => void;
+}) {
+  const title = titleOf(info);
+  const locked = title.word !== null && !progress.unlocked.includes(title.word);
+  const verb = info.sentence ? VERBS[info.sentence.verb] : null;
+  return (
+    <section className="vg-inspect vg-panel" aria-labelledby="vg-inspect-title">
+      <div className="vg-inspect__head">
+        <h3 id="vg-inspect-title"><span lang="en">{title.en}</span> <span className="vg-ipa">{title.ipa}</span></h3>
+        <PronounceButton text={title.en} />
+        <button type="button" className="vg-close" aria-label="Đóng thẻ xem" onClick={onClose}><Icon name="close" /></button>
+      </div>
+      <p className="vg-inspect__vi">{title.vi}</p>
+      {locked && title.word ? (
+        <button type="button" className="vg-mini vg-mini--go" onClick={() => onLearn(title.word as WordId)}>Học từ này để mở {TOOL[title.word].label.toLowerCase()}</button>
+      ) : null}
+      {info.sentence && verb ? (
+        <div className="vg-inspect__say">
+          <p lang="en"><Highlighted text={info.sentence.en} word={info.sentence.highlight} /></p>
+          <p className="vg-muted">{info.sentence.vi}</p>
+          <div className="vg-inspect__verb">
+            <PronounceButton text={info.sentence.en} label="Nghe câu" />
+            <span><span lang="en"><b>{verb.en}</b> → {verb.ing}</span> <span className="vg-ipa">{verb.ipa}</span> · {verb.vi}</span>
+          </div>
+        </div>
+      ) : null}
+      {info.parts.length ? (
+        <ul className="vg-inspect__parts" aria-label="Bộ phận có nhãn trên mô hình">
+          {info.parts.map((id) => (
+            <li key={id}>
+              <PronounceButton text={id} />
+              <span><span lang="en">{id}</span> <small>{PARTS[id].vi}</small></span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
   );
 }
 

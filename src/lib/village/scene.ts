@@ -10,17 +10,27 @@
  */
 import * as THREE from "three";
 import {
-  BUILD_R, INSTANCED, ISLAND_R, STEP, TOOL, TOOLS, WORDS, chaikin, clampToIsland, dist, emptyScene, hash2, lineLength, resample, rng, round2,
-  type House, type Placed, type Point, type Prop, type PropKind, type SavedScene, type Stroke, type StrokeTool, type ToolId, type VillageScene,
+  BUILD_R, INSTANCED, ISLAND_R, STEP, TOOL, TOOLS, WORDS, chaikin, clampToIsland, dist, emptyScene, hash2, lineLength, resample, rng, round2, viWho,
+  type House, type Placed, type Point, type Prop, type PropKind, type SavedScene, type Stroke, type StrokeTool, type ToolId, type VillageScene, type WordId,
 } from "./data";
-import { G, M, bake, painter, pick, ribbon, shade, type Part } from "./kit";
-import { PROP_GEOMETRIES, PROP_MODELS } from "./props";
+import { G, M, bake, painter, pick, ribbon, shade, type Mark, type Part } from "./kit";
+import { createPeople, personMarks, type Person } from "./people";
+import { PROP_GEOMETRIES, PROP_MARKS, PROP_MODELS } from "./props";
+import { describe, type ActionId, type PartId, type ResidentId, type VerbId } from "./vocab";
 import {
   BODY, GRAVITY, MAX_SPEED, bodyAt, gust, isDynamic, makeBody, makeWorld, pushOut, stepBodies, waterAt,
   type Body, type Box, type Circle, type DynamicKind, type Mover, type World,
 } from "./physics";
 
 export type Thumbs = Partial<Record<ToolId, string>>;
+/** What the Look tool found: its name, what it is doing (people and animals), and the parts labelled on it. */
+export interface InspectInfo {
+  /** Which thing this is, stable while it stays selected. */
+  id: string;
+  title: { word: WordId } | { resident: ResidentId } | { part: PartId };
+  sentence: { en: string; vi: string; verb: VerbId; highlight: string } | null;
+  parts: PartId[];
+}
 export interface VillageOptions {
   saved: SavedScene | null;
   time: number;
@@ -29,12 +39,16 @@ export interface VillageOptions {
   onSave: (raw: string) => void;
   onReady: () => void;
   onThumbs: (thumbs: Thumbs) => void;
+  /** The Look tool picked something (or nothing). Called again when a person or animal starts doing something else. */
+  onInspect?: (info: InspectInfo | null) => void;
 }
 export interface VillageController {
   setTool(id: ToolId): void;
   setTime(t: number): void;
   undo(): void;
   reset(kind: "empty" | "sample"): void;
+  /** Hides the Look tool's labels (the card was closed). */
+  clearInspect(): void;
   dispose(): void;
 }
 
@@ -75,6 +89,7 @@ type Drag =
   | { mode: "brush"; kind: ToolId; last: Point | null }
   | { mode: "erase" }
   | { mode: "tap"; kind: ToolId; x: number; y: number; moved: boolean }
+  | { mode: "look"; x: number; y: number; moved: boolean }
   | { mode: "hold"; body: Body; target: Point; trail: { t: number; x: number; z: number }[] }
   | { mode: "nudge"; x: number; y: number; moved: boolean };
 interface AnimalView {
@@ -291,6 +306,9 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   };
 
   /* ───────────── builders ───────────── */
+  /** Set while the Look tool rebuilds one piece to find where its parts are. */
+  let markSink: Mark[] | undefined;
+  const markAt = (part: PartId, x: number, y: number, z: number) => { markSink?.push({ part, at: new THREE.Vector3(x, y, z) }); };
   function pathParts(stroke: Stroke, index: number, parts: Part[]) {
     const pts = stroke.pts, n = pts.length;
     if (n < 2) return;
@@ -304,6 +322,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       const ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
       const off = side * r() * 0.32;
       parts.push({ g: G.dode, c: shade("#e7decd", (r() - 0.5) * 0.08), m: M(pts[i][0] - Math.sin(ang) * off, y + 0.01, pts[i][1] + Math.cos(ang) * off, 0.3 + r() * 0.15, 0.06, 0.24 + r() * 0.12, r() * 3) });
+      markAt("stone", pts[i][0] - Math.sin(ang) * off, y + 0.06, pts[i][1] + Math.cos(ang) * off);
     }
   }
 
@@ -321,8 +340,14 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       const ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
       const side = r() < 0.5 ? -1 : 1, off = side * (1.05 + r() * 0.2);
       const x = pts[i][0] - Math.sin(ang) * off, z = pts[i][1] + Math.cos(ang) * off;
-      if (r() < 0.7) ground.push({ g: G.dode, c: shade("#b9b3a2", (r() - 0.5) * 0.1), m: M(x, 0.06, z, 0.34 + r() * 0.2, 0.2, 0.28, r() * 3) });
-      else for (let q = 0; q < 3; q += 1) ground.push({ g: G.cyl6, c: "#5d8240", m: M(x + q * 0.07, 0.35, z, 0.04, 0.65 + q * 0.1, 0.04, 0, 0, (q - 1) * 0.12) });
+      if (r() < 0.7) {
+        ground.push({ g: G.dode, c: shade("#b9b3a2", (r() - 0.5) * 0.1), m: M(x, 0.06, z, 0.34 + r() * 0.2, 0.2, 0.28, r() * 3) });
+        markAt("stone", x, 0.16, z);
+      } else {
+        for (let q = 0; q < 3; q += 1) ground.push({ g: G.cyl6, c: "#5d8240", m: M(x + q * 0.07, 0.35, z, 0.04, 0.65 + q * 0.1, 0.04, 0, 0, (q - 1) * 0.12) });
+        markAt("reed", x, 0.75, z);
+      }
+      if (i % 3 === 0) markAt("bank", pts[i][0] + Math.sin(ang) * off * 0.95, 0.05, pts[i][1] - Math.cos(ang) * off * 0.95);
     }
   }
 
@@ -337,10 +362,13 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       while (j + 1 < n && wet[j + 1]) j += 1;
       const A = pts[Math.max(0, i - 2)], B = pts[Math.min(n - 1, j + 2)];
       const span = Math.max(1.8, dist(A, B)), th = Math.atan2(B[1] - A[1], B[0] - A[0]);
-      const { p } = painter(M((A[0] + B[0]) / 2, 0, (A[1] + B[1]) / 2, 1, 1, 1, -th), parts);
+      const { p, mark } = painter(M((A[0] + B[0]) / 2, 0, (A[1] + B[1]) / 2, 1, 1, 1, -th), parts, undefined, undefined, markSink);
       const r = rng(path.id * 7 + i);
       const planks = Math.ceil(span / 0.24), rise = 0.38;
       const yAt = (t: number) => 0.1 + Math.sin(Math.PI * t) * rise;
+      mark("bridge", 0, yAt(0.5) + 0.9, 0);
+      mark("plank", -span * 0.3, yAt(0.2) + 0.05, 0.3);
+      mark("railing", span * 0.25, yAt(0.75) + 0.55, 0.62);
       for (let k = 0; k < planks; k += 1) {
         const t = (k + 0.5) / planks;
         const slope = Math.atan((Math.cos(Math.PI * t) * Math.PI * rise) / span);
@@ -370,8 +398,10 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       const len = Math.hypot(bx - ax, bz - az);
       if (len < 0.01) continue;
       const th = Math.atan2(bz - az, bx - ax);
-      const { p } = painter(M((ax + bx) / 2, 0, (az + bz) / 2, 1, 1, 1, -th), parts);
+      const { p, mark } = painter(M((ax + bx) / 2, 0, (az + bz) / 2, 1, 1, 1, -th), parts, undefined, undefined, markSink);
       const r = rng(hash2(ax, az) + 7);
+      mark("wall", 0, h * 0.5, T / 2 + 0.02);
+      if (i % 2 === 0) mark("battlement", 0, h + 0.44, 0);
       p(G.box, "#a99d88", 0, 0.15, 0, len + 0.08, 0.3, T + 0.18);
       p(G.box, shade("#cfc5b1", (r() - 0.5) * 0.07), 0, h / 2, 0, len + 0.03, h, T);
       p(G.box, "#ddd5c4", 0, h + 0.05, 0, len + 0.08, 0.1, T + 0.12);
@@ -405,9 +435,11 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   function gateParts(A: Point, B: Point, h: number, parts: Part[]) {
     const span = Math.max(0.9, dist(A, B));
     const th = Math.atan2(B[1] - A[1], B[0] - A[0]);
-    const { p } = painter(M((A[0] + B[0]) / 2, 0, (A[1] + B[1]) / 2, 1, 1, 1, -th), parts);
+    const { p, mark } = painter(M((A[0] + B[0]) / 2, 0, (A[1] + B[1]) / 2, 1, 1, 1, -th), parts, undefined, undefined, markSink);
     const T = WALL_T;
     const top = h + 0.35, archTop = h * 0.92;
+    mark("gate", span / 2, top + 0.7, 0);
+    mark("arch", 0, archTop - 0.05, T / 2 + 0.05);
     for (const side of [-1, 1]) {
       p(G.box, "#c2b7a2", (side * span) / 2, top / 2, 0, 0.6, top, T + 0.18);
       p(G.box, "#ddd5c4", (side * span) / 2, top + 0.06, 0, 0.72, 0.12, T + 0.28);
@@ -423,34 +455,39 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
 
   function towerParts(x: number, z: number, seed: number, parts: Part[], glow: Part[]) {
     const r = rng(seed);
-    const { p, w } = painter(M(x, 0, z, 1, 1, 1, r() * Math.PI * 2), parts, glow);
+    const { p, w, mark } = painter(M(x, 0, z, 1, 1, 1, r() * Math.PI * 2), parts, glow, undefined, markSink);
     const R = 0.72 + r() * 0.12, H = WALL_H + 1.05 + r() * 0.35;
+    mark("wall", R + 0.02, H * 0.35, 0.3);
     p(G.cyl12, "#a99d88", 0, 0.2, 0, 2 * R + 0.3, 0.4, 2 * R + 0.3);
     p(G.cyl12, shade("#cdc3ae", (r() - 0.5) * 0.06), 0, H / 2, 0, 2 * R, H, 2 * R);
     p(G.cyl12, "#ddd5c4", 0, H + 0.07, 0, 2 * R + 0.24, 0.14, 2 * R + 0.24);
     if (r() < 0.75) {
       p(G.cone8, pick(ROOFS, r), 0, H + 0.14 + 0.85, 0, 2 * R + 0.5, 1.7, 2 * R + 0.5);
       p(G.sphere, "#e3bf55", 0, H + 1.9, 0, 0.16, 0.16, 0.16);
+      mark("roof", 0, H + 0.9, R * 0.6);
     } else {
       for (let k = 0; k < 8; k += 1) {
         const a = (k / 8) * Math.PI * 2;
         p(G.box, "#d3c9b6", Math.cos(a) * (R - 0.04), H + 0.33, Math.sin(a) * (R - 0.04), 0.32, 0.38, 0.3, -a);
       }
+      mark("battlement", 0, H + 0.55, R);
     }
     for (const a of [0.5, 0.5 + Math.PI]) w(G.box, Math.cos(a) * (R + 0.01), H * 0.62, Math.sin(a) * (R + 0.01), 0.07, 0.44, 0.15, -a);
+    mark("window", Math.cos(0.5) * (R + 0.05), H * 0.62, Math.sin(0.5) * (R + 0.05));
     const a0 = r() * Math.PI * 2;
     p(G.box, "#6b4f3a", Math.cos(a0) * R, 0.45, Math.sin(a0) * R, 0.08, 0.82, 0.44, -a0);
+    mark("door", Math.cos(a0) * (R + 0.06), 0.5, Math.sin(a0) * (R + 0.06));
     if (r() < 0.6) p(G.ico0, "#7ea456", Math.cos(a0 + 1.5) * (R + 0.05), 0.25, Math.sin(a0 + 1.5) * (R + 0.05), 0.5, 0.32, 0.4);
   }
 
-  /** A house faces its local +Z; `h.r` turns that front towards the nearest path. */
-  function houseParts(h: House, parts: Part[], glow: Part[]) {
+  /** A house faces its local +Z; `h.r` turns that front towards the nearest path. Returns the spot in front of its door. */
+  function houseParts(h: House, parts: Part[], glow: Part[]): Point {
     const r = rng(h.seed);
     const len = h.len, w = 1.55;
     const floors = len > 2.6 && r() < 0.65 ? 2 : 1;
     const H = floors === 2 ? 2.15 : 1.25;
     const plaster = pick(PLASTER, r), roof = pick(ROOFS, r), beam = "#6b4f3a";
-    const { p, w: win } = painter(M(h.x, 0, h.z, 1, 1, 1, h.r), parts, glow);
+    const { p, w: win, mark } = painter(M(h.x, 0, h.z, 1, 1, 1, h.r), parts, glow, undefined, markSink);
     p(G.box, "#a99e8b", 0, 0.12, 0, len + 0.2, 0.24, w + 0.2);
     p(G.box, plaster, 0, 0.24 + H / 2, 0, len, H, w);
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) p(G.box, beam, (sx * len) / 2, 0.24 + H / 2, (sz * w) / 2, 0.13, H, 0.13);
@@ -458,11 +495,18 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     const eave = 0.24 + H, rh = 0.95 + r() * 0.3, hw = w / 2 + 0.24;
     p(G.prism, shade(plaster, -0.03), 0, eave, 0, w, rh, len, Math.PI / 2);
     const slope = Math.hypot(rh, hw), ang = Math.atan2(rh, hw);
+    mark("roof", len * 0.28, eave + rh * 0.55, hw * 0.55);
+    mark("wall", len / 2 + 0.02, 0.24 + H * 0.4, -0.35);
     p(G.box, roof, 0, eave + rh / 2, hw / 2, len + 0.4, 0.12, slope + 0.06, 0, ang);
     p(G.box, roof, 0, eave + rh / 2, -hw / 2, len + 0.4, 0.12, slope + 0.06, 0, -ang);
     p(G.box, shade(roof, -0.06), 0, eave + rh + 0.02, 0, len + 0.44, 0.13, 0.2);
-    if (r() < 0.6) p(G.box, "#a8836a", (r() < 0.5 ? -1 : 1) * len * 0.26, eave + rh * 0.62 + 0.25, -hw * 0.4, 0.32, 0.85, 0.32);
+    if (r() < 0.6) {
+      const cx = (r() < 0.5 ? -1 : 1) * len * 0.26;
+      p(G.box, "#a8836a", cx, eave + rh * 0.62 + 0.25, -hw * 0.4, 0.32, 0.85, 0.32);
+      mark("chimney", cx, eave + rh * 0.62 + 0.75, -hw * 0.4);
+    }
     const doorX = len < 2.2 ? 0 : (r() < 0.5 ? -1 : 1) * len * 0.24;
+    mark("door", doorX, 0.7, w / 2 + 0.08);
     p(G.box, "#6b4f3a", doorX, 0.24 + 0.43, w / 2 + 0.03, 0.5, 0.86, 0.07);
     p(G.box, "#b8ad9a", doorX, 0.06, w / 2 + 0.38, 0.72, 0.1, 0.42);
     const count = Math.max(1, Math.floor(len / 0.85));
@@ -473,6 +517,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
         for (const side of [1, -1]) {
           if (side === 1 && f === 0 && Math.abs(wx - doorX) < 0.48) continue;
           p(G.box, "#f6f1e6", wx, wy, side * (w / 2 + 0.012), 0.46, 0.52, 0.03);
+          if (side === 1 && f === floors - 1 && k === count - 1) mark("window", wx, wy, w / 2 + 0.05);
           win(G.box, wx, wy, side * (w / 2 + 0.03), 0.34, 0.4, 0.04);
           if (side === 1 && f === 0 && r() < 0.55) {
             p(G.box, "#7a5a3f", wx, wy - 0.34, w / 2 + 0.09, 0.46, 0.1, 0.13);
@@ -488,6 +533,8 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       p(G.ico, shade("#6f9a4f", (r() - 0.5) * 0.06), bx, 0.18, side * (w / 2 + 0.32), 0.48, 0.4, 0.44);
       if (r() < 0.6) p(G.ico0, pick(["#f2c94c", "#e57f9e", "#f6f3ea"], r), bx + 0.1, 0.38, side * (w / 2 + 0.36), 0.12, 0.12, 0.12);
     }
+    const c = Math.cos(h.r), s = Math.sin(h.r), dz = w / 2 + 0.7;
+    return [h.x + doorX * c + dz * s, h.z - doorX * s + dz * c];
   }
 
   function fenceParts(stroke: Stroke, parts: Part[]) {
@@ -495,10 +542,12 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     for (let i = 0; i < n; i += 1) {
       const r = rng(hash2(pts[i][0], pts[i][1]));
       parts.push({ g: G.box, c: shade("#9a744d", (r() - 0.5) * 0.06), m: M(pts[i][0], 0.36, pts[i][1], 0.12, 0.72, 0.12, r()) });
+      markAt("post", pts[i][0], 0.9, pts[i][1]);
       parts.push({ g: G.cone6, c: "#8a6644", m: M(pts[i][0], 0.78, pts[i][1], 0.17, 0.14, 0.17) });
       if (i === n - 1) continue;
       const a = pts[i], b = pts[i + 1], len = dist(a, b), th = Math.atan2(b[1] - a[1], b[0] - a[0]);
       for (const y of [0.3, 0.56]) parts.push({ g: G.box, c: "#b18a5e", m: M((a[0] + b[0]) / 2, y, (a[1] + b[1]) / 2, len + 0.06, 0.07, 0.05, -th) });
+      markAt("rail", (a[0] + b[0]) / 2, 0.45, (a[1] + b[1]) / 2);
     }
   }
 
@@ -506,14 +555,19 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     const r = rng(stroke.id * 13 + 5);
     for (const [x, z] of stroke.pts) {
       parts.push({ g: G.ico, c: shade("#4f8a3f", (r() - 0.5) * 0.08), m: M(x, 0.46, z, 0.8 + r() * 0.14, 0.92 + r() * 0.16, 0.8 + r() * 0.14, r() * 3) });
+      markAt("leaf", x, 0.95, z);
       if (r() < 0.22) parts.push({ g: G.ico0, c: pick(["#f6f3ea", "#e57f9e", "#f2c94c"], r), m: M(x + (r() - 0.5) * 0.5, 0.55 + r() * 0.35, z + (r() - 0.5) * 0.5, 0.1, 0.1, 0.1) });
     }
   }
 
   function wellParts(o: Placed, parts: Part[]) {
     const r = rng(o.seed);
-    const { p } = painter(M(o.x, 0, o.z, 1, 1, 1, r() * Math.PI), parts);
+    const { p, mark } = painter(M(o.x, 0, o.z, 1, 1, 1, r() * Math.PI), parts, undefined, undefined, markSink);
     p(G.cyl12, "#bdb19b", 0, 0.36, 0, 1.3, 0.72, 1.3);
+    mark("roof", 0, 2.05, 0.35);
+    mark("bucket", 0.12, 1.0, 0.18);
+    mark("handle", -0.45, 1.48, 0.08);
+    mark("stone", 0.66, 0.4, 0.1);
     p(G.cyl12, "#d6ccb8", 0, 0.75, 0, 1.4, 0.08, 1.4);
     p(G.cyl12, "#284750", 0, 0.73, 0, 1.0, 0.04, 1.0);
     for (const sx of [-1, 1]) p(G.box, "#7a5a3e", sx * 0.58, 1.1, 0, 0.12, 1.5, 0.12);
@@ -527,6 +581,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     const r = rng(o.seed);
     parts.push({ g: G.disc, c: "#4b6f63", m: M(o.x, 0.014, o.z, 2 * o.r + 0.3, 0.02, 2 * o.r + 0.3) });
     const count = Math.max(8, Math.floor((Math.PI * 2 * o.r) / 0.42));
+    markAt("stone", o.x + o.r + 0.15, 0.2, o.z);
     for (let k = 0; k < count; k += 1) {
       const a = (k / count) * Math.PI * 2 + r() * 0.1, rad = o.r + 0.12 + r() * 0.08;
       parts.push({ g: G.dode, c: shade("#b9b3a2", (r() - 0.5) * 0.1), m: M(o.x + Math.cos(a) * rad, 0.07, o.z + Math.sin(a) * rad, 0.36 + r() * 0.22, 0.2, 0.3, -a) });
@@ -535,19 +590,25 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       const a = r() * Math.PI * 2, rad = r() * o.r * 0.7;
       const x = o.x + Math.cos(a) * rad, z = o.z + Math.sin(a) * rad;
       parts.push({ g: G.cyl12, c: "#6e9d4a", m: M(x, 0.09, z, 0.42, 0.02, 0.42) });
+      if (k === 0) markAt("leaf", x, 0.12, z);
       if (r() < 0.5) parts.push({ g: G.ico0, c: "#f2b5c9", m: M(x + 0.06, 0.13, z, 0.1, 0.08, 0.1) });
     }
     for (let k = 0; k < 3; k += 1) {
       const a = r() * Math.PI * 2;
       for (let q = 0; q < 4; q += 1) parts.push({ g: G.cyl6, c: "#5d8240", m: M(o.x + Math.cos(a) * (o.r - 0.1) + q * 0.07, 0.4, o.z + Math.sin(a) * (o.r - 0.1) + q * 0.05, 0.04, 0.75 + q * 0.1, 0.04, 0, 0, (q - 1.5) * 0.08) });
+      if (k === 0) markAt("reed", o.x + Math.cos(a) * (o.r - 0.1), 0.85, o.z + Math.sin(a) * (o.r - 0.1));
     }
   }
 
   function millParts(o: Placed, parts: Part[], glow: Part[]) {
     const r = rng(o.seed);
     const T = M(o.x, 0, o.z, 1, 1, 1, o.r ?? r() * Math.PI * 2);
-    const { p, w } = painter(T, parts, glow);
+    const { p, w, mark } = painter(T, parts, glow, undefined, markSink);
     p(G.cyl12, "#a99d88", 0, 0.18, 0, 1.9, 0.36, 1.9);
+    mark("sail", 1.1, 3.8, 0.95);
+    mark("roof", 0, 3.75, 0.45);
+    mark("window", 0, 2.2, 0.72);
+    mark("door", 0, 0.8, 0.86);
     p(G.taper, "#ece4d2", 0, 0.36 + 1.4, 0, 1.6, 2.8, 1.6);
     p(G.cone8, "#8a5c47", 0, 3.6, 0, 1.4, 0.9, 1.4);
     p(G.box, "#6b4f3a", 0, 0.75, 0.78, 0.48, 0.8, 0.08);
@@ -558,7 +619,9 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
 
   function lanternParts(o: Placed, parts: Part[], glow: Part[], halos: THREE.Vector3[]) {
     const r = rng(o.seed);
-    const { p, w, halo } = painter(M(o.x, 0, o.z, 1, 1, 1, r() * Math.PI * 2), parts, glow, halos);
+    const { p, w, halo, mark } = painter(M(o.x, 0, o.z, 1, 1, 1, r() * Math.PI * 2), parts, glow, halos, markSink);
+    mark("lamp", 0.46, 1.25, 0.14);
+    mark("post", 0, 0.6, 0.07);
     p(G.box, "#4f3f33", 0, 0.82, 0, 0.11, 1.64, 0.11);
     p(G.box, "#4f3f33", 0.24, 1.6, 0, 0.5, 0.07, 0.07);
     p(G.box, "#3a332d", 0.46, 1.48, 0, 0.04, 0.2, 0.04);
@@ -703,6 +766,8 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     layer[key] = mesh;
   }
 
+  const houseDoors = new Map<number, Point>();
+  let towerSpotsNow: TowerSpot[] = [];
   function rebuildAll() {
     pathIndex = makeIndex(S.paths);
     streamIndex = makeIndex(S.streams);
@@ -717,11 +782,13 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     for (const t of towerSpots) towerParts(t[0], t[1], t[2] ?? hash2(t[0], t[1]), parts, glow);
     for (const s of S.fences) fenceParts(s, parts);
     for (const s of S.hedges) hedgeParts(s, parts);
-    for (const h of S.houses) houseParts(h, parts, glow);
+    houseDoors.clear();
+    for (const h of S.houses) houseDoors.set(h.id, houseParts(h, parts, glow));
+    towerSpotsNow = towerSpots;
     for (const o of S.wells) wellParts(o, parts);
     for (const o of S.lanterns) lanternParts(o, parts, glow, halos);
     for (const o of S.props) {
-      if (TOOL[o.kind].animal || plantMeshes.has(o.kind) || isDynamic(o.kind) || drops.has(o.id)) continue;
+      if (TOOL[o.kind].animal || TOOL[o.kind].person || plantMeshes.has(o.kind) || isDynamic(o.kind) || drops.has(o.id)) continue;
       PROP_MODELS[o.kind](painter(M(o.x, 0, o.z, 1, 1, 1, o.r), parts, glow, halos), rng(o.seed));
     }
 
@@ -760,10 +827,13 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     rebuildPlants();
     rebuildTufts();
     rebuildAnimals();
+    people.rebuild(reduceMotion ? new Set() : fresh);
     buildWorld(towerSpots);
     syncBodies();
     rebuildBees();
     fresh.clear();
+    // A fixed piece's labels were built from the old layout.
+    if (selection && !selection.refresh) clearSelection(true);
   }
 
   function rebuildTrees() {
@@ -814,7 +884,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     for (const list of [S.wells, S.mills, S.towers]) for (const o of list) if (Math.hypot(o.x - x, o.z - z) < 1.2) return true;
     for (const o of S.props) {
       const def = TOOL[o.kind];
-      if (!def.animal && Math.hypot(o.x - x, o.z - z) < def.size + pad * 0.4) return true;
+      if (!def.animal && !def.person && Math.hypot(o.x - x, o.z - z) < def.size + pad * 0.4) return true;
     }
     return false;
   }
@@ -1059,10 +1129,12 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     S.wells = keep(S.wells, (o) => near(o, R + 0.4));
     S.mills = keep(S.mills, (o) => near(o, R + 0.5));
     S.lanterns = keep(S.lanterns, (o) => near(o, R));
-    S.sheep = keep(S.sheep, (o) => near(o, R + 0.2));
+    // Animals and people are erased where they stand now, not where they were placed.
+    const live = (o: { id: number; x: number; z: number }) => animalViews.get(o.id)?.mesh.position ?? people.where(o.id) ?? o;
+    S.sheep = keep(S.sheep, (o) => near(live(o), R + 0.2));
     S.trees = keep(S.trees, (o) => near(o, R));
     S.ponds = keep(S.ponds, (o) => near(o, o.r));
-    S.props = keep(S.props, (o) => near(o, R * 0.6 + TOOL[o.kind].size));
+    S.props = keep(S.props, (o) => near(live(o), R * 0.6 + TOOL[o.kind].size));
     for (const kind of ["paths", "walls", "fences", "hedges", "streams"] as const) {
       S[kind] = S[kind].flatMap((st) => {
         if (!st.pts.some((p) => Math.hypot(p[0] - x, p[1] - z) < R)) return [st];
@@ -1109,7 +1181,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     const r = def.face ? facePath(g[0], g[1]) : Math.random() * Math.PI * 2;
     const prop = { ...base, kind: kind as PropKind, r: +r.toFixed(3) } satisfies Prop;
     S.props.push(prop);
-    if (!def.animal && !isDynamic(kind) && !INSTANCED.includes(prop.kind)) startDrop(prop);
+    if (!def.animal && !def.person && !isDynamic(kind) && !INSTANCED.includes(prop.kind)) startDrop(prop);
   }
 
   function commit() {
@@ -1128,6 +1200,8 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     const place = TOOL[tool].place;
     if (place === "orbit" || e.button === 2) { drag = { mode: "orbit", x: e.clientX, y: e.clientY }; return; }
     if (e.button === 1) { drag = { mode: "pan", x: e.clientX, y: e.clientY }; return; }
+    // Look: a tap inspects, a drag turns the view.
+    if (place === "look") { drag = { mode: "look", x: e.clientX, y: e.clientY, moved: false }; return; }
     const hitAt = groundAt(e.clientX, e.clientY);
     if (!hitAt) return;
     // The grass rim past BUILD_R looks buildable, so a start anywhere on the island is pulled inwards.
@@ -1172,6 +1246,11 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       return;
     }
     if (drag.mode === "tap" || drag.mode === "nudge") { drag.moved = drag.moved || Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 12; return; }
+    if (drag.mode === "look") {
+      drag.moved = drag.moved || Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 12;
+      if (drag.moved) { orbitBy(e.clientX - drag.x, e.clientY - drag.y); drag.x = e.clientX; drag.y = e.clientY; }
+      return;
+    }
     if (drag.mode === "hold") {
       const g = groundAt(e.clientX, e.clientY);
       if (!g) return;
@@ -1208,10 +1287,13 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     drag = null;
     previewDirty = true;
     if (d.mode === "orbit" || d.mode === "pan") return;
+    if (d.mode === "look") { if (!d.moved) inspectAt(e.clientX, e.clientY); return; }
     if (d.mode === "hold") { release(d, true); return; }
     if (d.mode === "nudge") {
       const g = d.moved ? null : groundAt(e.clientX, e.clientY);
-      if (g && !petAnimal(g)) gustAt(g);
+      const person = g ? people.pick(ray) : null;
+      if (person) { greet(person); before = null; }
+      else if (g && !petAnimal(g)) gustAt(g);
       else before = null;
       return;
     }
@@ -1267,6 +1349,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       gustAt([goal.tx, goal.tz]);
       return;
     }
+    if (def.place === "look") { inspectNext(); return; }
     if (def.place === "orbit" || def.place === "erase") { say("Chọn nhà, cây hoặc một món đồ rồi bấm Enter để đặt vào giữa khung nhìn."); return; }
     const g = clampToIsland([goal.tx + (Math.random() - 0.5) * 3, goal.tz + (Math.random() - 0.5) * 3]);
     before = serialize();
@@ -1380,7 +1463,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     for (const t of S.trees) circles.push({ x: t.x, z: t.z, r: 0.18 * t.s + 0.08 });
     for (const h of S.houses) boxes.push({ x: h.x, z: h.z, hx: h.len / 2 + 0.05, hz: 0.83, rot: h.r });
     for (const o of S.props) {
-      if (TOOL[o.kind].animal || isDynamic(o.kind) || NO_COLLIDE.has(o.kind)) continue;
+      if (TOOL[o.kind].animal || TOOL[o.kind].person || isDynamic(o.kind) || NO_COLLIDE.has(o.kind)) continue;
       const box = PROP_BOX[o.kind];
       if (box) boxes.push({ x: o.x, z: o.z, hx: box[0], hz: box[1], rot: o.r });
       else circles.push({ x: o.x, z: o.z, r: PROP_RADIUS[o.kind] ?? TOOL[o.kind].size * 0.75 });
@@ -1446,7 +1529,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       b.vz = clamp((drag.target[1] - b.z) * 14, -MAX_SPEED, MAX_SPEED);
       b.awake = true;
     }
-    const movers: Mover[] = [];
+    const movers: Mover[] = people.movers();
     for (const v of animalViews.values()) {
       if (Math.hypot(v.vx, v.vz) > 0.05) movers.push({ x: v.mesh.position.x, z: v.mesh.position.z, vx: v.vx, vz: v.vz, r: Math.max(0.22, TOOL[v.kind].size * 0.8) });
     }
@@ -1757,6 +1840,312 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     }
   }
 
+  /* ───────────── villagers ───────────── */
+  const people = createPeople({
+    world, scene, material: surface,
+    village: () => S,
+    phys: () => phys,
+    time: () => timeOfDay,
+    blocked: (x, z, pad) => blocked(x, z, pad),
+    houseDoor: (h) => houseDoors.get(h.id) ?? [h.x + Math.sin(h.r) * 1.5, h.z + Math.cos(h.r) * 1.5],
+    animals: () => [...animalViews.values()].map((v) => ({ kind: v.kind, x: v.mesh.position.x, z: v.mesh.position.z })),
+    balls: () => [...bodies.values()].filter((b) => b.kind === "ball"),
+  });
+  /** Hand tool on a person: they wave back, and the toast says so in both languages. */
+  function greet(p: Person) {
+    people.wave(p);
+    const line = describe(people.describe(p).who, "wave");
+    say(`${line.en} ${line.vi}`);
+  }
+
+  /* ───────────── Look tool: names, what people and animals are doing, part labels ───────────── */
+  interface Selection {
+    info: InspectInfo;
+    /** Label anchors, in the space `frame` maps to the world. */
+    marks: Mark[];
+    /** The thing's current world matrix; null once it has gone (erased, gone indoors). */
+    frame: () => THREE.Matrix4 | null;
+    /** Fixed ground centre for things that do not move. */
+    center?: THREE.Vector3;
+    ring: number;
+    /** Re-reads what a person or animal is doing. */
+    refresh?: () => InspectInfo | null;
+  }
+  let selection: Selection | null = null, selectionCheck = 0;
+  const IDENTITY = new THREE.Matrix4();
+  // Drawn over everything, so a villager behind a house still shows where they stand.
+  const selMat = new THREE.MeshBasicMaterial({ color: "#fff7e0", transparent: true, opacity: 0.85, depthWrite: false, depthTest: false });
+  const selRing = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.045, 6, 48), selMat);
+  selRing.renderOrder = 10;
+  selRing.rotation.x = Math.PI / 2;
+  selRing.visible = false;
+  scene.add(selRing);
+  const labelLayer = document.createElement("div");
+  labelLayer.className = "vg-labels";
+  labelLayer.setAttribute("aria-hidden", "true");
+  container.appendChild(labelLayer);
+  let labelEls: { dot: HTMLElement; line: HTMLElement; chip: HTMLElement; w: number }[] = [];
+  const uniqueParts = (marks: { part: PartId }[]) => [...new Set(marks.map((m) => m.part))];
+  const anchors = (list: readonly [PartId, number, number, number][] | undefined): Mark[] => (list ?? []).map(([part, x, y, z]) => ({ part, at: new THREE.Vector3(x, y, z) }));
+  /** Runs a builder only to collect where its parts are. */
+  function collectMarks(build: () => void) {
+    const marks: Mark[] = [];
+    markSink = marks;
+    try { build(); } finally { markSink = undefined; }
+    return marks;
+  }
+
+  function clearSelection(notify: boolean) {
+    selection = null;
+    selRing.visible = false;
+    labelLayer.replaceChildren();
+    labelEls = [];
+    if (notify) options.onInspect?.(null);
+  }
+  /** Shows a selection's labels and card; `focus` (keyboard) also brings it to the middle of the view. */
+  function select(sel: Selection, focus = false) {
+    selection = sel;
+    selectionCheck = 0.4;
+    labelLayer.replaceChildren();
+    labelEls = sel.marks.map((m) => {
+      const dot = document.createElement("i"), line = document.createElement("i"), chip = document.createElement("span");
+      dot.className = "vg-label-dot";
+      line.className = "vg-label-line";
+      chip.className = "vg-label";
+      chip.lang = "en";
+      chip.textContent = m.part;
+      labelLayer.append(line, dot, chip);
+      return { dot, line, chip, w: 0 };
+    });
+    // A thin ring of the right size (scaling one ring would thicken it too).
+    selRing.geometry.dispose();
+    selRing.geometry = new THREE.TorusGeometry(sel.ring, 0.045, 6, 48);
+    // Keyboard steps bring the thing to the middle; on a phone a tap does too, a little low so the card does not cover it.
+    const narrow = container.clientWidth < 640;
+    if (focus || narrow) {
+      const at = sel.center ?? _sel.setFromMatrixPosition(sel.frame() ?? IDENTITY);
+      if (focus) goal.radius = Math.min(goal.radius, sel.refresh ? 14 : 22);
+      const ahead = narrow ? goal.radius * 0.1 : 0;
+      goal.tx = clamp(at.x - Math.sin(goal.theta) * ahead, -PAN, PAN);
+      goal.tz = clamp(at.z - Math.cos(goal.theta) * ahead, -PAN, PAN);
+    }
+    selRing.visible = true;
+    options.onInspect?.(sel.info);
+  }
+  const _sel = new THREE.Vector3();
+
+  function personInfo(p: Person): InspectInfo {
+    const { who, action } = people.describe(p);
+    return {
+      id: `person:${p.id}`,
+      title: who.word ? { word: who.word } : { resident: who.resident as ResidentId },
+      sentence: describe(who, action),
+      parts: uniqueParts(personMarks(p.role).map(([part]) => ({ part }))),
+    };
+  }
+  function personSelection(p: Person): Selection {
+    return {
+      info: personInfo(p), marks: anchors(personMarks(p.role)), ring: 0.45,
+      frame: () => (people.isAlive(p) ? p.mesh.matrixWorld : null),
+      refresh: () => (people.isAlive(p) ? personInfo(p) : null),
+    };
+  }
+
+  /** What an animal is doing, read from its state and how it moves. */
+  function animalAction(v: AnimalView): { action: ActionId; target?: { en: string; vi: string } } {
+    if (v.state === "sleep") return { action: "sleep" };
+    if (v.state === "home") return { action: "goHome" };
+    if (v.state === "flee") return { action: "flee" };
+    if (v.state === "chase" && v.chase) {
+      if (!("mesh" in v.chase)) return { action: "chaseBall" };
+      const prey = v.chase.kind as WordId;
+      return { action: "chase", target: { en: prey, vi: viWho(prey) } };
+    }
+    const p = v.mesh.position;
+    if (v.kind === "duck" && waterAt(phys, p.x, p.z)) return { action: "swim" };
+    if (Math.hypot(v.vx, v.vz) > 0.08) return { action: v.kind === "rabbit" ? "hopAbout" : "roam" };
+    if (v.kind === "chicken" || v.kind === "duck") return { action: "peck" };
+    if (v.kind === "sheep" || v.kind === "cow" || v.kind === "horse") return { action: "graze" };
+    if (v.kind === "dog" || v.kind === "pig") return { action: "sniff" };
+    return { action: "restSun" };
+  }
+  function animalInfo(v: AnimalView): InspectInfo {
+    const word = v.kind as WordId, { action, target } = animalAction(v);
+    return { id: `animal:${v.id}`, title: { word }, sentence: describe({ en: word, vi: viWho(word) }, action, target), parts: uniqueParts(anchors(PROP_MARKS[v.kind as PropKind])) };
+  }
+  function animalSelection(v: AnimalView): Selection {
+    return {
+      info: animalInfo(v), marks: anchors(PROP_MARKS[v.kind as PropKind]), ring: TOOL[v.kind].size + 0.25,
+      frame: () => (animalViews.get(v.id) === v ? v.mesh.matrixWorld : null),
+      refresh: () => (animalViews.get(v.id) === v ? animalInfo(v) : null),
+    };
+  }
+  function bodySelection(b: Body): Selection {
+    const m = new THREE.Matrix4(), marks = anchors(PROP_MARKS[b.kind]);
+    return {
+      info: { id: `body:${b.id}`, title: { word: b.kind }, sentence: null, parts: uniqueParts(marks) },
+      marks, ring: BODY[b.kind].r + 0.3,
+      frame: () => {
+        if (b.gone || bodies.get(b.id) !== b) return null;
+        return BODY[b.kind].rolls ? m.makeTranslation(b.x, b.y, b.z) : m.makeRotationY(b.yaw).setPosition(b.x, b.y, b.z);
+      },
+    };
+  }
+
+  /** The built piece nearest a point: houses, towers, props, trees, ponds and drawn lines. */
+  function thingAt(x: number, z: number): Selection | null {
+    let best: { score: number; make: () => Selection } | null = null;
+    const offer = (score: number, make: () => Selection) => { if (score < 0.5 && (!best || score < best.score)) best = { score, make }; };
+    const far = (o: { x: number; z: number }) => Math.hypot(o.x - x, o.z - z);
+    const thing = (title: InspectInfo["title"], key: string, marks: Mark[], cx: number, cz: number, ring: number): Selection => ({
+      info: { id: key, title, sentence: null, parts: uniqueParts(marks) }, marks, frame: () => IDENTITY, center: new THREE.Vector3(cx, 0, cz), ring,
+    });
+    for (const o of S.props) {
+      const def = TOOL[o.kind];
+      if (def.animal || def.person || isDynamic(o.kind)) continue;
+      const box = PROP_BOX[o.kind];
+      let score = far(o) - def.size * 0.8;
+      if (box) {
+        const c = Math.cos(o.r), s = Math.sin(o.r), dx = x - o.x, dz = z - o.z;
+        score = Math.hypot(Math.max(0, Math.abs(dx * c - dz * s) - box[0]), Math.max(0, Math.abs(dx * s + dz * c) - box[1]));
+      }
+      offer(Math.max(0, score), () => {
+        const k = INSTANCED.includes(o.kind) ? 0.8 + rng(o.seed)() * 0.45 : 1, T = M(o.x, 0, o.z, k, k, k, o.r);
+        const marks = anchors(PROP_MARKS[o.kind]).map((m) => ({ ...m, at: m.at.applyMatrix4(T) }));
+        return thing({ word: o.kind }, `prop:${o.id}`, marks, o.x, o.z, def.size + 0.3);
+      });
+    }
+    for (const h of S.houses) {
+      const c = Math.cos(h.r), s = Math.sin(h.r), dx = x - h.x, dz = z - h.z;
+      const score = Math.hypot(Math.max(0, Math.abs(dx * c - dz * s) - h.len / 2 - 0.1), Math.max(0, Math.abs(dx * s + dz * c) - 0.9));
+      offer(score, () => thing({ word: "house" }, `house:${h.id}`, collectMarks(() => houseParts(h, [], [])), h.x, h.z, h.len / 2 + 0.9));
+    }
+    for (const [tx, tz, seed] of towerSpotsNow) {
+      offer(Math.max(0, Math.hypot(tx - x, tz - z) - 0.9), () => thing({ word: "tower" }, `tower:${tx},${tz}`, collectMarks(() => towerParts(tx, tz, seed ?? hash2(tx, tz), [], [])), tx, tz, 1.15));
+    }
+    for (const o of S.wells) offer(Math.max(0, far(o) - 0.75), () => thing({ word: "well" }, `well:${o.id}`, collectMarks(() => wellParts(o, [])), o.x, o.z, 1));
+    for (const o of S.mills) offer(Math.max(0, far(o) - 1), () => thing({ word: "windmill" }, `mill:${o.id}`, collectMarks(() => millParts(o, [], [])), o.x, o.z, 1.25));
+    for (const o of S.lanterns) offer(Math.max(0, far(o) - 0.35), () => thing({ word: "lantern" }, `lantern:${o.id}`, collectMarks(() => lanternParts(o, [], [], [])), o.x, o.z, 0.45));
+    for (const t of S.trees) {
+      offer(Math.max(0, far(t) - 0.65 * t.s), () => {
+        const T = M(t.x, 0, t.z, t.s, t.s, t.s, t.r);
+        const list: [PartId, number, number, number][] = t.k ? [["trunk", 0.12, 0.3, 0.05], ["leaf", 0.55, 1.25, 0.2]] : [["trunk", 0.13, 0.45, 0], ["leaf", 0.6, 1.6, 0.3]];
+        return thing({ word: "tree" }, `tree:${t.id}`, anchors(list).map((m) => ({ ...m, at: m.at.applyMatrix4(T) })), t.x, t.z, 0.9 * t.s);
+      });
+    }
+    for (const o of S.ponds) offer(Math.max(0, far(o) - o.r), () => thing({ word: "pond" }, `pond:${o.id}`, collectMarks(() => pondParts(o, [])), o.x, o.z, o.r + 0.4));
+    // Drawn lines: the labels nearest the tap, one of each part.
+    const lines: [StrokeTool, number][] = [["wall", 0.45], ["fence", 0.2], ["hedge", 0.5], ["path", 0.7], ["stream", 1.0]];
+    for (const [kind, half] of lines) {
+      for (const st of S[STROKE_KEY[kind]]) {
+        let nd = Infinity, np: Point = st.pts[0];
+        for (const q of st.pts) { const dd = Math.hypot(q[0] - x, q[1] - z); if (dd < nd) { nd = dd; np = q; } }
+        const bridge = kind === "path" && streamIndex.near(np[0], np[1], 1.15);
+        offer(Math.max(0, nd - half), () => {
+          const all = collectMarks(() => {
+            if (bridge) bridgeParts(st, []);
+            else if (kind === "wall") wallParts(st, [], [], pathIndex);
+            else if (kind === "fence") fenceParts(st, []);
+            else if (kind === "hedge") hedgeParts(st, []);
+            else if (kind === "path") pathParts(st, 0, []);
+            else streamParts(st, [], []);
+          });
+          const nearest = new Map<PartId, { m: Mark; d: number }>();
+          for (const m of all) {
+            const dd = Math.hypot(m.at.x - x, m.at.z - z);
+            if (dd < 3 && dd < (nearest.get(m.part)?.d ?? Infinity)) nearest.set(m.part, { m, d: dd });
+          }
+          const marks = [...nearest.values()].map((e) => e.m);
+          return thing(bridge ? { part: "bridge" } : { word: kind }, `${kind}:${st.id}`, marks, np[0], np[1], bridge ? 1.4 : 0.9);
+        });
+      }
+    }
+    return (best as { make: () => Selection } | null)?.make() ?? null;
+  }
+
+  function inspectAt(cx: number, cy: number) {
+    const g = groundAt(cx, cy);
+    if (!g) { clearSelection(true); return; }
+    const person = people.pick(ray);
+    if (person) { select(personSelection(person)); return; }
+    const views = [...animalViews.values()];
+    const animalHit = ray.intersectObjects(views.map((v) => v.mesh), false)[0];
+    const view = animalHit && views.find((v) => v.mesh === animalHit.object);
+    if (view) { select(animalSelection(view)); return; }
+    const body = bodyUnderPointer(cx, cy);
+    if (body) { select(bodySelection(body)); return; }
+    groundAt(cx, cy);
+    const targets = [layer.structures, layer.water, layer.ground, ...treeMeshes, ...plantMeshes.values()].filter((o): o is THREE.Mesh => !!o);
+    const first = ray.intersectObjects(targets, false)[0];
+    const found = thingAt(first ? first.point.x : g[0], first ? first.point.z : g[1]);
+    if (found) select(found);
+    else { clearSelection(true); say("Chạm vào người, con vật, nhà cửa hay cây cối để xem tên tiếng Anh của chúng."); }
+  }
+  /** Keyboard: Enter steps through the people and animals nearest the middle of the view, then the nearest piece. */
+  let cycleFrom: Point | null = null;
+  function inspectNext() {
+    // The order is fixed from where the round started, so each press moves on to someone new.
+    const current = selection?.info.id ?? "";
+    if (!cycleFrom || !/^(person|animal):/.test(current)) cycleFrom = [goal.tx, goal.tz];
+    const [ox, oz] = cycleFrom;
+    const beings: { id: string; d: number; make: () => Selection }[] = [];
+    for (const p of people.list()) beings.push({ id: `person:${p.id}`, d: Math.hypot(p.x - ox, p.z - oz), make: () => personSelection(p) });
+    for (const v of animalViews.values()) beings.push({ id: `animal:${v.id}`, d: Math.hypot(v.mesh.position.x - ox, v.mesh.position.z - oz), make: () => animalSelection(v) });
+    const near = beings.filter((b) => b.d < 12).sort((a, b) => a.d - b.d);
+    const next = near[near.findIndex((b) => b.id === current) + 1];
+    if (next) { select(next.make(), true); return; }
+    cycleFrom = null;
+    const found = thingAt(goal.tx, goal.tz);
+    if (found) select(found, true);
+    else say("Giữa khung nhìn không có gì. Dời khung nhìn bằng Shift + mũi tên rồi bấm Enter lại.");
+  }
+
+  const _lv = new THREE.Vector3();
+  /** Keeps labels on their parts, spreads them so they do not overlap, and follows moving beings. */
+  function updateSelection(dt: number) {
+    if (!selection) return;
+    const sel = selection;
+    if (sel.refresh) {
+      selectionCheck -= dt;
+      if (selectionCheck <= 0) {
+        selectionCheck = 0.4;
+        const info = sel.refresh();
+        if (!info) { clearSelection(true); return; }
+        if (info.sentence?.en !== sel.info.sentence?.en) { sel.info = info; options.onInspect?.(info); }
+      }
+    }
+    const T = sel.frame();
+    if (!T) { clearSelection(true); return; }
+    const c = sel.center ?? _lv.setFromMatrixPosition(T);
+    selRing.position.set(c.x, 0.07, c.z);
+    const pulse = 1 + Math.sin(clock * 3) * 0.04 * (reduceMotion ? 0 : 1);
+    selRing.scale.set(pulse, pulse, 1);
+    const W = container.clientWidth, H = container.clientHeight, CH = 26;
+    const placed: [number, number, number, number][] = [];
+    sel.marks.forEach((m, i) => {
+      const el = labelEls[i];
+      if (!el) return;
+      _lv.copy(m.at).applyMatrix4(T).project(camera);
+      const show = _lv.z < 1 && Math.abs(_lv.x) < 1.05 && Math.abs(_lv.y) < 1.05;
+      el.dot.hidden = el.line.hidden = el.chip.hidden = !show;
+      if (!show) return;
+      const px = (_lv.x * 0.5 + 0.5) * W, py = (-_lv.y * 0.5 + 0.5) * H;
+      if (!el.w) el.w = el.chip.offsetWidth || 56;
+      const cw = el.w, cx = clamp(px, cw / 2 + 4, W - cw / 2 - 4);
+      let cy = py - 30;
+      for (const dy of [-30, -58, 28, -86, 56, -114]) {
+        cy = clamp(py + dy, CH / 2 + 4, H - CH / 2 - 4);
+        if (!placed.some(([x, y, w, h]) => cx - cw / 2 < x + w + 4 && cx + cw / 2 > x - 4 && cy - CH / 2 < y + h + 3 && cy + CH / 2 > y - 3)) break;
+      }
+      placed.push([cx - cw / 2, cy - CH / 2, cw, CH]);
+      el.chip.style.transform = `translate(${cx - cw / 2}px, ${cy - CH / 2}px)`;
+      el.dot.style.transform = `translate(${px}px, ${py}px)`;
+      const ex = cx, ey = cy + (cy < py ? CH / 2 : -CH / 2);
+      el.line.style.width = `${Math.hypot(ex - px, ey - py)}px`;
+      el.line.style.transform = `translate(${px}px, ${py}px) rotate(${Math.atan2(ey - py, ex - px)}rad)`;
+    });
+  }
+
   /* ───────────── wind, petals, bees, birds ───────────── */
   function updateWind(dt: number, motion: number) {
     const t = clock;
@@ -2026,10 +2415,12 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       if (Math.abs(c.position.z) > 55) c.position.z = -Math.sign(c.position.z) * 54;
     }
     updateAnimals(dt, motion);
+    people.update(dt, motion);
     stepPhysics(dt);
     updateDrops(dt);
     updateLife(dt, motion);
     renderer.render(scene, camera);
+    updateSelection(dt);
     if (firstFrame) { firstFrame = false; options.onReady(); makeThumbnails(); }
 
     frames += 1;
@@ -2060,13 +2451,16 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       cancelTool();
       tool = id;
       canvas.dataset.mode = id;
+      if (id !== "look" && selection) clearSelection(true);
     },
+    clearInspect: () => clearSelection(false),
     setTime: applyTime,
     undo() {
       const prev = undoStack.pop();
       if (prev === undefined) return;
       cancelTool();
       clearMotion();
+      clearSelection(true);
       S = JSON.parse(prev) as VillageScene;
       options.onUndoChange(undoStack.length > 0);
       needsRebuild = true;
@@ -2076,6 +2470,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     reset(kind) {
       cancelTool();
       clearMotion();
+      clearSelection(true);
       undoStack.push(serialize());
       options.onUndoChange(true);
       if (kind === "sample") sampleVillage();
@@ -2098,8 +2493,10 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       ]);
       scene.traverse((obj) => { const g = (obj as THREE.Mesh).geometry; if (g) geometries.add(g); });
       geometries.forEach((g) => g.dispose());
-      for (const m of [surface, swayMat, glowMat, waterMat, cloudMat, haloMat, starMat, petalMat, ringMat]) m.dispose();
+      people.dispose();
+      for (const m of [surface, swayMat, glowMat, waterMat, cloudMat, haloMat, starMat, petalMat, ringMat, selMat]) m.dispose();
       haloTex.dispose();
+      labelLayer.remove();
       renderer.dispose();
       canvas.remove();
     },

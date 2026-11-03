@@ -3,6 +3,8 @@
  * Pure data and functions only — no React, DOM or three.js — so it is cheap to import and test.
  */
 
+import { PARTS, RESIDENTS, VERBS } from "./vocab.ts";
+
 export const ISLAND_R = 22;
 export const BUILD_R = 20.4;
 export const STEP = 0.5;
@@ -16,14 +18,15 @@ export const PROP_KINDS = [
   "fountain", "boat",
   "bench", "signpost", "cart", "barrel", "crate", "flag", "statue", "scarecrow", "swing", "campfire", "beehive", "woodpile", "mailbox", "ball",
   "chicken", "duck", "cow", "horse", "pig", "dog", "cat", "rabbit",
+  "farmer", "baker", "fisherman", "shepherd", "woodcutter", "postman", "musician", "child",
 ] as const;
 export type PropKind = (typeof PROP_KINDS)[number];
 export type StrokeTool = "path" | "wall" | "fence" | "hedge" | "stream";
-export type ToolId = "orbit" | "hand" | "erase" | "house" | "tree" | "tower" | "well" | "pond" | "windmill" | "lantern" | "sheep" | StrokeTool | PropKind;
-export type WordId = Exclude<ToolId, "orbit" | "hand" | "erase">;
-export type Category = "build" | "nature" | "water" | "decor" | "animals";
+export type ToolId = "orbit" | "look" | "hand" | "erase" | "house" | "tree" | "tower" | "well" | "pond" | "windmill" | "lantern" | "sheep" | StrokeTool | PropKind;
+export type WordId = Exclude<ToolId, "orbit" | "look" | "hand" | "erase">;
+export type Category = "build" | "nature" | "water" | "decor" | "animals" | "people";
 /** How a tool is used: drag a line, tap once, brush (scatter while dragging), or its own gesture. */
-export type Place = "orbit" | "hand" | "erase" | "stroke" | "house" | "pond" | "brush" | "tap";
+export type Place = "orbit" | "look" | "hand" | "erase" | "stroke" | "house" | "pond" | "brush" | "tap";
 
 export type Point = [number, number];
 export interface Stroke { id: number; pts: Point[] }
@@ -49,7 +52,8 @@ export interface VillageScene {
   props: Prop[];
 }
 export interface SavedScene { scene: VillageScene; idSeq: number }
-export interface VillageProgress { unlocked: ToolId[]; learned: Record<string, { at: number; reviewed?: number }>; time: number }
+/** `seen` holds discovery words (verbs, parts, villagers) found with the Look tool, by vocab key. */
+export interface VillageProgress { unlocked: ToolId[]; learned: Record<string, { at: number; reviewed?: number }>; seen: Record<string, number>; time: number }
 
 export interface ToolDef {
   id: ToolId;
@@ -64,6 +68,9 @@ export interface ToolDef {
   animal?: boolean;
   /** What an animal says when petted. */
   sound?: string;
+  person?: boolean;
+  /** How the piece is named in a Vietnamese sentence (“bác nông dân”). */
+  viWho?: string;
 }
 
 export const CATEGORIES: { id: Category; label: string }[] = [
@@ -72,6 +79,7 @@ export const CATEGORIES: { id: Category; label: string }[] = [
   { id: "water", label: "Nước" },
   { id: "decor", label: "Trang trí" },
   { id: "animals", label: "Con vật" },
+  { id: "people", label: "Người" },
 ];
 
 const tap = (label: string, cat: Category, size: number, hint: string, extra: Partial<ToolDef> = {}) => ({ label, cat, size, hint, place: "tap" as const, ...extra });
@@ -81,9 +89,12 @@ const animal = (label: string, size: number, sound: string) => ({
   hint: `Chạm để thả ${label.toLowerCase()}. Chạm vào một con vật để vuốt ve: “${sound}”`,
 });
 
+const person = (label: string, viWho: string, hint: string) => ({ label, viWho, hint, cat: "people" as const, size: 0.3, place: "tap" as const, person: true });
+
 const DEFS: Record<ToolId, Omit<ToolDef, "id">> = {
+  look: { label: "Xem", cat: null, place: "look", size: 0, hint: "Chạm vào người, con vật hay công trình để xem họ đang làm gì và tên từng bộ phận bằng tiếng Anh." },
   orbit: { label: "Xoay", cat: null, place: "orbit", size: 0, hint: "Kéo để xoay đảo. Hai ngón tay hoặc con lăn chuột để phóng to, thu nhỏ." },
-  hand: { label: "Tay", cat: null, place: "hand", size: 0, hint: "Kéo bóng, thùng, bí ngô hay thuyền rồi thả tay để ném. Chạm cỏ để thổi một cơn gió nhỏ, chạm con vật để vuốt ve." },
+  hand: { label: "Tay", cat: null, place: "hand", size: 0, hint: "Kéo bóng, thùng, bí ngô hay thuyền rồi thả tay để ném. Chạm cỏ để thổi gió nhỏ, chạm con vật để vuốt ve, chạm người để chào." },
   erase: { label: "Xóa", cat: null, place: "erase", size: 0, hint: "Kéo qua thứ muốn xóa. Lỡ tay thì bấm Hoàn tác." },
 
   path: { label: "Đường", cat: "build", place: "stroke", size: 0, hint: "Kéo để vẽ đường đi. Đường xuyên qua tường thành cổng, băng qua suối thành cầu." },
@@ -144,11 +155,20 @@ const DEFS: Record<ToolId, Omit<ToolDef, "id">> = {
   dog: animal("Chó", 0.4, "Gâu gâu!"),
   cat: animal("Mèo", 0.3, "Meo meo!"),
   rabbit: animal("Thỏ", 0.3, "Thỏ dụi mũi vào tay bạn."),
+
+  farmer: person("Nông dân", "bác nông dân", "Chạm để mời bác nông dân đến làng. Bác tưới vườn rau, hái bí ngô."),
+  baker: person("Thợ bánh", "chú thợ bánh", "Chạm để mời chú thợ bánh. Có sạp hàng thì chú ra sạp bán bánh."),
+  fisherman: person("Ngư dân", "ông ngư dân", "Chạm để mời ông ngư dân. Ông ra ao hoặc suối gần nhất để câu cá."),
+  shepherd: person("Chăn cừu", "anh chăn cừu", "Chạm để mời anh chăn cừu. Anh đi theo đàn cừu gần nhất."),
+  woodcutter: person("Tiều phu", "chú tiều phu", "Chạm để mời chú tiều phu. Chú bổ củi ở đống củi, khúc gỗ hay gốc cây."),
+  postman: person("Đưa thư", "chú đưa thư", "Chạm để mời chú đưa thư. Chú đi lần lượt tới từng hộp thư."),
+  musician: person("Nhạc công", "anh nhạc công", "Chạm để mời anh nhạc công. Anh đàn bên lửa trại, đài nước hay chòi nghỉ."),
+  child: person("Em bé", "em bé", "Chạm để thêm một em bé. Em đá bóng, chơi xích đu, chạy nhảy khắp nơi."),
 };
 
 export const TOOLS: ToolDef[] = (Object.keys(DEFS) as ToolId[]).map((id) => ({ id, ...DEFS[id] }));
 export const TOOL = Object.fromEntries(TOOLS.map((t) => [t.id, t])) as Record<ToolId, ToolDef>;
-export const STARTER: ToolId[] = ["orbit", "hand", "path", "wall", "house", "tree", "erase"];
+export const STARTER: ToolId[] = ["orbit", "look", "hand", "path", "wall", "house", "tree", "erase"];
 export const isPropKind = (value: unknown): value is PropKind => typeof value === "string" && (PROP_KINDS as readonly string[]).includes(value);
 /** Brushed plants are drawn as instanced meshes, so thousands stay cheap. */
 export const INSTANCED: PropKind[] = ["bush", "flower", "blossom", "sunflower", "mushroom", "rock"];
@@ -214,11 +234,27 @@ export const WORDS: Record<WordId, WordDef> = {
   dog: w("/dɑːɡ/", "con chó", "Our ___ barks when someone knocks on the door.", "Con chó nhà tôi sủa khi có người gõ cửa."),
   cat: w("/kæt/", "con mèo", "The ___ is sleeping in the sun by the window.", "Con mèo đang ngủ dưới nắng bên cửa sổ."),
   rabbit: w("/ˈræb.ɪt/", "con thỏ", "The ___ has long ears and a short, fluffy tail.", "Con thỏ có đôi tai dài và cái đuôi ngắn, xù."),
+
+  farmer: w("/ˈfɑːr.mɚ/", "nông dân", "The ___ gets up early to work in the fields.", "Người nông dân dậy sớm để làm việc ngoài đồng."),
+  baker: w("/ˈbeɪ.kɚ/", "thợ làm bánh", "The ___ makes fresh bread every morning.", "Người thợ làm bánh làm bánh mì tươi mỗi sáng.", "bake (nướng bánh) + -er thành baker; tiệm bánh là bakery."),
+  fisherman: w("/ˈfɪʃ.ɚ.mən/", "ngư dân, người câu cá", "The old ___ caught a big fish in the lake.", "Ông ngư dân già câu được một con cá lớn ở hồ.", "Số nhiều là fishermen."),
+  shepherd: w("/ˈʃep.ɚd/", "người chăn cừu", "The ___ takes the sheep up the hill.", "Người chăn cừu dẫn đàn cừu lên đồi.", "Chữ h trong shepherd không đọc: /ˈʃep.ɚd/."),
+  woodcutter: w("/ˈwʊdˌkʌt̬.ɚ/", "tiều phu, người đốn củi", "The ___ went into the forest with his axe.", "Chú tiều phu vào rừng với cái rìu.", "Từ ghép: wood (gỗ) + cutter (người cắt)."),
+  postman: w("/ˈpoʊst.mən/", "người đưa thư", "The ___ brings our letters every afternoon.", "Chú đưa thư mang thư đến cho chúng tôi mỗi chiều.", "Anh-Mỹ hay nói mail carrier."),
+  musician: w("/mjuːˈzɪʃ.ən/", "nhạc công", "A ___ played a song by the fire.", "Một nhạc công chơi một bài hát bên đống lửa.", "music (âm nhạc) + -ian chỉ người làm nghề đó."),
+  child: w("/tʃaɪld/", "đứa trẻ", "The ___ is laughing on the swing.", "Đứa trẻ đang cười trên xích đu.", "Số nhiều bất quy tắc: children /ˈtʃɪl.drən/."),
 };
 /** Words in dock order: grouped by category. */
 export const WORD_ORDER = TOOLS.filter((t) => t.cat).map((t) => t.id as WordId);
 export const toolOfWord = (word: WordId) => TOOL[word];
 export const wordsIn = (cat: Category) => WORD_ORDER.filter((word) => TOOL[word].cat === cat);
+
+/** How a piece is named in a Vietnamese sentence: “con chó”, “bác nông dân”. */
+export const viWho = (word: WordId) => TOOL[word].viWho ?? WORDS[word].vi.split(",")[0].trim();
+const isVocabKey = (key: string) => {
+  const [kind, id] = key.split(":");
+  return (kind === "verb" && id in VERBS) || (kind === "part" && id in PARTS) || (kind === "noun" && id in RESIDENTS);
+};
 
 /* ---------- geometry helpers ---------- */
 
@@ -353,7 +389,7 @@ export function parseSavedScene(raw: string | null): SavedScene | null {
 }
 
 export function parseProgress(raw: string | null): VillageProgress {
-  const fallback: VillageProgress = { unlocked: [...STARTER], learned: {}, time: 0.32 };
+  const fallback: VillageProgress = { unlocked: [...STARTER], learned: {}, seen: {}, time: 0.32 };
   if (!raw) return fallback;
   try {
     const data = JSON.parse(raw) as Record<string, unknown>;
@@ -366,9 +402,14 @@ export function parseProgress(raw: string | null): VillageProgress {
         if (finite(e.at)) learned[word] = { at: e.at as number, ...(finite(e.reviewed) ? { reviewed: e.reviewed as number } : {}) };
       }
     }
+    const seen: VillageProgress["seen"] = {};
+    if (data.seen && typeof data.seen === "object") {
+      for (const [key, at] of Object.entries(data.seen as Record<string, unknown>)) if (isVocabKey(key) && finite(at)) seen[key] = at as number;
+    }
     return {
       unlocked: [...new Set([...STARTER, ...unlocked])],
       learned,
+      seen,
       time: finite(data.time) ? Math.min(1, Math.max(0, data.time as number)) : fallback.time,
     };
   } catch {

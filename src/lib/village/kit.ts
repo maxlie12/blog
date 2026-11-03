@@ -5,14 +5,18 @@
  */
 import * as THREE from "three";
 import type { Point } from "./data";
+import type { PartId } from "./vocab";
 
 export type Args = [x?: number, y?: number, z?: number, sx?: number, sy?: number, sz?: number, ry?: number, rx?: number, rz?: number];
 export interface Part { g: THREE.BufferGeometry; c: THREE.ColorRepresentation | null; m: THREE.Matrix4 | null }
-/** Draws in one object's frame: `p` solid parts, `w` parts that glow at night, `halo` a light glow. */
+/** Where a named part sits, for the Look tool's labels. */
+export interface Mark { part: PartId; at: THREE.Vector3 }
+/** Draws in one object's frame: `p` solid parts, `w` parts that glow at night, `halo` a light glow, `mark` a part label. */
 export interface Draw {
   p: (g: THREE.BufferGeometry, c: THREE.ColorRepresentation, ...a: Args) => void;
   w: (g: THREE.BufferGeometry, ...a: Args) => void;
   halo: (x: number, y: number, z: number) => void;
+  mark: (part: PartId, x: number, y: number, z: number) => void;
 }
 
 const _q = new THREE.Quaternion(), _e = new THREE.Euler(), _p = new THREE.Vector3(), _s = new THREE.Vector3(), _c = new THREE.Color();
@@ -24,11 +28,12 @@ export function M(x = 0, y = 0, z = 0, sx = 1, sy = 1, sz = 1, ry = 0, rx = 0, r
 export const shade = (hex: THREE.ColorRepresentation, amount: number) => new THREE.Color(hex).offsetHSL(0, 0, amount);
 export const pick = <T>(arr: readonly T[], r: () => number) => arr[Math.floor(r() * arr.length) % arr.length];
 
-export function painter(T: THREE.Matrix4, parts: Part[], glow?: Part[], halos?: THREE.Vector3[]): Draw {
+export function painter(T: THREE.Matrix4, parts: Part[], glow?: Part[], halos?: THREE.Vector3[], marks?: Mark[]): Draw {
   return {
     p: (g, c, ...a) => { parts.push({ g, c, m: T.clone().multiply(M(...a)) }); },
     w: (g, ...a) => { glow?.push({ g, c: "#ffffff", m: T.clone().multiply(M(...a)) }); },
     halo: (x, y, z) => { halos?.push(new THREE.Vector3(x, y, z).applyMatrix4(T)); },
+    mark: (part, x, y, z) => { marks?.push({ part, at: new THREE.Vector3(x, y, z).applyMatrix4(T) }); },
   };
 }
 

@@ -53,8 +53,8 @@ test("typed answers ignore case and outer spaces", () => {
 
 test("every buildable piece has a usable word card and a group", async () => {
   const { TOOLS, WORDS, WORD_ORDER, CATEGORIES, wordsIn } = await import("./village/data.ts");
-  assert.equal(WORD_ORDER.length, 54);
-  assert.equal(TOOLS.length, 57, "54 pieces plus orbit, hand and erase");
+  assert.equal(WORD_ORDER.length, 62);
+  assert.equal(TOOLS.length, 66, "62 pieces plus orbit, look, hand and erase");
   assert.equal(CATEGORIES.reduce((n, c) => n + wordsIn(c.id).length, 0), WORD_ORDER.length);
   for (const word of WORD_ORDER) {
     const card = WORDS[word];
@@ -150,4 +150,30 @@ test("physics: an animal walking into a sleeping crate pushes it", async () => {
   const crate = makeBody({ id: 1, kind: "crate", x: 0.5, z: 0, r: 0 });
   stepBodies(makeWorld({ islandR: 22 }), [crate], [{ x: 0, z: 0, vx: 1.2, vz: 0, r: 0.4 }], 1 / 60);
   assert.ok(crate.awake && crate.vx > 0 && crate.x >= 0.73 - 1e-9);
+});
+
+test("discovery words are complete and every action sentence uses its verb", async () => {
+  const { ACTIONS, PARTS, RESIDENTS, VERBS, describe } = await import("./village/vocab.ts");
+  for (const [id, entry] of [...Object.entries(VERBS), ...Object.entries(PARTS), ...Object.entries(RESIDENTS)]) {
+    assert.equal(entry.en, id, `${id}: key is the English word`);
+    assert.match(entry.ipa, /^\/.+\/$/, `${id}: IPA in slashes`);
+    assert.ok(entry.vi, `${id}: Vietnamese meaning`);
+  }
+  for (const [id, action] of Object.entries(ACTIONS)) {
+    assert.ok(action.en.startsWith(`is ${VERBS[action.verb].ing}`), `${id}: “${action.en}” starts with its -ing verb`);
+    assert.ok(action.vi.startsWith("đang "), `${id}: Vietnamese uses “đang”`);
+  }
+  const chase = describe({ en: "dog", vi: "con chó" }, "chase", { en: "chicken", vi: "con gà" });
+  assert.deepEqual(chase, { en: "The dog is chasing the chicken.", vi: "Con chó đang đuổi theo con gà.", verb: "chase", highlight: "chasing" });
+  assert.equal(describe({ en: "farmer", vi: "bác nông dân" }, "waterGarden").vi, "Bác nông dân đang tưới rau.");
+});
+
+test("people are words with a Vietnamese name, and seen words survive a reload", async () => {
+  const { TOOL, wordsIn, viWho } = await import("./village/data.ts");
+  assert.deepEqual(wordsIn("people"), ["farmer", "baker", "fisherman", "shepherd", "woodcutter", "postman", "musician", "child"]);
+  for (const word of wordsIn("people")) assert.ok(TOOL[word].person && viWho(word).length > 2, `${word}: placeable person with a Vietnamese name`);
+  assert.equal(viWho("cow"), "con bò");
+  const progress = parseProgress(JSON.stringify({ unlocked: [], seen: { "verb:walk": 5, "part:roof": 6, "noun:grandma": 7, "verb:fly": 1, "part:roof2": 2, "noun:man": "x", junk: 3 } }));
+  assert.deepEqual(progress.seen, { "verb:walk": 5, "part:roof": 6, "noun:grandma": 7 });
+  assert.deepEqual(parseProgress(null).seen, {});
 });

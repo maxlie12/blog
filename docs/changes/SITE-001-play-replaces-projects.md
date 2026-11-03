@@ -51,7 +51,8 @@ The header and home page promote a Projects section whose only entry is a placeh
       visible focus; no horizontal scroll.
 - [ ] Not checked here: `next build`, the `/projects` → `/play` redirect and the home card in a
       running Next server (the workspace cannot install Clerk). Vercel's build is the check.
-- [ ] Vercel build + production deploy
+- [x] Vercel build + production deploy: commit `19194e4` deployed to Production (status
+      “Deployment has completed”). The live page was not opened from this workspace.
 
 ## Result
 

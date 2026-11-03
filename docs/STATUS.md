@@ -1,6 +1,20 @@
 # Status
 
-Last verified: 2026-11-03 (play corner replaces Projects; static render checks).
+Last verified: 2026-11-03 (Làng Rêu villagers and Look tool; harness browser checks).
+
+## 2026-11-03 — Làng Rêu: villagers, action sentences and part names
+
+- Every house now has one or two residents who walk, fetch water, sit on benches, shop, sweep,
+  chat and go indoors at night. A new **Người** group adds eight professions unlocked by their
+  word (farmer, baker, fisherman, shepherd, woodcutter, postman, musician, child), each with
+  jobs that use what is built nearby. 62 words in six groups.
+- New pinned **Xem** (Look) tool: tap a person or animal for an English sentence of what they are
+  doing (“The farmer is watering the vegetables.”) with Vietnamese and the verb; tap a building,
+  tree or animal for English labels on its parts. Found words (6 villagers, 29 verbs, 70 parts)
+  are listed in the word book. Not counted toward Done, the rhythm or a level.
+- Checks: 14 village tests, ESLint and `tsc` clean, Playwright 64/64 (new suite, desktop, phone,
+  reduced motion) plus the physics and earlier suites. See
+  `docs/changes/GAME-004-village-people-vocab.md`. The SITE-001 deploy (`19194e4`) is confirmed.
 
 ## 2026-11-03 — “Nghỉ dưỡng & vui chơi” replaces Projects
 

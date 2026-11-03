@@ -3521,6 +3521,32 @@ a.path-node--done:hover .path-node__circle { color: var(--surface); }
 .vg-mini { min-width: 44px; min-height: 44px; padding: 0 .7rem; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: inherit; font-weight: 600; cursor: pointer; }
 .vg-mini--go { color: var(--butter-ink); background: var(--butter); border-color: transparent; }
 .vg-note { margin: .9rem 0 0; color: var(--text-muted); font-size: .8rem; line-height: 1.5; }
+.vg-small { font-size: .82rem; }
+.vg-words--found li { grid-template-columns: minmax(0, 1fr) auto; }
+.vg-scene[data-mode="look"] canvas { cursor: help; }
+/* Look tool: part labels drawn over the 3D view, and the card that names what was tapped. */
+.vg-labels { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
+/* Moved every frame from script; the site-wide reduced-motion rule would otherwise turn each move into a transition. */
+.vg-labels > * { transition: none !important; }
+.vg-label, .vg-label-dot, .vg-label-line { position: absolute; top: 0; left: 0; }
+.vg-label { padding: 3px 9px; color: #25322a; background: #fffdf6f2; border: 1px solid #25322a33; border-radius: 99px; box-shadow: 0 6px 14px -8px #25322a99; font-size: .78rem; font-weight: 700; line-height: 18px; white-space: nowrap; }
+.vg-label-dot { width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; background: #fffdf6; border: 2px solid #25322a; border-radius: 50%; }
+.vg-label-line { height: 2px; margin-top: -1px; background: #fffdf6; box-shadow: 0 0 0 .5px #25322a66; transform-origin: 0 50%; }
+.vg-inspect { flex: 0 1 25rem; min-width: 0; max-height: min(44svh, 24rem); overflow-y: auto; overscroll-behavior: contain; padding: .45rem .5rem .7rem .9rem; }
+.vg-inspect__head { display: flex; align-items: center; gap: .2rem; }
+.vg-inspect__head h3 { flex: 1; min-width: 0; margin: 0; font-family: var(--font-serif), Georgia, serif; font-size: 1.45rem; line-height: 1.1; overflow-wrap: anywhere; }
+.vg-inspect__head .vg-ipa { font-family: inherit; font-size: .85rem; font-weight: 500; }
+.vg-inspect__vi { margin: 0 0 .35rem; font-size: .9rem; font-weight: 600; }
+.vg-inspect__say { margin-top: .4rem; padding: .55rem .7rem .4rem; background: var(--sage); border-radius: 12px; }
+.vg-inspect__say p { margin: 0; line-height: 1.45; }
+.vg-inspect__say p[lang] { font-size: 1rem; font-weight: 600; }
+.vg-inspect__say mark { padding: 0 3px; color: inherit; background: var(--butter); border-radius: 4px; }
+.vg-inspect__say .vg-muted { margin-top: .15rem; font-size: .85rem; }
+.vg-inspect__verb { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem .6rem; margin-top: .35rem; font-size: .82rem; }
+.vg-inspect__verb .pronounce--labelled { min-height: 40px; background: var(--surface); }
+.vg-inspect__parts { display: flex; flex-wrap: wrap; gap: .35rem; margin: .55rem 0 0; padding: 0; list-style: none; }
+.vg-inspect__parts li { display: flex; align-items: center; padding-right: .7rem; background: var(--surface-raised); border: 1px solid var(--border); border-radius: 99px; font-size: .85rem; font-weight: 650; }
+.vg-inspect__parts small { color: var(--text-muted); font-weight: 500; }
 @media (max-width: 560px) {
   .vg-stage { border-radius: 18px; }
   .vg-hud { padding: .5rem; }
@@ -3533,4 +3559,12 @@ a.path-node--done:hover .path-node__circle { color: var(--surface); }
   .vg-toast { bottom: 12.5rem; }
   .vg-words li { grid-template-columns: 40px minmax(0, 1fr); }
   .vg-words__acts { grid-column: 2; }
+  .vg-words--found li { grid-template-columns: minmax(0, 1fr) auto; }
+  .vg-words--found .vg-words__acts { grid-column: auto; }
+  .vg-inspect { max-height: 38svh; padding-left: .7rem; }
+  .vg-inspect__head h3 { font-size: 1.25rem; }
+  /* One swipeable row of parts keeps the card short enough to see the village under it. */
+  .vg-inspect__parts { flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .vg-inspect__parts::-webkit-scrollbar { display: none; }
+  .vg-inspect__parts li { flex: none; }
 }
