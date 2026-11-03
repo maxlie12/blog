@@ -65,7 +65,7 @@ no way to go to a spot or keep a villager in view.
       GAME-007 rerun); physics needed the test to put the page scroll back before the throw (the
       longer help text makes the test page scroll when a tool is clicked), then 9/9; Look 63/64
       then 42/42 on a rerun (labels were measured before the next frame had placed them).
-- [ ] Vercel build + production deploy.
+- [x] Vercel build + production deploy (`7776591`).
 
 ## Result
 
