@@ -256,3 +256,30 @@ test("the running clock maps hours onto the day and night light", async () => {
   assert.deepEqual(progress.seen, { "chat:dog-play": 3 });
   assert.equal(parseProgress(JSON.stringify({ clock: "warp" })).clock, "manual");
 });
+
+test("graphics level: picked from the device, steps down, saved with the weather", async () => {
+  const { QUALITY, autoQuality, lowerQuality } = await import("./village/data.ts");
+  const desk = { renderer: "ANGLE (NVIDIA GeForce RTX 3060)", cores: 12, memory: 16, coarse: false, minSide: 1080 };
+  assert.equal(autoQuality(desk), "high");
+  assert.equal(autoQuality({ ...desk, renderer: "Google SwiftShader" }), "low", "software rendering");
+  assert.equal(autoQuality({ ...desk, cores: 4 }), "medium");
+  assert.equal(autoQuality({ ...desk, coarse: true, minSide: 390, cores: 8 }), "medium", "a good phone");
+  assert.equal(autoQuality({ ...desk, coarse: true, minSide: 390, cores: 4 }), "low", "a modest phone");
+  assert.equal(autoQuality({ ...desk, memory: 2 }), "low");
+  assert.equal(lowerQuality("high"), "medium");
+  assert.equal(lowerQuality("medium"), "low");
+  assert.equal(lowerQuality("low"), "low");
+  for (const key of ["tufts", "flowers", "smoke", "rain", "shadows", "dpr"] as const) {
+    assert.ok(QUALITY.low[key] <= QUALITY.medium[key] && QUALITY.medium[key] <= QUALITY.high[key], `${key} grows with the level`);
+  }
+  assert.ok(QUALITY.high.post && !QUALITY.medium.post && !QUALITY.low.post, "post-processing only on High");
+  const fresh = parseProgress(null);
+  assert.equal(fresh.quality, "auto");
+  assert.equal(fresh.weather, "auto");
+  const saved = parseProgress(JSON.stringify({ quality: "low", weather: "rain" }));
+  assert.equal(saved.quality, "low");
+  assert.equal(saved.weather, "rain");
+  const odd = parseProgress(JSON.stringify({ quality: "ultra", weather: "snow" }));
+  assert.equal(odd.quality, "auto");
+  assert.equal(odd.weather, "auto");
+});

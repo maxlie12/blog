@@ -10,10 +10,11 @@
  */
 import * as THREE from "three";
 import {
-  BUILD_R, INSTANCED, ISLAND_R, STEP, TOOL, TOOLS, WORDS, chaikin, clampToIsland, dist, emptyScene, hash2, lineLength, resample, rng, round2, viWho,
+  BUILD_R, INSTANCED, ISLAND_R, QUALITY, STEP, TOOL, TOOLS, WORDS, lowerQuality, type Quality, type Weather, chaikin, clampToIsland, dist, emptyScene, hash2, lineLength, resample, rng, round2, viWho,
   type House, type Placed, type Point, type Prop, type PropKind, type SavedScene, type Stroke, type StrokeTool, type ToolId, type VillageScene, type WordId,
 } from "./data";
 import { G, M, bake, painter, pick, ribbon, shade, type Mark, type Part } from "./kit";
+import { makeComposer, makeRain, makeSky, makeSmoke, pondGeometry, streamsGeometry, waterMaterial, waterUniforms, type Composer } from "./graphics";
 import { createPeople, personMarks, type Person } from "./people";
 import { PROP_GEOMETRIES, PROP_MARKS, PROP_MODELS } from "./props";
 import { describe, type ActionId, type PartId, type ResidentId, type VerbId } from "./vocab";
@@ -43,6 +44,13 @@ export interface VillageOptions {
   onThumbs: (thumbs: Thumbs) => void;
   /** The Look tool picked something (or nothing). Called again when a person or animal starts doing something else. */
   onInspect?: (info: InspectInfo | null) => void;
+  /** Graphics level to start with; `autoQuality` lets the scene step down once if frames are slow. */
+  quality: Quality;
+  autoQuality: boolean;
+  /** The scene lowered the level by itself. */
+  onQuality?: (quality: Quality) => void;
+  /** "auto" changes the weather now and then. */
+  weather: Weather;
 }
 export interface VillageController {
   setTool(id: ToolId): void;
@@ -51,6 +59,8 @@ export interface VillageController {
   reset(kind: "empty" | "sample"): void;
   /** Hides the Look tool's labels (the card was closed). */
   clearInspect(): void;
+  setQuality(q: Quality, auto: boolean): void;
+  setWeather(w: Weather): void;
   dispose(): void;
 }
 
@@ -59,7 +69,7 @@ const ROOFS = ["#b65f4a", "#4e7287", "#8a5c47", "#5f6f92", "#9c4a41", "#6c7f55"]
 const PLASTER = ["#efe6d3", "#f3e2c3", "#e8ddcb", "#f0d8c3", "#e3e2d4", "#f2ead9"];
 const STROKE_KEY: Record<StrokeTool, "paths" | "walls" | "fences" | "hedges" | "streams"> = { path: "paths", wall: "walls", fence: "fences", hedge: "hedges", stream: "streams" };
 const LEGACY_TAP = ["tower", "well", "windmill", "lantern", "sheep"] as const;
-const MAX_TREES = 1000, MAX_INSTANCES = 900, TUFTS = 1200;
+const MAX_TREES = 1000, MAX_INSTANCES = 900, MAX_TUFTS = 2400, MAX_FLOWERS = 700, MAX_RAIN = 2400, MAX_SMOKE = 240;
 const SPEED: Partial<Record<ToolId, number>> = {
   sheep: 0.55, chicken: 0.7, duck: 0.45, cow: 0.35, horse: 0.6, pig: 0.45, dog: 0.9, cat: 0.5, rabbit: 0.8, buffalo: 0.3, goat: 0.55, goose: 0.45, frog: 0.7, fish: 0.5,
 };
@@ -176,12 +186,13 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   const wind = { x: 0.5, z: 0.3, strength: 0.6 };
 
   /* ───────────── renderer, camera, lights ───────────── */
-  let dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const renderer = new THREE.WebGLRenderer({ antialias: dpr < 2, powerPreference: "high-performance" });
+  let quality: Quality = options.quality, autoQ = options.autoQuality;
+  let dpr = Math.min(window.devicePixelRatio || 1, QUALITY[quality].dpr);
+  const renderer = new THREE.WebGLRenderer({ antialias: window.devicePixelRatio < 2, powerPreference: "high-performance" });
   renderer.setPixelRatio(dpr);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.NeutralToneMapping;
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = QUALITY[quality].shadows > 0;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const canvas = renderer.domElement;
   canvas.tabIndex = 0;
@@ -194,8 +205,10 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   container.appendChild(canvas);
 
   const scene = new THREE.Scene();
+  /** The horizon colour: fog fades into it and the water reflects it. */
   const sky = new THREE.Color("#cfe3ea");
-  scene.background = sky;
+  const skyDome = makeSky();
+  scene.add(skyDome.mesh);
   const fog = new THREE.Fog("#cfe3ea", 48, 95);
   scene.fog = fog;
   const camera = new THREE.PerspectiveCamera(36, 1, 0.5, 420);
@@ -203,8 +216,8 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   const hemi = new THREE.HemisphereLight("#fff4e0", "#6c8a5a", 1.7);
   const sun = new THREE.DirectionalLight("#fff3dc", 2.8);
   const SHADOW = ISLAND_R + 4;
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  sun.castShadow = QUALITY[quality].shadows > 0;
+  sun.shadow.mapSize.setScalar(QUALITY[quality].shadows || 2048);
   Object.assign(sun.shadow.camera, { left: -SHADOW, right: SHADOW, top: SHADOW, bottom: -SHADOW, near: 1, far: 130 });
   sun.shadow.camera.updateProjectionMatrix();
   sun.shadow.bias = -0.0006;
@@ -229,8 +242,10 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   })();
   const surface = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0, flatShading: true });
   const glowMat = new THREE.MeshStandardMaterial({ color: "#2f4250", emissive: "#ffc46b", emissiveIntensity: 0, roughness: 0.35 });
-  const waterMat = new THREE.MeshStandardMaterial({ color: "#5fb2c0", roughness: 0.12, metalness: 0.05, transparent: true, opacity: 0.84 });
-  const cloudMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, flatShading: true, transparent: true, opacity: 0.92 });
+  const waterU = waterUniforms();
+  const waterMat = waterMaterial(waterU);
+  const pondGeo = pondGeometry();
+  const cloudMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, transparent: true, opacity: 0.94 });
   const haloMat = new THREE.SpriteMaterial({ map: haloTex, color: "#ffc46b", transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
   const starMat = new THREE.PointsMaterial({ color: "#ffffff", size: 1.6, sizeAttenuation: false, transparent: true, opacity: 0, fog: false, depthWrite: false });
   /** Same look as `surface`, but instanced plants bend with the wind (taller parts move more). */
@@ -346,13 +361,13 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   }
 
   /** A stream: muddy banks, a dark bed and stones; the water ribbon goes to its own transparent mesh. */
-  function streamParts(stroke: Stroke, ground: Part[], water: Part[]) {
+  /** The stream bed and banks; the water surface is its own shaded mesh (see `streamsGeometry`). */
+  function streamParts(stroke: Stroke, ground: Part[]) {
     const pts = stroke.pts, n = pts.length;
     if (n < 2) return;
     const r = rng(stroke.id * 17 + 3);
     ground.push({ g: ribbon(pts, 1.12, 0.01, "#8a8a5a", 0.06, stroke.id), c: null, m: null });
     ground.push({ g: ribbon(pts, 0.94, 0.016, "#3f6a68", 0.06, stroke.id), c: null, m: null });
-    water.push({ g: ribbon(pts, 0.92, 0.075, "#5fb2c0", 0, stroke.id), c: null, m: null });
     for (let i = 0; i < n; i += 1) {
       if (r() > 0.45) continue;
       const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)];
@@ -519,6 +534,11 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     p(G.box, roof, 0, eave + rh / 2, hw / 2, len + 0.4, 0.12, slope + 0.06, 0, ang);
     p(G.box, roof, 0, eave + rh / 2, -hw / 2, len + 0.4, 0.12, slope + 0.06, 0, -ang);
     p(G.box, shade(roof, -0.06), 0, eave + rh + 0.02, 0, len + 0.44, 0.13, 0.2);
+    // Rows of tiles: thin ridges down each slope.
+    for (const sd of [-1, 1]) for (let k = 1; k <= 5; k += 1) {
+      const f = k / 5.6;
+      p(G.box, shade(roof, -0.045), 0, eave + rh * (1 - f) + Math.cos(ang) * 0.075, sd * (hw * f + Math.sin(ang) * 0.075), len + 0.42, 0.035, 0.07, 0, sd * ang);
+    }
     if (r() < 0.6) {
       const cx = (r() < 0.5 ? -1 : 1) * len * 0.26;
       p(G.box, "#a8836a", cx, eave + rh * 0.62 + 0.25, -hw * 0.4, 0.32, 0.85, 0.32);
@@ -685,10 +705,17 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     pp(G.cone8, "#4a8a55", 0, 1.58, 0, 0.98, 1.0, 0.98);
     pp(G.cone8, "#55985f", 0, 2.05, 0, 0.64, 0.82, 0.64);
 
+    // A grass tuft: five blades leaning out, lighter at the tips by colour, not one cone.
     const tuft: Part[] = [];
-    for (let k = 0; k < 3; k += 1) tuft.push({ g: G.cone6, c: k === 1 ? "#8cbc5c" : "#78a84f", m: M((k - 1) * 0.07, 0.11, (k % 2) * 0.05, 0.07, 0.24, 0.07, 0, 0, (k - 1) * 0.35) });
+    const blades = ["#78a84f", "#8cbc5c", "#6f9a46", "#94c463", "#7fb055"];
+    for (let k = 0; k < 5; k += 1) {
+      const a = (k / 5) * Math.PI * 2 + 0.4, lean = 0.22 + (k % 2) * 0.16, h = 0.2 + (k % 3) * 0.05;
+      tuft.push({ g: G.cone6, c: blades[k], m: M(Math.cos(a) * 0.04, h / 2, Math.sin(a) * 0.04, 0.05, h, 0.05, -a, 0, lean) });
+    }
+    const wild: Part[] = [];
+    wild.push({ g: G.cyl6, c: "#5d8240", m: M(0, 0.12, 0, 0.02, 0.24, 0.02) }, { g: G.ico0, c: "#ffffff", m: M(0, 0.25, 0, 0.1, 0.06, 0.1) }, { g: G.ico0, c: "#f2c94c", m: M(0, 0.28, 0, 0.035, 0.03, 0.035) });
 
-    const cast = (parts: Part[]) => bake(parts) as THREE.BufferGeometry;
+    const cast = (parts: Part[]) => bake(parts, true) as THREE.BufferGeometry;
     const animals = new Map<ToolId, THREE.BufferGeometry>([["sheep", cast(sheepParts)]]);
     const plants = new Map<PropKind, THREE.BufferGeometry>();
     for (const t of TOOLS) {
@@ -707,7 +734,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     dp(G.sphere, "#4a4a52", 0, 0.18, 0.12, 0.12, 0.12, 0.12);
     dp(G.cone6, "#f2a53a", 0, 0.18, 0.2, 0.04, 0.08, 0.04, 0, Math.PI / 2);
     for (const s of [-1, 1]) dp(G.box, "#3a3a42", s * 0.12, 0.13, -0.01, 0.2, 0.02, 0.12, 0, 0, s * 0.25);
-    return { blade: cast(bladeParts), trees: [cast(leafy), cast(pine)], tuft: cast(tuft), animals, plants, bodies, bee: cast(bee), bird: cast(bird) };
+    return { blade: bake(bladeParts) as THREE.BufferGeometry, trees: [cast(leafy), cast(pine)], tuft: cast(tuft), wild: bake(wild) as THREE.BufferGeometry, animals, plants, bodies, bee: bake(bee) as THREE.BufferGeometry, bird: bake(bird) as THREE.BufferGeometry };
   })();
 
   function instancedMesh(geo: THREE.BufferGeometry, max: number, shadows: boolean, material: THREE.Material = swayMat) {
@@ -722,7 +749,8 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   }
   const treeMeshes = templates.trees.map((geo) => instancedMesh(geo, MAX_TREES, true));
   const plantMeshes = new Map([...templates.plants].map(([kind, geo]) => [kind, instancedMesh(geo, MAX_INSTANCES, kind !== "flower")]));
-  const tuftMesh = instancedMesh(templates.tuft, TUFTS, false);
+  const tuftMesh = instancedMesh(templates.tuft, MAX_TUFTS, false);
+  const wildMesh = instancedMesh(templates.wild, MAX_FLOWERS, false);
   const bodyMeshes = new Map([...templates.bodies].map(([kind, geo]) => [kind, instancedMesh(geo, MAX_BODIES, true, surface)]));
   const beeMesh = instancedMesh(templates.bee, MAX_BEES, false, surface);
   const birdMesh = instancedMesh(templates.bird, MAX_BIRDS, true, surface);
@@ -743,17 +771,97 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   const clouds: THREE.Mesh[] = [];
   {
     const r = rng(21);
-    for (let i = 0; i < 7; i += 1) {
-      const parts: Part[] = [];
-      for (let k = 0; k < 4; k += 1) parts.push({ g: G.ico, c: "#ffffff", m: M(k * 0.9 - 1.3, k === 1 || k === 2 ? 0.35 : 0, (r() - 0.5) * 0.6, 1.4 + r() * 0.6, 1.0 + r() * 0.5, 1.3) });
+    // The first seven fly in fair weather; the rest join when it clouds over.
+    for (let i = 0; i < 16; i += 1) {
+      const parts: Part[] = [], puffs = 5 + Math.floor(r() * 4);
+      for (let k = 0; k < puffs; k += 1) {
+        const x = (k - puffs / 2) * 0.75 + (r() - 0.5) * 0.4, top = 1 - Math.abs(x) / (puffs * 0.45);
+        parts.push({ g: G.ico, c: "#ffffff", m: M(x, 0.25 + top * 0.55 + r() * 0.2, (r() - 0.5) * 0.9, 1.2 + r() * 0.7, 0.9 + top * 0.6, 1.1 + r() * 0.5) });
+      }
+      for (let k = 0; k < 3; k += 1) parts.push({ g: G.ico, c: "#dfe5ec", m: M((k - 1) * 1.2, 0, 0, 1.6, 0.5, 1.2) });
       const cloud = new THREE.Mesh(bake(parts) ?? undefined, cloudMat);
       // High enough to sit above the camera's usual height, so they drift overhead instead of across the view.
-      cloud.position.set(-60 + i * 18 + r() * 6, 32 + r() * 6, -40 + r() * 80);
-      cloud.scale.setScalar(1 + r() * 0.6);
+      cloud.position.set(-66 + (i % 8) * 18 + r() * 6, 30 + r() * 8, -55 + r() * 110);
+      cloud.scale.setScalar(1 + r() * 0.7);
+      cloud.visible = i < 7;
       scene.add(cloud);
       clouds.push(cloud);
     }
   }
+  /* ───────────── weather, rain, chimney smoke, post-processing ───────────── */
+  let chimneys: THREE.Vector3[] = [];
+  const smoke = makeSmoke(MAX_SMOKE);
+  const rain = makeRain(MAX_RAIN);
+  scene.add(smoke.points, rain.mesh);
+  type Sky = Exclude<Weather, "auto">;
+  let weatherChoice: Weather = options.weather;
+  const startSky: Sky = options.weather === "auto" ? "clear" : options.weather === "rain" && reduceMotion ? "cloudy" : options.weather;
+  const CLOUD: Record<Sky, number> = { clear: 0, cloudy: 0.55, rain: 1 };
+  // A saved fixed weather is there from the first frame; "auto" starts clear.
+  const weather = { now: startSky, left: 120 + Math.random() * 120, cloud: CLOUD[startSky], rain: startSky === "rain" ? 1 : 0 };
+  /** Light levels from the time of day, before clouds dim them. */
+  const base = { hemi: 1.7, sun: 2.8, water: 1, glow: 0, cloudShade: 1 };
+  const grey = new THREE.Color("#9aa3ab");
+  let post: Composer | null = null;
+  function announce(was: Sky, now: Sky) {
+    if (now === "rain") say("It's raining. Trời đổ mưa rồi!");
+    else if (was === "rain") say("The rain has stopped. Mưa tạnh rồi.");
+    else if (now === "cloudy") say("It's cloudy. Trời nhiều mây.");
+    else if (was === "cloudy") say("The sun is out. Nắng lên rồi!");
+  }
+  function updateWeather(dt: number) {
+    if (weatherChoice === "auto" && !reduceMotion) {
+      weather.left -= dt;
+      if (weather.left <= 0) {
+        const was = weather.now, r = Math.random();
+        weather.now = was === "clear" ? (r < 0.6 ? "cloudy" : "clear") : was === "cloudy" ? (r < 0.5 ? "rain" : "clear") : r < 0.6 ? "cloudy" : "clear";
+        weather.left = weather.now === "rain" ? 60 + Math.random() * 90 : 120 + Math.random() * 180;
+        if (was !== weather.now) announce(was, weather.now);
+      }
+    }
+    const k = reduceMotion ? 1 : Math.min(1, dt * 0.35);
+    weather.cloud += (CLOUD[weather.now] - weather.cloud) * k;
+    weather.rain += ((weather.now === "rain" && !reduceMotion ? 1 : 0) - weather.rain) * k;
+    rain.mesh.visible = weather.rain > 0.02;
+    rain.uniforms.uAmount.value = weather.rain * 0.85;
+    rain.uniforms.uTime.value = clock;
+    rain.uniforms.uWind.value.set(wind.x * 3, wind.z * 3);
+    rain.mesh.position.set(rig.tx, 0, rig.tz);
+    waterU.uRain.value = weather.rain;
+    waterU.uLight.value = base.water * (1 - weather.cloud * 0.2);
+    // Clouds thin the light and grey the sky and the haze.
+    hemi.intensity = base.hemi * (1 - weather.cloud * 0.32);
+    sun.intensity = base.sun * (1 - weather.cloud * 0.65);
+    skyDome.uniforms.uCloud.value = weather.cloud;
+    fog.color.copy(sky).lerp(grey, weather.cloud * 0.45);
+    cloudMat.color.setScalar(base.cloudShade * (1 - weather.cloud * 0.3));
+  }
+  function applyQuality(q: Quality) {
+    quality = q;
+    const Q = QUALITY[q], shadows = Q.shadows > 0;
+    dpr = Math.min(window.devicePixelRatio || 1, Q.dpr);
+    renderer.setPixelRatio(dpr);
+    if (renderer.shadowMap.enabled !== shadows || (shadows && sun.shadow.mapSize.x !== Q.shadows)) {
+      renderer.shadowMap.enabled = shadows;
+      sun.castShadow = shadows;
+      sun.shadow.mapSize.setScalar(Q.shadows || 2048);
+      sun.shadow.map?.dispose();
+      sun.shadow.map = null;
+      // Shadow settings are compiled into each lit material.
+      scene.traverse((o) => {
+        const m = (o as THREE.Mesh).material;
+        if (m) for (const x of Array.isArray(m) ? m : [m]) x.needsUpdate = true;
+      });
+    }
+    if (Q.post && !post) post = makeComposer(renderer, scene, camera);
+    if (!Q.post && post) { post.dispose(); post = null; }
+    rain.mesh.geometry.setDrawRange(0, Q.rain * 2);
+    smoke.setSources(chimneys.slice(0, Math.floor(Q.smoke / 7)));
+    smoke.points.visible = Q.smoke > 0 && !reduceMotion;
+    rebuildTufts();
+    resize();
+  }
+
   {
     const r = rng(99);
     const pos: number[] = [];
@@ -792,9 +900,9 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     pathIndex = makeIndex(S.paths);
     streamIndex = makeIndex(S.streams);
     lineIndex = makeIndex([...S.paths, ...S.walls, ...S.fences, ...S.hedges]);
-    const ground: Part[] = [], water: Part[] = [], parts: Part[] = [], glow: Part[] = [], halos: THREE.Vector3[] = [], towerSpots: TowerSpot[] = [];
+    const ground: Part[] = [], parts: Part[] = [], glow: Part[] = [], halos: THREE.Vector3[] = [], towerSpots: TowerSpot[] = [];
     S.paths.forEach((s, i) => pathParts(s, i, ground));
-    for (const s of S.streams) streamParts(s, ground, water);
+    for (const s of S.streams) streamParts(s, ground);
     for (const s of S.paths) bridgeParts(s, parts);
     for (const p of S.ponds) pondParts(p, ground);
     for (const s of S.walls) wallParts(s, parts, towerSpots);
@@ -803,7 +911,11 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     for (const s of S.fences) fenceParts(s, parts);
     for (const s of S.hedges) hedgeParts(s, parts);
     houseDoors.clear();
+    const houseMarks: Mark[] = [];
+    markSink = houseMarks;
     for (const h of S.houses) houseDoors.set(h.id, houseParts(h, parts, glow));
+    markSink = undefined;
+    chimneys = houseMarks.filter((m) => m.part === "chimney").map((m) => m.at.setY(m.at.y + 0.2));
     towerSpotsNow = towerSpots;
     for (const o of S.wells) wellParts(o, parts);
     for (const o of S.lanterns) lanternParts(o, parts, glow, halos);
@@ -826,9 +938,9 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       mills.push(blades);
     }
     for (const o of S.ponds) {
-      const pond = new THREE.Mesh(G.disc, waterMat);
-      pond.position.set(o.x, 0.06, o.z);
-      pond.scale.set(o.r * 2, 0.02, o.r * 2);
+      const pond = new THREE.Mesh(pondGeo, waterMat);
+      pond.position.set(o.x, 0.065, o.z);
+      pond.scale.set(o.r * 2, 1, o.r * 2);
       pond.receiveShadow = true;
       extras.add(pond);
     }
@@ -840,8 +952,10 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     }
 
     setMesh("ground", bake(ground), surface, false);
-    setMesh("water", bake(water), waterMat, false);
-    setMesh("structures", bake(parts), surface, true);
+    setMesh("water", streamsGeometry(S.streams.map((st) => st.pts), 0.92, 0.075), waterMat, false);
+    setMesh("structures", bake(parts, true), surface, true);
+    for (const o of S.props) if (o.kind === "bakery") chimneys.push(new THREE.Vector3(0.7, 3.25, -0.35).applyMatrix4(M(o.x, 0, o.z, 1, 1, 1, o.r)));
+    smoke.setSources(chimneys.slice(0, Math.floor(QUALITY[quality].smoke / 7)));
     setMesh("glow", bake(glow), glowMat, false);
     rebuildTrees();
     rebuildPlants();
@@ -909,10 +1023,12 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     return false;
   }
 
+  /** Grass tufts and wild flowers on free ground; how many depends on the graphics level. */
   function rebuildTufts() {
+    const { tufts, flowers } = QUALITY[quality];
     const r = rng(77);
     let n = 0;
-    for (let i = 0; i < TUFTS * 2 && n < TUFTS; i += 1) {
+    for (let i = 0; i < tufts * 2 && n < tufts; i += 1) {
       const a = r() * Math.PI * 2, rad = Math.sqrt(r()) * (ISLAND_R - 0.6);
       const x = Math.cos(a) * rad, z = Math.sin(a) * rad, s = 0.7 + r() * 0.8, rot = r() * 3;
       if (blocked(x, z, 0.75)) continue;
@@ -921,6 +1037,23 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     }
     tuftMesh.count = n;
     tuftMesh.instanceMatrix.needsUpdate = true;
+    const petals = ["#ffffff", "#f2c94c", "#e57f9e", "#b48ee0", "#f6f3ea"], tint = new THREE.Color();
+    let f = 0;
+    for (let i = 0; i < flowers * 3 && f < flowers; i += 1) {
+      // Flowers come in small patches, like real meadows.
+      const a = r() * Math.PI * 2, rad = Math.sqrt(r()) * (ISLAND_R - 1);
+      const cx = Math.cos(a) * rad, cz = Math.sin(a) * rad, colour = pick(petals, r);
+      for (let k = 0; k < 4 && f < flowers; k += 1) {
+        const x = cx + (r() - 0.5) * 1.2, z = cz + (r() - 0.5) * 1.2, s = 0.8 + r() * 0.5;
+        if (blocked(x, z, 0.6)) continue;
+        wildMesh.setMatrixAt(f, M(x, 0, z, s, s, s, r() * 3));
+        wildMesh.setColorAt(f, tint.set(colour));
+        f += 1;
+      }
+    }
+    wildMesh.count = f;
+    wildMesh.instanceMatrix.needsUpdate = true;
+    if (wildMesh.instanceColor) wildMesh.instanceColor.needsUpdate = true;
   }
 
   function rebuildAnimals() {
@@ -974,7 +1107,10 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       for (const t of spots) towerParts(t[0], t[1], hash2(t[0], t[1]), parts, glow);
     } else if (kind === "fence") fenceParts(stroke, parts);
     else if (kind === "hedge") hedgeParts(stroke, parts);
-    else streamParts(stroke, parts, parts);
+    else {
+      streamParts(stroke, parts);
+      parts.push({ g: ribbon(stroke.pts, 0.92, 0.075, "#5fb2c0", 0, stroke.id), c: null, m: null });
+    }
   }
 
   function sampleVillage() {
@@ -1026,8 +1162,10 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     const sp = Math.sin(rig.phi);
     camera.position.set(rig.tx + rig.radius * sp * Math.sin(rig.theta), rig.radius * Math.cos(rig.phi), rig.tz + rig.radius * sp * Math.cos(rig.theta));
     camera.lookAt(rig.tx, 0, rig.tz);
-    fog.near = rig.radius * 0.9 + 22;
-    fog.far = rig.radius * 1.6 + 70;
+    // Mist early in the morning and in the rain pulls the haze in closer.
+    const mist = Math.max(clamp(1 - timeOfDay / 0.12, 0, 1) * 0.55, weather.rain * 0.5, weather.cloud * 0.15);
+    fog.near = (rig.radius * 0.9 + 22) * (1 - mist * 0.7);
+    fog.far = (rig.radius * 1.6 + 70) * (1 - mist * 0.45);
   }
   const orbitBy = (dx: number, dy: number) => {
     goal.theta -= dx * 0.0065;
@@ -1043,10 +1181,10 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
 
   /* ───────────── time of day ───────────── */
   const KEYS = [
-    { t: 0.0, sky: "#d3e2e6", hs: "#fff1dc", hg: "#6d8a5c", hi: 1.55, sc: "#ffe0b5", si: 2.3, elev: 0.42, glow: 0 },
-    { t: 0.4, sky: "#c3e1ef", hs: "#fff7e8", hg: "#6c8a5a", hi: 1.85, sc: "#fff6e4", si: 3.0, elev: 1.0, glow: 0 },
-    { t: 0.72, sky: "#f0c9a6", hs: "#ffd8b0", hg: "#7a6a55", hi: 1.3, sc: "#ffab72", si: 2.4, elev: 0.26, glow: 0.35 },
-    { t: 1.0, sky: "#1e2c47", hs: "#8fa4d8", hg: "#1f2a24", hi: 0.6, sc: "#a9bbff", si: 0.75, elev: 0.75, glow: 1 },
+    { t: 0.0, sky: "#e6dccb", top: "#8fc0dd", hs: "#fff1dc", hg: "#6d8a5c", hi: 1.55, sc: "#ffe0b5", si: 2.3, elev: 0.42, glow: 0 },
+    { t: 0.4, sky: "#cfe6ef", top: "#6aaed9", hs: "#fff7e8", hg: "#6c8a5a", hi: 1.85, sc: "#fff6e4", si: 3.0, elev: 1.0, glow: 0 },
+    { t: 0.72, sky: "#f4bf95", top: "#7184b9", hs: "#ffd8b0", hg: "#7a6a55", hi: 1.3, sc: "#ffab72", si: 2.4, elev: 0.26, glow: 0.35 },
+    { t: 1.0, sky: "#24345a", top: "#0b1430", hs: "#8fa4d8", hg: "#1f2a24", hi: 0.6, sc: "#a9bbff", si: 0.75, elev: 0.75, glow: 1 },
   ];
   const _a = new THREE.Color(), _b = new THREE.Color();
   function applyTime(t: number) {
@@ -1054,22 +1192,36 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     let i = 0;
     while (i < KEYS.length - 2 && t > KEYS[i + 1].t) i += 1;
     const A = KEYS[i], B = KEYS[i + 1], k = clamp((t - A.t) / (B.t - A.t), 0, 1);
-    const mix = (key: "sky" | "hs" | "hg" | "sc") => _a.set(A[key]).lerp(_b.set(B[key]), k);
+    const mix = (key: "sky" | "top" | "hs" | "hg" | "sc") => _a.set(A[key]).lerp(_b.set(B[key]), k);
     sky.copy(mix("sky"));
     fog.color.copy(sky);
     hemi.color.copy(mix("hs"));
     hemi.groundColor.copy(mix("hg"));
-    hemi.intensity = lerp(A.hi, B.hi, k);
+    base.hemi = hemi.intensity = lerp(A.hi, B.hi, k);
     sun.color.copy(mix("sc"));
-    sun.intensity = lerp(A.si, B.si, k);
+    base.sun = sun.intensity = lerp(A.si, B.si, k);
     const elev = lerp(A.elev, B.elev, k), az = -0.9 + t * 2.4, D = 45;
     sun.position.set(Math.cos(az) * Math.cos(elev) * D, Math.sin(elev) * D + 4, Math.sin(az) * Math.cos(elev) * D);
-    const glow = lerp(A.glow, B.glow, k);
+    const glow = lerp(A.glow, B.glow, k), night = clamp((t - 0.8) / 0.2, 0, 1);
+    base.glow = glow;
+    // Sky dome and water follow the same light.
+    skyDome.uniforms.uTop.value.copy(mix("top"));
+    skyDome.uniforms.uHorizon.value.copy(sky);
+    skyDome.uniforms.uGround.value.copy(sky).multiplyScalar(0.85);
+    skyDome.uniforms.uSunDir.value.copy(sun.position).normalize();
+    skyDome.uniforms.uSunColor.value.copy(sun.color);
+    skyDome.uniforms.uNight.value = night;
+    waterU.uSky.value.copy(sky);
+    waterU.uSunDir.value.copy(sun.position).normalize();
+    waterU.uSunColor.value.copy(sun.color).multiplyScalar(lerp(1, 0.4, night));
+    base.water = clamp(0.3 + base.hemi * 0.38, 0.3, 1.05);
+    smoke.uniforms.uTint.value.set("#dedbd5").multiplyScalar(lerp(1, 0.35, night));
     glowMat.emissiveIntensity = glow * 2.2;
     glowMat.color.set(glow > 0.5 ? "#4a3a28" : "#2f4250");
     haloMat.opacity = glow * 0.85;
     starMat.opacity = clamp((t - 0.8) / 0.2, 0, 1);
-    cloudMat.color.setScalar(lerp(1, 0.55, clamp((t - 0.72) / 0.28, 0, 1)));
+    base.cloudShade = lerp(1, 0.55, clamp((t - 0.72) / 0.28, 0, 1));
+    cloudMat.color.setScalar(base.cloudShade);
     petalMat.color.set("#f7c9d6").multiplyScalar(lerp(1, 0.3, clamp((t - 0.72) / 0.28, 0, 1)));
   }
 
@@ -1445,7 +1597,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     const step = () => {
       if (disposed) { finish(); return; }
       for (const end = Math.min(ids.length, i + 6); i < end; i += 1) {
-        const geo = bake(previewParts(ids[i]));
+        const geo = bake(previewParts(ids[i]), true);
         if (!geo?.boundingSphere) continue;
         const { center, radius } = geo.boundingSphere;
         const d = (radius / Math.sin(THREE.MathUtils.degToRad(cam.fov / 2))) * 1.02;
@@ -1666,7 +1818,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     if (reduceMotion) return;
     const glow: Part[] = [];
     const parts = modelParts(o.kind, o.seed, glow);
-    const geo = bake([...parts, ...glow.map((g) => ({ ...g, c: "#2f4250" }))]);
+    const geo = bake([...parts, ...glow.map((g) => ({ ...g, c: "#2f4250" }))], true);
     if (!geo) return;
     const mesh = new THREE.Mesh(geo, surface);
     mesh.castShadow = true;
@@ -2201,7 +2353,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
             else if (kind === "fence") fenceParts(st, []);
             else if (kind === "hedge") hedgeParts(st, []);
             else if (kind === "path") pathParts(st, 0, []);
-            else streamParts(st, [], []);
+            else streamParts(st, []);
           });
           const nearest = new Map<PartId, { m: Mark; d: number }>();
           for (const m of all) {
@@ -2545,6 +2697,8 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    post?.setSize(w, h, dpr);
+    smoke.uniforms.uScale.value = h * dpr * 0.5;
   };
   const resizeObserver = new ResizeObserver(resize);
   resizeObserver.observe(container);
@@ -2552,12 +2706,13 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   const intersection = new IntersectionObserver((entries) => { visible = entries.some((entry) => entry.isIntersecting); });
   intersection.observe(container);
 
-  let raf = 0, last = performance.now(), frames = 0, perfStart = 0, downgraded = false, firstFrame = true;
+  let raf = 0, last = performance.now(), frames = 0, perfStart = 0, perfFrom = 60, firstFrame = true;
   function frame(now: number) {
     raf = requestAnimationFrame(frame);
-    const dt = Math.min(0.1, (now - last) / 1000);
+    const gap = now - last, dt = Math.min(0.1, gap / 1000);
     last = now;
-    if (document.hidden || !visible) return;
+    // Time spent hidden or scrolled away must not count as slow frames.
+    if (document.hidden || !visible) { perfFrom = frames + 30; return; }
     if (needsRebuild) { needsRebuild = false; plantsDirty = false; rebuildAll(); }
     if (plantsDirty) { plantsDirty = false; rebuildPlants(); }
     if (previewDirty) { previewDirty = false; rebuildPreview(); }
@@ -2566,34 +2721,41 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     clock += dt;
     updateWind(dt, motion);
     for (const b of mills) b.rotation.z += dt * (0.3 + wind.strength * 1.4) * motion;
-    for (const c of clouds) {
+    updateWeather(dt);
+    clouds.forEach((c, i) => {
       c.position.x += wind.x * dt * 0.8 * motion;
       c.position.z += wind.z * dt * 0.8 * motion;
-      if (Math.abs(c.position.x) > 70) c.position.x = -Math.sign(c.position.x) * 69;
-      if (Math.abs(c.position.z) > 70) c.position.z = -Math.sign(c.position.z) * 69;
-      // A cloud right in front of the camera would hide the village.
-      c.visible = c.position.distanceTo(camera.position) > 18;
-    }
+      if (Math.abs(c.position.x) > 75) c.position.x = -Math.sign(c.position.x) * 74;
+      if (Math.abs(c.position.z) > 75) c.position.z = -Math.sign(c.position.z) * 74;
+      // Extra clouds gather in grey weather; a cloud right in front of the camera would hide the village.
+      c.visible = (i < 7 || weather.cloud > 0.3) && c.position.distanceTo(camera.position) > 18;
+    });
+    skyDome.mesh.position.copy(camera.position);
+    waterU.uTime.value = clock;
+    if (smoke.points.visible) smoke.update(dt, wind);
     updateAnimals(dt, motion);
     people.update(dt, motion);
     stepPhysics(dt);
     updateDrops(dt);
     updateLife(dt, motion);
-    renderer.render(scene, camera);
+    if (post) {
+      post.bloom.strength = 0.12 + base.glow * 0.85;
+      post.composer.render(dt);
+    } else renderer.render(scene, camera);
     updateSelection(dt);
     updateBubbles();
     if (firstFrame) { firstFrame = false; options.onReady(); makeThumbnails(); }
 
+    // On "auto", a slow device steps down a level (and again later if still slow).
     frames += 1;
-    if (!downgraded && frames === 60) perfStart = now;
-    if (!downgraded && frames === 240 && 180 / ((now - perfStart) / 1000) < 40) {
-      downgraded = true;
-      renderer.shadowMap.enabled = false;
-      sun.castShadow = false;
-      dpr = 1;
-      renderer.setPixelRatio(dpr);
-      resize();
-      for (const m of [surface, glowMat, waterMat]) m.needsUpdate = true;
+    if (gap > 1000) perfFrom = frames + 30;
+    if (autoQ && quality !== "low") {
+      if (frames === perfFrom) perfStart = now;
+      if (frames === perfFrom + 180 && 180 / ((now - perfStart) / 1000) < 28) {
+        applyQuality(lowerQuality(quality));
+        options.onQuality?.(quality);
+        perfFrom = frames + 90;
+      }
     }
   }
 
@@ -2605,6 +2767,8 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
   goal.radius = rig.radius = fit.radius;
   goal.phi = rig.phi = fit.phi;
   rebuildAll();
+  applyQuality(quality);
+  waterU.uMotion.value = reduceMotion ? 0 : 1;
   raf = requestAnimationFrame(frame);
 
   return {
@@ -2615,6 +2779,18 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       if (id !== "look" && selection) clearSelection(true);
     },
     clearInspect: () => clearSelection(false),
+    setQuality(q, auto) {
+      autoQ = auto;
+      perfFrom = frames + 90;
+      if (q !== quality) applyQuality(q);
+    },
+    setWeather(w) {
+      weatherChoice = w;
+      if (w === "auto") { weather.left = 90 + Math.random() * 90; return; }
+      const was = weather.now;
+      weather.now = w === "rain" && reduceMotion ? "cloudy" : w;
+      if (was !== weather.now) announce(was, weather.now);
+    },
     setTime: applyTime,
     undo() {
       const prev = undoStack.pop();
@@ -2649,13 +2825,16 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       intersection.disconnect();
       window.removeEventListener("pagehide", flushSave);
       const geometries = new Set<THREE.BufferGeometry>([
-        ...Object.values(G), ...PROP_GEOMETRIES, templates.blade, templates.tuft, ...templates.trees, ...templates.animals.values(), ...templates.plants.values(),
+        ...Object.values(G), ...PROP_GEOMETRIES, templates.blade, templates.tuft, templates.wild, ...templates.trees, ...templates.animals.values(), ...templates.plants.values(),
         ...templates.bodies.values(), templates.bee, templates.bird,
       ]);
       scene.traverse((obj) => { const g = (obj as THREE.Mesh).geometry; if (g) geometries.add(g); });
       geometries.forEach((g) => g.dispose());
       people.dispose();
-      for (const m of [surface, swayMat, glowMat, waterMat, cloudMat, haloMat, starMat, petalMat, ringMat, selMat]) m.dispose();
+      post?.dispose();
+      smoke.dispose();
+      pondGeo.dispose();
+      for (const m of [surface, swayMat, glowMat, waterMat, cloudMat, haloMat, starMat, petalMat, ringMat, selMat, skyDome.mesh.material, rain.mesh.material]) (m as THREE.Material).dispose();
       haloTex.dispose();
       labelLayer.remove();
       bubbleLayer.remove();

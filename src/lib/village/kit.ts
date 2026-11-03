@@ -37,8 +37,11 @@ export function painter(T: THREE.Matrix4, parts: Part[], glow?: Part[], halos?: 
   };
 }
 
-/** Merges coloured parts into one vertex-coloured geometry: one draw call however many parts. */
-export function bake(parts: Part[]): THREE.BufferGeometry | null {
+/**
+ * Merges coloured parts into one vertex-coloured geometry: one draw call however many parts.
+ * `ground` darkens what is close to the ground a little, like light blocked near a wall's foot.
+ */
+export function bake(parts: Part[], ground = false): THREE.BufferGeometry | null {
   if (!parts.length) return null;
   let total = 0;
   const prepared: [THREE.BufferGeometry, THREE.ColorRepresentation | null][] = [];
@@ -58,6 +61,12 @@ export function bake(parts: Part[]): THREE.BufferGeometry | null {
     else {
       _c.set(c ?? "#ffffff");
       for (let i = 0; i < n; i += 1) { col[(o + i) * 3] = _c.r; col[(o + i) * 3 + 1] = _c.g; col[(o + i) * 3 + 2] = _c.b; }
+    }
+    if (ground) {
+      for (let i = 0; i < n; i += 1) {
+        const y = pos[(o + i) * 3 + 1], k = 0.72 + 0.28 * Math.min(1, Math.max(0, y / 0.9)) ** 0.7;
+        col[(o + i) * 3] *= k; col[(o + i) * 3 + 1] *= k; col[(o + i) * 3 + 2] *= k;
+      }
     }
     o += n;
     g.dispose();

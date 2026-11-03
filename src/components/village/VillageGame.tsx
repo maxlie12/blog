@@ -4,17 +4,18 @@ import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type
 import { PronounceButton } from "@/components/PronounceButton";
 import { getActiveLearnerProfileId, readProfileStorage, writeProfileStorage, type LearnerProfileId } from "@/lib/learnerProfiles";
 import {
-  CATEGORIES, FAST_DAY_SECONDS, PROGRESS_KEY, SCENE_KEY, STARTER, TOOL, TOOLS, WORDS, WORD_ORDER, clockLabel, hourToTime, isAnswer, parseProgress,
+  CATEGORIES, FAST_DAY_SECONDS, PROGRESS_KEY, SCENE_KEY, STARTER, TOOL, TOOLS, WORDS, WORD_ORDER, autoQuality, clockLabel, hourToTime, isAnswer, parseProgress,
   parseSavedScene, toolOfWord, wordsIn,
-  type Category, type ClockMode, type ToolId, type VillageProgress, type WordId,
+  type Category, type ClockMode, type Quality, type QualityChoice, type ToolId, type VillageProgress, type Weather, type WordId,
 } from "@/lib/village/data";
 import { ALL_CHATS } from "@/lib/village/talk";
 import type { InspectInfo, Thumbs, VillageController } from "@/lib/village/scene";
 import { choicesFor, dueItems, nextReview, type ReviewItem } from "@/lib/village/review";
 import { PARTS, RESIDENTS, VERBS, vocabKey, type PartId, type ResidentId, type VerbId } from "@/lib/village/vocab";
 
-type IconName = "orbit" | "look" | "hand" | "erase" | "undo" | "book" | "reset" | "sun" | "moon" | "close" | "lock" | "cards" | "left" | "right" | "manual" | "fast" | "real";
+type IconName = "orbit" | "look" | "hand" | "erase" | "undo" | "book" | "reset" | "sun" | "moon" | "close" | "lock" | "cards" | "left" | "right" | "manual" | "fast" | "real" | "tune";
 const ICONS: Record<IconName, ReactNode> = {
+  tune: <><path d="M4 7h9M17 7h3M4 17h3M11 17h9" /><circle cx="15" cy="7" r="2" /><circle cx="9" cy="17" r="2" /></>,
   manual: <><path d="M9 6v12" /><path d="M15 6v12" /></>,
   fast: <><path d="m4 6 7 6-7 6z" /><path d="m13 6 7 6-7 6z" /></>,
   real: <><circle cx="12" cy="12" r="8" /><path d="M12 7.5V12l3 2" /></>,
@@ -120,10 +121,44 @@ function Strip({ className, label, role, resetKey, children }: { className: stri
   );
 }
 
+const QUALITY_TEXT: Record<Quality, { label: string; note: string }> = {
+  low: { label: "Thấp", note: "Nhẹ nhất: không đổ bóng, ít cỏ hơn." },
+  medium: { label: "Vừa", note: "Đổ bóng, hoa dại và khói bếp." },
+  high: { label: "Cao", note: "Thêm đèn tỏa sáng ban đêm, viền ảnh nhòe như mô hình thu nhỏ." },
+};
+const WEATHER_TEXT: Record<Weather, { label: string; en?: string; note: string }> = {
+  auto: { label: "Tự đổi", note: "Nắng, mây và mưa thay nhau mỗi vài phút." },
+  clear: { label: "Nắng", en: "sunny", note: "Trời quang." },
+  cloudy: { label: "Nhiều mây", en: "cloudy", note: "Trời xám, nắng dịu." },
+  rain: { label: "Mưa", en: "rainy", note: "Mưa rơi, mặt nước gợn vòng." },
+};
+
+/** What the device can manage, from its graphics chip, cores, memory and screen. */
+function deviceQuality(canvas: HTMLCanvasElement): Quality {
+  let renderer = "";
+  try {
+    const gl = (canvas.getContext("webgl2") ?? canvas.getContext("webgl")) as WebGLRenderingContext | null;
+    if (gl) {
+      const info = gl.getExtension("WEBGL_debug_renderer_info");
+      renderer = String(gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : gl.RENDERER) ?? "");
+      gl.getExtension("WEBGL_lose_context")?.loseContext();
+    }
+  } catch {
+    // Unknown chip: decide from the rest.
+  }
+  return autoQuality({
+    renderer,
+    cores: navigator.hardwareConcurrency || 4,
+    memory: (navigator as Navigator & { deviceMemory?: number }).deviceMemory,
+    coarse: window.matchMedia("(pointer: coarse)").matches,
+    minSide: Math.min(window.screen.width, window.screen.height),
+  });
+}
+
 type LessonMode = "unlock" | "review";
 interface Question { item: ReviewItem; choices: ReviewItem[] }
 type Sheet =
-  | { kind: "book" } | { kind: "reset" }
+  | { kind: "book" } | { kind: "reset" } | { kind: "graphics" }
   | { kind: "lesson"; word: WordId; mode: LessonMode; options: WordId[] }
   | { kind: "review"; queue: Question[] };
 
@@ -189,6 +224,8 @@ export default function VillageGame() {
   const due = useMemo(() => dueItems(progress, now, 99), [progress, now]);
   const [announce, setAnnounce] = useState("");
   const inspectIdRef = useRef<string | null>(null);
+  // The level "auto" picked for this device (lowered if frames were slow).
+  const [autoLevel, setAutoLevel] = useState<Quality>("medium");
 
   const say = useCallback((text: string) => {
     setToast({ text });
@@ -230,6 +267,8 @@ export default function VillageGame() {
         setStatus("unavailable");
         return;
       }
+      const deviceLevel = deviceQuality(probe);
+      setAutoLevel(deviceLevel);
       import("@/lib/village/scene")
         .then(({ createVillageScene }) => {
           if (cancelled) return;
@@ -241,6 +280,13 @@ export default function VillageGame() {
             onSave: (raw) => store(SCENE_KEY, raw),
             onReady: () => setStatus("ready"),
             onThumbs: setThumbs,
+            quality: loaded.quality === "auto" ? deviceLevel : loaded.quality,
+            autoQuality: loaded.quality === "auto",
+            onQuality: (level) => {
+              setAutoLevel(level);
+              say(`Máy đang hơi chậm nên đồ họa tự giảm xuống mức ${QUALITY_TEXT[level].label}.`);
+            },
+            weather: loaded.weather,
             onInspect: (info) => {
               setInspect(info);
               // Words met with the Look tool go into the word book.
@@ -341,6 +387,15 @@ export default function VillageGame() {
     say(CLOCK_SAY[mode]);
   };
 
+  const setQuality = (choice: QualityChoice) => {
+    controllerRef.current?.setQuality(choice === "auto" ? autoLevel : choice, choice === "auto");
+    setProgress((current) => ({ ...current, quality: choice }));
+  };
+  const setWeather = (weather: Weather) => {
+    controllerRef.current?.setWeather(weather);
+    setProgress((current) => ({ ...current, weather }));
+  };
+
   /** Today's review: up to ten due words, each with four choices from its own group. */
   const openReview = () => {
     const at = Date.now();
@@ -437,6 +492,11 @@ export default function VillageGame() {
                 <Icon name="book" />
                 <span className="vg-count" aria-hidden="true">{known}/{WORD_ORDER.length}</span>
               </button>
+              {status === "ready" ? (
+                <button className="vg-icon" type="button" aria-label="Đồ họa và thời tiết" onClick={() => setSheet({ kind: "graphics" })}>
+                  <Icon name="tune" />
+                </button>
+              ) : null}
               {status === "ready" ? (
                 <button className="vg-icon" type="button" aria-label="Làm mới làng" onClick={() => setSheet({ kind: "reset" })}>
                   <Icon name="reset" />
@@ -536,6 +596,34 @@ export default function VillageGame() {
                 <button type="button" className="button button--ghost" onClick={() => { controllerRef.current?.reset("sample"); setSheet(null); }}>Khôi phục làng mẫu</button>
                 <button type="button" className="button button--ghost" onClick={() => setSheet(null)}>Hủy</button>
               </div>
+            </SheetFrame>
+          ) : sheet?.kind === "graphics" ? (
+            <SheetFrame title="Đồ họa và thời tiết" onClose={() => setSheet(null)}>
+              <fieldset className="vg-choices">
+                <legend>Chất lượng hình ảnh</legend>
+                {(["auto", "low", "medium", "high"] as const).map((q) => (
+                  <label key={q} className="vg-choice">
+                    <input type="radio" name="vg-quality" checked={progress.quality === q} onChange={() => setQuality(q)} />
+                    <span>
+                      <b>{q === "auto" ? "Tự động" : QUALITY_TEXT[q].label}</b>
+                      <small>{q === "auto" ? `Theo sức máy, đang dùng mức ${QUALITY_TEXT[autoLevel].label}. Chậm quá thì tự giảm.` : QUALITY_TEXT[q].note}</small>
+                    </span>
+                  </label>
+                ))}
+              </fieldset>
+              <fieldset className="vg-choices">
+                <legend>Thời tiết</legend>
+                {(["auto", "clear", "cloudy", "rain"] as const).map((w) => (
+                  <label key={w} className="vg-choice">
+                    <input type="radio" name="vg-weather" checked={progress.weather === w} onChange={() => setWeather(w)} />
+                    <span>
+                      <b>{WEATHER_TEXT[w].label}{WEATHER_TEXT[w].en ? <i lang="en"> · {WEATHER_TEXT[w].en}</i> : null}</b>
+                      <small>{WEATHER_TEXT[w].note}</small>
+                    </span>
+                  </label>
+                ))}
+              </fieldset>
+              <p className="vg-muted vg-reduced-note">Máy đang bật giảm chuyển động, nên không có mưa rơi, khói bếp hay mặt nước gợn sóng.</p>
             </SheetFrame>
           ) : sheet?.kind === "lesson" ? (
             <Lesson

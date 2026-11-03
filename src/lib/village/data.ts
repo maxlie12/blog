@@ -69,7 +69,32 @@ export interface VillageProgress {
   clock: ClockMode;
   /** The hour of the fast day, so it carries on where it stopped. */
   hour: number;
+  /** Graphics level, or "auto" to let the device decide. */
+  quality: QualityChoice;
+  /** Fixed weather, or "auto" for weather that changes now and then. */
+  weather: Weather;
 }
+
+export type Weather = "auto" | "clear" | "cloudy" | "rain";
+const WEATHERS: Weather[] = ["auto", "clear", "cloudy", "rain"];
+
+export type Quality = "low" | "medium" | "high";
+export type QualityChoice = "auto" | Quality;
+const QUALITY_CHOICES: QualityChoice[] = ["auto", "low", "medium", "high"];
+/** What each graphics level turns on. `shadows` is the shadow map size (0 = none). */
+export const QUALITY: Record<Quality, { dpr: number; shadows: number; tufts: number; flowers: number; post: boolean; smoke: number; rain: number }> = {
+  low: { dpr: 1, shadows: 0, tufts: 700, flowers: 0, post: false, smoke: 0, rain: 700 },
+  medium: { dpr: 1.5, shadows: 2048, tufts: 1300, flowers: 260, post: false, smoke: 120, rain: 1400 },
+  high: { dpr: 2, shadows: 4096, tufts: 2400, flowers: 650, post: true, smoke: 240, rain: 2400 },
+};
+/** A starting level from what the device reports: software rendering is slow, phones are mid. */
+export function autoQuality(d: { renderer: string; cores: number; memory?: number; coarse: boolean; minSide: number }): Quality {
+  if (/swiftshader|llvmpipe|software|softpipe/i.test(d.renderer)) return "low";
+  if ((d.memory ?? 8) < 4 || d.cores <= 2) return "low";
+  if (d.coarse || d.minSide < 700) return d.cores >= 6 ? "medium" : "low";
+  return d.cores >= 6 ? "high" : "medium";
+}
+export const lowerQuality = (q: Quality): Quality => (q === "high" ? "medium" : "low");
 export type ClockMode = "manual" | "fast" | "real";
 const CLOCK_MODES: ClockMode[] = ["manual", "fast", "real"];
 /** One village day in fast mode lasts this many real seconds. */
@@ -484,7 +509,7 @@ export function parseSavedScene(raw: string | null): SavedScene | null {
 }
 
 export function parseProgress(raw: string | null): VillageProgress {
-  const fallback: VillageProgress = { unlocked: [...STARTER], learned: {}, seen: {}, review: {}, time: 0.32, clock: "manual", hour: 9 };
+  const fallback: VillageProgress = { unlocked: [...STARTER], learned: {}, seen: {}, review: {}, time: 0.32, clock: "manual", hour: 9, quality: "auto", weather: "auto" };
   if (!raw) return fallback;
   try {
     const data = JSON.parse(raw) as Record<string, unknown>;
@@ -517,6 +542,8 @@ export function parseProgress(raw: string | null): VillageProgress {
       time: finite(data.time) ? Math.min(1, Math.max(0, data.time as number)) : fallback.time,
       clock: CLOCK_MODES.includes(data.clock as ClockMode) ? (data.clock as ClockMode) : "manual",
       hour: finite(data.hour) ? (((data.hour as number) % 24) + 24) % 24 : fallback.hour,
+      quality: QUALITY_CHOICES.includes(data.quality as QualityChoice) ? (data.quality as QualityChoice) : "auto",
+      weather: WEATHERS.includes(data.weather as Weather) ? (data.weather as Weather) : "auto",
     };
   } catch {
     return fallback;
