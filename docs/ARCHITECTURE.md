@@ -9,14 +9,14 @@
 ┌─────────────────┐                   ┌──────────────────────┐
 │  Public routes   │                   │  /studio/* (private)  │
 │  /, /blog,       │◀── revalidate ────│  Overview, Posts,      │
-│  /projects,      │      on write     │  Learning, Journey     │
+│  /play,          │      on write     │  Learning, Journey     │
 │  /learning       │                   └──────────┬─────────────┘
 └────────┬─────────┘                              │ Server Actions
          │ reads                                   ▼
          ▼                                ┌──────────────────┐
 ┌─────────────────────────────┐           │  SQLite (Prisma)  │
 │  content/articles/*.mdx      │──merge──▶│  data/blog.db      │
-│  content/projects/*.mdx      │           │  Post, Lesson,     │
+│                              │           │  Post, Lesson,     │
 │  (git-committed, hand-edited)│           │  Attempt, Journey* │
 └──────────────────────────────┘           │  LearningLog,      │
                                             │  InterviewRecord   │
@@ -44,7 +44,7 @@ configuration, so English, Chinese and Japanese do not require separate page imp
   multiple roles to manage. See "Studio auth," below, and [DECISIONS.md](DECISIONS.md).
 - **Two content storage mechanisms, chosen per access pattern**, not one — and this still holds
   after Studio:
-  - **MDX files in git** (`content/`) remain supported for hand-written articles/projects:
+  - **MDX files in git** (`content/`) remain supported for hand-written articles:
     long-form, infrequently updated, versioned by git.
   - **SQLite via Prisma** (`data/blog.db`) now also holds **Studio-authored content** (`Post`,
     `Lesson`, `Attempt`, `JourneyCheckpoint`, `JourneyEvidence`), not just the original
@@ -110,14 +110,12 @@ Smallest workable scheme for a single owner, not a general auth system:
 ```
 Article (content/articles/<slug>.mdx)                  ─┐
   frontmatter: title, date, summary, areas[], draft?,    │  merged into one
-  sample?, relatedProjects[], relatedLogAreas[]           │  "public article"
+  sample?, relatedLogAreas[], study?                      │  "public article"
                                                            │  list/detail by
 Post (SQLite, authored in Studio)                         │  src/lib/posts.ts
   title, excerpt, slug (unique), category?, tags[],       │
   coverImage?, content (Markdown), status (draft|         │
   published), relatedLearning, publishedAt              ─┘
-
-Project (content/projects/<slug>.mdx) — unchanged from before.
 
 Lesson (SQLite, authored in Studio)
   skill (writing|listening|speaking|reading), title, level, instructions,
@@ -205,7 +203,7 @@ pronunciation score. The path's lesson step and today's stage only read existing
   leave the browser through this path. A validated JSON export includes the private sync token,
   allowing a second device to import it once and continue the same history. This data never
   feeds reviewed attempts or CEFR progress.
-- **Write (articles/projects, learning-log CLI):** unchanged from before — file edits + git
+- **Write (articles, learning-log CLI):** unchanged from before — file edits + git
   commit, and `npm run log`, respectively.
 
 ## Privacy model

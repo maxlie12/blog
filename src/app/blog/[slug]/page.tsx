@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublicArticleBySlug } from "@/lib/posts";
-import { getProjectBySlug } from "@/lib/content";
 import { Mdx } from "@/lib/mdx";
 import { StudyAside, StudyWordList, studyComponents } from "@/components/ArticleStudy";
 
@@ -26,10 +25,6 @@ export default async function ArticlePage({
   const { slug } = await params;
   const article = await getPublicArticleBySlug(slug);
   if (!article) notFound();
-
-  const relatedProjects = (article.relatedProjects ?? [])
-    .map((s) => getProjectBySlug(s))
-    .filter((p): p is NonNullable<typeof p> => Boolean(p));
 
   const page = (
     <article className="article-page">
@@ -67,20 +62,6 @@ export default async function ArticlePage({
       <Mdx source={article.content} components={article.study && studyComponents(article.study)} lang={article.study ? "en" : undefined} />
       {article.study && <StudyWordList study={article.study} />}
 
-      {relatedProjects.length > 0 && (
-        <aside className="article-page__related">
-          <h2>Related projects</h2>
-          <ul>
-            {relatedProjects.map((p) => (
-              <li key={p.slug}>
-                <Link href={`/projects/${p.slug}`} className="pill">
-                  {p.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </aside>
-      )}
     </article>
   );
 

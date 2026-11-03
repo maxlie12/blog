@@ -7,13 +7,19 @@ import { useTheme } from "@/lib/theme";
 
 const NAV_LINKS = [
   { href: "/blog", label: "Blog" },
-  { href: "/projects", label: "Projects" },
   { href: "/learning", label: "Learning" },
+  { href: "/play", label: "Vui chơi" },
   { href: "/about", label: "About" },
 ];
 
+/** The games live under /learning, but they belong to the play corner in the header. */
+const PLAY_ROUTES = ["/play", "/learning/village", "/learning/world"];
+
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
+  const playing = PLAY_ROUTES.some((route) => pathname.startsWith(route));
+  if (href === "/play") return playing;
+  if (href === "/learning" && playing) return false;
   return pathname.startsWith(href);
 }
 

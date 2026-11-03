@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { getAllProjects } from "@/lib/content";
 import { getPublicArticles } from "@/lib/posts";
 import { getAllLessons } from "@/lib/lessonsData";
 import { BlogCard } from "@/components/BlogCard";
@@ -17,7 +16,6 @@ export default async function Home() {
     getJourneyCheckpoints(),
   ]);
   const latestArticles = articles.slice(0, 3);
-  const featuredProjects = getAllProjects().filter((p) => p.featured).slice(0, 1);
 
   return (
     <div className="home-grid">
@@ -47,13 +45,11 @@ export default async function Home() {
             ))}
           </div>
         )}
-        {featuredProjects.map((p) => (
-          <a key={p.slug} href={`/projects/${p.slug}`} className="featured-project-card">
-            <span className="featured-project-card__label">Featured project</span>
-            <h3>{p.title}</h3>
-            <p>{p.summary}</p>
-          </a>
-        ))}
+        <Link href="/play" className="featured-card">
+          <span className="featured-card__label">Nghỉ dưỡng &amp; vui chơi</span>
+          <h3>Làng Rêu và Nông trại</h3>
+          <p>Xây làng trên đảo bay hoặc chăm nông trại khi cần nghỉ tay. Không tính vào Done.</p>
+        </Link>
       </section>
 
       <section className="home-grid__journey" aria-label="Learning journey">

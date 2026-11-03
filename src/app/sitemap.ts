@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
-import { getAllArticles, getAllProjects } from "@/lib/content";
+import { getAllArticles } from "@/lib/content";
 
 const SITE_URL = process.env.SITE_URL || "http://localhost:3000";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const staticRoutes = ["", "/about", "/projects", "/blog", "/learning"].map((route) => ({
+  const staticRoutes = ["", "/about", "/blog", "/learning", "/play", "/learning/village", "/learning/world"].map((route) => ({
     url: `${SITE_URL}${route}`,
     lastModified: new Date(),
   }));
@@ -14,10 +14,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: new Date(a.updated || a.date),
   }));
 
-  const projectRoutes = getAllProjects().map((p) => ({
-    url: `${SITE_URL}/projects/${p.slug}`,
-    lastModified: new Date(p.date),
-  }));
-
-  return [...staticRoutes, ...articleRoutes, ...projectRoutes];
+  return [...staticRoutes, ...articleRoutes];
 }

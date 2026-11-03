@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     template: "%s · Luân",
   },
   description:
-    "Code. Learn. Explore a sharper self. Portfolio, writing, and an English-learning space — projects, articles, and practice tracked as it actually happens.",
+    "Code. Learn. Explore a sharper self. Writing, an English-learning space and a small play corner — articles, practice and games, tracked as it actually happens.",
 };
 
 // Applies the persisted theme/palette before first paint to avoid a flash of the default theme.

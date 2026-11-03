@@ -37,7 +37,6 @@ public `/blog` page merges these with Studio posts.
    summary: "One or two sentences — this shows in lists and social previews."
    areas: ["dev"]            # any of: dev, work, learning, life
    draft: true               # omit or set false to publish
-   relatedProjects: ["atlas"]        # optional, Project slugs
    relatedLogAreas: ["english"]      # optional, LearningLog.area values
    ---
    ```
@@ -48,8 +47,8 @@ public `/blog` page merges these with Studio posts.
 ### What makes a good article here
 
 - **State the claim, then the evidence.** If you say a method worked, link the practice log,
-  exercise, or project it came from. "I did X and it worked" needs `relatedLogAreas` or
-  `relatedProjects` pointing at something concrete.
+  exercise, or project it came from. "I did X and it worked" needs `relatedLogAreas` or a
+  link pointing at something concrete.
 - **Write for a beginner** unless the piece says otherwise. Define jargon on first use.
 - **Cite sources.** Link the reference, doc, or course you learned something from, rather than
   restating it as if it were self-evident.
@@ -89,15 +88,6 @@ study:
 - Do not use Markdown tables: articles do not render them. Use a list.
 - Check facts against a fetched source and name what could not be checked.
 
-## Adding a project
-
-1. Create `content/projects/<slug>.mdx`.
-2. Frontmatter fields: `title`, `summary`, `date`, `status` (`active` | `paused` | `shipped` |
-   `archived`), `tech` (string array), `repoUrl?`, `liveUrl?`, `featured?` (shows it on the
-   homepage).
-3. Body: what it is, what you built, what you learned — link to articles that go deeper on
-   specific decisions.
-
 ## Logging practice (streaks)
 
 This is the original hand-logged practice tracker — separate from Studio's Lesson/Attempt
@@ -123,12 +113,10 @@ Full flag reference and troubleshooting: [OPERATIONS.md](OPERATIONS.md).
 
 ## Connecting content across areas
 
-An article, a project, and a learning-log area are linked by **soft references** — plain
+An article and a learning-log area are linked by **soft references** — plain
 slugs/strings, not database foreign keys (see [ARCHITECTURE.md](ARCHITECTURE.md#content-model)
 for why). In practice:
 
-- From an article, list `relatedProjects: ["<project-slug>"]` to show a "Related projects"
-  box at the bottom of the article page.
 - From an article, list `relatedLogAreas: ["chinese"]` to note which practice area the piece
   discusses (rendering this on the page is planned — see [ROADMAP.md](ROADMAP.md)).
 - From a learning-log entry, pass `--article=<slug>` (maps to `articleSlug` in the database)

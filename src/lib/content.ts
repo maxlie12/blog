@@ -17,7 +17,6 @@ export interface ArticleFrontmatter {
   areas: ArticleArea[];
   draft?: boolean;
   sample?: boolean; // true = placeholder/demo content, clearly labelled in the UI
-  relatedProjects?: string[]; // project slugs
   relatedLogAreas?: string[]; // LearningLog.area values this article discusses
   study?: ArticleStudy; // language-study panel for English articles
 }
@@ -45,23 +44,6 @@ export interface Article extends ArticleFrontmatter {
   coverImage?: string;
   relatedLearning?: boolean;
   tags?: string[];
-}
-
-export interface ProjectFrontmatter {
-  title: string;
-  summary: string;
-  date: string;
-  status: "active" | "paused" | "shipped" | "archived";
-  tech: string[];
-  repoUrl?: string;
-  liveUrl?: string;
-  featured?: boolean;
-  sample?: boolean;
-}
-
-export interface Project extends ProjectFrontmatter {
-  slug: string;
-  content: string;
 }
 
 function readMdxDir<T>(dir: string): Array<{ slug: string; data: T; content: string }> {
@@ -93,14 +75,4 @@ export function getAllArticles(): Article[] {
 
 export function getArticleBySlug(slug: string): Article | undefined {
   return getAllArticles().find((a) => a.slug === slug);
-}
-
-export function getAllProjects(): Project[] {
-  return readMdxDir<ProjectFrontmatter>("projects")
-    .map(({ slug, data, content }) => ({ slug, ...data, content }))
-    .sort((a, b) => (a.date < b.date ? 1 : -1));
-}
-
-export function getProjectBySlug(slug: string): Project | undefined {
-  return getAllProjects().find((p) => p.slug === slug);
 }

@@ -4,7 +4,7 @@
 
 A single public site that is a genuine record of growth, not a highlight reel:
 
-- Show what has been built (portfolio/projects).
+- Show what has been built, including a small play corner with the games.
 - Show what is being learned and how (English, Chinese, Japanese, software), including setbacks.
 - Provide a space to practice explaining technical topics clearly.
 - Track a flexible rolling learning rhythm that reflects real activity without making rest days
@@ -29,14 +29,14 @@ A single public site that is a genuine record of growth, not a highlight reel:
 
 ## Core flows
 
-1. **Reading** — a visitor browses projects and blog posts, reads the learning streak/log and
+1. **Reading** — a visitor browses blog posts and the play corner, reads the learning streak/log and
    lesson progress, with no login required. Drafts, interview records, private log notes, and
    all of `/studio` are never visible to this flow.
 2. **Publishing a post** — the owner signs into `/studio`, drafts a post, previews it (same
    rendering as the public site), and publishes it — visible on `/blog` immediately. Unpublish
    returns it to draft without deleting it. See [CONTENT-GUIDE.md](CONTENT-GUIDE.md).
 3. **Writing a legacy article** — the owner can still add/edit an `.mdx` file under
-   `content/articles/` or `content/projects/` and commit it; the public blog merges both
+   `content/articles/` and commit it; the public blog merges both
    sources. Kept for content that benefits from being in git (see
    [ARCHITECTURE.md](ARCHITECTURE.md)).
 4. **Defining a lesson** — the owner creates a lesson (skill, instructions, completion
@@ -67,7 +67,9 @@ A single public site that is a genuine record of growth, not a highlight reel:
 **In (original MVP, unchanged unless noted):**
 - About/portfolio page (About, Skills, Experience — placeholder data, see
   [STATUS.md](STATUS.md)).
-- Projects list + detail pages, rendered from MDX, including Atlas as a placeholder entry.
+- Play corner (`/play`, “Nghỉ dưỡng & vui chơi”): picture cards for Làng Rêu and the Learning
+  Farm plus cozy-game reading. It replaced the Projects section (SITE-001); old `/projects`
+  links redirect here.
 - Blog list + detail pages — **now merges Studio-authored posts (database) with hand-written
   `.mdx` articles.**
 - Learning page: one guest-first start action resumes a draft, opens a due review or selects the
@@ -75,7 +77,7 @@ A single public site that is a genuine record of growth, not a highlight reel:
   and owner-facing evidence tools stay outside this primary surface, and the games are one quiet
   row of links under the start card. Mountain milestones
   remain database-backed and editable in Studio, but activity never moves them automatically.
-- A documented, git-based way to add/edit legacy articles and projects.
+- A documented, git-based way to add/edit legacy articles.
 - A documented CLI (`npm run log`) for the original practice-log flow.
 - Theme (light/dark) and accent-color switcher, persisted per-browser.
 - Mobile-friendly layout, basic SEO, accessible semantic HTML, real empty states.
@@ -124,5 +126,5 @@ A single public site that is a genuine record of growth, not a highlight reel:
   Studio → then it updates, on both Studio and the public page.
 - `/studio` is unreachable without the correct password, from a fresh browser session; the
   public lesson page's submit form is likewise invisible without a valid session.
-- Every placeholder (profile bio, Atlas project body, the sample article) is visually marked
+- Every placeholder (profile bio, the sample article) is visually marked
   as a sample/placeholder so it can never be mistaken for real content.

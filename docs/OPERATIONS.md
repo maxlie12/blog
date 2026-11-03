@@ -57,7 +57,7 @@ Sign in at `/studio/login` with the `STUDIO_PASSWORD` you set.
 
 ## Adding content
 
-- Articles/projects (legacy path, still supported): add/edit a `.mdx` file under `content/` —
+- Articles (legacy path, still supported): add/edit a `.mdx` file under `content/` —
   see [CONTENT-GUIDE.md](CONTENT-GUIDE.md).
 - Blog posts, lessons, attempts, and the mountain-journey map: use `/studio` — see
   [CONTENT-GUIDE.md](CONTENT-GUIDE.md) for the editorial workflow.
@@ -83,13 +83,13 @@ npm run build
 npm run start
 ```
 
-`next build` statically generates content-only pages (`/about`, `/projects`, `/studio/login`);
+`next build` statically generates content-only pages (`/about`, `/play`, `/studio/login`);
 anything reading the database (`/`, `/blog`, `/learning`, and all of `/studio`) is
 `force-dynamic` so a Studio publish is visible on the next request, not just the next deploy.
 
 ## Backups
 
-- **Articles/projects (`content/*.mdx`):** already backed up by git — every commit is a restore
+- **Articles (`content/*.mdx`):** already backed up by git — every commit is a restore
   point. Push to the GitHub remote regularly.
 - **`data/blog.db`** (now includes Studio's posts, lessons, attempts, and journey data, not
   just the learning log): copy the file. A simple approach for a single-operator site:
@@ -133,7 +133,7 @@ GitHub `master` branch is connected to Vercel. For future deployments:
    [ARCHITECTURE.md](ARCHITECTURE.md#deployment-implications). This requires creating a Turso
    account/database, which also needs the site owner's action.
 5. Push to the connected `master` branch (or use an authenticated production deploy).
-6. Verify: load the deployed URL, check `/`, `/blog`, `/projects`, `/learning` all render; sign
+6. Verify: load the deployed URL, check `/`, `/blog`, `/play`, `/learning` all render; sign
    in at `/studio/login`; confirm a test post publish appears on `/blog` and an unpublish
    removes it.
 
@@ -166,6 +166,6 @@ GitHub `master` branch is connected to Vercel. For future deployments:
   "published" (posts) — lessons and attempts are always visible once saved, only posts have a
   draft/published gate. If it should show and doesn't, check the server logs for a
   `revalidatePath` or Prisma error.
-- **A new `.mdx` article/project doesn't show up:** check `draft` isn't `true` (production
+- **A new `.mdx` article doesn't show up:** check `draft` isn't `true` (production
   builds filter drafts out), and confirm the filename ends in `.mdx` inside
-  `content/articles/` or `content/projects/`.
+  `content/articles/`.

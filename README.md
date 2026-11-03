@@ -4,7 +4,7 @@ Personal site: portfolio, blog, and an English-learning space, with a private "S
 workspace for publishing. Built with Next.js (App Router) and a SQLite database (via Prisma).
 
 **Status: deployed at https://maxlie-blog.vercel.app, with placeholder content still in
-About/Projects.** See
+About.** See
 [docs/STATUS.md](docs/STATUS.md) for the full, current picture — what works, what's
 placeholder, and what's next.
 
@@ -44,8 +44,7 @@ a session secret).
 
 ```
 content/articles/*.mdx     Legacy hand-written blog posts (still supported, merged with Studio)
-content/projects/*.mdx     Portfolio project write-ups
-src/app/                   Public routes: /, /blog, /projects, /learning (+ /path, /practice), /about
+src/app/                   Public routes: /, /blog, /learning (+ /path, /practice, /village, /world), /play, /about
 src/app/studio/            Private routes: login (unauthenticated) + (dashboard) route group
                             (Overview, Posts, Learning, Mountain journey — all session-gated)
 src/proxy.ts               Gates /studio/** by verifying the signed session cookie

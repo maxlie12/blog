@@ -1,6 +1,14 @@
 # Status
 
-Last verified: 2026-11-03 (Làng Rêu light physics and interactions, harness checks).
+Last verified: 2026-11-03 (play corner replaces Projects; static render checks).
+
+## 2026-11-03 — “Nghỉ dưỡng & vui chơi” replaces Projects
+
+- The header's Projects link is now **Vui chơi** → `/play` (“Nghỉ dưỡng & vui chơi”): picture
+  cards for Làng Rêu and the Learning Farm, and three cozy-game articles to read. The tab is also
+  active while playing either game. The home page's “Featured project” card points here.
+- Projects are removed (the only entry was the Atlas placeholder); old `/projects` links redirect
+  to `/play`. See `docs/changes/SITE-001-play-replaces-projects.md`.
 
 ## 2026-11-03 — Làng Rêu: light physics and interactions
 
