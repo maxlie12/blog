@@ -4,7 +4,7 @@
 
 - **Issue:** `GAME-007` (owner request, 2026-11-03: “cải thiện đồ họa thì sao”; owner chose all of:
   living water, light and effects, sky and weather, grass/ground/models; with a quality setting)
-- **Status:** in progress
+- **Status:** done (live page check by owner)
 - **Owner:** Claude
 - **Date:** 2026-11-03
 - **Builds on:** `GAME-006-village-talk-clock.md`
@@ -65,9 +65,14 @@ weather and nothing distinguishes a strong computer from a weak phone.
       night on High renders the glow; both choices survive a reload; reduced motion shows its note
       and keeps rain off; no horizontal scroll; no console errors. Screenshots reviewed: water,
       smoke, sunset, rain, night bloom, cloudy morning mist, phone sheet.
-- [ ] Earlier suites (41, physics 18, Look 64, countryside 20, strip/castle/fish 27, talk/clock
-      26) on the final build — running when this was committed.
-- [ ] Vercel build + production deploy.
+- [x] Earlier suites on the final build: Look 64/64, countryside 20/20, strip/castle/fish 27/27,
+      talk/clock 26/26; main 40/41 and physics 17/18 on the first run, each failure a timing check
+      (petting a dog that had walked off; a thrown ball not yet saved) that passed on a rerun
+      (main desktop 21/21, physics desktop 9/9). The previous release failed the same ball check
+      when rerun the same way, so it is harness timing, not a regression.
+- [x] Frame rate in the software-rendering harness: 2.0–2.2 fps on the auto level (Low) against
+      1.5 fps for the previous release on the same page.
+- [x] Vercel build + production deploy (`f58ec5f`).
 
 ## Result
 

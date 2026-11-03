@@ -13,7 +13,8 @@ Last verified: 2026-11-03 (Làng Rêu graphics and weather; harness browser chec
 - New header button “Đồ họa và thời tiết”: Tự động / Thấp / Vừa / Cao and Tự đổi / Nắng /
   Nhiều mây / Mưa, saved per profile. Auto picks by device and steps down if frames are slow.
 - Checks: 20 village tests, ESLint and `tsc` clean; Playwright graphics suite 17/17 desktop,
-  17/17 phone, 10/10 reduced motion. See `docs/changes/GAME-007-village-graphics.md`.
+  17/17 phone, 10/10 reduced motion; earlier suites pass (two timing checks needed a rerun).
+  Deployed (`f58ec5f`). See `docs/changes/GAME-007-village-graphics.md`.
 
 ## 2026-11-03 — Làng Rêu: castle, fish, conversations, a running day, larger island
 
