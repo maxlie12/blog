@@ -5,8 +5,8 @@
 - **Issue:** `GAME-004` (owner request, 2026-11-03: “thêm người và mở rộng thêm các từ vựng không”;
   owner chose: every house has residents **and** professions unlocked by words; vocabulary as
   action sentences, names of parts, more pieces and review)
-- **Status:** phase 1 done (live page check by owner); phase 2 (about 25 new countryside pieces,
-  daily spaced review) follows in its own commit
+- **Status:** done (live page check by owner). Phase 1 `5b81e22` (villagers, Look tool, discovery
+  words); phase 2 (26 countryside pieces, daily review) in the following commit
 - **Owner:** Claude
 - **Date:** 2026-11-03
 - **Builds on:** `GAME-003-village-physics.md`
@@ -40,12 +40,33 @@ piece is unlocked there is nothing more to learn from it.
 - Keyboard: with Look selected, Enter steps through the people and animals near the middle of the
   view; a screen-reader live region reads each new selection once.
 
+## Completion evidence (phase 2)
+
+- 26 new pieces, each with its word card (88 words): bakery, pagoda, hut, treehouse; bamboo,
+  palm, fern, cactus (brushed); pier, lotus (only on water), raft (floats, can be thrown);
+  kite (flutters in the wind), bicycle, umbrella, table, ladder, wheelbarrow, seesaw, slide,
+  snowman, birdhouse, lamppost (lit at night); buffalo, goat, goose, frog.
+- They give villagers more to do and more sentences to read: children fly kites, climb to the
+  treehouse, go up and down the slide, ride the seesaw and build snowmen; neighbours eat at the
+  table, rest under the umbrella, visit the pagoda and fix bicycles; the baker bakes at the
+  bakery; the fisherman fishes from a pier. Geese swim, frogs hop in and out of ponds, the
+  buffalo wades. Six new verbs (fly, visit, fix, build, bake, climb) and twelve new parts.
+- **Daily review**: every word the learner has met (unlocked with a lesson or found with Look)
+  comes back after 1, 3, 7 and 14 days — the site's review rhythm — then monthly; a wrong answer
+  brings it back the next day. A header button with a count appears when words are due; a
+  session asks up to ten four-choice questions from the same group, repeats misses at the end,
+  and shows a summary. The word book says how many are due. Saved per profile; not counted
+  toward Done, the rhythm or a level.
+
 ## Scope
 
 ### May edit
 
 - `src/lib/village/vocab.ts` (new) — verbs, parts, residents, action sentences; pure, tested in Node.
 - `src/lib/village/people.ts` (new) — villager models, jobs, movement, day and night.
+- `src/lib/village/review.ts` (new, phase 2) — due words, schedule, choices; pure, tested in Node;
+  reuses `REVIEW_INTERVALS` from `src/lib/reviewSchedule.ts` (read only).
+- `src/lib/village/physics.ts` (phase 2: the raft is a floating body like the boat).
 - `src/lib/village/data.ts`, `kit.ts` (part marks in the painter), `props.ts` (person models,
   part anchors), `scene.ts`, `src/lib/village.test.ts`
 - `src/components/village/VillageGame.tsx`, `src/app/globals.css` (`vg-` only)
@@ -58,7 +79,8 @@ piece is unlocked there is nothing more to learn from it.
 ## Constraints
 
 - Save format stays version 1: professions are ordinary saved pieces; residents are derived from
-  houses and never saved; `seen` is an optional progress field with only known keys kept.
+  houses and never saved; `seen` and `review` are optional progress fields with only known keys
+  kept. A word without a saved schedule is due the day after it was met, so nothing migrates.
 - Residents and their jobs come from what is built nearby; nothing is scripted per village.
 - No new dependency. Label positions are computed in the scene and drawn as a DOM layer
   (`aria-hidden`; the card carries the same words for assistive technology).
@@ -80,6 +102,17 @@ piece is unlocked there is nothing more to learn from it.
       “Bác nông dân …”; the word book counts villagers, verbs and parts; seen words are saved;
       no horizontal scroll; no console errors. Physics suite 18/18. The GAME-002 suite passes
       after updating its counts (62 words, four pinned tools).
+- [x] Phase 1 deployed: Vercel built `5b81e22` and deployed it to Production.
+- [x] Phase 2: `npm test` 16 village tests (adds: met words are due from the next midnight and
+      return after 3, 7, 14, then 30 days; a miss starts again tomorrow; a saved schedule wins;
+      choices are four distinct words from the same group; unknown schedule keys are dropped).
+      ESLint and `tsc` clean. Playwright, new suite 20/20 at 1280px and 390px with a seeded
+      village: group tabs count the new words; the review button appears with due words, a
+      session asks four-choice questions, ends with a summary, saves future due dates and the
+      button goes away; lotus refuses dry land; Look names the buffalo, goat, goose and frog and
+      reads new activities (“The baker is baking bread.”, “The child is climbing up to the
+      treehouse.”, “The grandpa is eating lunch at the table.”); no console errors; no horizontal
+      scroll. Earlier suites: 41/41 (88 previews render), physics 18/18, Look 64/64.
 - [ ] Not checked here: `next build` (the workspace cannot install Clerk), a real phone, and the
       live page. Vercel's build is the check.
 

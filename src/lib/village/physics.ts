@@ -8,7 +8,7 @@
  */
 import type { Point } from "./data";
 
-export type DynamicKind = "ball" | "barrel" | "crate" | "pumpkin" | "boat";
+export type DynamicKind = "ball" | "barrel" | "crate" | "pumpkin" | "boat" | "raft";
 /** `drag` slows a body in proportion to its speed; `brake` is a steady slowdown (m/s²) so it comes to a clear stop. */
 export interface BodySpec { r: number; m: number; drag: number; brake: number; bounce: number; rolls: boolean }
 export const BODY: Record<DynamicKind, BodySpec> = {
@@ -17,6 +17,7 @@ export const BODY: Record<DynamicKind, BodySpec> = {
   barrel: { r: 0.33, m: 3, drag: 0.8, brake: 3.2, bounce: 0.25, rolls: false },
   crate: { r: 0.33, m: 2.5, drag: 1.2, brake: 6, bounce: 0.15, rolls: false },
   boat: { r: 0.75, m: 6, drag: 1.5, brake: 7, bounce: 0.2, rolls: false },
+  raft: { r: 0.62, m: 5, drag: 1.4, brake: 6, bounce: 0.2, rolls: false },
 };
 export const isDynamic = (kind: string): kind is DynamicKind => kind in BODY;
 export const GRAVITY = 14, WATER_Y = 0.05, MAX_SPEED = 14, FLOW = 1.1, HOLD_Y = 0.55;

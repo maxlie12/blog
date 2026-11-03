@@ -37,6 +37,12 @@ export const VERBS = {
   hop: { ...e("hop", "/hɑːp/", "nhảy cóc, nhảy lò cò"), ing: "hopping" },
   sniff: { ...e("sniff", "/snɪf/", "hít, đánh hơi"), ing: "sniffing" },
   look: { ...e("look", "/lʊk/", "nhìn"), ing: "looking" },
+  fly: { ...e("fly", "/flaɪ/", "bay, thả (diều)"), ing: "flying" },
+  visit: { ...e("visit", "/ˈvɪz.ɪt/", "thăm, viếng"), ing: "visiting" },
+  fix: { ...e("fix", "/fɪks/", "sửa"), ing: "fixing" },
+  build: { ...e("build", "/bɪld/", "xây, đắp"), ing: "building" },
+  bake: { ...e("bake", "/beɪk/", "nướng (bánh)"), ing: "baking" },
+  climb: { ...e("climb", "/klaɪm/", "trèo, leo"), ing: "climbing" },
 };
 export type VerbId = keyof typeof VERBS;
 
@@ -111,6 +117,18 @@ export const PARTS = {
   arm: e("arm", "/ɑːrm/", "cánh tay"),
   hand: e("hand", "/hænd/", "bàn tay"),
   leg: e("leg", "/leɡ/", "cái chân"),
+  coconut: e("coconut", "/ˈkoʊ.kə.nʌt/", "quả dừa"),
+  thorn: e("thorn", "/θɔːrn/", "cái gai"),
+  string: e("string", "/strɪŋ/", "sợi dây"),
+  pedal: e("pedal", "/ˈped.əl/", "bàn đạp"),
+  basket: e("basket", "/ˈbæs.kət/", "cái giỏ"),
+  cup: e("cup", "/kʌp/", "cái cốc"),
+  rung: e("rung", "/rʌŋ/", "bậc thang (nấc)"),
+  step: e("step", "/step/", "bậc lên xuống"),
+  scarf: e("scarf", "/skɑːrf/", "khăn quàng cổ"),
+  button: e("button", "/ˈbʌt.ən/", "cúc áo"),
+  beard: e("beard", "/bɪrd/", "chòm râu"),
+  eye: e("eye", "/aɪ/", "con mắt"),
 };
 export type PartId = keyof typeof PARTS;
 
@@ -152,6 +170,16 @@ export const ACTIONS = {
   wave: a("wave", "is waving at you", "đang vẫy tay chào bạn"),
   restFire: a("rest", "is resting by the campfire", "đang nghỉ bên lửa trại"),
   lookAround: a("look", "is looking around", "đang nhìn quanh"),
+  flyKite: a("fly", "is flying a kite", "đang thả diều"),
+  playSlide: a("play", "is playing on the slide", "đang chơi cầu trượt"),
+  playSeesaw: a("play", "is playing on the seesaw", "đang chơi bập bênh"),
+  climbTreehouse: a("climb", "is climbing up to the treehouse", "đang trèo lên nhà trên cây"),
+  buildSnowman: a("build", "is building a snowman", "đang đắp người tuyết"),
+  eatTable: a("eat", "is eating lunch at the table", "đang ăn trưa bên bàn"),
+  restUmbrella: a("rest", "is resting under the umbrella", "đang nghỉ dưới chiếc ô"),
+  visitPagoda: a("visit", "is visiting the pagoda", "đang đi lễ chùa"),
+  fixBike: a("fix", "is fixing the bicycle", "đang sửa xe đạp"),
+  bakeBread: a("bake", "is baking bread", "đang nướng bánh mì"),
   // animals
   roam: a("walk", "is walking around", "đang đi loanh quanh"),
   graze: a("eat", "is eating grass", "đang ăn cỏ"),

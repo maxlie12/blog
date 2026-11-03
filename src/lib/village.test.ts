@@ -53,8 +53,8 @@ test("typed answers ignore case and outer spaces", () => {
 
 test("every buildable piece has a usable word card and a group", async () => {
   const { TOOLS, WORDS, WORD_ORDER, CATEGORIES, wordsIn } = await import("./village/data.ts");
-  assert.equal(WORD_ORDER.length, 62);
-  assert.equal(TOOLS.length, 66, "62 pieces plus orbit, look, hand and erase");
+  assert.equal(WORD_ORDER.length, 88);
+  assert.equal(TOOLS.length, 92, "88 pieces plus orbit, look, hand and erase");
   assert.equal(CATEGORIES.reduce((n, c) => n + wordsIn(c.id).length, 0), WORD_ORDER.length);
   for (const word of WORD_ORDER) {
     const card = WORDS[word];
@@ -173,7 +173,40 @@ test("people are words with a Vietnamese name, and seen words survive a reload",
   assert.deepEqual(wordsIn("people"), ["farmer", "baker", "fisherman", "shepherd", "woodcutter", "postman", "musician", "child"]);
   for (const word of wordsIn("people")) assert.ok(TOOL[word].person && viWho(word).length > 2, `${word}: placeable person with a Vietnamese name`);
   assert.equal(viWho("cow"), "con bò");
-  const progress = parseProgress(JSON.stringify({ unlocked: [], seen: { "verb:walk": 5, "part:roof": 6, "noun:grandma": 7, "verb:fly": 1, "part:roof2": 2, "noun:man": "x", junk: 3 } }));
+  const progress = parseProgress(JSON.stringify({ unlocked: [], seen: { "verb:walk": 5, "part:roof": 6, "noun:grandma": 7, "verb:dance": 1, "part:roof2": 2, "noun:man": "x", junk: 3 } }));
   assert.deepEqual(progress.seen, { "verb:walk": 5, "part:roof": 6, "noun:grandma": 7 });
   assert.deepEqual(parseProgress(null).seen, {});
+});
+
+test("daily review: met words come back after 1, 3, 7 and 14 days, a miss starts again", async () => {
+  const { DAY, choicesFor, dueItems, nextReview, startOfDay } = await import("./village/review.ts");
+  const met = new Date(2026, 10, 3, 20, 0).getTime();
+  const progress = parseProgress(JSON.stringify({ unlocked: ["tower"], learned: { tower: { at: met } }, seen: { "part:roof": met, "verb:walk": met + DAY * 3 } }));
+  assert.deepEqual(dueItems(progress, met + 3600_000).map((i) => i.key), [], "not due on the day it was met");
+  assert.deepEqual(dueItems(progress, startOfDay(met) + DAY).map((i) => i.key), ["part:roof", "word:tower"], "due from the next midnight");
+
+  let state = nextReview(undefined, true, met);
+  const gaps = [];
+  for (let k = 0; k < 4; k += 1) {
+    gaps.push(Math.round((state.due - startOfDay(met)) / DAY));
+    state = nextReview(state, true, met);
+  }
+  assert.deepEqual(gaps, [3, 7, 14, 30]);
+  assert.deepEqual(nextReview({ due: 0, step: 3 }, false, met), { due: startOfDay(met) + DAY, step: 0 });
+
+  const later = { ...progress, review: { "part:roof": { due: startOfDay(met) + DAY * 10, step: 2 } } };
+  assert.deepEqual(dueItems(later, startOfDay(met) + DAY * 2).map((i) => i.key), ["word:tower"], "a saved schedule wins");
+
+  const [roof] = dueItems(progress, startOfDay(met) + DAY);
+  const choices = choicesFor(roof, () => 0.3);
+  assert.equal(choices.length, 4);
+  assert.equal(new Set(choices.map((c) => c.key)).size, 4);
+  assert.ok(choices.some((c) => c.key === "part:roof") && choices.every((c) => c.group === "part"), "choices come from the same group");
+  const tower = dueItems(progress, startOfDay(met) + DAY).find((i) => i.key === "word:tower");
+  assert.ok(tower && choicesFor(tower).every((c) => c.group === "word:build"));
+});
+
+test("saved review schedules keep only known words", () => {
+  const progress = parseProgress(JSON.stringify({ review: { "word:house": { due: 5, step: 1.7 }, "word:rocket": { due: 5, step: 1 }, "part:roof": { due: "x" }, "verb:dance": { due: 1, step: 0 }, "verb:fly": { due: 1, step: 0 } } }));
+  assert.deepEqual(progress.review, { "word:house": { due: 5, step: 1 }, "verb:fly": { due: 1, step: 0 } });
 });

@@ -92,7 +92,7 @@ function drawPerson({ p }: Draw, role: Role, look: Look, legs: boolean) {
 /** Thumbnail / placement models for the eight professions (with legs). */
 export const PERSON_MODELS = Object.fromEntries(
   PROFESSIONS.map((role) => [role, (d: Draw, r: () => number) => {
-    drawPerson(d, role, lookFor(role, Math.floor(r() * 1e6)), true);
+    drawPerson(d, role, lookFor(role, Math.floor(r() * 1e6) + PROFESSIONS.indexOf(role) * 7919), true);
   }]),
 ) as Record<Profession, (d: Draw, r: () => number) => void>;
 
@@ -116,12 +116,14 @@ interface Task {
   /** Where to look once there. */
   face?: Point;
   pose: "stand" | "sit";
-  anim?: "chop" | "water" | "sweep" | "strum" | "talk" | "fish";
+  anim?: "chop" | "water" | "sweep" | "strum" | "talk" | "fish" | "bob";
   dur: number;
   t: number;
   arrived: boolean;
   /** Re-aims at a moving target (a ball, the sheep). */
   follow?: () => Point | null;
+  /** Once there, moves along a fixed route over time (up a ladder, down a slide): x, z, height. */
+  ride?: (t: number) => [number, number, number];
   speed: number;
   night?: boolean;
   giveUp: number;
@@ -163,8 +165,14 @@ const turn = (a: number, b: number) => {
   if (d < -Math.PI) d += Math.PI * 2;
   return d;
 };
-/** A point `d` in front of a piece (its local +Z), the side people use. */
-const front = (o: { x: number; z: number; r: number }, d: number): Point => [o.x + Math.sin(o.r) * d, o.z + Math.cos(o.r) * d];
+/** A point in a piece's own frame (front +Z), turned and moved to where the piece stands. */
+const local = (o: { x: number; z: number; r: number }, lx: number, lz: number): Point => {
+  const c = Math.cos(o.r), s = Math.sin(o.r);
+  return [o.x + lx * c + lz * s, o.z - lx * s + lz * c];
+};
+/** A point `d` in front of a piece, the side people use. */
+const front = (o: { x: number; z: number; r: number }, d: number): Point => local(o, 0, d);
+const mix = (a: Point, b: Point, k: number): Point => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
 const around = (x: number, z: number, d: number, a = Math.random() * Math.PI * 2): Point => [x + Math.cos(a) * d, z + Math.sin(a) * d];
 
 export function createPeople(ctx: PeopleContext) {
@@ -263,6 +271,8 @@ export function createPeople(ctx: PeopleContext) {
   }
   function waterEdge(x: number, z: number): { at: Point; face: Point } | null {
     const S = ctx.village();
+    const pier = nearest(["pier"], x, z, 22);
+    if (pier) return { at: local(pier, 0, 1.9), face: local(pier, 0, 4) };
     let best: { at: Point; face: Point } | null = null, bestD = 22;
     for (const pond of S.ponds) {
       const d = dist2(pond.x, pond.z, x, z);
@@ -296,6 +306,8 @@ export function createPeople(ctx: PeopleContext) {
         break;
       }
       case "baker": {
+        const bakery = nearest(["bakery"], p.x, p.z, 20);
+        if (bakery && roll < 0.55) return task("bakeBread", local(bakery, 0.45, 1.45), { face: local(bakery, 0.45, 0), anim: "water", dur: 12 + Math.random() * 8 });
         const stall = nearest(["stall"], p.x, p.z, 18);
         // Behind the stall (its counter is solid), facing the customers.
         if (stall && roll < 0.6) return task("sellBread", front(stall, -0.95), { face: front(stall, 3), dur: 10 + Math.random() * 8 });
@@ -350,8 +362,46 @@ export function createPeople(ctx: PeopleContext) {
           const ball = balls[0];
           return task("kickBall", [ball.x, ball.z], { follow: () => [ball.x - 0.2, ball.z - 0.2], speed: RUN, dur: 6 + Math.random() * 4 });
         }
-        const swing = nearest(["swing"], p.x, p.z, 14);
-        if (swing && roll < 0.85) return task("playSwing", [swing.x, swing.z], { face: front(swing, 2), pose: "sit", dur: 8 + Math.random() * 6 });
+        const near = (kind: PropKind) => nearest([kind], p.x, p.z, 14);
+        const play: (() => Task | null)[] = [
+          () => { const o = near("swing"); return o && task("playSwing", [o.x, o.z], { face: front(o, 2), pose: "sit", dur: 8 + Math.random() * 6 }); },
+          () => { const o = near("kite"); return o && task("flyKite", local(o, 0, 0.3), { face: local(o, 0, 3), anim: "strum", dur: 10 + Math.random() * 6 }); },
+          () => {
+            const o = near("seesaw"), end = Math.random() < 0.5 ? 1 : -1;
+            return o && task("playSeesaw", local(o, 0, end * 1.05), { face: [o.x, o.z], pose: "sit", anim: "bob", dur: 8 + Math.random() * 6 });
+          },
+          () => {
+            const o = near("slide");
+            if (!o) return null;
+            // Up the ladder, a moment on top, down the chute, walk round again.
+            const base = local(o, 0, -1.0), top = local(o, 0, -0.5), end = local(o, 0, 1.3);
+            const ride = (t: number): [number, number, number] => {
+              const f = (t % 5) / 5;
+              if (f < 0.4) return [...mix(base, top, f / 0.4), 1.24 * (f / 0.4)];
+              if (f < 0.5) return [...top, 1.24];
+              if (f < 0.7) { const k = (f - 0.5) / 0.2; return [...mix(top, end, k), 1.24 - 1.12 * k]; }
+              return [...mix(end, base, (f - 0.7) / 0.3), 0];
+            };
+            return task("playSlide", base, { ride, dur: 15 });
+          },
+          () => {
+            const o = near("treehouse");
+            if (!o) return null;
+            const base = local(o, 0.6, 1.3), top = local(o, 0.3, 0.45), dur = 9 + Math.random() * 6;
+            const ride = (t: number): [number, number, number] => {
+              const k = Math.max(0, Math.min(1, Math.min(t, dur - t) * 0.6));
+              return [...mix(base, top, k), 1.8 * k];
+            };
+            return task("climbTreehouse", base, { ride, dur });
+          },
+          () => { const o = near("snowman"); return o && task("buildSnowman", local(o, 0.45, 0.45), { face: [o.x, o.z], anim: "chop", dur: 8 }); },
+        ];
+        if (roll < 0.85) {
+          for (let tries = 0; tries < 4; tries += 1) {
+            const t = pick(play, Math.random)();
+            if (t) return t;
+          }
+        }
         return wanderTask(p, "runAround", 6);
       }
       default:
@@ -361,7 +411,15 @@ export function createPeople(ctx: PeopleContext) {
     const well = S.wells.find((o) => dist2(o.x, o.z, p.home[0], p.home[1]) < 12);
     const bench = nearest(["bench"], p.home[0], p.home[1], 12);
     const stall = nearest(["stall"], p.home[0], p.home[1], 14);
+    const table = nearest(["table"], p.home[0], p.home[1], 14);
+    const umbrella = nearest(["umbrella"], p.home[0], p.home[1], 14);
+    const pagoda = nearest(["pagoda"], p.home[0], p.home[1], 18);
+    const bike = nearest(["bicycle"], p.home[0], p.home[1], 12);
     const options: (() => Task | null)[] = [
+      () => (table ? task("eatTable", local(table, 0, Math.random() < 0.5 ? 0.68 : -0.68), { face: [table.x, table.z], pose: "sit", dur: 12 + Math.random() * 8 }) : null),
+      () => (umbrella ? task("restUmbrella", local(umbrella, 0.45, 0.1), { face: local(umbrella, 3, 0.1), dur: 10 + Math.random() * 6 }) : null),
+      () => (pagoda ? task("visitPagoda", local(pagoda, (Math.random() - 0.5) * 0.8, 1.95), { face: [pagoda.x, pagoda.z], anim: "water", dur: 8 }) : null),
+      () => (bike ? task("fixBike", local(bike, 0.55, 0), { face: [bike.x, bike.z], anim: "chop", dur: 8 }) : null),
       () => wanderTask(p),
       () => (well ? task("fillBucket", around(well.x, well.z, 1.0), { face: [well.x, well.z], dur: 4 }) : null),
       () => (bench ? task(Math.random() < 0.5 ? "sitBench" : "readBench", [bench.x, bench.z], { face: front(bench, 2), pose: "sit", dur: 10 + Math.random() * 8 }) : null),
@@ -428,7 +486,7 @@ export function createPeople(ctx: PeopleContext) {
         const d = dist2(t.to[0], t.to[1], p.x, p.z);
         t.giveUp -= dt;
         // Seats are solid, so sitting starts beside them and slides on.
-        if (!t.arrived && (d < (t.pose === "sit" ? 0.9 : 0.15) || t.giveUp <= 0) && !t.follow) t.arrived = true;
+        if (!t.arrived && (d < (t.pose === "sit" || t.ride ? 0.9 : 0.15) || t.giveUp <= 0) && !t.follow) t.arrived = true;
         if (t.follow && t.action === "kickBall") t.arrived = false;
         if (!t.arrived && d > 0.05) { const s = Math.min(t.speed, d * 3); wx = ((t.to[0] - p.x) / d) * s; wz = ((t.to[1] - p.z) / d) * s; }
         if (t.arrived || t.follow) {
@@ -452,7 +510,12 @@ export function createPeople(ctx: PeopleContext) {
       const k = Math.min(1, dt * 6);
       p.vx += (wx - p.vx) * k;
       p.vz += (wz - p.vz) * k;
-      if (!(t?.arrived && t.pose === "sit")) {
+      if (t?.arrived && t.ride && motion) {
+        // Following a route (ladder, slide): placed directly, facing the way they move.
+        const [rx, rz, ry] = t.ride(t.t);
+        if (Math.hypot(rx - p.x, rz - p.z) > 1e-3) p.yaw = Math.atan2(rx - p.x, rz - p.z);
+        p.x = rx; p.z = rz; p.y = ry; p.vy = 0; p.vx = p.vz = 0;
+      } else if (!(t?.arrived && t.pose === "sit")) {
         Object.assign(_push, { x: p.x + p.vx * dt, z: p.z + p.vz * dt, vx: p.vx, vz: p.vz });
         pushOut(phys, _push, 0.18, 0);
         if (!waterAt(phys, _push.x, _push.z)) { p.x = _push.x; p.z = _push.z; }
@@ -475,6 +538,7 @@ export function createPeople(ctx: PeopleContext) {
         else if (t.anim === "sweep") yawWiggle = Math.sin(clock * 4) * 0.35;
         else if (t.anim === "strum") roll = Math.sin(clock * 3) * 0.08;
         else if (t.anim === "talk") { roll = Math.sin(clock * 2) * 0.05; lift += Math.max(0, Math.sin(clock * 3.3)) * 0.015; }
+        else if (t.anim === "bob") lift += (0.5 + Math.sin(clock * 2.2) * 0.5) * 0.3;
       }
       if (p.waveT > 0 && motion) { roll = Math.sin(p.waveT * 14) * 0.2; lift += Math.max(0, Math.sin(p.waveT * 7)) * 0.12; }
       let sx = 0;

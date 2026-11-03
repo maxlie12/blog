@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { PronounceButton } from "@/components/PronounceButton";
 import { getActiveLearnerProfileId, readProfileStorage, writeProfileStorage, type LearnerProfileId } from "@/lib/learnerProfiles";
 import {
@@ -8,10 +8,12 @@ import {
   type Category, type ToolId, type VillageProgress, type WordId,
 } from "@/lib/village/data";
 import type { InspectInfo, Thumbs, VillageController } from "@/lib/village/scene";
+import { choicesFor, dueItems, nextReview, type ReviewItem } from "@/lib/village/review";
 import { PARTS, RESIDENTS, VERBS, vocabKey, type PartId, type ResidentId, type VerbId } from "@/lib/village/vocab";
 
-type IconName = "orbit" | "look" | "hand" | "erase" | "undo" | "book" | "reset" | "sun" | "moon" | "close" | "lock";
+type IconName = "orbit" | "look" | "hand" | "erase" | "undo" | "book" | "reset" | "sun" | "moon" | "close" | "lock" | "cards";
 const ICONS: Record<IconName, ReactNode> = {
+  cards: <><rect x="4" y="7" width="12" height="13" rx="2" /><path d="M8 4h10a2 2 0 0 1 2 2v12" /><path d="m7.5 13.5 2 2 3.5-4" /></>,
   look: <><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 5 5" /><path d="M8 10.5a2.5 2.5 0 0 1 2.5-2.5" /></>,
   orbit: <><path d="M4.5 12a7.5 7.5 0 0 1 13.1-5" /><path d="M19.5 12a7.5 7.5 0 0 1-13.1 5" /><path d="M18 3.5v3.8h-3.8" /><path d="M6 20.5v-3.8h3.8" /></>,
   hand: <><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12" /><path d="M11 11.5V4a1.5 1.5 0 0 1 3 0v7.5" /><path d="M14 11.5V5.5a1.5 1.5 0 0 1 3 0V13" /><path d="M17 9.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1.5a6 6 0 0 1-4.6-2.2L4.4 15a1.6 1.6 0 0 1 2.4-2.1L8 14" /></>,
@@ -41,7 +43,11 @@ function ToolPic({ id, thumbs }: { id: ToolId; thumbs: Thumbs }) {
 }
 
 type LessonMode = "unlock" | "review";
-type Sheet = { kind: "book" } | { kind: "reset" } | { kind: "lesson"; word: WordId; mode: LessonMode; options: WordId[] };
+interface Question { item: ReviewItem; choices: ReviewItem[] }
+type Sheet =
+  | { kind: "book" } | { kind: "reset" }
+  | { kind: "lesson"; word: WordId; mode: LessonMode; options: WordId[] }
+  | { kind: "review"; queue: Question[] };
 
 function shuffle<T>(items: T[]) {
   const out = [...items];
@@ -90,6 +96,9 @@ export default function VillageGame() {
   const [cat, setCat] = useState<Category>("build");
   const [thumbs, setThumbs] = useState<Thumbs>({});
   const [inspect, setInspect] = useState<InspectInfo | null>(null);
+  // Review due dates are compared with this clock, refreshed every minute and when a sheet opens.
+  const [now, setNow] = useState(() => Date.now());
+  const due = useMemo(() => dueItems(progress, now, 99), [progress, now]);
   const [announce, setAnnounce] = useState("");
   const inspectIdRef = useRef<string | null>(null);
 
@@ -184,6 +193,11 @@ export default function VillageGame() {
   }, [progress, store]);
 
   useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
     if (!toast) return;
     const timer = window.setTimeout(() => setToast(null), toast.text.length > 60 ? 4200 : 2800);
     return () => window.clearTimeout(timer);
@@ -202,6 +216,18 @@ export default function VillageGame() {
     const others = shuffle(group.length >= 3 ? group : WORD_ORDER.filter((w) => w !== word)).slice(0, 3);
     setSheet({ kind: "lesson", word, mode, options: shuffle([word, ...others]) });
   }, []);
+
+  /** Today's review: up to ten due words, each with four choices from its own group. */
+  const openReview = () => {
+    const at = Date.now();
+    setNow(at);
+    const queue = dueItems(progress, at).map((item) => ({ item, choices: choicesFor(item) }));
+    if (queue.length) setSheet({ kind: "review", queue });
+  };
+  const recordReview = (key: string, right: boolean) => {
+    const at = Date.now();
+    setProgress((current) => ({ ...current, review: { ...current.review, [key]: nextReview(current.review[key], right, at) } }));
+  };
 
   const selectTool = (id: ToolId) => {
     if (!progress.unlocked.includes(id) && TOOL[id].cat !== null) {
@@ -222,8 +248,13 @@ export default function VillageGame() {
     const firstTime = mode === "unlock" && !progress.unlocked.includes(id);
     setProgress((current) => {
       if (firstTime) return { ...current, unlocked: [...current.unlocked, id], learned: { ...current.learned, [word]: { at } } };
-      const prev = current.learned[word];
-      return { ...current, learned: { ...current.learned, [word]: { at: prev?.at ?? at, reviewed: (prev?.reviewed ?? 0) + 1 } } };
+      const prev = current.learned[word], key = `word:${word}`;
+      return {
+        ...current,
+        learned: { ...current.learned, [word]: { at: prev?.at ?? at, reviewed: (prev?.reviewed ?? 0) + 1 } },
+        // A finished practice card counts as a right answer for the daily review too.
+        review: prev ? { ...current.review, [key]: nextReview(current.review[key], true, at) } : current.review,
+      };
     });
     return firstTime;
   };
@@ -266,6 +297,12 @@ export default function VillageGame() {
               </div>
             )}
             <div className="vg-actions">
+              {due.length ? (
+                <button className="vg-icon" type="button" aria-label={`Ôn từ hôm nay: ${due.length} từ đến hạn`} onClick={openReview}>
+                  <Icon name="cards" />
+                  <span className="vg-count" aria-hidden="true">{due.length > 9 ? "9+" : due.length}</span>
+                </button>
+              ) : null}
               {status === "ready" ? (
                 <button className="vg-icon" type="button" aria-label="Hoàn tác" disabled={!canUndo} onClick={() => controllerRef.current?.undo()}>
                   <Icon name="undo" />
@@ -351,7 +388,9 @@ export default function VillageGame() {
           onClick={(event) => { if (event.target === event.currentTarget) setSheet(null); }}
         >
           {sheet?.kind === "book" ? (
-            <WordBook progress={progress} thumbs={thumbs} onClose={() => setSheet(null)} onLearn={openLesson} />
+            <WordBook progress={progress} thumbs={thumbs} due={due.length} onClose={() => setSheet(null)} onLearn={openLesson} onReview={openReview} />
+          ) : sheet?.kind === "review" ? (
+            <ReviewSession key={sheet.queue.map((q) => q.item.key).join()} queue={sheet.queue} onAnswer={recordReview} onClose={() => setSheet(null)} />
           ) : sheet?.kind === "reset" ? (
             <SheetFrame title="Làm mới làng" onClose={() => setSheet(null)}>
               <p className="vg-muted">Các món đồ đã mở khóa vẫn được giữ lại. Lỡ tay thì bấm Hoàn tác.</p>
@@ -403,11 +442,24 @@ function SheetFrame({ title, eyebrow, onClose, children }: { title: string; eyeb
   );
 }
 
-function WordBook({ progress, thumbs, onClose, onLearn }: { progress: VillageProgress; thumbs: Thumbs; onClose: () => void; onLearn: (word: WordId, mode: LessonMode) => void }) {
+function WordBook({ progress, thumbs, due, onClose, onLearn, onReview }: {
+  progress: VillageProgress;
+  thumbs: Thumbs;
+  due: number;
+  onClose: () => void;
+  onLearn: (word: WordId, mode: LessonMode) => void;
+  onReview: () => void;
+}) {
   const known = WORD_ORDER.filter((w) => progress.unlocked.includes(w)).length;
   return (
     <SheetFrame title="Sổ từ" eyebrow="Học để mở khóa" onClose={onClose}>
       <p className="vg-muted">Đã có <b>{known}/{WORD_ORDER.length}</b> từ. Mỗi từ mới mở một món đồ để xây.</p>
+      <div className="vg-review-row">
+        <p className="vg-muted">
+          {due ? <>Hôm nay có <b>{due}</b> từ đến hạn ôn.</> : "Hôm nay chưa có từ nào đến hạn ôn."} Từ đã học quay lại sau 1, 3, 7 rồi 14 ngày; trả lời sai thì gặp lại ngày mai.
+        </p>
+        {due ? <button type="button" className="button button--primary" onClick={onReview}>Ôn ngay</button> : null}
+      </div>
       {CATEGORIES.map((c) => {
         const words = wordsIn(c.id);
         return (
@@ -443,6 +495,85 @@ function WordBook({ progress, thumbs, onClose, onLearn }: { progress: VillagePro
       <p className="vg-note">
         Đây là ôn từ vựng nhanh để mở đồ chơi, không phải bài kiểm tra trình độ. Không tính vào Done, nhịp học hay bài nộp. Tiến độ lưu trên trình duyệt này, theo hồ sơ học đang chọn.
       </p>
+    </SheetFrame>
+  );
+}
+
+/** Today's review: pick the English for each Vietnamese meaning; a miss is asked again at the end. */
+function ReviewSession({ queue, onAnswer, onClose }: { queue: Question[]; onAnswer: (key: string, right: boolean) => void; onClose: () => void }) {
+  const [order, setOrder] = useState(queue);
+  const [index, setIndex] = useState(0);
+  const [picked, setPicked] = useState<string | null>(null);
+  const [answered, setAnswered] = useState<Record<string, boolean>>({});
+  const firstRef = useRef<HTMLButtonElement>(null);
+  const nextRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    (picked ? nextRef.current : firstRef.current)?.focus();
+  }, [index, picked]);
+
+  const q = order[index];
+  if (!q) {
+    const keys = Object.keys(answered), right = keys.filter((key) => answered[key]).length;
+    const missed = queue.filter((x) => answered[x.item.key] === false).map((x) => x.item);
+    return (
+      <SheetFrame title="Ôn xong!" eyebrow="Ôn từ hôm nay" onClose={onClose}>
+        <p className="vg-q">Đúng ngay lần đầu <b>{right}/{keys.length}</b> từ.</p>
+        {missed.length ? (
+          <ul className="vg-words vg-words--found">
+            {missed.map((item) => (
+              <li key={item.key}>
+                <span className="vg-words__text"><strong lang="en">{item.en}</strong> <span className="vg-ipa">{item.ipa}</span><small>{item.vi}</small></span>
+                <span className="vg-words__acts"><PronounceButton text={item.en} /></span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <p className="vg-muted">Từ trả lời đúng sẽ quay lại sau 3, 7 rồi 14 ngày; từ sai gặp lại ngày mai. Phần ôn này không tính vào Done hay nhịp học.</p>
+        <div className="vg-row"><button ref={nextRef} type="button" className="button button--primary" onClick={onClose}>Xong</button></div>
+      </SheetFrame>
+    );
+  }
+
+  const correct = q.item.key;
+  const choose = (key: string) => {
+    if (picked) return;
+    setPicked(key);
+    if (correct in answered) return;
+    const right = key === correct;
+    onAnswer(correct, right);
+    setAnswered({ ...answered, [correct]: right });
+    if (!right) setOrder([...order, q]);
+  };
+  return (
+    <SheetFrame title="Ôn từ hôm nay" eyebrow={`Câu ${index + 1}/${order.length} · ${q.item.groupLabel}`} onClose={onClose}>
+      <p className="vg-q">Từ nào nghĩa là “{q.item.vi}”?</p>
+      <div className="vg-options">
+        {q.choices.map((c, i) => (
+          <button
+            key={c.key}
+            ref={i === 0 ? firstRef : undefined}
+            type="button"
+            className="vg-option"
+            lang="en"
+            data-state={picked && c.key === correct ? "right" : picked === c.key ? "wrong" : undefined}
+            disabled={picked !== null}
+            onClick={() => choose(c.key)}
+          >
+            {c.en}
+          </button>
+        ))}
+      </div>
+      <p className="vg-feedback" data-tone={picked ? (picked === correct ? "right" : "wrong") : undefined} aria-live="polite">
+        {picked ? (picked === correct ? "Đúng rồi!" : `Chưa đúng. “${q.item.vi}” là “${q.item.en}”; từ này sẽ hỏi lại cuối lượt.`) : ""}
+      </p>
+      {picked ? (
+        <div className="vg-row">
+          <span lang="en"><b>{q.item.en}</b> <span className="vg-ipa">{q.item.ipa}</span></span>
+          <PronounceButton text={q.item.en} />
+          <button ref={nextRef} type="button" className="button button--primary" onClick={() => { setPicked(null); setIndex(index + 1); }}>Tiếp</button>
+        </div>
+      ) : null}
     </SheetFrame>
   );
 }

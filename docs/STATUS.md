@@ -1,6 +1,19 @@
 # Status
 
-Last verified: 2026-11-03 (Làng Rêu villagers and Look tool; harness browser checks).
+Last verified: 2026-11-03 (Làng Rêu countryside pieces and daily review; harness browser checks).
+
+## 2026-11-03 — Làng Rêu: 26 countryside pieces and a daily review
+
+- 88 words now. New pieces: bakery, pagoda, hut, treehouse; bamboo, palm, fern, cactus; pier,
+  lotus (water only), raft; kite, bicycle, umbrella, table, ladder, wheelbarrow, seesaw, slide,
+  snowman, birdhouse, lamppost; buffalo, goat, goose, frog. Villagers use them (children fly
+  kites, climb to the treehouse, slide; neighbours eat at the table, visit the pagoda; the baker
+  bakes; the fisherman fishes from a pier), which adds six verbs and twelve part names.
+- Daily review: words met in the village return after 1, 3, 7 and 14 days, then monthly; a miss
+  returns the next day. A header button shows how many are due. Not counted toward Done.
+- Checks: 16 village tests, ESLint and `tsc` clean; Playwright: new 20/20 suite (pieces, review
+  session and saved schedule, lotus on water only, new animals and activities), Look suite,
+  physics 18/18 and the earlier 41/41 suite. Phase 1 (`5b81e22`) deployed to Production.
 
 ## 2026-11-03 — Làng Rêu: villagers, action sentences and part names
 

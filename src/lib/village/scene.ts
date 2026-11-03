@@ -58,20 +58,29 @@ const PLASTER = ["#efe6d3", "#f3e2c3", "#e8ddcb", "#f0d8c3", "#e3e2d4", "#f2ead9
 const STROKE_KEY: Record<StrokeTool, "paths" | "walls" | "fences" | "hedges" | "streams"> = { path: "paths", wall: "walls", fence: "fences", hedge: "hedges", stream: "streams" };
 const LEGACY_TAP = ["tower", "well", "windmill", "lantern", "sheep"] as const;
 const MAX_TREES = 700, MAX_INSTANCES = 900, TUFTS = 760;
-const SPEED: Partial<Record<ToolId, number>> = { sheep: 0.55, chicken: 0.7, duck: 0.45, cow: 0.35, horse: 0.6, pig: 0.45, dog: 0.9, cat: 0.5, rabbit: 0.8 };
+const SPEED: Partial<Record<ToolId, number>> = {
+  sheep: 0.55, chicken: 0.7, duck: 0.45, cow: 0.35, horse: 0.6, pig: 0.45, dog: 0.9, cat: 0.5, rabbit: 0.8, buffalo: 0.3, goat: 0.55, goose: 0.45, frog: 0.7,
+};
 
-const PREY = new Set<ToolId>(["chicken", "cat", "rabbit", "duck"]);
+const PREY = new Set<ToolId>(["chicken", "cat", "rabbit", "duck", "goose"]);
+/** Animals that go into ponds and streams (the buffalo wades), and the ones that hop. */
+const SWIMMERS = new Set<ToolId>(["duck", "goose", "frog", "buffalo"]);
+const HOPPERS = new Set<ToolId>(["rabbit", "frog"]);
 /** How far each movable piece sits in the water when floating. */
-const FLOAT_SINK: Record<DynamicKind, number> = { ball: 0.12, pumpkin: 0.14, barrel: 0.22, crate: 0.22, boat: 0.03 };
+const FLOAT_SINK: Record<DynamicKind, number> = { ball: 0.12, pumpkin: 0.14, barrel: 0.22, crate: 0.22, boat: 0.03, raft: 0.05 };
 /** Colliders for pieces that are not simple round things. Half sizes along local X and Z. */
-const PROP_BOX: Partial<Record<PropKind, [number, number]>> = { barn: [1.25, 1.55], chapel: [0.95, 1.55], stall: [0.95, 0.65], tent: [0.95, 1.12] };
+const PROP_BOX: Partial<Record<PropKind, [number, number]>> = {
+  barn: [1.25, 1.55], chapel: [0.95, 1.55], stall: [0.95, 0.65], tent: [0.95, 1.12], bakery: [1.25, 0.95], pagoda: [1.3, 1.3], seesaw: [0.18, 1.2],
+};
 const PROP_RADIUS: Partial<Record<PropKind, number>> = {
   blossom: 0.25, bush: 0.4, rock: 0.5, lighthouse: 1.05, fountain: 1.2, gazebo: 1.25, log: 0.45, stump: 0.36, haystack: 0.72, statue: 0.45,
   bench: 0.5, cart: 0.7, flag: 0.12, signpost: 0.1, mailbox: 0.12, scarecrow: 0.12, swing: 0.5, campfire: 0.5, beehive: 0.3, woodpile: 0.55,
+  hut: 0.85, treehouse: 0.3, bamboo: 0.3, palm: 0.2, cactus: 0.25, kite: 0.06, bicycle: 0.35, umbrella: 0.08, table: 0.75, ladder: 0.3,
+  wheelbarrow: 0.45, slide: 0.6, snowman: 0.4, birdhouse: 0.06, lamppost: 0.1,
 };
-/** Pieces balls roll over and animals walk through. */
-const NO_COLLIDE = new Set<PropKind>(["flower", "mushroom", "sunflower", "garden"]);
-const FLOWER_HEIGHT: Partial<Record<PropKind, number>> = { flower: 0.35, sunflower: 1.2, blossom: 1.6, garden: 0.3 };
+/** Pieces balls roll over and animals walk through (piers are walked on). */
+const NO_COLLIDE = new Set<PropKind>(["flower", "mushroom", "sunflower", "garden", "fern", "lotus", "pier"]);
+const FLOWER_HEIGHT: Partial<Record<PropKind, number>> = { flower: 0.35, sunflower: 1.2, blossom: 1.6, garden: 0.3, lotus: 0.3 };
 const MAX_BODIES = 400, MAX_BEES = 80, MAX_BIRDS = 48, PETALS = 160;
 const angleDiff = (a: number, b: number) => {
   let d = (a - b) % (Math.PI * 2);
@@ -298,6 +307,13 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       if (d < bestD) { bestD = d; best = p; }
     }
     return best;
+  }
+  /** Rotation that points a pier out over the nearest pond or stream. */
+  function faceWater(x: number, z: number) {
+    let best: Point | null = null, bestD = 9;
+    for (const p of S.ponds) { const d = Math.hypot(p.x - x, p.z - z) - p.r; if (d < bestD) { bestD = d; best = [p.x, p.z]; } }
+    for (const s of S.streams) for (const q of s.pts) { const d = Math.hypot(q[0] - x, q[1] - z) - 0.9; if (d < bestD) { bestD = d; best = q; } }
+    return best ? Math.atan2(best[0] - x, best[1] - z) : facePath(x, z) + Math.PI;
   }
   /** Rotation that turns a piece's front (+Z) towards the nearest path, or a random one. */
   const facePath = (x: number, z: number) => {
@@ -1107,7 +1123,10 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       rebuildTrees();
       return true;
     }
-    if (blocked(g[0], g[1], 0.2) || S.trees.some((t) => Math.hypot(t.x - g[0], t.z - g[1]) < 0.7)) return false;
+    if (kind === "lotus") {
+      // Lotus grows only on open water, not under a bridge.
+      if (!waterAt(phys, g[0], g[1]) || pathIndex.near(g[0], g[1], 0.9)) { say("Sen chỉ mọc trên mặt nước: chạm hoặc quét trên ao, suối."); return false; }
+    } else if (blocked(g[0], g[1], 0.2) || S.trees.some((t) => Math.hypot(t.x - g[0], t.z - g[1]) < 0.7)) return false;
     const id = newId();
     S.props.push({ id, kind: kind as PropKind, x: +g[0].toFixed(2), z: +g[1].toFixed(2), r: +(Math.random() * Math.PI * 2).toFixed(2), seed: randSeed() });
     if (isDynamic(kind)) { fresh.add(id); needsBodySync = true; } else plantsDirty = true;
@@ -1178,7 +1197,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       else S.sheep.push(base);
       return;
     }
-    const r = def.face ? facePath(g[0], g[1]) : Math.random() * Math.PI * 2;
+    const r = kind === "pier" ? faceWater(g[0], g[1]) : def.face ? facePath(g[0], g[1]) : Math.random() * Math.PI * 2;
     const prop = { ...base, kind: kind as PropKind, r: +r.toFixed(3) } satisfies Prop;
     S.props.push(prop);
     if (!def.animal && !def.person && !isDynamic(kind) && !INSTANCED.includes(prop.kind)) startDrop(prop);
@@ -1468,11 +1487,17 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       if (box) boxes.push({ x: o.x, z: o.z, hx: box[0], hz: box[1], rot: o.r });
       else circles.push({ x: o.x, z: o.z, r: PROP_RADIUS[o.kind] ?? TOOL[o.kind].size * 0.75 });
     }
+    // Bridges and piers are dry: people walk on them and floating things bump under them.
+    const piers = S.props.filter((o) => o.kind === "pier").map((o) => ({ x: o.x, z: o.z, c: Math.cos(o.r), s: Math.sin(o.r) }));
+    const onPier = (x: number, z: number) => piers.some((p) => {
+      const dx = x - p.x, dz = z - p.z, lz = dx * p.s + dz * p.c;
+      return Math.abs(dx * p.c - dz * p.s) < 0.5 && lz > -0.6 && lz < 2.35;
+    });
     phys = makeWorld({
       islandR: ISLAND_R, circles, boxes,
       ponds: S.ponds.map((p) => ({ x: p.x, z: p.z, r: p.r })),
       streams: S.streams.map((s) => s.pts),
-      dry: (x, z) => pathIndex.near(x, z, 0.8), // bridges
+      dry: (x, z) => pathIndex.near(x, z, 0.8) || onPier(x, z),
     });
   }
 
@@ -1675,7 +1700,9 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     return best;
   }
   function pickTarget(v: AnimalView) {
-    if (v.kind === "duck") {
+    // Ducks and geese keep to the water; frogs and the buffalo go in now and then.
+    const likesWater = v.kind === "duck" || v.kind === "goose" ? 1 : v.kind === "frog" ? 0.5 : v.kind === "buffalo" ? 0.35 : 0;
+    if (likesWater && Math.random() < likesWater) {
       const spot = waterSpot(v.home.x, v.home.y, 8);
       if (spot) { v.target.set(spot[0], spot[1]); return; }
     }
@@ -1749,7 +1776,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
     const night = timeOfDay > 0.82;
     for (const v of animalViews.values()) {
       const m = v.mesh, p = m.position;
-      const swim = v.kind === "duck" && !!waterAt(phys, p.x, p.z);
+      const swim = SWIMMERS.has(v.kind) && !!waterAt(phys, p.x, p.z);
       const ground = swim ? -0.08 : 0;
       if (v.y > ground || v.vy > 0) { v.vy -= GRAVITY * dt; v.y += v.vy * dt; }
       if (v.y <= ground) { v.y = ground; v.vy = v.vy < -2 ? -v.vy * 0.3 : 0; }
@@ -1824,7 +1851,7 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       p.z = _avoid.z;
       const rr = Math.hypot(p.x, p.z);
       if (rr > BUILD_R) { p.x *= BUILD_R / rr; p.z *= BUILD_R / rr; }
-      if (v.kind !== "duck" && waterAt(phys, p.x, p.z)) {
+      if (!SWIMMERS.has(v.kind) && waterAt(phys, p.x, p.z)) {
         p.x = px; p.z = pz; v.vx = v.vz = 0;
         if (v.state === "wander") pickTarget(v);
       }
@@ -1833,8 +1860,8 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       m.scale.y += ((v.state === "sleep" ? 0.86 : 1) - m.scale.y) * Math.min(1, dt * 3);
       let hop = 0;
       if (sp > 0.08 && !swim && v.vy === 0) {
-        v.hop += dt * (v.kind === "rabbit" ? 7 : 10) * Math.max(1, sp / (SPEED[v.kind] ?? 0.5));
-        hop = Math.abs(Math.sin(v.hop)) * (v.kind === "rabbit" ? 0.16 : 0.06) * Math.min(1, sp * 2);
+        v.hop += dt * (HOPPERS.has(v.kind) ? 7 : 10) * Math.max(1, sp / (SPEED[v.kind] ?? 0.5));
+        hop = Math.abs(Math.sin(v.hop)) * (HOPPERS.has(v.kind) ? 0.16 : 0.06) * Math.min(1, sp * 2);
       }
       p.y = v.y + hop + (swim ? Math.sin(clock * 2 + v.id) * 0.02 : 0);
     }
@@ -1962,10 +1989,10 @@ export function createVillageScene(container: HTMLElement, options: VillageOptio
       return { action: "chase", target: { en: prey, vi: viWho(prey) } };
     }
     const p = v.mesh.position;
-    if (v.kind === "duck" && waterAt(phys, p.x, p.z)) return { action: "swim" };
-    if (Math.hypot(v.vx, v.vz) > 0.08) return { action: v.kind === "rabbit" ? "hopAbout" : "roam" };
-    if (v.kind === "chicken" || v.kind === "duck") return { action: "peck" };
-    if (v.kind === "sheep" || v.kind === "cow" || v.kind === "horse") return { action: "graze" };
+    if (SWIMMERS.has(v.kind) && waterAt(phys, p.x, p.z)) return { action: "swim" };
+    if (Math.hypot(v.vx, v.vz) > 0.08) return { action: HOPPERS.has(v.kind) ? "hopAbout" : "roam" };
+    if (v.kind === "chicken" || v.kind === "duck" || v.kind === "goose") return { action: "peck" };
+    if (v.kind === "sheep" || v.kind === "cow" || v.kind === "horse" || v.kind === "buffalo" || v.kind === "goat") return { action: "graze" };
     if (v.kind === "dog" || v.kind === "pig") return { action: "sniff" };
     return { action: "restSun" };
   }

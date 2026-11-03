@@ -13,11 +13,12 @@ export const PROGRESS_KEY = "village-progress-v1";
 
 /** Pieces stored in the generic `props` list (everything added after the first 13 tools). */
 export const PROP_KINDS = [
-  "barn", "chapel", "stall", "tent", "lighthouse", "gazebo",
-  "bush", "flower", "blossom", "sunflower", "mushroom", "rock", "log", "stump", "garden", "pumpkin", "haystack",
-  "fountain", "boat",
+  "barn", "chapel", "stall", "tent", "lighthouse", "gazebo", "bakery", "pagoda", "hut", "treehouse",
+  "bush", "flower", "blossom", "sunflower", "mushroom", "rock", "log", "stump", "garden", "pumpkin", "haystack", "bamboo", "palm", "fern", "cactus",
+  "fountain", "boat", "pier", "lotus", "raft",
   "bench", "signpost", "cart", "barrel", "crate", "flag", "statue", "scarecrow", "swing", "campfire", "beehive", "woodpile", "mailbox", "ball",
-  "chicken", "duck", "cow", "horse", "pig", "dog", "cat", "rabbit",
+  "kite", "bicycle", "umbrella", "table", "ladder", "wheelbarrow", "seesaw", "slide", "snowman", "birdhouse", "lamppost",
+  "chicken", "duck", "cow", "horse", "pig", "dog", "cat", "rabbit", "buffalo", "goat", "goose", "frog",
   "farmer", "baker", "fisherman", "shepherd", "woodcutter", "postman", "musician", "child",
 ] as const;
 export type PropKind = (typeof PROP_KINDS)[number];
@@ -52,8 +53,18 @@ export interface VillageScene {
   props: Prop[];
 }
 export interface SavedScene { scene: VillageScene; idSeq: number }
-/** `seen` holds discovery words (verbs, parts, villagers) found with the Look tool, by vocab key. */
-export interface VillageProgress { unlocked: ToolId[]; learned: Record<string, { at: number; reviewed?: number }>; seen: Record<string, number>; time: number }
+/**
+ * `seen` holds discovery words (verbs, parts, villagers) found with the Look tool, by vocab key.
+ * `review` holds each practised word's next due time and how many right answers in a row
+ * (keys `word:<id>` or vocab keys); words without an entry are due the day after they were met.
+ */
+export interface VillageProgress {
+  unlocked: ToolId[];
+  learned: Record<string, { at: number; reviewed?: number }>;
+  seen: Record<string, number>;
+  review: Record<string, { due: number; step: number }>;
+  time: number;
+}
 
 export interface ToolDef {
   id: ToolId;
@@ -109,6 +120,10 @@ const DEFS: Record<ToolId, Omit<ToolDef, "id">> = {
   tent: tap("Lều", "build", 1.2, "Chạm để dựng lều cắm trại.", { face: true }),
   lighthouse: tap("Hải đăng", "build", 1.3, "Chạm để dựng hải đăng. Ban đêm đèn trên đỉnh sẽ sáng."),
   gazebo: tap("Chòi", "build", 1.5, "Chạm để dựng chòi nghỉ sáu cột."),
+  bakery: tap("Tiệm bánh", "build", 1.6, "Chạm để dựng tiệm bánh, cửa quay ra đường. Chú thợ bánh sẽ ra đây nướng bánh.", { face: true }),
+  pagoda: tap("Chùa", "build", 1.7, "Chạm để dựng ngôi chùa hai tầng mái có chuông.", { face: true }),
+  hut: tap("Chòi tranh", "build", 1.2, "Chạm để dựng túp lều tròn mái rơm.", { face: true }),
+  treehouse: tap("Nhà trên cây", "build", 1.3, "Chạm để dựng nhà trên cây có thang; trẻ con sẽ trèo lên chơi."),
 
   tree: { label: "Cây", cat: "nature", place: "brush", size: 0.6, hint: "Chạm hoặc quét ngón tay để trồng cây." },
   hedge: { label: "Rào cây", cat: "nature", place: "stroke", size: 0, hint: "Kéo để trồng một hàng rào cây xanh." },
@@ -123,12 +138,19 @@ const DEFS: Record<ToolId, Omit<ToolDef, "id">> = {
   garden: tap("Vườn rau", "nature", 1.6, "Chạm để làm luống rau cạnh đường.", { face: true }),
   pumpkin: brush("Bí ngô", 0.4, "Chạm hoặc quét để trồng bí ngô. Dùng Tay để lăn chúng."),
   haystack: tap("Đống rơm", "nature", 0.8, "Chạm để chất đống rơm."),
+  bamboo: brush("Tre", 0.5, "Chạm hoặc quét để trồng bụi tre."),
+  palm: brush("Dừa", 0.7, "Chạm hoặc quét để trồng cây dừa."),
+  fern: brush("Dương xỉ", 0.45, "Chạm hoặc quét để trồng dương xỉ."),
+  cactus: brush("Xương rồng", 0.4, "Chạm hoặc quét để trồng xương rồng."),
 
   pond: { label: "Ao", cat: "water", place: "pond", size: 0, hint: "Đặt ngón tay ở tâm rồi kéo ra để đào ao." },
   stream: { label: "Suối", cat: "water", place: "stroke", size: 0, hint: "Kéo để vẽ suối. Đường đi băng qua suối sẽ tự có cầu gỗ." },
   well: tap("Giếng", "water", 0.8, "Chạm để đặt giếng nước."),
   fountain: tap("Đài nước", "water", 1.3, "Chạm để đặt đài phun nước."),
   boat: tap("Thuyền", "water", 1.1, "Chạm để đặt thuyền. Thả xuống suối thì thuyền trôi theo dòng; dùng Tay để kéo."),
+  pier: tap("Cầu tàu", "water", 1.2, "Chạm ở bờ ao hay suối: cầu tàu tự chìa ra mặt nước. Ông ngư dân thích ra đây câu."),
+  lotus: { label: "Sen", cat: "water", place: "brush", size: 0.4, hint: "Chạm hoặc quét trên mặt ao, mặt suối để thả sen." },
+  raft: tap("Bè", "water", 0.9, "Chạm để đặt bè tre. Thả xuống nước thì bè trôi; dùng Tay để kéo."),
 
   lantern: tap("Đèn", "decor", 0.3, "Chạm để dựng đèn lồng. Kéo thanh giờ về đêm để thấy đèn sáng."),
   bench: tap("Ghế", "decor", 0.7, "Chạm để đặt ghế băng quay ra đường.", { face: true }),
@@ -145,6 +167,17 @@ const DEFS: Record<ToolId, Omit<ToolDef, "id">> = {
   woodpile: tap("Đống củi", "decor", 0.7, "Chạm để chất đống củi."),
   mailbox: tap("Hộp thư", "decor", 0.3, "Chạm để cắm hộp thư cạnh đường.", { face: true }),
   ball: tap("Bóng", "decor", 0.3, "Chạm để thả quả bóng. Dùng Tay để ném; chó sẽ chạy theo."),
+  kite: tap("Diều", "decor", 0.4, "Chạm để cắm một con diều bay trong gió. Em bé sẽ ra thả diều."),
+  bicycle: tap("Xe đạp", "decor", 0.6, "Chạm để dựng xe đạp cạnh đường.", { face: true }),
+  umbrella: tap("Ô che", "decor", 0.9, "Chạm để cắm ô che nắng; người làng sẽ ra nghỉ dưới ô."),
+  table: tap("Bàn", "decor", 0.9, "Chạm để đặt bàn ăn ngoài trời; người làng sẽ ra ăn trưa."),
+  ladder: tap("Thang", "decor", 0.4, "Chạm để dựng một chiếc thang chữ A."),
+  wheelbarrow: tap("Xe cút kít", "decor", 0.7, "Chạm để đặt xe cút kít chở bí ngô.", { face: true }),
+  seesaw: tap("Bập bênh", "decor", 1.1, "Chạm để đặt bập bênh cho trẻ con chơi."),
+  slide: tap("Cầu trượt", "decor", 1.1, "Chạm để đặt cầu trượt cho trẻ con chơi."),
+  snowman: tap("Người tuyết", "decor", 0.5, "Chạm để đắp người tuyết.", { face: true }),
+  birdhouse: tap("Tổ chim", "decor", 0.3, "Chạm để cắm tổ chim bằng gỗ."),
+  lamppost: tap("Cột đèn", "decor", 0.3, "Chạm để dựng cột đèn đường. Ban đêm đèn sáng."),
 
   sheep: animal("Cừu", 0.5, "Be-e-e!"),
   chicken: animal("Gà", 0.3, "Cục tác!"),
@@ -155,6 +188,10 @@ const DEFS: Record<ToolId, Omit<ToolDef, "id">> = {
   dog: animal("Chó", 0.4, "Gâu gâu!"),
   cat: animal("Mèo", 0.3, "Meo meo!"),
   rabbit: animal("Thỏ", 0.3, "Thỏ dụi mũi vào tay bạn."),
+  buffalo: animal("Trâu", 0.9, "Nghé ọ!"),
+  goat: animal("Dê", 0.45, "Be be!"),
+  goose: animal("Ngỗng", 0.35, "Quác quác!"),
+  frog: animal("Ếch", 0.2, "Ộp ộp!"),
 
   farmer: person("Nông dân", "bác nông dân", "Chạm để mời bác nông dân đến làng. Bác tưới vườn rau, hái bí ngô."),
   baker: person("Thợ bánh", "chú thợ bánh", "Chạm để mời chú thợ bánh. Có sạp hàng thì chú ra sạp bán bánh."),
@@ -171,7 +208,7 @@ export const TOOL = Object.fromEntries(TOOLS.map((t) => [t.id, t])) as Record<To
 export const STARTER: ToolId[] = ["orbit", "look", "hand", "path", "wall", "house", "tree", "erase"];
 export const isPropKind = (value: unknown): value is PropKind => typeof value === "string" && (PROP_KINDS as readonly string[]).includes(value);
 /** Brushed plants are drawn as instanced meshes, so thousands stay cheap. */
-export const INSTANCED: PropKind[] = ["bush", "flower", "blossom", "sunflower", "mushroom", "rock"];
+export const INSTANCED: PropKind[] = ["bush", "flower", "blossom", "sunflower", "mushroom", "rock", "bamboo", "palm", "fern", "cactus", "lotus", "kite"];
 
 export interface WordDef { ipa: string; vi: string; sentence: string; viS: string; tip?: string }
 const w = (ipa: string, vi: string, sentence: string, viS: string, tip?: string): WordDef => ({ ipa, vi, sentence, viS, ...(tip ? { tip } : {}) });
@@ -188,6 +225,10 @@ export const WORDS: Record<WordId, WordDef> = {
   tent: w("/tent/", "cái lều", "We put up a ___ by the lake and slept under the stars.", "Chúng tôi dựng lều bên hồ và ngủ dưới bầu trời sao.", "put up a tent là dựng lều; take down a tent là dỡ lều."),
   lighthouse: w("/ˈlaɪt.haʊs/", "ngọn hải đăng", "The light from the ___ helps ships find their way at night.", "Ánh sáng từ ngọn hải đăng giúp tàu thuyền tìm đường ban đêm.", "Từ ghép: light (ánh sáng) + house (ngôi nhà)."),
   gazebo: w("/ɡəˈziː.boʊ/", "chòi nghỉ trong vườn", "We drank tea in the ___ at the end of the garden.", "Chúng tôi uống trà trong chòi nghỉ ở cuối vườn."),
+  bakery: w("/ˈbeɪ.kɚ.i/", "tiệm bánh", "The ___ smells of fresh bread every morning.", "Tiệm bánh thơm mùi bánh mì mới mỗi sáng.", "baker (thợ bánh) + y → bakery (tiệm bánh)."),
+  pagoda: w("/pəˈɡoʊ.də/", "ngôi chùa", "We heard the bell ring at the old ___.", "Chúng tôi nghe tiếng chuông ngân ở ngôi chùa cổ.", "Chùa Một Cột trong tiếng Anh là One Pillar Pagoda."),
+  hut: w("/hʌt/", "túp lều, chòi tranh", "The fisherman lives in a small ___ by the river.", "Ông ngư dân sống trong một túp lều nhỏ bên sông."),
+  treehouse: w("/ˈtriː.haʊs/", "nhà trên cây", "The children climb up to their ___ after school.", "Bọn trẻ trèo lên nhà trên cây sau giờ học.", "Từ ghép: tree (cây) + house (nhà)."),
 
   tree: w("/triː/", "cái cây", "We had lunch in the shade of a big ___.", "Chúng tôi ăn trưa dưới bóng một cái cây lớn."),
   hedge: w("/hedʒ/", "hàng rào cây xanh", "A tall ___ separates our garden from the road.", "Một hàng rào cây cao ngăn vườn nhà tôi với con đường."),
@@ -202,12 +243,19 @@ export const WORDS: Record<WordId, WordDef> = {
   garden: w("/ˈɡɑːr.dən/", "khu vườn", "We grow carrots and lettuce in our small ___.", "Chúng tôi trồng cà rốt và rau diếp trong khu vườn nhỏ.", "vegetable garden là vườn rau; flower garden là vườn hoa."),
   pumpkin: w("/ˈpʌmp.kɪn/", "quả bí ngô", "In autumn, she makes soup from a big orange ___.", "Mùa thu, cô ấy nấu súp từ một quả bí ngô to màu cam."),
   haystack: w("/ˈheɪ.stæk/", "đống rơm, đống cỏ khô", "The farmer made a ___ to feed the animals in winter.", "Bác nông dân chất một đống cỏ khô để cho vật nuôi ăn vào mùa đông.", "Thành ngữ: look for a needle in a haystack nghĩa là mò kim đáy bể."),
+  bamboo: w("/bæmˈbuː/", "cây tre", "The ___ by the village gate grows very fast.", "Bụi tre ở cổng làng mọc rất nhanh.", "Lũy tre làng: a bamboo hedge around the village."),
+  palm: w("/pɑːm/", "cây dừa, cây cọ", "We sat in the shade of a tall ___ tree.", "Chúng tôi ngồi dưới bóng một cây dừa cao.", "Chữ l trong palm không đọc. palm còn nghĩa là lòng bàn tay."),
+  fern: w("/fɝːn/", "cây dương xỉ", "A green ___ grows in the shade under the trees.", "Một cây dương xỉ xanh mọc trong bóng râm dưới tán cây."),
+  cactus: w("/ˈkæk.təs/", "cây xương rồng", "Don't touch the ___; it has sharp thorns.", "Đừng chạm vào cây xương rồng, nó có gai nhọn.", "Số nhiều: cacti hoặc cactuses."),
 
   pond: w("/pɑːnd/", "cái ao", "Ducks are swimming in the ___ behind the house.", "Đàn vịt đang bơi trong cái ao sau nhà.", "pond nhỏ hơn lake (hồ)."),
   stream: w("/striːm/", "con suối", "The water in the ___ is cold and clear.", "Nước trong con suối lạnh và trong vắt.", "stream nhỏ hơn river (sông). Đường đi băng qua suối sẽ có bridge (cây cầu)."),
   well: w("/wel/", "giếng nước", "The villagers get fresh water from the old ___.", "Dân làng lấy nước sạch từ cái giếng cũ.", "well cũng là trạng từ “tốt, giỏi” (She sings well). Ở đây là danh từ “giếng”."),
   fountain: w("/ˈfaʊn.tən/", "đài phun nước", "People throw coins into the ___ and make a wish.", "Mọi người ném đồng xu vào đài phun nước và ước một điều."),
   boat: w("/boʊt/", "con thuyền", "We took a small ___ across the lake.", "Chúng tôi đi một chiếc thuyền nhỏ qua hồ.", "boat là thuyền nhỏ; ship là tàu lớn."),
+  pier: w("/pɪr/", "cầu tàu, bến gỗ", "The boat is tied to the wooden ___.", "Chiếc thuyền được buộc vào cầu tàu bằng gỗ."),
+  lotus: w("/ˈloʊ.t̬əs/", "hoa sen", "A pink ___ is blooming in the pond.", "Một bông sen hồng đang nở trong ao.", "Hoa sen thường được xem là quốc hoa của Việt Nam."),
+  raft: w("/ræft/", "cái bè", "They floated down the river on a bamboo ___.", "Họ thả trôi xuôi dòng sông trên một chiếc bè tre."),
 
   lantern: w("/ˈlæn.tɚn/", "đèn lồng", "She hung a ___ by the door so guests could find the way.", "Cô ấy treo đèn lồng cạnh cửa để khách tìm được đường.", "lantern là đèn có vỏ che, thường mang đi được; lamp là đèn nói chung."),
   bench: w("/bentʃ/", "ghế băng, ghế dài", "Grandpa likes to sit on the ___ and feed the birds.", "Ông thích ngồi trên ghế băng và cho chim ăn."),
@@ -224,6 +272,17 @@ export const WORDS: Record<WordId, WordDef> = {
   woodpile: w("/ˈwʊd.paɪl/", "đống củi", "He took some wood from the ___ to light the stove.", "Anh ấy lấy ít củi từ đống củi để nhóm bếp."),
   mailbox: w("/ˈmeɪl.bɑːks/", "hộp thư", "There's a letter for you in the ___.", "Có một lá thư cho bạn trong hộp thư.", "Anh-Anh hay nói letterbox hoặc postbox."),
   ball: w("/bɑːl/", "quả bóng", "The dog ran across the field to catch the ___.", "Con chó chạy băng qua cánh đồng để bắt quả bóng.", "Thành ngữ: on the ball nghĩa là nhanh nhạy, nắm bắt tốt."),
+  kite: w("/kaɪt/", "con diều", "The boy is flying a ___ in the windy field.", "Cậu bé đang thả diều trên cánh đồng lộng gió.", "fly a kite: thả diều."),
+  bicycle: w("/ˈbaɪ.sə.kəl/", "xe đạp", "She rides her ___ to the market.", "Cô ấy đạp xe ra chợ.", "Nói ngắn là bike."),
+  umbrella: w("/ʌmˈbrel.ə/", "cái ô, cái dù", "Take an ___; it might rain.", "Mang theo ô nhé, trời có thể mưa.", "Bắt đầu bằng nguyên âm nên đi với an: an umbrella."),
+  table: w("/ˈteɪ.bəl/", "cái bàn", "Lunch is ready on the ___.", "Bữa trưa đã dọn sẵn trên bàn."),
+  ladder: w("/ˈlæd.ɚ/", "cái thang", "He climbed the ___ to fix the roof.", "Anh ấy trèo thang lên sửa mái nhà."),
+  wheelbarrow: w("/ˈwiːlˌber.oʊ/", "xe cút kít", "The farmer pushes a ___ full of pumpkins.", "Bác nông dân đẩy xe cút kít đầy bí ngô.", "wheel (bánh xe) + barrow (xe đẩy)."),
+  seesaw: w("/ˈsiː.sɑː/", "cái bập bênh", "Two kids go up and down on the ___.", "Hai đứa trẻ lên xuống trên chiếc bập bênh."),
+  slide: w("/slaɪd/", "cầu trượt", "The children go down the ___ one by one.", "Bọn trẻ lần lượt trượt xuống cầu trượt.", "slide cũng là động từ: trượt."),
+  snowman: w("/ˈsnoʊ.mæn/", "người tuyết", "We made a ___ with a carrot nose.", "Chúng tôi đắp người tuyết có cái mũi bằng cà rốt.", "snow (tuyết) + man (người)."),
+  birdhouse: w("/ˈbɝːd.haʊs/", "tổ chim bằng gỗ", "A little bird lives in the ___ on the post.", "Một chú chim nhỏ sống trong tổ chim gỗ trên cột."),
+  lamppost: w("/ˈlæmp.poʊst/", "cột đèn đường", "The ___ lights up the street at night.", "Cột đèn chiếu sáng con đường vào ban đêm.", "lamp (đèn) + post (cột)."),
 
   sheep: w("/ʃiːp/", "con cừu", "The ___ are eating grass near the river.", "Đàn cừu đang ăn cỏ gần bờ sông.", "Số nhiều vẫn là sheep: one sheep, two sheep."),
   chicken: w("/ˈtʃɪk.ɪn/", "con gà", "The ___ lays an egg every morning.", "Con gà đẻ một quả trứng mỗi sáng.", "chicken vừa là con gà vừa là thịt gà."),
@@ -234,6 +293,10 @@ export const WORDS: Record<WordId, WordDef> = {
   dog: w("/dɑːɡ/", "con chó", "Our ___ barks when someone knocks on the door.", "Con chó nhà tôi sủa khi có người gõ cửa."),
   cat: w("/kæt/", "con mèo", "The ___ is sleeping in the sun by the window.", "Con mèo đang ngủ dưới nắng bên cửa sổ."),
   rabbit: w("/ˈræb.ɪt/", "con thỏ", "The ___ has long ears and a short, fluffy tail.", "Con thỏ có đôi tai dài và cái đuôi ngắn, xù."),
+  buffalo: w("/ˈbʌf.ə.loʊ/", "con trâu", "The ___ helps the farmer in the rice field.", "Con trâu giúp bác nông dân trên ruộng lúa.", "Trâu nước là water buffalo."),
+  goat: w("/ɡoʊt/", "con dê", "The ___ likes to climb on rocks.", "Con dê thích trèo lên đá."),
+  goose: w("/ɡuːs/", "con ngỗng", "A white ___ is swimming in the pond.", "Một con ngỗng trắng đang bơi trong ao.", "Số nhiều bất quy tắc: geese /ɡiːs/."),
+  frog: w("/frɑːɡ/", "con ếch", "The little ___ jumps into the water.", "Chú ếch nhỏ nhảy xuống nước."),
 
   farmer: w("/ˈfɑːr.mɚ/", "nông dân", "The ___ gets up early to work in the fields.", "Người nông dân dậy sớm để làm việc ngoài đồng."),
   baker: w("/ˈbeɪ.kɚ/", "thợ làm bánh", "The ___ makes fresh bread every morning.", "Người thợ làm bánh làm bánh mì tươi mỗi sáng.", "bake (nướng bánh) + -er thành baker; tiệm bánh là bakery."),
@@ -389,7 +452,7 @@ export function parseSavedScene(raw: string | null): SavedScene | null {
 }
 
 export function parseProgress(raw: string | null): VillageProgress {
-  const fallback: VillageProgress = { unlocked: [...STARTER], learned: {}, seen: {}, time: 0.32 };
+  const fallback: VillageProgress = { unlocked: [...STARTER], learned: {}, seen: {}, review: {}, time: 0.32 };
   if (!raw) return fallback;
   try {
     const data = JSON.parse(raw) as Record<string, unknown>;
@@ -406,10 +469,19 @@ export function parseProgress(raw: string | null): VillageProgress {
     if (data.seen && typeof data.seen === "object") {
       for (const [key, at] of Object.entries(data.seen as Record<string, unknown>)) if (isVocabKey(key) && finite(at)) seen[key] = at as number;
     }
+    const review: VillageProgress["review"] = {};
+    if (data.review && typeof data.review === "object") {
+      for (const [key, entry] of Object.entries(data.review as Record<string, unknown>)) {
+        const e = entry as Record<string, unknown> | null;
+        const known = key.startsWith("word:") ? key.slice(5) in WORDS : isVocabKey(key);
+        if (known && e && finite(e.due) && finite(e.step)) review[key] = { due: e.due as number, step: Math.max(0, Math.floor(e.step as number)) };
+      }
+    }
     return {
       unlocked: [...new Set([...STARTER, ...unlocked])],
       learned,
       seen,
+      review,
       time: finite(data.time) ? Math.min(1, Math.max(0, data.time as number)) : fallback.time,
     };
   } catch {

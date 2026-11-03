@@ -3522,6 +3522,8 @@ a.path-node--done:hover .path-node__circle { color: var(--surface); }
 .vg-mini--go { color: var(--butter-ink); background: var(--butter); border-color: transparent; }
 .vg-note { margin: .9rem 0 0; color: var(--text-muted); font-size: .8rem; line-height: 1.5; }
 .vg-small { font-size: .82rem; }
+.vg-review-row { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .9rem; margin-top: .6rem; padding: .6rem .8rem; background: var(--sage); border-radius: 12px; }
+.vg-review-row .vg-muted { flex: 1 1 14rem; margin: 0; font-size: .85rem; }
 .vg-words--found li { grid-template-columns: minmax(0, 1fr) auto; }
 .vg-scene[data-mode="look"] canvas { cursor: help; }
 /* Look tool: part labels drawn over the 3D view, and the card that names what was tapped. */
