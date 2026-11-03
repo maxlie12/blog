@@ -57,7 +57,7 @@ side of another stopped short or poked through; fences and hedges never joined a
 - [x] Earlier suites on the final build: main 41/41 (the pet-the-dog check, which had failed in
       the last three runs, passes: its failures were the dropping-animal bug above), physics 18/18,
       strip/castle/fish 27/27.
-- [ ] Vercel build + production deploy.
+- [x] Vercel build + production deploy (`35271e1`).
 
 ## Result
 
