@@ -16,7 +16,8 @@ type Draft = {
   checks?: CheckId[]; pattern?: string; sourceResult?: string;
 };
 const SOURCE = "https://learnenglish.britishcouncil.org/free-resources/listening/b2/digital-detox-podcast";
-const AUDIO = "https://learnenglish.britishcouncil.org/sites/podcasts/files/LE_listening_B2_Digital_detox_podcast.mp3";
+const CAMBRIDGE_SOURCE = "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues";
+const CHINESE_SOURCE = "https://mandarinbean.com/im-thirsty/";
 const STAGES = ["Chọn phiên", "Nghe / đọc", "Hiểu ý", "Áp dụng: nói → viết", "Đối chiếu bản đầu", "Sửa & chuyển giao", "Tổng kết"];
 const SELF_CHECKS: { id: CheckId; label: string }[] = [
   { id: "choice", label: "Choice — tôi nói rõ thay đổi sẽ làm" },
@@ -101,7 +102,7 @@ export function GuidedPractice() {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance("你好，我叫小林。我想要一杯茶，不要糖。");
     utterance.lang = "zh-CN"; utterance.rate = 0.8;
-    utterance.onerror = () => setSpeechNotice("Không phát được giọng máy. Dùng nguồn HelloChinese hoặc chọn đọc thay.");
+    utterance.onerror = () => setSpeechNotice("Không phát được giọng máy. Mở audio Mandarin Bean hoặc chọn đọc thay.");
     window.speechSynthesis.speak(utterance); setSpeechNotice("Đang dùng giọng máy của thiết bị; đây không phải audio người bản ngữ.");
   }
   const english = activeLanguage === "en";
@@ -141,10 +142,15 @@ export function GuidedPractice() {
       <section className="lesson-detail__section">
         <h2>{step}. {STAGES[step]}</h2>
         {step === 1 && <>
-          <p>{english ? "Nghe 60–90 giây đầu, tối đa hai lượt, chưa mở transcript. Ghi ý chính ở bước tiếp theo." : "Nghe một câu giới thiệu/gọi món trong bài HelloChinese đang mở được. Nếu chưa có nguồn phù hợp, dùng mẫu tự soạn bằng giọng máy hoặc đọc thay."}</p>
-          {english ? <><audio aria-label="Audio British Council — Digital detox" controls preload="none" src={AUDIO} style={{width:"100%"}} /><p><a href={SOURCE} target="_blank" rel="noopener noreferrer">Nguồn British Council · miễn phí, audio và transcript ↗</a></p></> :
-            <><a href="https://www.hellochinese.cc/" target="_blank" rel="noopener noreferrer">HelloChinese · audio/video bản ngữ, miễn phí giới hạn và Premium ↗</a><p><button type="button" className="button button--ghost" onClick={speakChinese}>Nghe mẫu tự soạn bằng giọng máy</button></p><p role="status">{speechNotice}</p></>}
-          <label>Đầu vào thực tế <select value={draft.inputMode} onChange={e => update({inputMode:e.target.value})}><option value="listening">Đã nghe</option><option value="reading">Đọc thay · chưa luyện nghe</option><option value="synthetic">Giọng máy · không phải bản ngữ</option></select></label>
+          <p>{english ? "Nghe 60–90 giây đầu, tối đa hai lượt, chưa mở transcript. Audio nằm trên trang nguồn chính thức; mở nguồn rồi quay lại đây ghi ý." : "Mở bài Mandarin Bean, nghe hội thoại ngắn trước khi bật pinyin. Sau đó quay lại đây ghi điều bạn nhận ra."}</p>
+          {english ? <div className="learning-transfer">
+            <p><a className="button" href={SOURCE} target="_blank" rel="noopener noreferrer">Mở audio + transcript British Council ↗</a></p>
+            <p><strong>Vì sao không còn player trống?</strong> Audio được phát tại trang nguồn để tránh link file âm thanh hết hạn. Bảy chặng bên dưới vẫn dùng đúng bài Digital detox này.</p>
+            <p><a className="button button--ghost" href={CAMBRIDGE_SOURCE} target="_blank" rel="noopener noreferrer">Cambridge B1–B2 · Listening to dialogues ↗</a></p>
+            <p><small>Cambridge miễn phí, có audio và bài tập. Dùng cho chu kỳ nghe–nói kế tiếp; không trộn kết quả Cambridge vào bài Digital detox đang làm.</small></p>
+          </div> :
+            <div className="learning-transfer"><p><a className="button" href={CHINESE_SOURCE} target="_blank" rel="noopener noreferrer">Mở hội thoại + audio Mandarin Bean ↗</a></p><p><small>Miễn phí không cần tài khoản: hội thoại phân cấp, pinyin bật/tắt và audio giáo viên Trung Quốc. Bản dịch/worksheet đầy đủ có thể cần Premium.</small></p><p><button type="button" className="button button--ghost" onClick={speakChinese}>Nghe mẫu tự soạn bằng giọng máy</button></p><p role="status">{speechNotice}</p></div>}
+          <label>Đầu vào thực tế <select value={draft.inputMode} onChange={e => update({inputMode:e.target.value})}><option value="listening">Đã nghe audio nguồn</option><option value="reading">Đọc thay · chưa luyện nghe</option><option value="synthetic">Giọng máy · không phải bản ngữ</option></select></label>
           <p className="lesson-detail__actions">
             <button type="button" className="button button--ghost" aria-expanded={showText} onClick={() => setShowText(!showText)}>{showText ? "Ẩn script luyện đọc" : "Hiện script luyện đọc"}</button>{" "}
             {english && <a className="button button--ghost" href={SOURCE} target="_blank" rel="noopener noreferrer">Mở transcript chính thức ↗</a>}

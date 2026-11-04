@@ -183,9 +183,9 @@ export const LEVEL_LESSONS: LevelLesson[] = [
     "skill": "listening",
     "title": "Beginner · Giới thiệu và gọi đồ uống · listening",
     "level": "Beginner",
-    "instructions": "5 phút. Mức sơ cấp nội bộ, không phải chứng nhận HSK/CEFR. Mẫu và câu hỏi do trợ lý soạn. HelloChinese có nội dung miễn phí giới hạn và Premium trả phí; dùng audio người bản ngữ đang mở được, không cần mua gói cho nhiệm vụ này.",
-    "material": "https://www.hellochinese.cc/",
-    "exercises": "Mở audio giới thiệu/gọi đồ uống đang truy cập được trong HelloChinese. Nghe một câu không nhìn chữ; ghi tên hoặc đồ uống nghe được và số lượt nghe.",
+    "instructions": "5 phút. Mức sơ cấp nội bộ, không phải chứng nhận HSK/CEFR. Nguồn Mandarin Bean chạy trên web: bài phân cấp, pinyin bật/tắt và audio giáo viên Trung Quốc dùng miễn phí; bản dịch/worksheet đầy đủ có thể cần Premium. Nhiệm vụ trong app do trợ lý soạn.",
+    "material": "https://mandarinbean.com/im-thirsty/",
+    "exercises": "Mở bài Mandarin Bean và tắt pinyin. Nghe audio tối đa hai lượt; ghi người nói muốn uống gì và một từ bạn nhận ra. Sau đó bật pinyin để kiểm tra.",
     "completionCriteria": "Làm trong 5–10 phút; lưu bản đầu, mở key tự kiểm tra và sửa một điểm. Gửi bài hoặc audio về ChatGPT để được review. Cấp độ nhiệm vụ do trợ lý thiết kế, không chứng nhận trình độ."
   },
   {
@@ -194,7 +194,7 @@ export const LEVEL_LESSONS: LevelLesson[] = [
     "skill": "reading",
     "title": "Beginner · Giới thiệu và gọi đồ uống · reading",
     "level": "Beginner",
-    "instructions": "5 phút. Mức sơ cấp nội bộ, không phải chứng nhận HSK/CEFR. Mẫu và câu hỏi do trợ lý soạn. HelloChinese có nội dung miễn phí giới hạn và Premium trả phí; dùng audio người bản ngữ đang mở được, không cần mua gói cho nhiệm vụ này.",
+    "instructions": "5 phút. Mức sơ cấp nội bộ, không phải chứng nhận HSK/CEFR. Nguồn Mandarin Bean chạy trên web: bài phân cấp, pinyin bật/tắt và audio giáo viên Trung Quốc dùng miễn phí; bản dịch/worksheet đầy đủ có thể cần Premium. Nhiệm vụ trong app do trợ lý soạn.",
     "material": "你好，我叫小林。我是程序员。我想喝茶。\nNǐ hǎo, wǒ jiào Xiǎolín. Wǒ shì chéngxùyuán. Wǒ xiǎng hē chá.",
     "exercises": "Người nói tên gì, làm nghề gì và muốn uống gì? Trả lời tiếng Việt, rồi nói một câu giới thiệu chính mình.",
     "completionCriteria": "Làm trong 5–10 phút; lưu bản đầu, mở key tự kiểm tra và sửa một điểm. Gửi bài hoặc audio về ChatGPT để được review. Cấp độ nhiệm vụ do trợ lý thiết kế, không chứng nhận trình độ."
@@ -205,9 +205,9 @@ export const LEVEL_LESSONS: LevelLesson[] = [
     "skill": "speaking",
     "title": "Beginner · Giới thiệu và gọi đồ uống · speaking",
     "level": "Beginner",
-    "instructions": "5 phút. Mức sơ cấp nội bộ, không phải chứng nhận HSK/CEFR. Mẫu và câu hỏi do trợ lý soạn. HelloChinese có nội dung miễn phí giới hạn và Premium trả phí; dùng audio người bản ngữ đang mở được, không cần mua gói cho nhiệm vụ này.",
-    "material": null,
-    "exercises": "Giới thiệu tên và nói đồ uống m muốn bằng hai câu ngắn. Có thể dùng mẫu trong bài đã học; nói lại khi che chữ.",
+    "instructions": "5 phút. Mức sơ cấp nội bộ, không phải chứng nhận HSK/CEFR. Nguồn Mandarin Bean chạy trên web: bài phân cấp, pinyin bật/tắt và audio giáo viên Trung Quốc dùng miễn phí; bản dịch/worksheet đầy đủ có thể cần Premium. Nhiệm vụ trong app do trợ lý soạn.",
+    "material": "https://mandarinbean.com/im-thirsty/",
+    "exercises": "Nghe và đọc hội thoại trước, rồi đóng nguồn. Nói hai câu: giới thiệu tên và gọi một đồ uống khác; đổi ít nhất một chi tiết so với nguồn.",
     "completionCriteria": "Làm trong 5–10 phút; lưu bản đầu, mở key tự kiểm tra và sửa một điểm. Gửi bài hoặc audio về ChatGPT để được review. Cấp độ nhiệm vụ do trợ lý thiết kế, không chứng nhận trình độ."
   },
   {
@@ -216,9 +216,9 @@ export const LEVEL_LESSONS: LevelLesson[] = [
     "skill": "writing",
     "title": "Beginner · Giới thiệu và gọi đồ uống · writing",
     "level": "Beginner",
-    "instructions": "5 phút. Mức sơ cấp nội bộ, không phải chứng nhận HSK/CEFR. Mẫu và câu hỏi do trợ lý soạn. HelloChinese có nội dung miễn phí giới hạn và Premium trả phí; dùng audio người bản ngữ đang mở được, không cần mua gói cho nhiệm vụ này.",
-    "material": null,
-    "exercises": "Viết hai câu giới thiệu tên và đồ uống m muốn. Có thể dùng pinyin nếu chưa biết gõ chữ Hán.",
+    "instructions": "5 phút. Mức sơ cấp nội bộ, không phải chứng nhận HSK/CEFR. Nguồn Mandarin Bean chạy trên web: bài phân cấp, pinyin bật/tắt và audio giáo viên Trung Quốc dùng miễn phí; bản dịch/worksheet đầy đủ có thể cần Premium. Nhiệm vụ trong app do trợ lý soạn.",
+    "material": "https://mandarinbean.com/im-thirsty/",
+    "exercises": "Sau khi nghe, đóng nguồn và gõ hai câu: giới thiệu tên và gọi một đồ uống. Pinyin được chấp nhận; sau đó đối chiếu chữ trên Mandarin Bean.",
     "completionCriteria": "Làm trong 5–10 phút; lưu bản đầu, mở key tự kiểm tra và sửa một điểm. Gửi bài hoặc audio về ChatGPT để được review. Cấp độ nhiệm vụ do trợ lý thiết kế, không chứng nhận trình độ."
   },
   {
@@ -227,9 +227,9 @@ export const LEVEL_LESSONS: LevelLesson[] = [
     "skill": "listening",
     "title": "Elementary · Đổi lựa chọn và yêu cầu · listening",
     "level": "Elementary",
-    "instructions": "5 phút. Mức sơ cấp nội bộ, không phải chứng nhận HSK/CEFR. Mẫu và câu hỏi do trợ lý soạn. HelloChinese có nội dung miễn phí giới hạn và Premium trả phí; dùng audio người bản ngữ đang mở được, không cần mua gói cho nhiệm vụ này.",
-    "material": "https://www.hellochinese.cc/",
-    "exercises": "Chọn audio gọi món trong HelloChinese phù hợp bài đã mở được. Nghe không nhìn chữ, ghi lại số lượng và một yêu cầu của người nói. Nếu audio không có các chi tiết đó, ghi rõ và chọn bài ôn quen thuộc.",
+    "instructions": "5 phút. Mức sơ cấp nội bộ, không phải chứng nhận HSK/CEFR. Nguồn Mandarin Bean chạy trên web: bài phân cấp, pinyin bật/tắt và audio giáo viên Trung Quốc dùng miễn phí; bản dịch/worksheet đầy đủ có thể cần Premium. Nhiệm vụ trong app do trợ lý soạn.",
+    "material": "https://mandarinbean.com/get-a-table-at-a-restaurant/",
+    "exercises": "Mở bài Mandarin Bean và nghe không nhìn chữ. Ghi số người, câu hỏi của nhân viên và một câu trả lời bạn nghe được; bật pinyin sau khi đã lưu bản đầu.",
     "completionCriteria": "Làm trong 5–10 phút; lưu bản đầu, mở key tự kiểm tra và sửa một điểm. Gửi bài hoặc audio về ChatGPT để được review. Cấp độ nhiệm vụ do trợ lý thiết kế, không chứng nhận trình độ."
   },
   {
@@ -238,7 +238,7 @@ export const LEVEL_LESSONS: LevelLesson[] = [
     "skill": "reading",
     "title": "Elementary · Đổi lựa chọn và yêu cầu · reading",
     "level": "Elementary",
-    "instructions": "5 phút. Mức sơ cấp nội bộ, không phải chứng nhận HSK/CEFR. Mẫu và câu hỏi do trợ lý soạn. HelloChinese có nội dung miễn phí giới hạn và Premium trả phí; dùng audio người bản ngữ đang mở được, không cần mua gói cho nhiệm vụ này.",
+    "instructions": "5 phút. Mức sơ cấp nội bộ, không phải chứng nhận HSK/CEFR. Nguồn Mandarin Bean chạy trên web: bài phân cấp, pinyin bật/tắt và audio giáo viên Trung Quốc dùng miễn phí; bản dịch/worksheet đầy đủ có thể cần Premium. Nhiệm vụ trong app do trợ lý soạn.",
     "material": "我想要两杯茶，一杯热的，一杯冰的。不要糖。\nWǒ xiǎng yào liǎng bēi chá, yì bēi rè de, yì bēi bīng de. Bú yào táng.",
     "exercises": "Xác định số lượng, lựa chọn nóng/lạnh và yêu cầu về đường. Trả lời ngắn tiếng Việt; không nhìn chữ rồi nhắc lại một ý.",
     "completionCriteria": "Làm trong 5–10 phút; lưu bản đầu, mở key tự kiểm tra và sửa một điểm. Gửi bài hoặc audio về ChatGPT để được review. Cấp độ nhiệm vụ do trợ lý thiết kế, không chứng nhận trình độ."
@@ -249,9 +249,9 @@ export const LEVEL_LESSONS: LevelLesson[] = [
     "skill": "speaking",
     "title": "Elementary · Đổi lựa chọn và yêu cầu · speaking",
     "level": "Elementary",
-    "instructions": "5 phút. Mức sơ cấp nội bộ, không phải chứng nhận HSK/CEFR. Mẫu và câu hỏi do trợ lý soạn. HelloChinese có nội dung miễn phí giới hạn và Premium trả phí; dùng audio người bản ngữ đang mở được, không cần mua gói cho nhiệm vụ này.",
-    "material": null,
-    "exercises": "Gọi đồ uống cho hai người có lựa chọn khác nhau, rồi thêm một yêu cầu. Dùng từ m đã biết; nói 20–30 giây.",
+    "instructions": "5 phút. Mức sơ cấp nội bộ, không phải chứng nhận HSK/CEFR. Nguồn Mandarin Bean chạy trên web: bài phân cấp, pinyin bật/tắt và audio giáo viên Trung Quốc dùng miễn phí; bản dịch/worksheet đầy đủ có thể cần Premium. Nhiệm vụ trong app do trợ lý soạn.",
+    "material": "https://mandarinbean.com/get-a-table-at-a-restaurant/",
+    "exercises": "Nghe hội thoại, rồi đóng nguồn. Đóng vai khách: nói số người, chọn chỗ ngồi và thêm một yêu cầu mới trong 20–30 giây.",
     "completionCriteria": "Làm trong 5–10 phút; lưu bản đầu, mở key tự kiểm tra và sửa một điểm. Gửi bài hoặc audio về ChatGPT để được review. Cấp độ nhiệm vụ do trợ lý thiết kế, không chứng nhận trình độ."
   },
   {
@@ -260,9 +260,9 @@ export const LEVEL_LESSONS: LevelLesson[] = [
     "skill": "writing",
     "title": "Elementary · Đổi lựa chọn và yêu cầu · writing",
     "level": "Elementary",
-    "instructions": "5 phút. Mức sơ cấp nội bộ, không phải chứng nhận HSK/CEFR. Mẫu và câu hỏi do trợ lý soạn. HelloChinese có nội dung miễn phí giới hạn và Premium trả phí; dùng audio người bản ngữ đang mở được, không cần mua gói cho nhiệm vụ này.",
-    "material": null,
-    "exercises": "Viết đơn gọi đồ uống hai câu với số lượng và một yêu cầu; đổi ít nhất một chi tiết so với đoạn đọc. Pinyin được chấp nhận.",
+    "instructions": "5 phút. Mức sơ cấp nội bộ, không phải chứng nhận HSK/CEFR. Nguồn Mandarin Bean chạy trên web: bài phân cấp, pinyin bật/tắt và audio giáo viên Trung Quốc dùng miễn phí; bản dịch/worksheet đầy đủ có thể cần Premium. Nhiệm vụ trong app do trợ lý soạn.",
+    "material": "https://mandarinbean.com/get-a-table-at-a-restaurant/",
+    "exercises": "Đóng nguồn và gõ 2–3 câu đặt bàn: số người, lựa chọn chỗ ngồi và một yêu cầu. Pinyin được chấp nhận; đổi ít nhất một chi tiết so với nguồn.",
     "completionCriteria": "Làm trong 5–10 phút; lưu bản đầu, mở key tự kiểm tra và sửa một điểm. Gửi bài hoặc audio về ChatGPT để được review. Cấp độ nhiệm vụ do trợ lý thiết kế, không chứng nhận trình độ."
   },
   {

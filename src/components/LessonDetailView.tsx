@@ -31,6 +31,7 @@ function getSourceLabel(value: string): string {
     const hostname = new URL(value).hostname;
     if (hostname.includes("britishcouncil.org")) return "British Council";
     if (hostname.includes("cambridgeenglish.org")) return "Cambridge English";
+    if (hostname.includes("mandarinbean.com")) return "Mandarin Bean";
     if (hostname.includes("hellochinese.cc")) return "HelloChinese";
     if (hostname.includes("duchinese.net")) return "Du Chinese";
     if (hostname.includes("irodori.jpf.go.jp")) return "Irodori";
