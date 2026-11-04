@@ -1,5 +1,6 @@
 import { LANGUAGES } from "@/lib/languages";
 import Link from "next/link";
+import { dailyLessonDate } from "@/lib/localLessonState";
 import { SKILLS, type SkillId } from "@/lib/lessonTypes";
 import { AttemptSubmitForm } from "@/components/AttemptSubmitForm";
 import { PracticeCoach } from "@/components/PracticeCoach";
@@ -74,6 +75,7 @@ export function LessonDetailView({
       </Link>
 
       <header className="lesson-detail__header">
+        {dailyLessonDate(lesson.id) && <p><Link href={`/learning/daily?date=${dailyLessonDate(lesson.id)}`}>← Gói Daily {dailyLessonDate(lesson.id)} · xem các bài cùng ngày</Link></p>}
         <div className="lesson-detail__meta">
           <span className="tag">{LANGUAGES.find((l) => l.id === lesson.language)?.label ?? lesson.language}</span>
           <span className="tag">{SKILLS.find((s) => s.id === lesson.skill)?.label}</span>

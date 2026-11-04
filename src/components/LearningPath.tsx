@@ -105,7 +105,8 @@ export function LearningPath({ topics, today, lessons }: {
     <section id="learning-path" className="learning-path" aria-labelledby="learning-path-title">
       <header className="learning-path__header">
         <h2 id="learning-path-title">Lộ trình học</h2>
-        <p>Bước nào cũng mở sẵn. Đây là dấu thói quen trên thiết bị này, không phải trình độ.</p>
+        <p>Daily là bài luyện chính; các chủ đề blog bên dưới là phần đọc và thực hành bổ trợ. Bước nào cũng mở sẵn, không phải chứng nhận trình độ.</p>
+        <Link className="button button--ghost" href="/learning/daily">Chọn Daily theo ngày hoặc từng bài →</Link>
       </header>
 
       {today && todayLessons.length > 0 && (
@@ -130,6 +131,7 @@ export function LearningPath({ topics, today, lessons }: {
                     next={next}
                     ariaLabel={`${label}, ${state}: ${lesson.title}`}
                   />
+                  <p className="path-note">{lesson.title}</p>
                 </li>
               );
             })}
@@ -173,7 +175,7 @@ export function LearningPath({ topics, today, lessons }: {
         return (
           <section key={topic.slug} aria-labelledby={`stage-${topic.slug}`}>
             <header className="path-stage">
-              <p>Chặng {unitIndex + 1}</p>
+              <p>Chủ đề blog bổ trợ {unitIndex + 1}</p>
               <h3 id={`stage-${topic.slug}`} lang="en">{topic.title}</h3>
             </header>
             <ol className="path-steps">
@@ -188,7 +190,6 @@ export function LearningPath({ topics, today, lessons }: {
                       state={step.done ? "Đã xong" : next ? "Tiếp theo" : "Chưa làm"}
                       done={step.done}
                       next={next}
-                      onClick={step.id === "read" ? () => addPathMark(topic.slug, "read") : undefined}
                     />
                   </li>
                 );
@@ -201,6 +202,10 @@ export function LearningPath({ topics, today, lessons }: {
                 </div>
               </li>
             </ol>
+            {!steps.find(step => step.id === "read")?.done && <button type="button" className="button button--ghost" onClick={() => {
+              addPathMark(topic.slug, "read");
+              setProgress(current => current ? { ...current, marks: readPathMarks() } : current);
+            }}>Tôi đã đọc và hiểu ý chính của chủ đề này</button>}
           </section>
         );
       })}

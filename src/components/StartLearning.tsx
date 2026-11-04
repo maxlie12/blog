@@ -4,22 +4,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getLanguageLabel } from "@/lib/languages";
 import { getLocalCompletedLessonIds, getLocalDueReviews } from "@/lib/localLearningProgress";
-import { readProfileStorage } from "@/lib/learnerProfiles";
+import { hasLessonDraft, dailyLessonDate } from "@/lib/localLessonState";
 import type { LessonSummary } from "@/lib/lessonTypes";
 import { selectNextLesson, type NextLesson } from "@/lib/nextLesson";
 import type { ScheduledReview } from "@/lib/reviewSchedule";
 import { useLearnerProfile } from "@/lib/useLearnerProfile";
-
-function hasSavedDraft(lessonId: string): boolean {
-  try {
-    const raw = readProfileStorage("learning-practice-v1:" + lessonId);
-    if (!raw) return false;
-    const value = JSON.parse(raw) as { version?: unknown; lessonId?: unknown; response?: unknown };
-    return value.version === 1 && value.lessonId === lessonId && typeof value.response === "string" && Boolean(value.response.trim());
-  } catch {
-    return false;
-  }
-}
 
 const actionLabel = {
   resume: "Tiếp tục bài đang dở",
@@ -44,7 +33,7 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
     const choose = () => {
       const completed = getLocalCompletedLessonIds();
       const dueReviews = getLocalDueReviews();
-      const drafts = new Set(lessons.filter((lesson) => hasSavedDraft(lesson.id)).map((lesson) => lesson.id));
+      const drafts = new Set(lessons.filter((lesson) => hasLessonDraft(lesson.id)).map((lesson) => lesson.id));
       const next = selectNextLesson(lessons, learner.id, completed, drafts, dueReviews);
       setTarget(next);
       // Due reviews stay one tap away without taking the main action from a new lesson.
@@ -66,6 +55,9 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
           <div className="learning-start__selection" aria-live="polite">
             <strong>{target.lesson.title}</strong>
             <span>{getLanguageLabel(target.lesson.language, true)} · {target.lesson.level}</span>
+            <span>{dailyLessonDate(target.lesson.id) ? `Daily ${dailyLessonDate(target.lesson.id)}` : "Bài luyện theo chủ đề/cấp độ"} · {target.lesson.skill}</span>
+            <p><strong>Mục tiêu:</strong> {target.lesson.exercises}</p>
+            <small>{target.reason === "resume" ? "Đang học · đã có bản nháp" : target.reason === "review" || target.reason === "due-review" ? "Đã Done · đang ôn lại" : "Chưa Done"}. Done là tự báo, không phải điểm trình độ.</small>
             <p>{reasonLabel[target.reason]}</p>
             {target.review && <small>Mốc ôn +{target.review.interval} ngày · đến hạn {target.review.dueDate}</small>}
           </div>
@@ -84,7 +76,7 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
         {dueReview && (
           <small>Đến hạn ôn: <Link href={`/learning/${dueReview.review.lessonId}`}>{dueReview.title}</Link> (+{dueReview.review.interval} ngày)</small>
         )}
-        <small>Muốn đổi bài hoặc học lại? <Link href="/learning/daily">Mở lịch sử bài học</Link>.</small>
+        <Link className="button button--ghost" href="/learning/daily">Đổi bài · xem Daily theo ngày →</Link>
         <small>Hôm nay không làm bài được? <Link href="/learning/practice">Tự luyện từ mới và đọc to</Link>.</small>
       </div>
     </section>

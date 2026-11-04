@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getLocalCompletionSummary, recordLocalCompletion, syncLocalProgress, type LocalCompletionSummary } from "@/lib/localLearningProgress";
-import { readProfileStorage, writeProfileStorage } from "@/lib/learnerProfiles";
+import { readSavedSessions, saveSession } from "@/lib/guidedSessionHistory";
 import { useLearnerProfile } from "@/lib/useLearnerProfile";
 
 type Language = "en" | "zh";
@@ -49,6 +49,8 @@ export function GuidedPractice() {
   const [language, setLanguage] = useState<Language>("en");
   const [budget, setBudget] = useState(10);
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [sessions, setSessions] = useState<Draft[]>([]);
+  const [historyReady, setHistoryReady] = useState(false);
   const [notice, setNotice] = useState("");
   const [speechNotice, setSpeechNotice] = useState("");
   const [showText, setShowText] = useState(false);
@@ -59,14 +61,32 @@ export function GuidedPractice() {
     let cancelled = false;
     queueMicrotask(() => {
       if (cancelled) return;
+      try {
+        setSessions(readSavedSessions(language, validDraft));
+        setHistoryReady(true);
+      } catch {
+        setSessions([]); setHistoryReady(false);
+        setNotice("Không đọc được lịch sử. Chưa tạo phiên mới để tránh ghi đè bài cũ; hãy giữ nguyên dữ liệu trình duyệt.");
+      }
+    });
+    return () => { cancelled = true; };
+  }, [language, learner.id]);
+  useEffect(() => {
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
       setCompletion(completionId ? getLocalCompletionSummary(completionId, activeLanguage) : null);
     });
     return () => { cancelled = true; };
   }, [completionId, activeLanguage]);
   function persist(next: Draft) {
-    setDraft(next);
-    try { writeProfileStorage("guided-practice-v1:" + next.language, JSON.stringify(next)); setNotice(`Đã lưu bước hiện tại cho ${learner.name}.`); }
-    catch { setNotice("Không lưu được trên thiết bị. Hãy sao chép nội dung trước khi đóng trang."); }
+    try {
+      setSessions(saveSession(next, validDraft)); setDraft(next);
+      setNotice("Đã lưu phiên này trên trình duyệt; các phiên cũ vẫn được giữ.");
+    } catch {
+      if (draft?.startedAt === next.startedAt) setDraft(next);
+      setNotice("Chưa lưu được thay đổi. Bài cũ vẫn được giữ; hãy sao chép bản đang sửa trước khi đóng trang.");
+    }
   }
   function update(patch: Partial<Draft>) { if (draft) persist({ ...draft, ...patch }); }
   function toggleCheck(id: CheckId) {
@@ -74,13 +94,11 @@ export function GuidedPractice() {
     const current = draft.checks ?? [];
     update({ checks: current.includes(id) ? current.filter(item => item !== id) : [...current, id] });
   }
-  function resume() {
+  function resume(saved?: Draft) {
     try {
-      const raw = readProfileStorage("guided-practice-v1:" + language);
-      if (!raw) { setNotice("Chưa có phiên lưu cho ngôn ngữ này. Bấm bắt đầu."); return; }
-      const value: unknown = JSON.parse(raw);
-      if (!validDraft(value)) throw new Error("Invalid draft");
-      setDraft(value); setBudget(value.budget); setNotice("Đã mở lại bước đang học. Phiên này chưa được chấm."); setShowText(false);
+      const value = saved ?? readSavedSessions(language, validDraft)[0];
+      if (!value) { setNotice("Chưa có phiên lưu cho ngôn ngữ này. Bấm bắt đầu."); return; }
+      setDraft(value); setBudget(value.budget); setNotice("Đã mở phiên đã lưu. Có thể sửa bài; không cộng Done/streak lần hai cho cùng phiên."); setShowText(false);
     } catch { setNotice("Không đọc được bản lưu. Có thể bắt đầu phiên mới; dữ liệu không được gửi lên server."); }
   }
   function go(step: number) { if (draft) { update({ step }); setShowText(false); if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel(); } }
@@ -131,13 +149,26 @@ export function GuidedPractice() {
     <ol aria-label="Các bước buổi học">{STAGES.map((name,index) => <li key={name} aria-current={step === index ? "step" : undefined}>{step === index ? "→ " : ""}{name}</li>)}</ol>
     {step === 0 ? <section className="lesson-detail__section">
       <h2>Bắt đầu hoặc tiếp tục</h2>
-      <label>Ngôn ngữ <select value={language} onChange={e => setLanguage(e.target.value as Language)}><option value="en">Tiếng Anh chính</option><option value="zh">Tiếng Trung phụ</option></select></label>
+      <label>Ngôn ngữ <select value={language} onChange={e => { setHistoryReady(false); setLanguage(e.target.value as Language); }}><option value="en">Tiếng Anh chính</option><option value="zh">Tiếng Trung phụ</option></select></label>
       <p><label>Phiên rảnh <select value={budget} onChange={e => setBudget(Number(e.target.value))}><option value={5}>5 phút · nhiệm vụ ngắn</option><option value={10}>10 phút · thêm ví dụ</option></select></label></p>
       <p>{english ? "Mục tiêu: hiểu một ý về thói quen dùng điện thoại và giải thích một thay đổi bạn muốn thử." : "Mục tiêu: hiểu và đổi một yêu cầu gọi đồ uống bằng hai câu."}</p>
       <p>Đây là thời lượng gợi ý, không có đồng hồ ép làm nhanh. Nếu quá khó, dùng phiên 5 phút hoặc bài mức thấp hơn trong kho.</p>
-      <button className="button" onClick={() => persist(fresh(language,budget))}>Bắt đầu phiên mới</button>{" "}
-      <button className="button button--ghost" onClick={resume}>Tiếp tục phiên đã lưu</button>
-      <p>Bắt đầu mới thay bản nháp gần nhất của ngôn ngữ này; hãy sao chép tổng kết nếu muốn giữ lịch sử.</p>
+      <button className="button" disabled={!historyReady} onClick={() => persist(fresh(language,budget))}>Bắt đầu phiên mới</button>{" "}
+      <button className="button button--ghost" disabled={!historyReady || sessions.length === 0} onClick={() => resume()}>Tiếp tục phiên gần nhất</button>
+      <p>Phiên mới không xoá bài cũ. Bài viết lưu riêng trên trình duyệt này; xoá dữ liệu trình duyệt sẽ mất các bản lưu.</p>
+      <h3>Bài đã lưu · {english ? "Tiếng Anh" : "Tiếng Trung"}</h3>
+      {historyReady && sessions.length === 0 && <p>Chưa có phiên nào được lưu trên trình duyệt này.</p>}
+      <ul aria-label="Lịch sử phiên học">
+        {sessions.map(session => {
+          const done = getLocalCompletionSummary("guided:" + session.language + ":" + session.startedAt, session.language).completed;
+          return <li key={session.startedAt} style={{marginBottom:"1rem"}}>
+            <p><strong>{session.language === "en" ? "English · Digital detox" : "中文 · Gọi đồ uống"}</strong><br/>
+              <time dateTime={session.startedAt}>{new Date(session.startedAt).toLocaleString("vi-VN", {timeZone:"Asia/Ho_Chi_Minh"})}</time>
+              {" · "}{done ? "Đã hoàn thành · tự báo" : `Đang học · bước ${session.step}: ${STAGES[session.step]}`}</p>
+            <button type="button" className="button button--ghost" onClick={() => resume(session)}>{done ? "Mở và sửa bài" : "Tiếp tục phiên này"}</button>
+          </li>;
+        })}
+      </ul>
     </section> : draft && <>
       <section className="lesson-detail__section">
         <h2>{step}. {STAGES[step]}</h2>
