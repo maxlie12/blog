@@ -1,0 +1,72 @@
+{
+  "date": "2026-11-04",
+  "title": "Khởi động 5 phút — đọc hai ý rồi nhớ lại",
+  "kind": "restart",
+  "note": "Chưa có bài làm mới hoặc bằng chứng Done được gửi trong chat, nên giữ B1+ tự đánh giá và bước nghe/đọc hiểu của cùng nguồn British Council; chưa chuyển sang shadowing, chưa tăng độ khó và không tạo backlog bắt buộc. Tiếng Trung là tùy chọn.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-04-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Nhiệm vụ chính 5 phút — yêu cầu và phản hồi",
+      "level": "B1+ restart / B1 source",
+      "instructions": "Bài do trợ lý soạn, không phải đề British Council/IELTS/TOEIC chính thức. Nguồn British Council miễn phí có audio, transcript và bài tương tác. Đọc phần đầu transcript trong 60–90 giây rồi đóng nguồn.",
+      "material": "https://learnenglish.britishcouncil.org/free-resources/listening/b1/phone-call-customer",
+      "exercises": "Không nhìn transcript, viết đúng hai dòng: “The caller wants …” và “The other person responds by …”. Mở lại nguồn, tìm một cụm ngắn hỗ trợ cho mỗi dòng. Chỉ sửa một dòng nếu chi tiết không khớp; chưa cần tóm tắt toàn bài.",
+      "completionCriteria": "Lưu hai dòng ban đầu, hai cụm bằng chứng, dòng đã sửa nếu có và số phút thực học rồi bấm Done. Hoàn thành không tự suy ra CEFR hay tiến bộ.",
+      "takeaway": {
+        "phrase": "The caller wants …",
+        "pattern": "Request → response → short evidence",
+        "reusePrompt": "Dùng khung này để ghi lại một yêu cầu và cách xử lý trong cuộc họp hoặc ticket công việc."
+      }
+    },
+    {
+      "id": "daily-2026-11-04-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — hỏi vị trí rồi đổi câu",
+      "level": "Beginner restart",
+      "instructions": "Bài ôn do trợ lý soạn, không phải bài HelloChinese chính thức. HelloChinese có phần miễn phí và nội dung Premium, với audio người bản ngữ trong ứng dụng nếu bạn muốn nghe lại. Tự nhớ trước khi mở pinyin và nghĩa.",
+      "material": "https://www.hellochinese.cc/",
+      "exercises": "Đọc câu mẫu một lượt, che mẫu và nói lại. Sau đó dùng hai đồ vật thật để đổi cả A và B, gõ một cặp hỏi–đáp mới rồi đọc thành tiếng. Viết tay một chữ chỉ là tùy chọn, không lưu và không tự chấm.",
+      "completionCriteria": "Chỉ bấm Done sau khi tự gõ một cặp hỏi–đáp mới và đọc không nhìn mẫu. Chép nguyên câu mẫu chưa đủ để ghi Done.",
+      "takeaway": {
+        "phrase": "在……旁边",
+        "pattern": "A 在哪儿？A 在 B 旁边。",
+        "reusePrompt": "Đổi A và B thành hai đồ vật thật đang nhìn thấy."
+      },
+      "chinesePractice": {
+        "sentence": "椅子在哪儿？椅子在窗户旁边。",
+        "translation": "Cái ghế ở đâu? Cái ghế ở bên cạnh cửa sổ.",
+        "tokens": [
+          {
+            "hanzi": "椅子",
+            "pinyin": "yǐzi",
+            "meaning": "cái ghế"
+          },
+          {
+            "hanzi": "在哪儿",
+            "pinyin": "zài nǎr",
+            "meaning": "ở đâu"
+          },
+          {
+            "hanzi": "在",
+            "pinyin": "zài",
+            "meaning": "ở / nằm tại"
+          },
+          {
+            "hanzi": "窗户",
+            "pinyin": "chuānghu",
+            "meaning": "cửa sổ"
+          },
+          {
+            "hanzi": "旁边",
+            "pinyin": "pángbiān",
+            "meaning": "bên cạnh"
+          }
+        ],
+        "outputPrompt": "Không nhìn mẫu, thay cả hai đồ vật để tự tạo một cặp hỏi–đáp mới rồi đọc thành tiếng."
+      }
+    }
+  ]
+}
