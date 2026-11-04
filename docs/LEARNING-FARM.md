@@ -14,6 +14,8 @@
 
 Every scene action also has a button (plot card, pond card, ranch card, sheets), and the 2D board offers the same game without WebGL.
 
+Background music (`src/lib/cozyMusic.ts`, made in the browser with Web Audio, no files) plays while the game is on screen; the **Nhạc** side button turns it off and the slider under the game sets the volume. The setting is shared with Làng Rêu (`cozy-music-v1` in localStorage).
+
 ## Graphics and performance
 
 The menu under the game ("Đồ họa") offers Automatic, 3D beautiful / balanced / smooth, and 2D battery saver. The choice is stored per browser (`learning-farm-graphics-v1`).

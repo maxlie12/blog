@@ -2588,6 +2588,9 @@ body { line-height: 1.65; }
 .fg-truck-road { position: relative; height: 3rem; margin: .3rem 0; overflow: hidden; background: linear-gradient(transparent 62%, #d6c08f 62% 88%, transparent 88%); border-radius: 12px; }
 .fg-truck-road span { position: absolute; top: .2rem; left: 0; font-size: 2rem; animation: fg-drive 3.2s linear infinite; }
 .fg-graphics { display: inline-flex; align-items: center; gap: .4rem; }
+.fg-graphics span { white-space: nowrap; }
+.fg-volume input { width: 6.5rem; min-height: 44px; margin: 0; accent-color: var(--fg-line, #24583e); }
+.fg-side button[aria-pressed="false"] { opacity: .75; }
 .fg-graphics select { padding: .3rem .5rem; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; font: inherit; font-size: .72rem; }
 .fg-sheet-wrap { position: absolute; inset: 0; z-index: 5; display: flex; align-items: flex-end; justify-content: center; }
 .fg-sheet-backdrop { position: absolute; inset: 0; background: #0f241a70; border: 0; cursor: pointer; }
@@ -3568,6 +3571,11 @@ a.path-node--done:hover .path-node__circle { color: var(--surface); }
 .vg-choice b { display: block; line-height: 1.3; }
 .vg-choice b i { color: var(--text-muted); font-weight: 500; }
 .vg-choice small { display: block; color: var(--text-muted); font-size: .82rem; line-height: 1.4; }
+.vg-volume { display: flex; align-items: center; gap: .7rem; min-height: 52px; padding: .45rem .8rem; background: var(--surface-raised); border: 1px solid var(--border); border-radius: 12px; }
+.vg-volume span { font-weight: 650; }
+.vg-volume input { flex: 1; min-width: 0; min-height: 44px; margin: 0; accent-color: var(--forest); }
+.vg-volume output { min-width: 3ch; color: var(--text-muted); font-variant-numeric: tabular-nums; text-align: right; }
+.vg-icon[aria-pressed="false"] { color: var(--text-muted); }
 .vg-reduced-note { display: none; font-size: .85rem; }
 @media (prefers-reduced-motion: reduce) { .vg-reduced-note { display: block; } }
 .vg-inspect { flex: 0 1 25rem; min-width: 0; max-height: min(44svh, 24rem); overflow-y: auto; overscroll-behavior: contain; padding: .45rem .5rem .7rem .9rem; }

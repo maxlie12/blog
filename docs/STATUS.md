@@ -1,6 +1,17 @@
 # Status
 
-Last verified: 2026-11-03 (Làng Rêu joins for walls, fences and hedges; harness browser checks).
+Last verified: 2026-11-04 (cozy music for Làng Rêu and the farm; harness browser checks).
+
+## 2026-11-04 — Cozy music for Làng Rêu and the farm
+
+- Soft lofi music made in the browser (electric piano, bass, kalimba or plucked melody, brushed
+  drums, birds; calmer with crickets at night in the village). No audio files.
+- A music button in each game (village header, farm side buttons) and a volume slider (village
+  graphics sheet, farm footer); one setting for both, on by default, starting at the first tap and
+  pausing when the tab is hidden or the game is off screen.
+- Checks: `cozyMusic.test.ts`, ESLint, `tsc`; offline render levels; harness 38/40 desktop and
+  phone (the two misses are the test browser allowing sound before a tap). See
+  `docs/changes/GAME-010-cozy-music.md`.
 
 ## 2026-11-03 — Làng Rêu: walls, fences and hedges join what is already there
 

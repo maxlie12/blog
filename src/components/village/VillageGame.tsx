@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { PronounceButton } from "@/components/PronounceButton";
+import { useCozyMusic } from "@/lib/useCozyMusic";
 import { getActiveLearnerProfileId, readProfileStorage, writeProfileStorage, type LearnerProfileId } from "@/lib/learnerProfiles";
 import {
   CATEGORIES, FAST_DAY_SECONDS, PROGRESS_KEY, SCENE_KEY, STARTER, TOOL, TOOLS, WORDS, WORD_ORDER, autoQuality, clockLabel, hourToTime, isAnswer, parseProgress,
@@ -13,10 +14,12 @@ import type { InspectInfo, Thumbs, VillageController } from "@/lib/village/scene
 import { choicesFor, dueItems, nextReview, type ReviewItem } from "@/lib/village/review";
 import { PARTS, RESIDENTS, VERBS, vocabKey, type PartId, type ResidentId, type VerbId } from "@/lib/village/vocab";
 
-type IconName = "orbit" | "look" | "hand" | "erase" | "undo" | "book" | "reset" | "sun" | "moon" | "close" | "lock" | "cards" | "left" | "right" | "manual" | "fast" | "real" | "tune" | "target" | "follow";
+type IconName = "orbit" | "look" | "hand" | "erase" | "undo" | "book" | "reset" | "sun" | "moon" | "close" | "lock" | "cards" | "left" | "right" | "manual" | "fast" | "real" | "tune" | "target" | "follow" | "music" | "mute";
 const ICONS: Record<IconName, ReactNode> = {
   target: <><circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="2.2" /><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" /></>,
   follow: <><path d="M12 21s-6-5.6-6-10.5a6 6 0 0 1 12 0C18 15.4 12 21 12 21z" /><circle cx="12" cy="10.5" r="2.2" /></>,
+  music: <><path d="M9 17.5V6l10-2v11.5" /><circle cx="6.5" cy="17.5" r="2.5" /><circle cx="16.5" cy="15.5" r="2.5" /></>,
+  mute: <><path d="M9 17.5V6l10-2v11.5" /><circle cx="6.5" cy="17.5" r="2.5" /><circle cx="16.5" cy="15.5" r="2.5" /><path d="M3.5 3.5l17 17" /></>,
   tune: <><path d="M4 7h9M17 7h3M4 17h3M11 17h9" /><circle cx="15" cy="7" r="2" /><circle cx="9" cy="17" r="2" /></>,
   manual: <><path d="M9 6v12" /><path d="M15 6v12" /></>,
   fast: <><path d="m4 6 7 6-7 6z" /><path d="m13 6 7 6-7 6z" /></>,
@@ -203,6 +206,7 @@ function Sentence({ text, fill }: { text: string; fill: ReactNode }) {
 }
 
 export default function VillageGame() {
+  const rootRef = useRef<HTMLDivElement>(null);
   const mountRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const controllerRef = useRef<VillageController | null>(null);
@@ -453,10 +457,13 @@ export default function VillageGame() {
 
   const known = WORD_ORDER.filter((w) => progress.unlocked.includes(w)).length;
   const running = progress.clock !== "manual";
-  const timeValue = Math.round((running && live ? live.t : progress.time) * 100);
+  const dayTime = running && live ? live.t : progress.time;
+  const timeValue = Math.round(dayTime * 100);
+  // Calmer music once night falls.
+  const music = useCozyMusic("village", rootRef, dayTime >= 0.85);
 
   return (
-    <div className="vg">
+    <div className="vg" ref={rootRef}>
       <div className="vg-stage" onKeyDown={onStageKey}>
         <div ref={mountRef} className="vg-scene" data-mode={tool} />
         {status !== "ready" ? (
@@ -504,8 +511,19 @@ export default function VillageGame() {
                 <Icon name="book" />
                 <span className="vg-count" aria-hidden="true">{known}/{WORD_ORDER.length}</span>
               </button>
+              <button
+                className="vg-icon"
+                type="button"
+                data-music-toggle
+                aria-pressed={music.on}
+                aria-label="Nhạc nền"
+                title={music.on ? "Tắt nhạc nền" : "Bật nhạc nền"}
+                onClick={music.toggle}
+              >
+                <Icon name={music.on ? "music" : "mute"} />
+              </button>
               {status === "ready" ? (
-                <button className="vg-icon" type="button" aria-label="Đồ họa và thời tiết" onClick={() => setSheet({ kind: "graphics" })}>
+                <button className="vg-icon" type="button" aria-label="Đồ họa, thời tiết và nhạc" onClick={() => setSheet({ kind: "graphics" })}>
                   <Icon name="tune" />
                 </button>
               ) : null}
@@ -610,7 +628,7 @@ export default function VillageGame() {
               </div>
             </SheetFrame>
           ) : sheet?.kind === "graphics" ? (
-            <SheetFrame title="Đồ họa và thời tiết" onClose={() => setSheet(null)}>
+            <SheetFrame title="Đồ họa, thời tiết và nhạc" onClose={() => setSheet(null)}>
               <fieldset className="vg-choices">
                 <legend>Chất lượng hình ảnh</legend>
                 {(["auto", "low", "medium", "high"] as const).map((q) => (
@@ -634,6 +652,21 @@ export default function VillageGame() {
                     </span>
                   </label>
                 ))}
+              </fieldset>
+              <fieldset className="vg-choices">
+                <legend>Nhạc nền</legend>
+                <label className="vg-choice">
+                  <input type="checkbox" data-music-toggle checked={music.on} onChange={music.toggle} />
+                  <span>
+                    <b>Phát nhạc</b>
+                    <small>Nhạc êm tạo ngay trên máy, không cần tải. Tối đến nhạc nhẹ hơn, có tiếng dế.</small>
+                  </span>
+                </label>
+                <label className="vg-volume">
+                  <span>Âm lượng</span>
+                  <input type="range" min={0} max={100} step={5} value={Math.round(music.volume * 100)} onChange={(event) => music.setVolume(Number(event.target.value) / 100)} />
+                  <output>{Math.round(music.volume * 100)}%</output>
+                </label>
               </fieldset>
               <p className="vg-muted vg-reduced-note">Máy đang bật giảm chuyển động, nên không có mưa rơi, khói bếp hay mặt nước gợn sóng.</p>
             </SheetFrame>

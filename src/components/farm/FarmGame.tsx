@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import * as Farm from "@/lib/farm/engine";
 import { getActiveLearnerProfileId, readProfileStorage, writeProfileStorage } from "@/lib/learnerProfiles";
+import { useCozyMusic } from "@/lib/useCozyMusic";
 import {
   QUALITY_LABELS,
   detectQuality,
@@ -140,6 +141,8 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
   const [graphics, setGraphics] = useState<{ choice: GraphicsChoice; detected: Quality } | null>(null);
   const [webglFailed, setWebglFailed] = useState(false);
   const { game, toast, storage, saveSeq } = state;
+  const rootRef = useRef<HTMLElement>(null);
+  const music = useCozyMusic("farm", rootRef);
 
   /* ───────────── load, tick, save ───────────── */
   useEffect(() => {
@@ -239,7 +242,7 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
 
   if (!game || !graphics) {
     return (
-      <section className="fg" aria-label="Game nông trại, ao cá và trang trại">
+      <section ref={rootRef} className="fg" aria-label="Game nông trại, ao cá và trang trại">
         <div className="fg-stage fg-stage--loading"><span>Đang mở cổng nông trại…</span></div>
       </section>
     );
@@ -429,7 +432,7 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
   const selected = selectedPlot !== null && view === "farm" ? game.plots[selectedPlot] : null;
 
   return (
-    <section className="fg" aria-label="Game nông trại, ao cá và trang trại">
+    <section ref={rootRef} className="fg" aria-label="Game nông trại, ao cá và trang trại">
       <div className="fg-stage" data-view={view} data-mode={mode}>
         {mode === "3d" ? (
           <FarmScene3D
@@ -484,6 +487,9 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
             <button type="button" onClick={() => setSheet("barn")}><span aria-hidden="true">📦</span>Kho{barnCount > 0 ? <b>{barnCount}</b> : null}</button>
             <button type="button" onClick={() => setSheet("gifts")}><span aria-hidden="true">🎁</span>Quà{dailyReady || studyReady ? <b className="fg-dot" aria-label="có quà chưa nhận">!</b> : null}</button>
             <button type="button" onClick={() => setSheet("help")}><span aria-hidden="true">❔</span>Cách chơi</button>
+            <button type="button" data-music-toggle aria-pressed={music.on} title={music.on ? "Tắt nhạc nền" : "Bật nhạc nền"} onClick={music.toggle}>
+              <span aria-hidden="true">{music.on ? "🎵" : "🔇"}</span>Nhạc
+            </button>
           </div>
 
           <div className="fg-bottom">
@@ -557,6 +563,10 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
                 </option>
               ))}
             </select>
+          </label>
+          <label className="fg-graphics fg-volume">
+            <span>Âm lượng nhạc</span>
+            <input type="range" min={0} max={100} step={5} value={Math.round(music.volume * 100)} onChange={(event) => music.setVolume(Number(event.target.value) / 100)} />
           </label>
           <button type="button" onClick={resetFarm}>Làm lại từ đầu</button>
         </div>
