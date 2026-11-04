@@ -1,6 +1,19 @@
 # Status
 
-Last verified: 2026-11-04 (cozy music for Làng Rêu and the farm; harness browser checks).
+Last verified: 2026-11-04 (farm river fishing, orchard and hands-on work; harness browser checks).
+
+## 2026-11-04 — Farm: river fishing, a fruit orchard and hands-on field work
+
+- A river along the island with an angler on a jetty: tap the water to cast, wait through the
+  nibbles, strike when the float plunges, then hold to reel and let go when the line goes red.
+  Six wild fish and an old boot; each bite uses one bait (market, daily gift).
+- An orchard with six spots: dig, plant a sapling (lemon to coconut by level), water, and shake the
+  grown tree for fruit again and again.
+- Fields and orchard work by dragging the tool across plots or trees, with the tool in hand and
+  dirt, seeds, water or falling fruit. Taps and card buttons still work; old saves load and get the
+  orchard, a sapling and bait. The 2D board has both new places.
+- Checks: `farm.test.ts`, ESLint, `tsc`; reeling tuned by simulation; harness 30/30 (desktop 3D
+  and 2D, phone, old save). See `docs/changes/GAME-011-farm-river-orchard.md`.
 
 ## 2026-11-04 — Cozy music for Làng Rêu and the farm
 

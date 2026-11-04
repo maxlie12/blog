@@ -1,9 +1,9 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import type { CSSProperties, PointerEvent } from "react";
 import * as Farm from "@/lib/farm/engine";
 import type { FarmView } from "@/lib/farm/scene";
-import { STAGE_LABELS } from "./shared";
+import { STAGE_LABELS, TREE_STAGE_LABELS } from "./shared";
 
 const SHORT_NAMES: Record<Farm.WorkshopId, string> = { saltery: "Trứng muối", bakery: "Lò bánh", loom: "Dệt len", dairy: "Phô mai" };
 
@@ -15,7 +15,11 @@ export default function Board2D({
   game,
   view,
   selectedPlot,
+  selectedSpot,
   onPlot,
+  onSpot,
+  onRiverPress,
+  onRiverRelease,
   onFish,
   onTrash,
   onAnimal,
@@ -27,7 +31,12 @@ export default function Board2D({
   game: Farm.GameState;
   view: FarmView;
   selectedPlot: number | null;
+  selectedSpot: number | null;
   onPlot: (index: number) => void;
+  onSpot: (index: number) => void;
+  /** A press on the river: where (fishing-spot coordinates), then its release. */
+  onRiverPress: (at: [number, number]) => void;
+  onRiverRelease: () => void;
   onFish: (id: string) => void;
   onTrash: (id: string) => void;
   onAnimal: (id: string) => void;
@@ -36,6 +45,67 @@ export default function Board2D({
   onTrough: () => void;
   onTruck: () => void;
 }) {
+  if (view === "orchard") {
+    return (
+      <div className="fg2 fg2--orchard">
+        <div className="fg2-orchard">
+          {game.orchard.spots.map((spot, index) => {
+            const def = spot.tree ? Farm.TREE_MAP[spot.tree] : null;
+            const ripe = Farm.isTreeRipe(spot);
+            const grown = Farm.isTreeGrown(spot);
+            const stage = Farm.treeStage(spot);
+            const progress = def ? (grown ? spot.fruit / def.fruitSeconds : spot.growth / def.growSeconds) : 0;
+            const label = spot.status === "locked" ? "🔒" : spot.status === "grass" ? "🌿" : spot.status === "hole" ? "🕳️" : ripe ? def?.emoji : stage === 0 ? "🌱" : "🌳";
+            const name =
+              spot.status === "tree" && def ? `${def.name}, ${ripe ? "có quả chín" : TREE_STAGE_LABELS[stage].toLowerCase()}` : spot.status === "locked" ? "chỗ chưa mở" : spot.status === "hole" ? "hố trống" : "bãi cỏ";
+            return (
+              <button
+                key={index}
+                type="button"
+                className="fg2-plot fg2-tree"
+                data-status={spot.status}
+                data-ripe={ripe || undefined}
+                aria-pressed={selectedSpot === index}
+                aria-label={`Chỗ trồng cây ${index + 1}: ${name}${spot.thirsty ? ", cần tưới" : ""}`}
+                onClick={() => onSpot(index)}
+              >
+                <span aria-hidden="true">{label}</span>
+                {spot.thirsty ? <small aria-hidden="true">💧</small> : null}
+                {spot.status === "tree" && !ripe ? <i aria-hidden="true"><em style={{ width: `${Math.round(Math.min(1, progress) * 100)}%` }} /></i> : null}
+                {ripe ? <b aria-hidden="true">⭐</b> : null}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "river") {
+    const at = (event: PointerEvent<HTMLDivElement>): [number, number] => {
+      const rect = event.currentTarget.getBoundingClientRect();
+      return [((event.clientX - rect.left) / rect.width - 0.5) * 2, 1 - (event.clientY - rect.top) / rect.height];
+    };
+    return (
+      <div className="fg2 fg2--river">
+        <div
+          className="fg2-river"
+          aria-hidden="true"
+          onPointerDown={(event) => {
+            event.currentTarget.setPointerCapture?.(event.pointerId);
+            onRiverPress(at(event));
+          }}
+          onPointerUp={onRiverRelease}
+          onPointerCancel={onRiverRelease}
+        >
+          {["🐟", "🐟", "🦐"].map((fish, index) => (
+            <span key={index} className="fg2-wild" style={{ "--y": `${25 + index * 20}%`, "--swim": `${9 + index * 3}s`, "--delay": `${-index * 2.5}s` } as CSSProperties}>{fish}</span>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (view === "pond") {
     return (
       <div className="fg2 fg2--pond">

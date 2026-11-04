@@ -2531,7 +2531,7 @@ body { line-height: 1.65; }
 .fg-stage { position: relative; height: clamp(32rem, 76vh, 46rem); overflow: hidden; isolation: isolate; color: var(--fg-ink); background: #cfe8d4; border: 1px solid #c6d9bd; border-radius: 24px; box-shadow: 0 24px 50px -40px #173f30aa; }
 .fg-stage--loading { display: grid; place-items: center; color: #24583e; background: linear-gradient(160deg, #dfeecf, #f2e7ae); font-family: var(--font-mono), monospace; letter-spacing: .08em; }
 .fg-scene { position: absolute; inset: 0; }
-.fg-scene canvas { display: block; width: 100%; height: 100%; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.fg-scene canvas { display: block; width: 100%; height: 100%; touch-action: manipulation; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .fg-hud { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; justify-content: space-between; gap: .5rem; padding: .75rem; pointer-events: none; }
 .fg-hud button { font: inherit; }
 .fg-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; }
@@ -2573,6 +2573,32 @@ body { line-height: 1.65; }
 .fg-close { width: 2rem; height: 2rem; flex: none; color: var(--fg-line); background: #e4eddf; border: 0; border-radius: 50%; font-size: 1.25rem; line-height: 1; cursor: pointer; }
 .fg-progress { display: block; height: .45rem; margin: .25rem 0 .4rem; overflow: hidden; background: #e4eddf; border-radius: 99px; }
 .fg-progress em { display: block; height: 100%; background: linear-gradient(90deg, #6fb24f, #f2c94c); }
+.fg-danger { background: #b9432f !important; }
+.fg-fish .fg-card__actions { align-items: center; }
+.fg-fish .fg-card__actions button { min-height: 44px; }
+.fg-fish__status { min-height: 1.3em; margin: 0 !important; color: var(--fg-ink) !important; font-size: .9rem; font-weight: 750; }
+.fg-fish[data-phase="bite"] .fg-fish__status, .fg-fish[data-phase="snapped"] .fg-fish__status { color: #b9432f !important; }
+.fg-fish[data-phase="caught"] .fg-fish__status { color: #24583e !important; }
+.fg-fish__main { flex: 2 1 9rem !important; min-height: 52px !important; font-size: 1rem !important; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.fg-fish__main[data-alert] { background: #d9533b !important; animation: fg-alert .45s ease-in-out infinite alternate; }
+.fg-fish__bait { flex: none; padding: 0 .3rem; font-weight: 750; }
+.fg-fish__meters { display: grid; gap: .35rem; margin-top: .45rem; }
+.fg-fish__meters label { display: grid; grid-template-columns: 7.5rem 1fr; align-items: center; gap: .5rem; font-weight: 650; }
+.fg-meter { position: relative; display: block; height: .7rem; overflow: hidden; background: #e4eddf; border-radius: 99px; }
+.fg-meter em { display: block; height: 100%; background: #6fb24f; border-radius: inherit; transition: width .08s linear; }
+.fg-meter i { position: absolute; top: 0; right: 0; bottom: 0; background: #f3c2b7; }
+.fg-meter[data-red] em { background: #d9533b; }
+.fg-meter em { position: relative; z-index: 1; }
+.fg-meter--line em { background: #4f9ad6; }
+.fg-meter--bite { margin-top: .45rem; }
+.fg-meter--bite em { background: #f2c94c; }
+.fg-fish__water { position: relative; height: 2.6rem; margin-top: .45rem; overflow: hidden; background: linear-gradient(180deg, #8fd8cc, #4f9f98); border-radius: 12px; }
+.fg-fish__angler { position: absolute; left: .3rem; bottom: .2rem; font-size: 1.4rem; }
+.fg-fish__float { position: absolute; top: 50%; font-size: 1rem; translate: -50% -50%; transition: left .1s linear; }
+.fg-fish__float[data-state="wait"] { animation: fg2-bob 1.6s ease-in-out infinite; }
+.fg-fish__float[data-state="nibble"] { translate: -50% -30%; }
+.fg-fish__float[data-state="bite"] { translate: -50% 0; font-size: 1.3rem; }
+.fg-fish__float[data-state="reel"] { animation: fg-thrash .2s linear infinite alternate; }
 .fg-stats { display: flex; flex-wrap: wrap; gap: .3rem .9rem; font-size: .76rem; font-weight: 700; }
 .fg-warn { color: #9a3d16; }
 .fg-split { display: grid; grid-template-columns: 1fr 1.3fr; gap: .5rem; }
@@ -2657,6 +2683,12 @@ body { line-height: 1.65; }
 .fg2-trash { position: absolute; transform: translate(-50%, -50%); padding: .1rem; font-size: 1.15rem; background: transparent; border: 0; cursor: pointer; animation: fg2-bob 2.6s ease-in-out infinite; }
 .fg2-hint { position: absolute; inset: 40% 10% auto; margin: 0; color: #fff; font-weight: 700; text-align: center; }
 .fg2--ranch { grid-template-rows: 1fr auto; gap: .6rem; }
+.fg2-orchard { width: min(24rem, 100%); display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; padding: .8rem; background: #9cc874; border: 5px solid #b98a55; border-radius: 22px; box-shadow: 0 14px 0 -6px #8b623b, 0 24px 30px -18px #24583e88; }
+.fg2-tree { border-radius: 50%; background: radial-gradient(circle, #6b4630 0 30%, #8fbd67 31%); font-size: 1.6rem; }
+.fg2-tree[data-status="grass"] { background: radial-gradient(circle at 35% 35%, #7fae57 0 14%, transparent 15%), #8fbd67; }
+.fg2-tree[data-status="hole"] { background: radial-gradient(circle, #3b2a1d 0 34%, #8fbd67 35%); }
+.fg2-river { position: relative; width: min(30rem, 100%); aspect-ratio: 1.6; overflow: hidden; background: repeating-linear-gradient(180deg, transparent 0 18px, #ffffff1f 18px 20px), linear-gradient(180deg, #cdbd8f 0 8%, #5fb8b4 8% 88%, #cdbd8f 88%); border-radius: 20px; box-shadow: 0 18px 30px -18px #24583e99; cursor: pointer; touch-action: none; }
+.fg2-wild { position: absolute; top: var(--y); left: 45%; font-size: 1.4rem; opacity: .7; filter: brightness(.55) saturate(.4); animation: fg2-swim var(--swim) ease-in-out infinite; animation-delay: var(--delay); }
 .fg2-pasture { position: relative; width: min(30rem, 100%); aspect-ratio: 1.7; background: repeating-linear-gradient(90deg, transparent 0 22px, #ffffff12 22px 24px), #a6d377; border: 5px dashed #f1e4c8; border-radius: 18px; box-shadow: 0 0 0 4px #c9b68f, 0 18px 30px -18px #24583e88; }
 .fg2-animal { animation-name: fg2-walk; animation-duration: var(--walk, 6s); animation-timing-function: steps(18); }
 .fg2-animal span { display: block; font-size: 1.8rem; transform: scaleX(-1); filter: drop-shadow(0 3px 0 #0000002a); }
@@ -2672,6 +2704,8 @@ body { line-height: 1.65; }
 .fg2-shop span, .fg2-truck span { font-size: 1.2rem; }
 .fg2-shop strong { overflow: hidden; max-width: 100%; text-overflow: ellipsis; white-space: nowrap; font-size: .58rem; }
 .fg2-truck[data-away] span { animation: fg-drive 3.2s linear infinite; }
+@keyframes fg-alert { from { transform: scale(1); } to { transform: scale(1.04); } }
+@keyframes fg-thrash { from { translate: -52% -50%; } to { translate: -48% -56%; } }
 @keyframes fg2-bounce { 0%, 100% { translate: 0 0; } 50% { translate: 0 -4px; } }
 @keyframes fg2-bob { 0%, 100% { translate: -50% -50%; } 50% { translate: -50% -42%; } }
 @keyframes fg2-swim { from { transform: translate(-30px, -6px) scaleX(-1); } 49% { transform: translate(30px, 6px) scaleX(-1); } 50% { transform: translate(30px, 6px) scaleX(1); } to { transform: translate(-30px, -6px) scaleX(1); } }
@@ -2686,7 +2720,7 @@ body { line-height: 1.65; }
   .fg-hud { padding: .55rem; }
   .fg-top { flex-wrap: wrap; }
   .fg-views { order: 3; width: 100%; justify-content: center; }
-  .fg-views button { flex: 1; }
+  .fg-views button { flex: 1; min-width: 0; padding: .45rem .2rem; font-size: .72rem; white-space: nowrap; }
   .fg-toast { top: 7.3rem; }
   .fg-side { top: 7.6rem; right: .55rem; transform: none; gap: .35rem; }
   .fg-side button { width: 3.25rem; padding: .35rem .1rem .3rem; font-size: .56rem; white-space: nowrap; }
@@ -2758,7 +2792,7 @@ body { line-height: 1.65; }
 
 @media (prefers-reduced-motion: reduce) {
   .world-mascot, .world-mascot b::before, .world-mascot b::after, .world-gate__sun, .world-gate__river { animation: none; }
-  .fg-toast, .fg-card, .fg-sheet, .fg-truck-road span, .fg2-plot span, .fg2-plot b, .fg2-fish, .fg2-fish b, .fg2-animal, .fg2-animal b, .fg2-drop, .fg2-trash, .fg2-truck span { animation: none; }
+  .fg-toast, .fg-card, .fg-sheet, .fg-truck-road span, .fg2-plot span, .fg2-plot b, .fg2-fish, .fg2-fish b, .fg2-animal, .fg2-animal b, .fg2-drop, .fg2-trash, .fg2-truck span, .fg2-wild, .fg-fish__main, .fg-fish__float { animation: none; }
 }
 .article-page .prose-content pre { max-width: 100%; overflow-x: auto; }
 .article-page .prose-content img { max-width: 100%; height: auto; border-radius: 12px; }

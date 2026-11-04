@@ -34,7 +34,9 @@ export function ShopSheet({ game, tab, onTab, onAct }: { game: Farm.GameState; t
   const pond = Farm.nextPondUpgrade(game);
   const ranch = Farm.nextRanchUpgrade(game);
   const firstLocked = game.plots.findIndex((plot) => plot.status === "locked");
-  const tabs: [ShopTab, string][] = [["seeds", "Hạt giống"], ["animals", "Vật nuôi"], ["fish", "Cá giống"], ["items", "Vật phẩm"], ["expand", "Mở rộng"]];
+  const spot = Farm.nextSpotUnlock(game);
+  const firstLockedSpot = game.orchard.spots.findIndex((item) => item.status === "locked");
+  const tabs: [ShopTab, string][] = [["seeds", "Hạt giống"], ["trees", "Cây ăn quả"], ["animals", "Vật nuôi"], ["fish", "Cá giống"], ["items", "Vật phẩm"], ["expand", "Mở rộng"]];
   return (
     <>
       <div className="fg-tabs" role="tablist">
@@ -57,6 +59,25 @@ export function ShopSheet({ game, tab, onTab, onAct }: { game: Farm.GameState; t
                 <div className="fg-list__buy">
                   <button type="button" disabled={locked || game.coins < crop.seedPrice} onClick={() => onAct((current) => Farm.buySeeds(current, crop.id, 1))}>{crop.seedPrice} xu</button>
                   <button type="button" disabled={locked || game.coins < crop.seedPrice * 5} onClick={() => onAct((current) => Farm.buySeeds(current, crop.id, 5))}>×5</button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+      {tab === "trees" ? (
+        <ul className="fg-list">
+          {Farm.TREES.map((tree) => {
+            const locked = level < tree.level;
+            return (
+              <li key={tree.id} data-locked={locked || undefined}>
+                <span className="fg-list__icon" aria-hidden="true">{tree.emoji}</span>
+                <div>
+                  <strong>{tree.name} <em>· đang có {game.saplings[tree.id] ?? 0}</em></strong>
+                  <small>{locked ? `Mở ở cấp ${tree.level}` : `Lớn sau ${Farm.formatDuration(tree.growSeconds)}, rồi cứ ${Farm.formatDuration(tree.fruitSeconds)} ra ${tree.yield} × ${tree.sellPrice} xu · +${tree.xp} XP`}</small>
+                </div>
+                <div className="fg-list__buy">
+                  <button type="button" disabled={locked || game.coins < tree.saplingPrice} onClick={() => onAct((current) => Farm.buySapling(current, tree.id, 1))}>{tree.saplingPrice} xu</button>
                 </div>
               </li>
             );
@@ -110,7 +131,7 @@ export function ShopSheet({ game, tab, onTab, onAct }: { game: Farm.GameState; t
         <ul className="fg-list">
           {(Object.keys(Farm.ITEMS) as Farm.ItemId[]).map((id) => {
             const item = Farm.ITEMS[id];
-            const bulk = id === "feed" ? 10 : 5;
+            const bulk = id === "feed" || id === "bait" ? 10 : 5;
             return (
               <li key={id}>
                 <span className="fg-list__icon" aria-hidden="true">{item.emoji}</span>
@@ -137,6 +158,16 @@ export function ShopSheet({ game, tab, onTab, onAct }: { game: Farm.GameState; t
             </div>
             <div className="fg-list__buy">
               {unlock ? <button type="button" disabled={level < unlock.level || game.coins < unlock.cost} onClick={() => onAct((current) => Farm.unlockPlot(current, firstLocked))}>Mở</button> : null}
+            </div>
+          </li>
+          <li>
+            <span className="fg-list__icon" aria-hidden="true">🌳</span>
+            <div>
+              <strong>Thêm chỗ trồng cây <em>· {Farm.unlockedSpotCount(game)}/{Farm.ORCHARD_SPOTS}</em></strong>
+              <small>{spot ? `${spot.cost} xu · cần cấp ${spot.level}. Chỗ mới là bãi cỏ, đào hố rồi trồng.` : "Đã mở hết vườn."}</small>
+            </div>
+            <div className="fg-list__buy">
+              {spot ? <button type="button" disabled={level < spot.level || game.coins < spot.cost} onClick={() => onAct((current) => Farm.unlockSpot(current, firstLockedSpot))}>Mở</button> : null}
             </div>
           </li>
           <li>
@@ -172,6 +203,7 @@ export function BarnSheet({ game, today, onAct, onTruck }: { game: Farm.GameStat
   const entries = Farm.barnEntries(game, today);
   const total = Farm.barnValue(game, today);
   const seeds = Farm.CROPS.filter((crop) => (game.seeds[crop.id] ?? 0) > 0);
+  const saplings = Farm.TREES.filter((tree) => (game.saplings[tree.id] ?? 0) > 0);
   return (
     <>
       <p className="fg-featured">
@@ -202,7 +234,8 @@ export function BarnSheet({ game, today, onAct, onTruck }: { game: Farm.GameStat
       <div className="fg-inventory">
         <p><strong>Túi đồ</strong></p>
         <p>
-          {seeds.length ? seeds.map((crop) => `${crop.emoji} ${game.seeds[crop.id]}`).join(" · ") : "Chưa có hạt giống"} · ✨ {game.items.fertilizer} phân bón · 🍞 {game.items.fishFood} cám · 🥣 {game.items.feed} thức ăn
+          {seeds.length ? seeds.map((crop) => `${crop.emoji} ${game.seeds[crop.id]}`).join(" · ") : "Chưa có hạt giống"}
+          {saplings.length ? ` · cây giống ${saplings.map((tree) => `${tree.emoji} ${game.saplings[tree.id]}`).join(" ")}` : ""} · ✨ {game.items.fertilizer} phân bón · 🍞 {game.items.fishFood} cám · 🥣 {game.items.feed} thức ăn · 🪱 {game.items.bait} mồi câu
         </p>
         <p className="fg-muted">Đã thu hoạch {game.stats.harvested} nông sản · vớt {game.stats.fishCaught} cá · kiếm {coinFormat.format(game.stats.earned)} xu.</p>
       </div>
@@ -240,6 +273,38 @@ export function SeedSheet({
         ))}
       </div>
       <button type="button" className="fg-wide" onClick={onShop}>🏪 Mua thêm hạt ở chợ</button>
+    </>
+  );
+}
+
+export function SaplingSheet({
+  game,
+  current,
+  pending,
+  onChoose,
+  onShop,
+}: {
+  game: Farm.GameState;
+  current: Farm.FruitId;
+  pending: boolean;
+  onChoose: (fruit: Farm.FruitId) => void;
+  onShop: () => void;
+}) {
+  const owned = Farm.TREES.filter((tree) => (game.saplings[tree.id] ?? 0) > 0);
+  return (
+    <>
+      {pending ? <p className="fg-muted">Chọn cây để trồng ngay vào hố vừa chạm.</p> : null}
+      {owned.length === 0 ? <p className="fg-empty">Chưa có cây giống nào.</p> : null}
+      <div className="fg-seed-grid">
+        {owned.map((tree) => (
+          <button key={tree.id} type="button" aria-pressed={tree.id === current} onClick={() => onChoose(tree.id)}>
+            <span aria-hidden="true">{tree.emoji}</span>
+            <strong>{tree.name}</strong>
+            <small>còn {game.saplings[tree.id]} · quả mỗi {Farm.formatDuration(tree.fruitSeconds)}</small>
+          </button>
+        ))}
+      </div>
+      <button type="button" className="fg-wide" onClick={onShop}>🏪 Mua cây giống ở chợ</button>
     </>
   );
 }
@@ -430,7 +495,7 @@ export function GiftSheet({
     <div className="fg-gifts">
       <article>
         <h4>👋 Quà ghé thăm</h4>
-        <p>Mỗi ngày một lần: +{Farm.DAILY_BONUS.coins} xu và +{Farm.DAILY_BONUS.fishFood} cám cá.</p>
+        <p>Mỗi ngày một lần: +{Farm.DAILY_BONUS.coins} xu, +{Farm.DAILY_BONUS.fishFood} cám cá và +{Farm.DAILY_BONUS.bait} mồi câu.</p>
         <button type="button" disabled={!dailyReady} onClick={() => onAct((current) => Farm.claimDailyBonus(current, today))}>
           {dailyReady ? "Nhận quà" : "Đã nhận hôm nay"}
         </button>
@@ -463,8 +528,10 @@ export function GiftSheet({
 export function HelpSheet() {
   return (
     <ol className="fg-help">
-      <li><strong>Ruộng:</strong> chạm ô đất bằng 👋 Tay để tự làm việc phù hợp — cuốc, gieo, chăm hoặc thu hoạch. Các công cụ bên dưới làm từng việc riêng.</li>
+      <li><strong>Ruộng:</strong> chạm ô đất bằng 👋 Tay để tự làm việc phù hợp — cuốc, gieo, chăm hoặc thu hoạch. Các công cụ bên dưới làm từng việc riêng. Giữ và kéo công cụ qua nhiều ô để làm một lượt.</li>
       <li><strong>Chăm cây:</strong> 💧 đất khô làm cây lớn chậm một nửa; 🌿 cỏ và 🐛 sâu làm mất sản lượng lúc thu hoạch. ⭐ là cây đã chín.</li>
+      <li><strong>Vườn cây:</strong> đào hố, trồng cây giống (mua ở chợ), tưới khi đất khô. Cây lớn rồi ra quả mãi; khi có ⭐ thì chạm hoặc kéo qua để rung cây, quả rơi vào kho.</li>
+      <li><strong>Câu cá ở sông:</strong> chạm mặt sông để thả câu. Phao rung nhẹ là cá rỉa, chưa giật; phao chìm hẳn và hiện dấu ! thì chạm ngay để giật. Rồi giữ để kéo, thả tay khi dây căng đỏ kẻo đứt. Mỗi lần cá cắn tốn một 🪱 mồi.</li>
       <li><strong>Ao cá:</strong> mua cá giống ở chợ, cho ăn để cá lớn đủ tốc độ, vớt rác để nước sạch. Cá có ⭐ là đã lớn — chạm để vớt.</li>
       <li><strong>Trang trại:</strong> gà, vịt, cừu, bò tự ăn từ máng và đẻ trứng, cho len, sữa. Chạm sản phẩm trên cỏ (hoặc nút 🧺) để nhặt. Con có biểu tượng bát là đang chờ thức ăn.</li>
       <li><strong>Xưởng:</strong> trứng vịt thành trứng muối, trứng gà + lúa thành bánh, len thành khăn, sữa thành phô mai — đắt hơn bán thô.</li>

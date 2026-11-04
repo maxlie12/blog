@@ -1,8 +1,8 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import * as Farm from "@/lib/farm/engine";
-import { STAGE_LABELS, type ActFn } from "./shared";
+import { STAGE_LABELS, TREE_STAGE_LABELS, type ActFn } from "./shared";
 
 export function PlotCard({
   game,
@@ -76,6 +76,89 @@ export function PlotCard({
       <div className="fg-card__head">
         <strong>{title}</strong>
         <button type="button" className="fg-close" aria-label="Đóng thông tin ô đất" onClick={onClose}>×</button>
+      </div>
+      <p>{detail}</p>
+      {buttons.length ? <div className="fg-card__actions">{buttons}</div> : null}
+    </div>
+  );
+}
+
+export function TreeCard({
+  game,
+  index,
+  sapling,
+  onClose,
+  onAct,
+  onPlant,
+}: {
+  game: Farm.GameState;
+  index: number;
+  sapling: Farm.FruitId;
+  onClose: () => void;
+  onAct: ActFn;
+  onPlant: () => void;
+}) {
+  const spot = game.orchard.spots[index];
+  const level = Farm.levelFromXp(game.xp);
+  // Cutting a tree down asks once more.
+  const [confirmCut, setConfirmCut] = useState(false);
+  let title = "";
+  let detail: ReactNode = null;
+  const buttons: ReactNode[] = [];
+
+  if (spot.status === "locked") {
+    const unlock = Farm.nextSpotUnlock(game);
+    title = "🔒 Chỗ trồng cây chưa mở";
+    detail = unlock ? `Mở với ${unlock.cost} xu · cần cấp ${unlock.level}.` : "Đã mở hết vườn.";
+    if (unlock) {
+      buttons.push(
+        <button key="unlock" type="button" disabled={level < unlock.level || game.coins < unlock.cost} onClick={() => onAct((current) => Farm.unlockSpot(current, index))}>
+          Mở chỗ này · {unlock.cost} xu
+        </button>,
+      );
+    }
+  } else if (spot.status === "grass") {
+    title = "🟩 Bãi cỏ";
+    detail = "Đào hố để trồng một cây ăn quả.";
+    buttons.push(<button key="dig" type="button" onClick={() => onAct((current) => Farm.digSpot(current, index))}>🕳️ Đào hố</button>);
+  } else if (spot.status === "hole") {
+    const def = Farm.TREE_MAP[sapling];
+    title = "🕳️ Hố trống";
+    detail = `Đang chọn ${def.emoji} ${def.name} (còn ${game.saplings[sapling] ?? 0} cây giống).`;
+    buttons.push(<button key="plant" type="button" onClick={onPlant}>🌱 Trồng cây</button>);
+  } else if (spot.tree) {
+    const def = Farm.TREE_MAP[spot.tree];
+    const grown = Farm.isTreeGrown(spot);
+    const ripe = Farm.isTreeRipe(spot);
+    const progress = grown ? Math.min(1, spot.fruit / def.fruitSeconds) : Math.min(1, spot.growth / def.growSeconds);
+    title = `${def.emoji} ${def.name} · ${TREE_STAGE_LABELS[Farm.treeStage(spot)]}`;
+    detail = (
+      <>
+        <span className="fg-progress" aria-hidden="true"><em style={{ width: `${Math.round(progress * 100)}%` }} /></span>
+        {ripe
+          ? `Quả đã chín: rung cây được ${def.yield} ${def.emoji}.`
+          : grown
+            ? `Quả chín sau ~${Farm.formatDuration(Farm.treeSecondsLeft(spot))}.`
+            : `Ra quả đầu sau ~${Farm.formatDuration(Farm.treeSecondsLeft(spot))}.`}
+        {spot.thirsty ? " Đất khô: cây lớn chậm một nửa." : ""}
+      </>
+    );
+    if (ripe) buttons.push(<button key="shake" type="button" onClick={() => onAct((current) => Farm.shakeTree(current, index))}>🧺 Rung cây</button>);
+    if (spot.thirsty) buttons.push(<button key="water" type="button" onClick={() => onAct((current) => Farm.waterTree(current, index))}>💧 Tưới</button>);
+    buttons.push(
+      confirmCut ? (
+        <button key="cut" type="button" className="fg-danger" onClick={() => { setConfirmCut(false); onAct((current) => Farm.removeTree(current, index)); }}>🪓 Chặt thật</button>
+      ) : (
+        <button key="cut" type="button" onClick={() => setConfirmCut(true)}>🪓 Chặt cây</button>
+      ),
+    );
+  }
+
+  return (
+    <div className="fg-card" aria-live="polite">
+      <div className="fg-card__head">
+        <strong>{title}</strong>
+        <button type="button" className="fg-close" aria-label="Đóng thông tin cây" onClick={onClose}>×</button>
       </div>
       <p>{detail}</p>
       {buttons.length ? <div className="fg-card__actions">{buttons}</div> : null}

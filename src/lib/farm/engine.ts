@@ -18,6 +18,9 @@ export type CropId =
   | "watermelon";
 
 export type FishId = "tilapia" | "carp" | "puffer" | "goldfish" | "koi" | "sturgeon";
+/** Fish that live in the river and are caught with a rod (not raised). */
+export type WildFishId = "goby" | "perch" | "prawn" | "catfish" | "snakehead" | "featherback";
+export type FruitId = "lemon" | "orange" | "banana" | "mango" | "coconut";
 
 export interface CropDef {
   id: CropId;
@@ -63,6 +66,57 @@ export const FISHES: FishDef[] = [
   { id: "goldfish", name: "Cá vàng", emoji: "🐠", level: 4, fryPrice: 60, growSeconds: 1800, sellPrice: 145, xp: 18, color: "#f28d34", accent: "#fff0d2" },
   { id: "koi", name: "Cá koi", emoji: "🐟", level: 6, fryPrice: 120, growSeconds: 3600, sellPrice: 300, xp: 34, color: "#fbf5ea", accent: "#df432d" },
   { id: "sturgeon", name: "Cá tầm", emoji: "🦈", level: 8, fryPrice: 250, growSeconds: 7200, sellPrice: 620, xp: 68, color: "#5b6a7e", accent: "#cdd5de" },
+];
+
+export interface WildFishDef {
+  id: WildFishId;
+  name: string;
+  emoji: string;
+  level: number;
+  sellPrice: number;
+  xp: number;
+  /** Relative chance of biting among the fish unlocked at the player's level. */
+  chance: number;
+  /** How hard it pulls, 0..1. Above about 0.65 a line held through a pull can snap. */
+  strength: number;
+  /** Weight range in kg. */
+  weight: [number, number];
+  color: string;
+}
+
+export const WILD_FISHES: WildFishDef[] = [
+  { id: "goby", name: "Cá bống", emoji: "🐟", level: 1, sellPrice: 8, xp: 3, chance: 34, strength: 0.25, weight: [0.05, 0.2], color: "#a08a68" },
+  { id: "perch", name: "Cá rô đồng", emoji: "🐟", level: 1, sellPrice: 12, xp: 4, chance: 30, strength: 0.38, weight: [0.1, 0.35], color: "#6f7d55" },
+  { id: "prawn", name: "Tôm càng", emoji: "🦐", level: 2, sellPrice: 20, xp: 6, chance: 16, strength: 0.45, weight: [0.08, 0.3], color: "#5b7fa0" },
+  { id: "catfish", name: "Cá trê", emoji: "🐟", level: 3, sellPrice: 30, xp: 8, chance: 12, strength: 0.68, weight: [0.3, 1.2], color: "#4b4a44" },
+  { id: "snakehead", name: "Cá lóc", emoji: "🐟", level: 5, sellPrice: 55, xp: 12, chance: 6, strength: 0.78, weight: [0.6, 2.5], color: "#3d4a3a" },
+  { id: "featherback", name: "Cá thát lát", emoji: "🐠", level: 7, sellPrice: 110, xp: 20, chance: 2, strength: 0.92, weight: [0.8, 3.5], color: "#b9c2c6" },
+];
+
+export interface TreeDef {
+  id: FruitId;
+  name: string;
+  fruit: string;
+  emoji: string;
+  level: number;
+  saplingPrice: number;
+  /** Seconds from sapling to a grown tree. */
+  growSeconds: number;
+  /** Seconds for each crop of fruit once the tree is grown. */
+  fruitSeconds: number;
+  yield: number;
+  sellPrice: number;
+  xp: number;
+  leaf: string;
+  color: string;
+}
+
+export const TREES: TreeDef[] = [
+  { id: "lemon", name: "Cây chanh", fruit: "Chanh", emoji: "🍋", level: 1, saplingPrice: 40, growSeconds: 300, fruitSeconds: 240, yield: 4, sellPrice: 5, xp: 4, leaf: "#4f9a3d", color: "#e9d84a" },
+  { id: "orange", name: "Cây cam", fruit: "Cam", emoji: "🍊", level: 2, saplingPrice: 70, growSeconds: 600, fruitSeconds: 360, yield: 5, sellPrice: 7, xp: 6, leaf: "#3f8a3a", color: "#f2902c" },
+  { id: "banana", name: "Cây chuối", fruit: "Chuối", emoji: "🍌", level: 3, saplingPrice: 100, growSeconds: 900, fruitSeconds: 600, yield: 6, sellPrice: 9, xp: 8, leaf: "#6aae45", color: "#f4d35e" },
+  { id: "mango", name: "Cây xoài", fruit: "Xoài", emoji: "🥭", level: 5, saplingPrice: 160, growSeconds: 1800, fruitSeconds: 1200, yield: 5, sellPrice: 20, xp: 14, leaf: "#2f7a3e", color: "#f5a524" },
+  { id: "coconut", name: "Cây dừa", fruit: "Dừa", emoji: "🥥", level: 7, saplingPrice: 240, growSeconds: 3600, fruitSeconds: 2400, yield: 4, sellPrice: 45, xp: 22, leaf: "#5c9d48", color: "#8a6a45" },
 ];
 
 export type AnimalId = "chicken" | "duck" | "sheep" | "cow";
@@ -150,11 +204,14 @@ export const WORKSHOP_MAP = Object.fromEntries(WORKSHOPS.map((item) => [item.id,
 
 export const CROP_MAP = Object.fromEntries(CROPS.map((crop) => [crop.id, crop])) as Record<CropId, CropDef>;
 export const FISH_MAP = Object.fromEntries(FISHES.map((fish) => [fish.id, fish])) as Record<FishId, FishDef>;
+export const WILD_FISH_MAP = Object.fromEntries(WILD_FISHES.map((fish) => [fish.id, fish])) as Record<WildFishId, WildFishDef>;
+export const TREE_MAP = Object.fromEntries(TREES.map((tree) => [tree.id, tree])) as Record<FruitId, TreeDef>;
 
 export const ITEMS = {
   fertilizer: { name: "Phân bón", emoji: "✨", price: 25, note: "Rút ngắn 30% thời gian còn lại của một vụ (mỗi vụ một lần)." },
   fishFood: { name: "Cám cá", emoji: "🍞", price: 8, note: "Một lần cho ăn giữ cả ao no trong 20 phút." },
   feed: { name: "Thức ăn gia súc", emoji: "🥣", price: 3, note: "Vật nuôi tự ăn từ máng: mỗi phần đổi lấy một lượt ra sản phẩm. Xay từ nông sản thì rẻ hơn." },
+  bait: { name: "Mồi câu", emoji: "🪱", price: 2, note: "Câu cá ở sông: mỗi lần cá cắn câu tốn một mồi. Thu dây trước khi cá cắn thì không mất." },
 } as const;
 export type ItemId = keyof typeof ITEMS;
 
@@ -186,6 +243,15 @@ export const RANCH_UPGRADES = [
   { cost: 300, level: 5 },
   { cost: 500, level: 7 },
 ];
+export const ORCHARD_SPOTS = 6;
+export const STARTING_SPOTS = 2;
+/** Cost and level to open the 3rd … 6th tree spot, in that order. */
+export const SPOT_UNLOCKS = [
+  { cost: 80, level: 2 },
+  { cost: 150, level: 3 },
+  { cost: 260, level: 5 },
+  { cost: 420, level: 7 },
+];
 export const MAX_DROPS = 24;
 export const TRUCK = { capacity: 20, tripSeconds: 90, bonus: 1.2 };
 
@@ -207,6 +273,18 @@ export interface Plot {
   weeds: number;
   bugs: number;
   fertilized: boolean;
+}
+
+export type SpotStatus = "locked" | "grass" | "hole" | "tree";
+
+export interface TreeSpot {
+  status: SpotStatus;
+  tree: FruitId | null;
+  /** Seconds of growth towards a grown tree (thirst halves it). */
+  growth: number;
+  /** Seconds into the current crop of fruit, once grown. */
+  fruit: number;
+  thirsty: boolean;
 }
 
 export interface PondFish {
@@ -253,7 +331,7 @@ export interface TruckTrip {
   items: number;
 }
 
-export type GoodsKind = "crop" | "fish" | "product" | "good";
+export type GoodsKind = "crop" | "fish" | "product" | "good" | "fruit" | "wild";
 
 export interface GameState {
   version: 1;
@@ -262,6 +340,7 @@ export interface GameState {
   coins: number;
   xp: number;
   plots: Plot[];
+  orchard: { spots: TreeSpot[] };
   pond: {
     capacityLevel: number;
     fedUntil: number;
@@ -276,12 +355,15 @@ export interface GameState {
     truck: TruckTrip | null;
   };
   seeds: Partial<Record<CropId, number>>;
+  saplings: Partial<Record<FruitId, number>>;
   items: Record<ItemId, number>;
   barn: {
     crops: Partial<Record<CropId, number>>;
     fish: Partial<Record<FishId, number>>;
     products: Partial<Record<ProductId, number>>;
     goods: Partial<Record<GoodId, number>>;
+    fruit: Partial<Record<FruitId, number>>;
+    wild: Partial<Record<WildFishId, number>>;
   };
   lastDailyBonus: string | null;
   lastStudyReward: string | null;
@@ -377,6 +459,42 @@ export function harvestYield(plot: Plot): { amount: number; lost: number } {
   return { amount, lost: base - amount };
 }
 
+export function isTreeGrown(spot: TreeSpot): boolean {
+  return spot.status === "tree" && !!spot.tree && spot.growth >= TREE_MAP[spot.tree].growSeconds;
+}
+
+export function isTreeRipe(spot: TreeSpot): boolean {
+  return isTreeGrown(spot) && spot.fruit >= TREE_MAP[spot.tree as FruitId].fruitSeconds;
+}
+
+/** 0 sapling, 1 young tree, 2 grown. */
+export function treeStage(spot: TreeSpot): 0 | 1 | 2 {
+  if (!spot.tree) return 0;
+  const ratio = spot.growth / TREE_MAP[spot.tree].growSeconds;
+  return ratio >= 1 ? 2 : ratio >= 0.4 ? 1 : 0;
+}
+
+/** Seconds until the next ripe fruit (through the growing years for a young tree). */
+export function treeSecondsLeft(spot: TreeSpot): number {
+  if (!spot.tree) return 0;
+  const def = TREE_MAP[spot.tree];
+  const rate = spot.thirsty ? THIRSTY_GROWTH : 1;
+  if (spot.growth < def.growSeconds) return (def.growSeconds - spot.growth) / rate + def.fruitSeconds;
+  return Math.max(0, def.fruitSeconds - spot.fruit) / rate;
+}
+
+export function unlockedSpotCount(game: GameState): number {
+  return game.orchard.spots.filter((spot) => spot.status !== "locked").length;
+}
+
+export function nextSpotUnlock(game: GameState) {
+  return SPOT_UNLOCKS[unlockedSpotCount(game) - STARTING_SPOTS] ?? null;
+}
+
+export function formatWeight(kg: number): string {
+  return `${kg.toFixed(kg < 1 ? 2 : 1).replace(".", ",")} kg`;
+}
+
 export function waterQuality(trashCount: number): number {
   return Math.max(0.4, 1 - 0.12 * trashCount);
 }
@@ -445,6 +563,8 @@ export function unitPrice(kind: GoodsKind, id: string, dateKey: string): number 
   if (kind === "crop") return cropSellPrice(id as CropId, dateKey);
   if (kind === "fish") return fishSellPrice(id as FishId, dateKey);
   if (kind === "product") return PRODUCT_MAP[id as ProductId].sellPrice;
+  if (kind === "fruit") return TREE_MAP[id as FruitId].sellPrice;
+  if (kind === "wild") return WILD_FISH_MAP[id as WildFishId].sellPrice;
   return GOOD_MAP[id as GoodId].sellPrice;
 }
 
@@ -469,13 +589,16 @@ export function barnEntries(game: GameState, dateKey: string): StockEntry[] {
   };
   for (const good of GOODS) push("good", good.id, good.name, good.emoji, game.barn.goods[good.id]);
   for (const product of PRODUCTS) push("product", product.id, product.name, product.emoji, game.barn.products[product.id]);
+  for (const tree of TREES) push("fruit", tree.id, tree.fruit, tree.emoji, game.barn.fruit[tree.id]);
+  for (const fish of WILD_FISHES) push("wild", fish.id, fish.name, fish.emoji, game.barn.wild[fish.id]);
   for (const fish of FISHES) push("fish", fish.id, fish.name, fish.emoji, game.barn.fish[fish.id], featured.fish === fish.id);
   for (const crop of CROPS) push("crop", crop.id, crop.name, crop.emoji, game.barn.crops[crop.id], featured.crop === crop.id);
   return entries;
 }
 
 function barnBucket(kind: GoodsKind): keyof GameState["barn"] {
-  return kind === "crop" ? "crops" : kind === "fish" ? "fish" : kind === "product" ? "products" : "goods";
+  const buckets: Record<GoodsKind, keyof GameState["barn"]> = { crop: "crops", fish: "fish", product: "products", good: "goods", fruit: "fruit", wild: "wild" };
+  return buckets[kind];
 }
 
 function barnCount(game: GameState, kind: GoodsKind, id: string): number {
@@ -517,6 +640,8 @@ function gainXp(game: GameState, amount: number): { game: GameState; suffix: str
   const unlocked = [
     ...CROPS.filter((crop) => crop.level > before && crop.level <= after).map((crop) => `${crop.emoji} ${crop.name}`),
     ...FISHES.filter((fish) => fish.level > before && fish.level <= after).map((fish) => `${fish.emoji} ${fish.name}`),
+    ...TREES.filter((tree) => tree.level > before && tree.level <= after).map((tree) => `${tree.emoji} ${tree.name}`),
+    ...WILD_FISHES.filter((fish) => fish.level > before && fish.level <= after).map((fish) => `${fish.emoji} ${fish.name} ở sông`),
   ];
   const unlockedText = unlocked.length ? ` Mở khóa: ${unlocked.join(", ")}.` : "";
   return {
@@ -535,6 +660,24 @@ function getPlot(game: GameState, index: number): Plot | null {
   return Number.isInteger(index) && index >= 0 && index < game.plots.length ? game.plots[index] : null;
 }
 
+function getSpot(game: GameState, index: number): TreeSpot | null {
+  return Number.isInteger(index) && index >= 0 && index < game.orchard.spots.length ? game.orchard.spots[index] : null;
+}
+
+function withSpot(game: GameState, index: number, spot: TreeSpot): GameState {
+  const spots = game.orchard.spots.slice();
+  spots[index] = spot;
+  return { ...game, orchard: { ...game.orchard, spots } };
+}
+
+function emptySpot(status: SpotStatus): TreeSpot {
+  return { status, tree: null, growth: 0, fruit: 0, thirsty: false };
+}
+
+function createOrchard(): GameState["orchard"] {
+  return { spots: Array.from({ length: ORCHARD_SPOTS }, (_, index) => emptySpot(index < STARTING_SPOTS ? "grass" : "locked")) };
+}
+
 /* ───────────────────────── creation & time ───────────────────────── */
 
 export function createGame(now: number): GameState {
@@ -545,6 +688,7 @@ export function createGame(now: number): GameState {
     coins: 150,
     xp: 0,
     plots: Array.from({ length: PLOT_COUNT }, (_, index) => emptyPlot(index < STARTING_PLOTS ? "tilled" : "locked")),
+    orchard: createOrchard(),
     pond: {
       capacityLevel: 0,
       fedUntil: now + FEED_DURATION_MS,
@@ -553,8 +697,9 @@ export function createGame(now: number): GameState {
     },
     ranch: createRanch(),
     seeds: { cabbage: 4, carrot: 2 },
-    items: { fertilizer: 1, fishFood: 3, feed: 6 },
-    barn: { crops: {}, fish: {}, products: {}, goods: {} },
+    saplings: { lemon: 1 },
+    items: { fertilizer: 1, fishFood: 3, feed: 6, bait: 8 },
+    barn: { crops: {}, fish: {}, products: {}, goods: {}, fruit: {}, wild: {} },
     lastDailyBonus: null,
     lastStudyReward: null,
     stats: { harvested: 0, fishCaught: 0, earned: 0 },
@@ -582,6 +727,7 @@ export function advance(game: GameState, now: number, seed: number): GameState {
   if (elapsed <= 0) return elapsed < 0 ? { ...game, lastTick: now } : game;
   const random = mulberry32(seed);
   const plots = game.plots.map((plot) => ({ ...plot }));
+  const spots = game.orchard.spots.map((spot) => ({ ...spot }));
   const fish = game.pond.fish.map((item) => ({ ...item }));
   const trash = game.pond.trash.slice();
   const animals = game.ranch.animals.map((item) => ({ ...item }));
@@ -610,6 +756,16 @@ export function advance(game: GameState, now: number, seed: number): GameState {
       if (!plot.thirsty && random() < 0.05 * perMinute) plot.thirsty = true;
       if (plot.weeds < 2 && random() < 0.035 * perMinute) plot.weeds += 1;
       if (plot.bugs < 2 && random() < 0.03 * perMinute) plot.bugs += 1;
+    }
+
+    for (const spot of spots) {
+      if (spot.status !== "tree" || !spot.tree) continue;
+      const def = TREE_MAP[spot.tree];
+      const grow = step * (spot.thirsty ? THIRSTY_GROWTH : 1);
+      if (spot.growth < def.growSeconds) spot.growth = Math.min(def.growSeconds, spot.growth + grow);
+      else if (spot.fruit < def.fruitSeconds) spot.fruit = Math.min(def.fruitSeconds, spot.fruit + grow);
+      else continue;
+      if (!spot.thirsty && random() < 0.04 * perMinute) spot.thirsty = true;
     }
 
     if (fish.length > 0) {
@@ -681,6 +837,7 @@ export function advance(game: GameState, now: number, seed: number): GameState {
     coins,
     stats,
     plots,
+    orchard: { ...game.orchard, spots },
     pond: { ...game.pond, fish, trash },
     ranch: { ...game.ranch, animals, drops, workshops, truck },
     items: { ...game.items, feed },
@@ -788,6 +945,124 @@ export function unlockPlot(game: GameState, index: number): ActionResult {
   if (game.coins < unlock.cost) return fail(game, `Cần ${unlock.cost} xu để mở ô đất này.`);
   const next = withPlot({ ...game, coins: game.coins - unlock.cost }, index, emptyPlot("wild"));
   return { game: next, ok: true, message: `🧱 Đã mở ô đất mới (−${unlock.cost} xu). Cuốc cỏ để bắt đầu trồng.`, tone: "good" };
+}
+
+/* ───────────────────────── orchard ───────────────────────── */
+
+export function digSpot(game: GameState, index: number): ActionResult {
+  const spot = getSpot(game, index);
+  if (!spot) return fail(game, "Không tìm thấy chỗ trồng cây.");
+  if (spot.status === "locked") return fail(game, "Chỗ này chưa mở. Mở thêm ở chợ, mục Mở rộng.");
+  if (spot.status === "hole") return fail(game, "Hố đã đào sẵn, trồng cây giống được rồi.", "info");
+  if (spot.status === "tree") return fail(game, "Chỗ này đang có cây.", "info");
+  const next = gainXp(withSpot(game, index, emptySpot("hole")), 2);
+  return { game: next.game, ok: true, message: `🕳️ Đã đào hố · +2 XP.${next.suffix}`, tone: "good" };
+}
+
+export function plantTree(game: GameState, index: number, fruit: FruitId): ActionResult {
+  const spot = getSpot(game, index);
+  const def = TREE_MAP[fruit];
+  if (!spot || !def) return fail(game, "Không trồng được.");
+  if (spot.status === "locked") return fail(game, "Chỗ này chưa mở.");
+  if (spot.status === "tree") return fail(game, "Chỗ này đang có cây rồi.", "info");
+  if (spot.status === "grass") return fail(game, "Đào hố trước rồi mới trồng được.");
+  if (levelFromXp(game.xp) < def.level) return fail(game, `${def.name} cần cấp ${def.level}.`);
+  const owned = game.saplings[fruit] ?? 0;
+  if (owned < 1) return fail(game, `Hết cây giống ${def.fruit.toLowerCase()}. Mua ở chợ nhé.`);
+  const planted = withSpot({ ...game, saplings: { ...game.saplings, [fruit]: owned - 1 } }, index, { ...emptySpot("tree"), tree: fruit });
+  const next = gainXp(planted, 3);
+  return {
+    game: next.game,
+    ok: true,
+    message: `🌱 Đã trồng ${def.emoji} ${def.name} · lớn sau ${formatDuration(def.growSeconds)}, rồi ra quả mỗi ${formatDuration(def.fruitSeconds)}.${next.suffix}`,
+    tone: "good",
+  };
+}
+
+export function waterTree(game: GameState, index: number): ActionResult {
+  const spot = getSpot(game, index);
+  if (!spot || spot.status !== "tree") return fail(game, "Chỉ tưới chỗ đã có cây.", "info");
+  if (!spot.thirsty) return fail(game, "Đất quanh gốc còn ẩm, chưa cần tưới.", "info");
+  const next = gainXp(withSpot(game, index, { ...spot, thirsty: false }), 2);
+  return { game: next.game, ok: true, message: `💧 Đã tưới cây · +2 XP.${next.suffix}`, tone: "good" };
+}
+
+export function shakeTree(game: GameState, index: number): ActionResult {
+  const spot = getSpot(game, index);
+  if (!spot || spot.status !== "tree" || !spot.tree) return fail(game, "Chỗ này chưa có cây.", "info");
+  const def = TREE_MAP[spot.tree];
+  if (!isTreeGrown(spot)) return fail(game, `${def.name} còn non · ra quả đầu sau ${formatDuration(treeSecondsLeft(spot))}.`, "info");
+  if (!isTreeRipe(spot)) return fail(game, `${def.fruit} chưa chín · còn ${formatDuration(treeSecondsLeft(spot))}.`, "info");
+  const stored = changeBarn(
+    { ...withSpot(game, index, { ...spot, fruit: 0 }), stats: { ...game.stats, harvested: game.stats.harvested + def.yield } },
+    "fruit",
+    def.id,
+    def.yield,
+  );
+  const next = gainXp(stored, def.xp);
+  return { game: next.game, ok: true, message: `🧺 Rung cây: +${def.yield} ${def.emoji} ${def.fruit} · +${def.xp} XP.${next.suffix}`, tone: "good" };
+}
+
+export function removeTree(game: GameState, index: number): ActionResult {
+  const spot = getSpot(game, index);
+  if (!spot || spot.status !== "tree") return fail(game, "Chỗ này chưa có cây.", "info");
+  return { game: withSpot(game, index, emptySpot("hole")), ok: true, message: "🪓 Đã chặt cây. Hố trống, trồng cây khác được.", tone: "info" };
+}
+
+export function unlockSpot(game: GameState, index: number): ActionResult {
+  const spot = getSpot(game, index);
+  if (!spot || spot.status !== "locked") return fail(game, "Chỗ này đã mở rồi.", "info");
+  const unlock = nextSpotUnlock(game);
+  if (!unlock) return fail(game, "Đã mở hết vườn.", "info");
+  if (levelFromXp(game.xp) < unlock.level) return fail(game, `Cần cấp ${unlock.level} để mở thêm chỗ trồng cây.`);
+  if (game.coins < unlock.cost) return fail(game, `Cần ${unlock.cost} xu để mở chỗ này.`);
+  return {
+    game: withSpot({ ...game, coins: game.coins - unlock.cost }, index, emptySpot("grass")),
+    ok: true,
+    message: `🧱 Đã mở thêm chỗ trồng cây (−${unlock.cost} xu). Đào hố để trồng.`,
+    tone: "good",
+  };
+}
+
+export function buySapling(game: GameState, fruit: FruitId, quantity: number): ActionResult {
+  const def = TREE_MAP[fruit];
+  const qty = Math.max(1, Math.floor(quantity));
+  if (!def) return fail(game, "Không có loại cây này.");
+  if (levelFromXp(game.xp) < def.level) return fail(game, `${def.name} mở ở cấp ${def.level}.`);
+  const cost = def.saplingPrice * qty;
+  if (game.coins < cost) return fail(game, `Cần ${cost} xu cho ${qty} cây giống ${def.fruit.toLowerCase()}.`);
+  return {
+    game: { ...game, coins: game.coins - cost, saplings: { ...game.saplings, [fruit]: (game.saplings[fruit] ?? 0) + qty } },
+    ok: true,
+    message: `🛒 Mua ${qty} cây giống ${def.emoji} ${def.fruit.toLowerCase()} (−${cost} xu).`,
+    tone: "good",
+  };
+}
+
+/* ───────────────────────── river fishing ───────────────────────── */
+
+/** What can come up on the hook: a wild fish or, now and then, an old boot. */
+export type WildCatch = WildFishId | "boot";
+
+/** A fish (or boot) landed with the rod: it took one bait. */
+export function landCatch(game: GameState, caught: WildCatch, weight: number): ActionResult {
+  const items = { ...game.items, bait: Math.max(0, game.items.bait - 1) };
+  if (caught === "boot") {
+    const next = gainXp({ ...game, items }, 2);
+    return { game: next.game, ok: true, message: `👢 Câu phải chiếc ủng cũ! Sông sạch hơn · +2 XP.${next.suffix}`, tone: "info" };
+  }
+  const def = WILD_FISH_MAP[caught];
+  if (!def) return fail(game, "Không có loại cá này.");
+  const stored = changeBarn({ ...game, items, stats: { ...game.stats, fishCaught: game.stats.fishCaught + 1 } }, "wild", def.id, 1);
+  const next = gainXp(stored, def.xp);
+  return { game: next.game, ok: true, message: `🎣 Câu được ${def.emoji} ${def.name} ${formatWeight(weight)} · +${def.xp} XP.${next.suffix}`, tone: "good" };
+}
+
+/** The fish got away with the bait. */
+export function loseBait(game: GameState, reason: "late" | "snapped" | "slack"): ActionResult {
+  const text =
+    reason === "late" ? "Cá ăn mất mồi rồi bơi đi. Lần sau giật nhanh hơn nhé." : reason === "snapped" ? "Đứt dây! Thả tay khi dây căng đỏ." : "Dây chùng lâu quá, cá thoát mất.";
+  return { game: { ...game, items: { ...game.items, bait: Math.max(0, game.items.bait - 1) } }, ok: true, message: `🪱 ${text}`, tone: "warn" };
 }
 
 /* ───────────────────────── pond actions ───────────────────────── */
@@ -941,7 +1216,7 @@ export function sellAll(game: GameState, dateKey: string): ActionResult {
     game: {
       ...game,
       coins: game.coins + earned,
-      barn: { crops: {}, fish: {}, products: {}, goods: {} },
+      barn: { crops: {}, fish: {}, products: {}, goods: {}, fruit: {}, wild: {} },
       stats: { ...game.stats, earned: game.stats.earned + earned },
     },
     ok: true,
@@ -1101,7 +1376,7 @@ export function sendTruck(game: GameState, cart: Record<string, number>, now: nu
 
 /* ───────────────────────── rewards ───────────────────────── */
 
-export const DAILY_BONUS = { coins: 30, fishFood: 2 };
+export const DAILY_BONUS = { coins: 30, fishFood: 2, bait: 5 };
 export const STUDY_REWARD = { coins: 50, fertilizer: 1, revisionFertilizer: 1 };
 
 export function claimDailyBonus(game: GameState, dateKey: string): ActionResult {
@@ -1110,11 +1385,11 @@ export function claimDailyBonus(game: GameState, dateKey: string): ActionResult 
     game: {
       ...game,
       coins: game.coins + DAILY_BONUS.coins,
-      items: { ...game.items, fishFood: game.items.fishFood + DAILY_BONUS.fishFood },
+      items: { ...game.items, fishFood: game.items.fishFood + DAILY_BONUS.fishFood, bait: game.items.bait + DAILY_BONUS.bait },
       lastDailyBonus: dateKey,
     },
     ok: true,
-    message: `🎁 Quà ghé thăm: +${DAILY_BONUS.coins} xu, +${DAILY_BONUS.fishFood} cám cá.`,
+    message: `🎁 Quà ghé thăm: +${DAILY_BONUS.coins} xu, +${DAILY_BONUS.fishFood} cám cá, +${DAILY_BONUS.bait} mồi câu.`,
     tone: "good",
   };
 }
@@ -1154,6 +1429,33 @@ const ANIMAL_IDS = ANIMALS.map((item) => item.id);
 const PRODUCT_IDS = PRODUCTS.map((item) => item.id);
 const GOOD_IDS = GOODS.map((item) => item.id);
 const WORKSHOP_IDS = WORKSHOPS.map((item) => item.id);
+const SPOT_STATUSES: SpotStatus[] = ["locked", "grass", "hole", "tree"];
+const FRUIT_IDS = TREES.map((item) => item.id);
+const WILD_IDS = WILD_FISHES.map((item) => item.id);
+
+function parseOrchard(value: unknown): GameState["orchard"] {
+  const fresh = createOrchard();
+  if (!value || typeof value !== "object" || !Array.isArray((value as Record<string, unknown>).spots)) return fresh;
+  const source = (value as { spots: unknown[] }).spots;
+  return {
+    spots: fresh.spots.map((fallback, index) => {
+      const item = source[index] as Record<string, unknown> | undefined;
+      if (!item || typeof item !== "object") return fallback;
+      const status = SPOT_STATUSES.includes(item.status as SpotStatus) ? (item.status as SpotStatus) : fallback.status;
+      const tree = FRUIT_IDS.includes(item.tree as FruitId) ? (item.tree as FruitId) : null;
+      if (status !== "tree") return emptySpot(status);
+      if (!tree) return emptySpot("hole");
+      const def = TREE_MAP[tree];
+      return {
+        status,
+        tree,
+        growth: num(item.growth, 0, 0, def.growSeconds),
+        fruit: num(item.fruit, 0, 0, def.fruitSeconds),
+        thirsty: item.thirsty === true,
+      };
+    }),
+  };
+}
 
 function parseRanch(value: unknown, now: number): GameState["ranch"] {
   if (!value || typeof value !== "object") return createRanch();
@@ -1274,20 +1576,26 @@ export function parseSave(raw: string | null, now: number): GameState | null {
     coins: Math.floor(num(value.coins, fresh.coins)),
     xp: Math.floor(num(value.xp, 0)),
     plots,
+    orchard: parseOrchard(value.orchard),
     pond: { capacityLevel, fedUntil: num(pondSource.fedUntil, 0), fish, trash },
     ranch: parseRanch(value.ranch, now),
     seeds: counts(value.seeds, cropIds),
+    // Saves from before the orchard and river get the same starter sapling and bait as a new farm.
+    saplings: value.orchard ? counts(value.saplings, FRUIT_IDS) : { ...fresh.saplings },
     items: {
       fertilizer: Math.floor(num(items.fertilizer, 0)),
       fishFood: Math.floor(num(items.fishFood, 0)),
       // Saves from before the ranch existed get the same starter feed as a new farm.
       feed: Math.floor(num(items.feed, value.ranch ? 0 : 6)),
+      bait: Math.floor(num(items.bait, value.orchard ? 0 : fresh.items.bait)),
     },
     barn: {
       crops: counts(barn.crops, cropIds),
       fish: counts(barn.fish, fishIds),
       products: counts(barn.products, PRODUCT_IDS),
       goods: counts(barn.goods, GOOD_IDS),
+      fruit: counts(barn.fruit, FRUIT_IDS),
+      wild: counts(barn.wild, WILD_IDS),
     },
     lastDailyBonus: typeof value.lastDailyBonus === "string" ? value.lastDailyBonus : null,
     lastStudyReward: typeof value.lastStudyReward === "string" ? value.lastStudyReward : null,
@@ -1308,9 +1616,14 @@ export function describeAway(before: GameState, after: GameState): string | null
   const fishAfter = after.pond.fish.filter(isFishMature).length;
   const parts: string[] = [];
   if (ripeAfter > ripeBefore) parts.push(`${ripeAfter - ripeBefore} ô đã chín`);
+  const treesBefore = before.orchard.spots.filter(isTreeRipe).length;
+  const treesAfter = after.orchard.spots.filter(isTreeRipe).length;
+  if (treesAfter > treesBefore) parts.push(`${treesAfter - treesBefore} cây có quả chín`);
   if (fishAfter > fishBefore) parts.push(`${fishAfter - fishBefore} cá đã lớn`);
   const problems = after.plots.filter((plot) => plot.thirsty || plot.weeds > 0 || plot.bugs > 0).length;
   if (problems > 0) parts.push(`${problems} ô cần chăm`);
+  const dryTrees = after.orchard.spots.filter((spot) => spot.status === "tree" && spot.thirsty).length;
+  if (dryTrees > 0) parts.push(`${dryTrees} cây cần tưới`);
   if (after.pond.trash.length > before.pond.trash.length) parts.push(`ao có ${after.pond.trash.length} mẩu rác`);
   const newDrops = after.ranch.drops.length - before.ranch.drops.length;
   if (newDrops > 0) parts.push(`${newDrops} sản phẩm chờ nhặt ở trang trại`);

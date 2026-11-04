@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import * as Farm from "@/lib/farm/engine";
 import { getActiveLearnerProfileId, readProfileStorage, writeProfileStorage } from "@/lib/learnerProfiles";
 import { useCozyMusic } from "@/lib/useCozyMusic";
@@ -12,14 +12,16 @@ import {
   type GraphicsChoice,
   type Quality,
 } from "@/lib/farm/quality";
-import type { FarmView, SceneHit } from "@/lib/farm/scene";
+import { idleFishing, type FishingState } from "@/lib/farm/fishing";
+import type { FarmView, FishingLink, SceneHit, SceneTool } from "@/lib/farm/scene";
 import Board2D from "./Board2D";
-import { PlotCard, PondCard, RanchCard } from "./cards";
+import { PlotCard, PondCard, RanchCard, TreeCard } from "./cards";
 import FarmScene3D from "./FarmScene3D";
+import FishingPanel, { type FishingOutcome } from "./FishingPanel";
 import { SHEET_TITLES, coinFormat, type ShopTab, type SheetName } from "./shared";
-import { BarnSheet, GiftSheet, HelpSheet, MillSheet, SeedSheet, Sheet, ShopSheet, TruckSheet, WorkshopSheet } from "./sheets";
+import { BarnSheet, GiftSheet, HelpSheet, MillSheet, SaplingSheet, SeedSheet, Sheet, ShopSheet, TruckSheet, WorkshopSheet } from "./sheets";
 
-type Tool = "hand" | "seed" | "water" | "weed" | "bug" | "fertilize" | "hoe";
+type Tool = SceneTool;
 type Toast = { id: number; text: string; tone: Farm.Tone };
 type Storage = "pending" | "ok" | "unavailable";
 export type PracticeDay = { date: string; intensity: 0 | 1 | 2 };
@@ -35,7 +37,8 @@ interface State {
 type Action =
   | { type: "load"; game: Farm.GameState; message: string | null; storage: Storage }
   | { type: "tick"; now: number; seed: number }
-  | { type: "act"; run: (game: Farm.GameState) => Farm.ActionResult }
+  /** `quiet`: a failure (e.g. a dragged tool passing a plot it cannot work) changes nothing and says nothing. */
+  | { type: "act"; run: (game: Farm.GameState) => Farm.ActionResult; quiet?: boolean }
   | { type: "reset"; now: number }
   | { type: "toast"; text: string; tone: Farm.Tone }
   | { type: "dismiss"; id: number };
@@ -69,6 +72,7 @@ function reducer(state: State, action: Action): State {
     case "act": {
       if (!state.game) return state;
       const result = action.run(state.game);
+      if (action.quiet && !result.ok) return state;
       return {
         ...state,
         game: result.game,
@@ -92,7 +96,7 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-const TOOLS: { id: Tool; icon: string; label: string; hint: string }[] = [
+const FIELD_TOOLS: { id: Tool; icon: string; label: string; hint: string }[] = [
   { id: "hand", icon: "👋", label: "Tay", hint: "Tự chọn việc phù hợp: cuốc, gieo, chăm hoặc thu hoạch" },
   { id: "seed", icon: "🌱", label: "Gieo", hint: "Gieo hạt đang chọn" },
   { id: "water", icon: "💧", label: "Tưới", hint: "Tưới ô bị khô" },
@@ -102,14 +106,27 @@ const TOOLS: { id: Tool; icon: string; label: string; hint: string }[] = [
   { id: "hoe", icon: "⛏️", label: "Cuốc", hint: "Cuốc đất cỏ hoặc gốc đã thu hoạch" },
 ];
 
+const ORCHARD_TOOLS: { id: Tool; icon: string; label: string; hint: string }[] = [
+  { id: "hand", icon: "👋", label: "Tay", hint: "Tự chọn việc: đào hố, trồng, tưới hoặc rung cây lấy quả" },
+  { id: "shovel", icon: "🕳️", label: "Đào hố", hint: "Đào hố trên bãi cỏ" },
+  { id: "sapling", icon: "🌱", label: "Trồng", hint: "Trồng cây giống đang chọn" },
+  { id: "water", icon: "💧", label: "Tưới", hint: "Tưới cây bị khô" },
+];
+
 const VIEWS: { id: FarmView; label: string }[] = [
   { id: "farm", label: "🌾 Ruộng" },
-  { id: "pond", label: "🐟 Ao cá" },
+  { id: "orchard", label: "🌳 Vườn" },
+  { id: "pond", label: "🐟 Ao" },
+  { id: "river", label: "🎣 Sông" },
   { id: "ranch", label: "🐔 Trại" },
 ];
 
+const SHOP_TAB: Record<FarmView, ShopTab> = { farm: "seeds", orchard: "trees", pond: "fish", river: "items", ranch: "animals" };
+
 const HIT_VIEW: Record<SceneHit["kind"], FarmView | null> = {
   plot: "farm",
+  tree: "orchard",
+  river: "river",
   fish: "pond",
   trash: "pond",
   pond: "pond",
@@ -138,6 +155,13 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
   const [sheet, setSheet] = useState<SheetName | null>(null);
   const [shopTab, setShopTab] = useState<ShopTab>("seeds");
   const [pendingPlot, setPendingPlot] = useState<number | null>(null);
+  const [sapling, setSapling] = useState<Farm.FruitId>("lemon");
+  const [selectedSpot, setSelectedSpot] = useState<number | null>(null);
+  const [pendingSpot, setPendingSpot] = useState<number | null>(null);
+  // Fishing state lives outside React state: the panel steps it each frame and the scene draws it.
+  const fishingState = useRef<FishingState>(idleFishing());
+  const fishingInput = useRef<FishingLink["input"]["current"]>({ holding: false, tapped: false, castAt: null });
+  const fishing = useMemo<FishingLink>(() => ({ state: fishingState, input: fishingInput }), []);
   const [graphics, setGraphics] = useState<{ choice: GraphicsChoice; detected: Quality } | null>(null);
   const [webglFailed, setWebglFailed] = useState(false);
   const { game, toast, storage, saveSeq } = state;
@@ -221,6 +245,7 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
   const closeSheet = useCallback(() => {
     setSheet(null);
     setPendingPlot(null);
+    setPendingSpot(null);
   }, []);
 
   useEffect(() => {
@@ -232,8 +257,14 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
     return () => window.removeEventListener("keydown", onKey);
   }, [sheet, closeSheet]);
 
-  const act = useCallback((run: (current: Farm.GameState) => Farm.ActionResult) => dispatch({ type: "act", run }), []);
+  const act = useCallback((run: (current: Farm.GameState) => Farm.ActionResult, quiet = false) => dispatch({ type: "act", run, quiet }), []);
   const say = useCallback((text: string, tone: Farm.Tone = "info") => dispatch({ type: "toast", text, tone }), []);
+  const onFishingOutcome = useCallback((outcome: FishingOutcome, state: FishingState) => {
+    const caught = state.catch;
+    if (outcome === "caught" && caught) act((current) => Farm.landCatch(current, caught, state.weight));
+    else if (outcome === "spooked") say("🎣 Giật sớm quá, cá sợ bỏ đi. Mồi vẫn còn, thả câu lại nhé.");
+    else if (outcome !== "caught") act((current) => Farm.loseBait(current, outcome));
+  }, [act, say]);
   const onUnavailable = useCallback(() => {
     setWebglFailed(true);
     dispatch({ type: "toast", text: "Thiết bị không hỗ trợ 3D, chuyển sang bản 2D.", tone: "info" });
@@ -270,24 +301,30 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
 
   function changeView(next: FarmView) {
     setView(next);
+    // Each place has its own tools; start again with the hand.
+    if (next !== view) setTool("hand");
     if (next !== "farm") setSelectedPlot(null);
+    if (next !== "orchard") setSelectedSpot(null);
   }
 
-  function plantInto(index: number, crop: Farm.CropId) {
+  function plantInto(index: number, crop: Farm.CropId, quiet = false) {
     if ((game?.seeds[crop] ?? 0) < 1) {
+      if (quiet) return;
       say(`Hết hạt ${Farm.CROP_MAP[crop].name}. Mua thêm ở chợ nhé.`, "warn");
       openShop("seeds");
       return;
     }
-    act((current) => Farm.plant(current, index, crop));
+    act((current) => Farm.plant(current, index, crop), quiet);
   }
 
-  function needSeedFor(index: number) {
+  function needSeedFor(index: number, drag = false) {
     if (!game) return;
     if ((game.seeds[seed] ?? 0) > 0) {
-      plantInto(index, seed);
+      plantInto(index, seed, drag);
       return;
     }
+    // A dragged tool never opens a sheet halfway through the drag.
+    if (drag) return;
     setPendingPlot(index);
     if (ownedSeeds.length === 0) {
       say("Túi hạt đang trống — mua hạt ở chợ trước nhé.", "warn");
@@ -297,35 +334,76 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
     setSheet("seeds");
   }
 
-  function smartPlot(index: number) {
+  function smartPlot(index: number, drag: boolean) {
     if (!game) return;
     const plot = game.plots[index];
     if (plot.status === "locked") return;
-    if (plot.status === "wild" || plot.status === "withered") return act((current) => Farm.hoe(current, index));
-    if (plot.status === "tilled") return needSeedFor(index);
-    if (Farm.isRipe(plot)) return act((current) => Farm.harvest(current, index));
-    if (plot.bugs > 0) return act((current) => Farm.catchBug(current, index));
-    if (plot.weeds > 0) return act((current) => Farm.pullWeed(current, index));
-    if (plot.thirsty) return act((current) => Farm.water(current, index));
+    if (plot.status === "wild" || plot.status === "withered") return act((current) => Farm.hoe(current, index), drag);
+    if (plot.status === "tilled") return needSeedFor(index, drag);
+    if (Farm.isRipe(plot)) return act((current) => Farm.harvest(current, index), drag);
+    if (plot.bugs > 0) return act((current) => Farm.catchBug(current, index), drag);
+    if (plot.weeds > 0) return act((current) => Farm.pullWeed(current, index), drag);
+    if (plot.thirsty) return act((current) => Farm.water(current, index), drag);
   }
 
-  function actOnPlot(index: number) {
-    setSelectedPlot(index);
+  /** `drag`: the tool was dragged onto this plot after the first one, so failures stay quiet. */
+  function actOnPlot(index: number, drag = false) {
+    // A tap shows the plot's card; a drag across plots hides it so it does not cover the field.
+    setSelectedPlot(drag ? null : index);
     switch (tool) {
-      case "hand":
-        return smartPlot(index);
       case "seed":
-        return needSeedFor(index);
+        return needSeedFor(index, drag);
       case "water":
-        return act((current) => Farm.water(current, index));
+        return act((current) => Farm.water(current, index), drag);
       case "weed":
-        return act((current) => Farm.pullWeed(current, index));
+        return act((current) => Farm.pullWeed(current, index), drag);
       case "bug":
-        return act((current) => Farm.catchBug(current, index));
+        return act((current) => Farm.catchBug(current, index), drag);
       case "fertilize":
-        return act((current) => Farm.fertilize(current, index));
+        return act((current) => Farm.fertilize(current, index), drag);
       case "hoe":
-        return act((current) => Farm.hoe(current, index));
+        return act((current) => Farm.hoe(current, index), drag);
+      default:
+        return smartPlot(index, drag);
+    }
+  }
+
+  function needSaplingFor(index: number, drag = false) {
+    if (!game) return;
+    if ((game.saplings[sapling] ?? 0) > 0) return act((current) => Farm.plantTree(current, index, sapling), drag);
+    if (drag) return;
+    setPendingSpot(index);
+    if (!Farm.TREES.some((tree) => (game.saplings[tree.id] ?? 0) > 0)) {
+      say("Chưa có cây giống — mua ở chợ trước nhé.", "warn");
+      openShop("trees");
+      return;
+    }
+    setSheet("saplings");
+  }
+
+  function smartSpot(index: number, drag: boolean) {
+    if (!game) return;
+    const spot = game.orchard.spots[index];
+    if (spot.status === "locked") return;
+    if (spot.status === "grass") return act((current) => Farm.digSpot(current, index), drag);
+    if (spot.status === "hole") return needSaplingFor(index, drag);
+    if (Farm.isTreeRipe(spot)) return act((current) => Farm.shakeTree(current, index), drag);
+    if (spot.thirsty) return act((current) => Farm.waterTree(current, index), drag);
+    // Nothing to do yet: say how long until the fruit.
+    if (!drag) act((current) => Farm.shakeTree(current, index));
+  }
+
+  function actOnSpot(index: number, drag = false) {
+    setSelectedSpot(drag ? null : index);
+    switch (tool) {
+      case "shovel":
+        return act((current) => Farm.digSpot(current, index), drag);
+      case "sapling":
+        return needSaplingFor(index, drag);
+      case "water":
+        return act((current) => Farm.waterTree(current, index), drag);
+      default:
+        return smartSpot(index, drag);
     }
   }
 
@@ -368,17 +446,22 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
   }
 
   function handleHit(hit: SceneHit) {
+    // A sheet opened part-way through a drag (e.g. to choose seeds): ignore the rest of the drag.
+    if (sheet) return;
     if (hit.kind === "barn") return setSheet("barn");
-    if (hit.kind === "shop") return openShop(view === "pond" ? "fish" : view === "ranch" ? "animals" : "seeds");
+    if (hit.kind === "shop") return openShop(SHOP_TAB[view]);
     const target = HIT_VIEW[hit.kind];
     if (target && target !== view) {
       changeView(target);
       if (hit.kind === "plot") setSelectedPlot(hit.index);
+      if (hit.kind === "tree") setSelectedSpot(hit.index);
       return;
     }
     switch (hit.kind) {
       case "plot":
-        return actOnPlot(hit.index);
+        return actOnPlot(hit.index, hit.drag);
+      case "tree":
+        return actOnSpot(hit.index, hit.drag);
       case "fish":
         return actOnFish(hit.id);
       case "trash":
@@ -402,7 +485,32 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
       setSheet("seeds");
       return;
     }
+    if (next === "sapling" && (tool === "sapling" || (game?.saplings[sapling] ?? 0) < 1)) {
+      setTool("sapling");
+      setSheet("saplings");
+      return;
+    }
     setTool(next);
+  }
+
+  function chooseSapling(fruit: Farm.FruitId) {
+    setSapling(fruit);
+    setTool((current) => (current === "hand" ? "hand" : "sapling"));
+    const target = pendingSpot;
+    setSheet(null);
+    setPendingSpot(null);
+    if (target !== null) act((current) => Farm.plantTree(current, target, fruit));
+    else say(`Đã chọn cây giống ${Farm.TREE_MAP[fruit].emoji} ${Farm.TREE_MAP[fruit].fruit.toLowerCase()}.`);
+  }
+
+  /** A press for the fishing round, aimed at a spot on the water when `at` is given. */
+  function pressRiver(at: [number, number] | null) {
+    fishingInput.current.tapped = true;
+    fishingInput.current.holding = true;
+    fishingInput.current.castAt = at;
+  }
+  function releaseRiver() {
+    fishingInput.current.holding = false;
   }
 
   function chooseSeed(crop: Farm.CropId) {
@@ -430,6 +538,8 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
   }
 
   const selected = selectedPlot !== null && view === "farm" ? game.plots[selectedPlot] : null;
+  const tools = view === "orchard" ? ORCHARD_TOOLS : FIELD_TOOLS;
+  const saplingDef = Farm.TREE_MAP[sapling];
 
   return (
     <section ref={rootRef} className="fg" aria-label="Game nông trại, ao cá và trang trại">
@@ -440,6 +550,8 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
             game={game}
             view={view}
             selectedPlot={view === "farm" ? selectedPlot : null}
+            tool={tool}
+            fishing={fishing}
             quality={quality}
             adaptive={graphics.choice === "auto"}
             onHit={handleHit}
@@ -451,7 +563,11 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
             game={game}
             view={view}
             selectedPlot={selectedPlot}
-            onPlot={actOnPlot}
+            selectedSpot={selectedSpot}
+            onPlot={(index) => actOnPlot(index)}
+            onSpot={(index) => actOnSpot(index)}
+            onRiverPress={pressRiver}
+            onRiverRelease={releaseRiver}
             onFish={actOnFish}
             onTrash={(id) => act((current) => Farm.removeTrash(current, id))}
             onAnimal={describeAnimal}
@@ -483,7 +599,7 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
           {toast ? <div key={toast.id} className="fg-toast" data-tone={toast.tone} role="status">{toast.text}</div> : null}
 
           <div className="fg-side">
-            <button type="button" onClick={() => openShop(view === "pond" ? "fish" : view === "ranch" ? "animals" : "seeds")}><span aria-hidden="true">🏪</span>Chợ</button>
+            <button type="button" onClick={() => openShop(SHOP_TAB[view])}><span aria-hidden="true">🏪</span>Chợ</button>
             <button type="button" onClick={() => setSheet("barn")}><span aria-hidden="true">📦</span>Kho{barnCount > 0 ? <b>{barnCount}</b> : null}</button>
             <button type="button" onClick={() => setSheet("gifts")}><span aria-hidden="true">🎁</span>Quà{dailyReady || studyReady ? <b className="fg-dot" aria-label="có quà chưa nhận">!</b> : null}</button>
             <button type="button" onClick={() => setSheet("help")}><span aria-hidden="true">❔</span>Cách chơi</button>
@@ -495,6 +611,25 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
           <div className="fg-bottom">
             {view === "farm" && selected && selectedPlot !== null ? (
               <PlotCard game={game} index={selectedPlot} seed={seed} onClose={() => setSelectedPlot(null)} onAct={act} onPlant={() => needSeedFor(selectedPlot)} />
+            ) : null}
+            {view === "orchard" && selectedSpot !== null ? (
+              <TreeCard key={selectedSpot} game={game} index={selectedSpot} sapling={sapling} onClose={() => setSelectedSpot(null)} onAct={act} onPlant={() => needSaplingFor(selectedSpot)} />
+            ) : null}
+            {view === "river" ? (
+              <FishingPanel
+                link={fishing}
+                xp={game.xp}
+                bait={game.items.bait}
+                showWater={mode === "2d"}
+                onPress={() => pressRiver(null)}
+                onRelease={releaseRiver}
+                onOutcome={onFishingOutcome}
+                onNoBait={() => {
+                  say("Hết mồi câu. Mua mồi ở chợ (mục Vật phẩm) hoặc nhận quà hằng ngày.", "warn");
+                  openShop("items");
+                }}
+                onShop={() => openShop("items")}
+              />
             ) : null}
             {view === "pond" ? (
               <PondCard
@@ -515,15 +650,15 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
                 onBuy={() => openShop("animals")}
               />
             ) : null}
-            {view === "farm" ? (
-              <div className="fg-tools" role="toolbar" aria-label="Công cụ làm ruộng">
-                {TOOLS.map((item) => {
-                  const icon = item.id === "seed" ? seedDef.emoji : item.icon;
-                  const badge = item.id === "seed" ? game.seeds[seed] ?? 0 : item.id === "fertilize" ? game.items.fertilizer : null;
+            {view === "farm" || view === "orchard" ? (
+              <div className="fg-tools" role="toolbar" aria-label={view === "farm" ? "Công cụ làm ruộng" : "Công cụ làm vườn"}>
+                {tools.map((item) => {
+                  const icon = item.id === "seed" ? seedDef.emoji : item.id === "sapling" ? saplingDef.emoji : item.icon;
+                  const badge = item.id === "seed" ? game.seeds[seed] ?? 0 : item.id === "sapling" ? game.saplings[sapling] ?? 0 : item.id === "fertilize" ? game.items.fertilizer : null;
                   return (
                     <button key={item.id} type="button" title={item.hint} aria-pressed={tool === item.id} onClick={() => chooseTool(item.id)}>
                       <span aria-hidden="true">{icon}</span>
-                      {item.id === "seed" ? seedDef.name : item.label}
+                      {item.id === "seed" ? seedDef.name : item.id === "sapling" ? saplingDef.fruit : item.label}
                       {badge !== null ? <b>{badge}</b> : null}
                     </button>
                   );
@@ -538,6 +673,7 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
             {sheet === "shop" ? <ShopSheet game={game} tab={shopTab} onTab={setShopTab} onAct={act} /> : null}
             {sheet === "barn" ? <BarnSheet game={game} today={today} onAct={act} onTruck={() => setSheet("truck")} /> : null}
             {sheet === "seeds" ? <SeedSheet game={game} current={seed} pending={pendingPlot !== null} onChoose={chooseSeed} onShop={() => openShop("seeds")} /> : null}
+            {sheet === "saplings" ? <SaplingSheet game={game} current={sapling} pending={pendingSpot !== null} onChoose={chooseSapling} onShop={() => openShop("trees")} /> : null}
             {sheet === "gifts" ? <GiftSheet game={game} today={today} practice={practice} dailyReady={dailyReady} onAct={act} /> : null}
             {sheet === "mill" ? <MillSheet game={game} onAct={act} onShop={() => openShop("items")} /> : null}
             {sheet === "workshops" ? <WorkshopSheet game={game} onAct={act} /> : null}

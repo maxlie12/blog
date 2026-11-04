@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { GameState } from "@/lib/farm/engine";
 import type { Quality } from "@/lib/farm/quality";
-import type { FarmSceneController, FarmView, SceneHit } from "@/lib/farm/scene";
+import type { FarmSceneController, FarmView, FishingLink, SceneHit, SceneTool } from "@/lib/farm/scene";
 
 /**
  * Mounts the three.js farm. three.js and the scene builder are imported on demand, so the page
@@ -14,6 +14,8 @@ export default function FarmScene3D({
   game,
   view,
   selectedPlot,
+  tool,
+  fishing,
   quality,
   adaptive,
   onHit,
@@ -23,6 +25,9 @@ export default function FarmScene3D({
   game: GameState;
   view: FarmView;
   selectedPlot: number | null;
+  tool: SceneTool;
+  /** Shared with the fishing panel; read once when the scene is made. */
+  fishing: FishingLink;
   quality: Quality;
   adaptive: boolean;
   onHit: (hit: SceneHit) => void;
@@ -31,8 +36,8 @@ export default function FarmScene3D({
 }) {
   const mountRef = useRef<HTMLDivElement>(null);
   const controllerRef = useRef<FarmSceneController | null>(null);
-  const latestRef = useRef({ game, view, selectedPlot });
-  const settingsRef = useRef({ quality, adaptive });
+  const latestRef = useRef({ game, view, selectedPlot, tool });
+  const settingsRef = useRef({ quality, adaptive, fishing });
   const callbacksRef = useRef({ onHit, onUnavailable, onDowngrade });
 
   useEffect(() => {
@@ -40,13 +45,14 @@ export default function FarmScene3D({
   }, [onHit, onUnavailable, onDowngrade]);
 
   useEffect(() => {
-    latestRef.current = { game, view, selectedPlot };
+    latestRef.current = { game, view, selectedPlot, tool };
     const controller = controllerRef.current;
     if (!controller) return;
     controller.update(game);
     controller.setView(view);
     controller.setSelectedPlot(selectedPlot);
-  }, [game, view, selectedPlot]);
+    controller.setTool(tool);
+  }, [game, view, selectedPlot, tool]);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -65,11 +71,13 @@ export default function FarmScene3D({
           adaptive: settingsRef.current.adaptive,
           onHit: (hit) => callbacksRef.current.onHit(hit),
           onDowngrade: (note) => callbacksRef.current.onDowngrade(note),
+          fishing: settingsRef.current.fishing,
         });
         const latest = latestRef.current;
         controller.update(latest.game);
         controller.setView(latest.view);
         controller.setSelectedPlot(latest.selectedPlot);
+        controller.setTool(latest.tool);
         controllerRef.current = controller;
       })
       .catch(() => {
