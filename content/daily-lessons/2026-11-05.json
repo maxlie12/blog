@@ -1,0 +1,85 @@
+{
+  "date": "2026-11-05",
+  "title": "Mốc 28 ngày — kiểm tra nhẹ, không tăng độ khó",
+  "kind": "monthly-test",
+  "note": "Mốc kiểm tra theo lịch tính từ 09/10/2026, không phải xác nhận đã học đủ 28 ngày. Chưa có bài làm mới nên giữ B1+ tự đánh giá; không suy ra tiến bộ hoặc chuyển bước chu kỳ đang học. Chỉ cần nhiệm vụ nghe 5 phút; ba kỹ năng còn lại và tiếng Trung có thể làm ở các phiên rảnh riêng, không phải backlog bắt buộc. Nếu đã luyện đoạn Cambridge này, chọn một hội thoại chưa luyện trên cùng trang và ghi rõ.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-05-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Nhiệm vụ chính 5 phút — nghe một hội thoại chưa luyện",
+      "level": "B1+ self-report / B1–B2 source",
+      "instructions": "Bài đánh giá do trợ lý soạn, không phải đề thi hoặc thang điểm Cambridge/IELTS/TOEIC chính thức. Không dùng AI sửa bản đầu. Cambridge Listening to dialogues là nguồn công khai miễn phí, B1–B2, thời lượng toàn hoạt động 5–10 phút, có bài nghe và câu hỏi. Mở nguồn, chọn một hội thoại chưa luyện; nghe tối đa hai lượt, chưa xem đáp án hoặc chữ nếu nguồn có. Chỉ dùng 5 phút hôm nay; chưa xong có thể dừng.",
+      "material": "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues",
+      "exercises": "Ghi bằng tiếng Anh 2–3 câu: người nói đang trao đổi việc gì; một chi tiết bạn nghe rõ; một điều còn chưa chắc. Ghi số lượt nghe và có dùng chữ/hỗ trợ không. Nếu làm câu hỏi của nguồn, chỉ ghi kết quả sau khi đã nộp lựa chọn của mình; không đoán transcript nếu nguồn không cung cấp.",
+      "completionCriteria": "Lưu 2–3 câu do bạn tự tạo, điều chưa chắc, số lượt nghe và thời gian thực học. Done chỉ ghi thực hành; chưa quy đổi điểm hay CEFR. Có thể gửi bản này về ChatGPT để nhận phản hồi."
+    },
+    {
+      "id": "daily-2026-11-05-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — đọc văn bản mới và tìm bằng chứng",
+      "level": "B1+ diagnostic task",
+      "instructions": "Bài đánh giá do trợ lý soạn, không phải đề thi hoặc thang điểm Cambridge/IELTS/TOEIC chính thức. Không dùng AI sửa bản đầu. Đoạn dưới do trợ lý tự viết mới cho lần kiểm tra này, không phải transcript Cambridge. Đọc một lượt, sau đó trả lời bằng lời của bạn.",
+      "material": "On Monday, a small development team tried a new way of handling questions. Instead of answering every message immediately, they checked routine messages at two agreed times. Urgent problems could still reach the team through a phone call. At first, one designer worried that waiting would slow decisions. By Friday, the team had completed its planned tasks, but a client had waited longer than expected for a simple answer. The team decided to keep the trial for another week, add a named contact for client questions, and record both completed tasks and response times before making a permanent decision.",
+      "exercises": "Trả lời ba câu: 1) Vì sao nhóm chưa đưa ra quyết định lâu dài? 2) Kết quả tích cực và bất tiện nào được nêu? 3) Họ sẽ dùng hai loại thông tin nào để đánh giá tuần kế tiếp? Với mỗi câu, chỉ ra một cụm ngắn trong đoạn làm bằng chứng; phân biệt chi tiết được nêu và suy luận của bạn.",
+      "completionCriteria": "Lưu ba câu trả lời cùng bằng chứng và thời gian đọc; không mở bản dịch trước bản đầu. Gửi ChatGPT nếu muốn được kiểm tra độ khớp ý, chưa tự gán điểm CEFR."
+    },
+    {
+      "id": "daily-2026-11-05-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — tự nói về một lựa chọn thực tế",
+      "level": "B1+ diagnostic task",
+      "instructions": "Bài đánh giá do trợ lý soạn, không phải đề thi hoặc thang điểm Cambridge/IELTS/TOEIC chính thức. Không dùng AI sửa bản đầu. Tình huống độc lập do trợ lý soạn; không cần hoàn thành bài đọc trước. Dành một phút ghi tối đa bốn từ khóa, rồi nói 45–60 giây.",
+      "material": null,
+      "exercises": "Bạn chỉ có 10 phút rảnh sau giờ làm. Bạn chọn ôn bài cũ hay học bài mới hôm nay? Nêu lựa chọn, lý do, một ví dụ thật và một hạn chế. Không viết toàn đoạn trước khi nói. Gửi ChatGPT audio nếu muốn nhận xét phát âm; nếu chỉ gõ nội dung, chỉ có thể nhận xét ý và ngôn ngữ, không chấm âm thanh.",
+      "completionCriteria": "Tự nói một lượt rồi ghi lại 2–3 câu đã thực sự nói và chỗ bị bí. Audio gửi ChatGPT là tùy chọn, không ghi vào repo. Done không đồng nghĩa nói đạt B2."
+    },
+    {
+      "id": "daily-2026-11-05-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5–10 phút — viết tin nhắn có mục đích",
+      "level": "B1+ diagnostic task",
+      "instructions": "Bài đánh giá do trợ lý soạn, không phải đề thi hoặc thang điểm Cambridge/IELTS/TOEIC chính thức. Không dùng AI sửa bản đầu. Nhiệm vụ viết mới, không phụ thuộc bài đọc/nghe. Giữ lại bản đầu trước khi nhận sửa.",
+      "material": null,
+      "exercises": "Viết 60–80 từ bằng tiếng Anh cho một đồng nghiệp: đề nghị đổi cuộc trao đổi từ tối nay sang trưa mai, giải thích ngắn lý do, đề xuất một giờ cụ thể và cách xử lý nếu có việc khẩn cấp. Tự chọn các chi tiết; chưa xem bài mẫu. Gửi ChatGPT bản đầu và số phút để nhận một điểm mạnh, một lỗi ưu tiên và một nhiệm vụ viết lại ngắn.",
+      "completionCriteria": "Lưu bản đầu tự viết, thời gian và hỗ trợ đã dùng. Chỉ so sánh tiến bộ khi có bài làm trước tương ứng; hiện chưa đủ bằng chứng để dự đoán điểm thi."
+    },
+    {
+      "id": "daily-2026-11-05-zh-writing",
+      "language": "zh",
+      "skill": "writing",
+      "title": "Tùy chọn 5 phút — nói nhu cầu rồi đổi đồ uống",
+      "level": "Beginner practical task",
+      "instructions": "Bài luyện do trợ lý soạn, không phải bài/đề chính thức của Mandarin Bean hoặc HSK. Mandarin Bean dùng trên web, có hội thoại, pinyin bật/tắt và audio; văn bản/audio miễn phí, bài tập và bản dịch đầy đủ yêu cầu Premium. Nghe một lượt nếu tiện rồi luyện câu ở Learning; không cần cài app hoặc mua gói.",
+      "material": "https://mandarinbean.com/im-thirsty/",
+      "exercises": "Nhớ lại hai cụm chỉ nhu cầu. Đọc mẫu một lượt, che cả chữ và pinyin; gõ một câu mới để gọi đồ uống khác, thêm một chi tiết bạn tự chọn, rồi nói câu đó. Nếu bị bí, mở gợi ý một lần và ghi rõ. Viết tay một chữ là tùy chọn, không lưu và không tự chấm.",
+      "completionCriteria": "Chỉ Done sau khi tự gõ câu mới và đọc thành tiếng, không chép nguyên mẫu. Không suy ra trình độ từ số ngày Duolingo.",
+      "chinesePractice": {
+        "sentence": "我想喝水。",
+        "translation": "Tôi muốn uống nước.",
+        "tokens": [
+          {
+            "hanzi": "我",
+            "pinyin": "wǒ",
+            "meaning": "tôi"
+          },
+          {
+            "hanzi": "想",
+            "pinyin": "xiǎng",
+            "meaning": "muốn"
+          },
+          {
+            "hanzi": "喝水",
+            "pinyin": "hē shuǐ",
+            "meaning": "uống nước"
+          }
+        ],
+        "outputPrompt": "Che mẫu, đổi đồ uống và thêm một chi tiết để gõ một câu mới của riêng bạn, rồi nói không nhìn chữ."
+      }
+    }
+  ]
+}
