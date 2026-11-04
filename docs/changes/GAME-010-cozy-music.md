@@ -58,6 +58,7 @@ Both games are silent. The owner wants a little cozy music while building and fa
       it when scrolled away; no console errors. The two failures: the test browser let the village
       start before any tap; on a fresh page load real browsers block sound until the first tap, and
       the code then waits for it.
+- [x] Vercel build + production deploy (`0a138ca`).
 
 ## Result
 

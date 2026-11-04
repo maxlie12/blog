@@ -75,7 +75,7 @@ and nothing to plant that keeps giving. Actions do not feel like doing the work.
       page and the five view buttons fit; no console errors. Screenshots reviewed (river, reeling,
       catch, orchard with ripe and dry trees, falling fruit, tool in hand, 2D river and orchard).
 - [x] Draw calls per view on the low preset: 10–42.
-- [ ] Vercel build + production deploy.
+- [x] Vercel build + production deploy (`af242ce`). Village main suite 41/41 with the music button.
 
 ## Result
 
