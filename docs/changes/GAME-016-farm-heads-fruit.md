@@ -4,7 +4,7 @@
 
 - **Issue:** `GAME-016` (owner request, 2026-11-06: animals should bend their neck down to eat
   instead of tipping the whole body; update the look of the fruit)
-- **Status:** in progress
+- **Status:** done (live page check by owner)
 - **Owner:** Claude
 - **Date:** 2026-11-06
 - **Builds on:** `GAME-015-farm-legs-grazing-fish.md`, `docs/LEARNING-FARM.md`
@@ -61,7 +61,7 @@ simple shapes with one colour.
 - [x] Worst case (all twelve plots ripe, six trees fruiting), triangles per frame before → after:
       low fields 232k → 182k (tomatoes) and 191k → 215k (strawberries), orchard 203k → 214k;
       high 630k → 661k and 635k → 667k.
-- [ ] Vercel build + production deploy.
+- [x] Vercel build + production deploy (`a27aba4`).
 
 ## Result
 
