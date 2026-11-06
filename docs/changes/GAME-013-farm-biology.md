@@ -76,7 +76,7 @@ grown and produce around the clock. There is no time of day and no season.
       coins without covering the view or side buttons.
 - [x] Screenshots reviewed: morning, dusk and night; autumn and winter; chicks and ducklings, the
       lamb, sleeping animals; phone HUD.
-- [ ] Vercel build + production deploy.
+- [x] Vercel build + production deploy (`4bbddef`).
 
 ## Result
 
