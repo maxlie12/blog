@@ -64,6 +64,8 @@ import {
 } from "./engine";
 import { isNibbling, type FishingInput, type FishingState } from "./fishing";
 import { QUALITY_PRESETS, type Quality } from "./quality";
+import { NO_COVER, ZOOM_MAX, clampZoom, coverLift, defaultHeight, isNarrow, panLimits, zoomMin, type Cover } from "./view";
+import { DUCK_POND, FIXTURES, LANE, PEN_OF, PEN_ROOM, RANCH_BOUNDS, TOP_LEVEL, TROUGH_OF, fixtureRect, inDuckPond, inside, penRect, walkable, type PenId } from "./ranchLayout";
 
 export type FarmView = "farm" | "orchard" | "pond" | "river" | "ranch";
 /** The tool in the player's hand; it decides the model that follows a drag. */
@@ -89,12 +91,21 @@ export type SceneHit =
   | { kind: "truck" }
   | { kind: "incubator" };
 
+/** Where the player's zoom stands, for the zoom buttons. */
+export interface ZoomState {
+  atMin: boolean;
+  atMax: boolean;
+  /** Zoomed or panned away from the area's default framing. */
+  moved: boolean;
+}
+
 export interface SceneOptions {
   quality: Quality;
   /** Measure frame rate and step quality down on slow devices. */
   adaptive: boolean;
   onHit: (hit: SceneHit) => void;
   onDowngrade?: (note: string) => void;
+  onZoom?: (state: ZoomState) => void;
   fishing?: FishingLink;
 }
 
@@ -103,6 +114,14 @@ export interface FarmSceneController {
   setView(view: FarmView): void;
   setSelectedPlot(index: number | null): void;
   setTool(tool: SceneTool): void;
+  /** Zoom by a factor about the middle of the screen (above 1 is closer). */
+  zoomBy(factor: number): void;
+  /** Move the view by a share of the screen (x to the right, y up). */
+  panBy(x: number, y: number): void;
+  /** Back to the area's default framing. */
+  resetZoom(): void;
+  /** Pixels the page's own bars and cards cover at the top and bottom of the canvas. */
+  setCover(top: number, bottom: number): void;
   dispose(): void;
 }
 
@@ -131,28 +150,30 @@ const POND_CENTER = new THREE.Vector3(6.1, 0, 0.9);
 const POND_RX = 3.7;
 const POND_RZ = 2.8;
 const WATER_Y = 0.27;
-const PASTURE = { x: 0.8, z: 8.9, hx: 4, hz: 2.3 };
 const ROAD_Z = 5.4;
 const TRUCK_PARK_X = 3.1;
 const ROAD_END_X = 15.2;
-const TROUGH: [number, number] = [-2.2, 7.35];
 const WORKSHOP_SPOTS: Record<WorkshopId, [number, number]> = {
   saltery: [6.9, 7.35],
   bakery: [9.25, 8.15],
   loom: [6.9, 9.95],
   dairy: [9.25, 10.75],
 };
-/** The incubator hut, just south of the pasture. */
-const INCUBATOR_SPOT: [number, number] = [1.0, 12.55];
 const PLOT_PITCH = 2.05;
 const PLOT_SIZE = 1.74;
 const CAMERA_OFFSET = new THREE.Vector3(1, 1.08, 1.3).normalize().multiplyScalar(40);
-const VIEWS: Record<FarmView, { target: THREE.Vector3; width: number; height: number }> = {
-  farm: { target: new THREE.Vector3(-4.1, 0, 0.3), width: 11.2, height: 10 },
-  orchard: { target: new THREE.Vector3(-7.4, 0, 8.3), width: 9.4, height: 8.6 },
-  pond: { target: new THREE.Vector3(5.9, 0, 0.7), width: 9.6, height: 8.4 },
-  river: { target: new THREE.Vector3(12, 0, -0.9), width: 7.8, height: 7.6 },
-  ranch: { target: new THREE.Vector3(2.4, 0, 9.1), width: 11.8, height: 9.4 },
+/**
+ * Each area's centre and size on screen. `phone` is the share of its width a phone shows at
+ * first (the rest is a sideways drag away); a phone starts centred on `focus` when there is one.
+ * The fields keep every plot in view (only the outer corners touch the edges); the ranch shows
+ * its first pens, and the parts added by upgrades are a drag away.
+ */
+const VIEWS: Record<FarmView, { target: THREE.Vector3; width: number; height: number; phone: number; focus?: THREE.Vector3 }> = {
+  farm: { target: new THREE.Vector3(-4.1, 0, 0.3), width: 11.2, height: 10, phone: 0.86, focus: FARM_CENTER },
+  orchard: { target: new THREE.Vector3(-7.4, 0, 8.3), width: 9.4, height: 8.6, phone: 0.7 },
+  pond: { target: new THREE.Vector3(5.9, 0, 0.7), width: 9.6, height: 8.4, phone: 0.66 },
+  river: { target: new THREE.Vector3(12, 0, -0.9), width: 7.8, height: 7.6, phone: 0.8 },
+  ranch: { target: new THREE.Vector3(1.5, 0, 9.9), width: 13.6, height: 10.4, phone: 0.7 },
 };
 const ORCHARD = { x: -7.5, z: 8.55, pitch: 2.3 };
 /** River centre line, from a spring at the foot of the mountain to the cliff edge. */
@@ -221,9 +242,6 @@ function pondPoint(x: number, z: number): [number, number] {
   return [POND_CENTER.x + x * POND_RX, POND_CENTER.z + z * POND_RZ];
 }
 
-function pasturePoint(x: number, z: number): [number, number] {
-  return [PASTURE.x + x * (PASTURE.hx - 0.55), PASTURE.z + z * (PASTURE.hz - 0.5)];
-}
 
 /** Fry start clearly visible and grow to about twice their size. */
 function fishSize(ratio: number): number {
@@ -269,6 +287,15 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   let viewName: FarmView = "farm";
   let viewHeight = VIEWS.farm.height;
   let aspect = 1;
+  /** The player's zoom (1 is the area's default framing) and how far they panned from its centre, on the ground. */
+  let zoom = 1;
+  const pan = new THREE.Vector3();
+  const panGoal = new THREE.Vector3();
+  // Ground directions that move the view right and up on screen; a step up the screen covers
+  // more ground than the same step across it, by 1 / UP_SCALE (the camera looks down at an angle).
+  const SCREEN_RIGHT = new THREE.Vector3(CAMERA_OFFSET.z, 0, -CAMERA_OFFSET.x).normalize();
+  const SCREEN_UP = new THREE.Vector3(-CAMERA_OFFSET.x, 0, -CAMERA_OFFSET.z).normalize();
+  const UP_SCALE = CAMERA_OFFSET.y / CAMERA_OFFSET.length();
 
   // Cool sky light in the shade, warm afternoon sun: the contrast reads as cosy.
   const hemi = new THREE.HemisphereLight("#d9ecff", "#6f8f4f", preset.pbr ? 1.55 : 1.45);
@@ -689,22 +716,6 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   addTrellis(FARM_CENTER.x - 4.75, FARM_CENTER.z - 3.65, FARM_CENTER.x - 4.75, FARM_CENTER.z + 3.65, 1.35);
   addLantern(FARM_CENTER.x - 1.15, FARM_CENTER.z + 3.95);
   addLantern(FARM_CENTER.x + 5.05, FARM_CENTER.z + 1.15);
-  const hx = PASTURE.hx;
-  const hz = PASTURE.hz;
-  addFence(propsRoot, PASTURE.x, PASTURE.z, [
-    [-hx, -hz, 1.6, -hz],
-    [2.8, -hz, hx, -hz],
-    [-hx, hz, hx, hz],
-    [-hx, -hz, -hx, hz],
-    [hx, -hz, hx, hz],
-  ], "#f1e4c8");
-  for (const [x, z] of [[-3.4, 10.7], [-2.7, 10.85], [4.3, 10.6]]) {
-    const bale = part(cylinder(0.32, 0.32, 0.5, 14), "#e2c25f", x, 0.3, z);
-    bale.rotation.z = Math.PI / 2;
-    propsRoot.add(bale);
-    for (const side of [-1, 1]) propsRoot.add(turn(part(cylinder(0.325, 0.325, 0.03, 14), "#c9a443", x + side * 0.13, 0.3, z), 0, 0, Math.PI / 2));
-    groundShade.push([x, z, 0.6, 0.2]);
-  }
 
   /**
    * A gable roof of overlapping rounded shingles, its ridge along x, sitting on walls `depth`
@@ -882,7 +893,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     [-11.5, -5.5, 1.1, false], [-12.6, -2.6, 0.95, true], [-12.2, 1.8, 1.05, false], [-11.6, 5.4, 0.9, true],
     [-4.2, -7.6, 1.15, false], [-0.6, -7.2, 0.95, true], [2.6, -6.6, 1.1, false],
     [5.5, -5.6, 0.9, true], [9.2, -5.2, 1.15, false], [14.6, -2.8, 1, true], [14.7, 1.9, 0.9, false],
-    [-1.4, 13.2, 0.95, true], [3.8, 12.9, 1.1, false], [-12.6, 7.6, 0.95, false],
+    [-12.6, 7.6, 0.95, false],
     [-14.1, -0.4, 0.85, true], [7.2, -8.1, 1.0, true], [-8.6, -8.4, 1.05, true],
   ];
   treeSpots.forEach(([x, z, s, round]) => addTree(x, z, s, round));
@@ -1113,6 +1124,166 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   addLantern(COZY.x + 0.95, COZY.z + 0.65, 1.2);
 
   // Flower pots, crates of produce, sunflowers.
+  /* ───────────── ranch: buildings that are there from the start ───────────── */
+  /* A poultry yard with the hen house, straw nests and a duck pond, a sheep pen with its
+     shelter, a cow pen with a shed and hay rack, a trough in each, and the middle lane with the
+     feed store and a water pump. They sit where each pen starts; fences and the extras that come
+     with bigger pens are built in `buildRanchYard`. */
+  /** A hay bale on its side (a round one rolled along x). */
+  function addBale(root: THREE.Object3D, x: number, y: number, z: number, yaw = 0) {
+    const bale = new THREE.Group();
+    bale.position.set(x, y, z);
+    bale.rotation.y = yaw;
+    bale.add(turn(part(cylinder(0.26, 0.26, 0.42, 14), "#e2c25f", 0, 0.26, 0), 0, 0, Math.PI / 2));
+    for (const side of [-1, 1]) bale.add(turn(part(cylinder(0.262, 0.262, 0.025, 14), "#c9a443", side * 0.2, 0.26, 0), 0, 0, Math.PI / 2));
+    root.add(bale);
+  }
+  {
+    // Hen house: a raised coop with a ramp, a small window and a nest box on its east side.
+    const { x, z } = FIXTURES.henHouse;
+    const coop = new THREE.Group();
+    coop.position.set(x, 0, z);
+    const wood = "#d9a066";
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) coop.add(part(rbox(0.07, 0.3, 0.07, 0.02), "#7a5638", sx * 0.38, 0.15, sz * 0.22));
+    coop.add(part(rbox(0.86, 0.5, 0.56, 0.04), wood, 0, 0.55, 0));
+    for (let i = -3; i <= 3; i += 1) coop.add(part(box(0.012, 0.44, 0.012), tint(wood, -0.12), i * 0.12, 0.55, 0.284));
+    coop.add(part(gable(0.86, 0.56, 0.3), wood, 0, 0.8, 0));
+    const roof = shingleRoof(1.0, 0.72, 0.32, "#6f8f4e", mulberry32(77));
+    roof.position.y = 0.78;
+    coop.add(roof);
+    // A door with a ramp down to the yard.
+    coop.add(part(rbox(0.22, 0.28, 0.03, 0.02), "#4a3122", -0.18, 0.52, 0.29));
+    const ramp = part(rbox(0.2, 0.03, 0.52, 0.01), "#a77a4c", -0.18, 0.2, 0.5);
+    ramp.rotation.x = 0.6;
+    coop.add(ramp);
+    for (let i = 0; i < 4; i += 1) coop.add(turn(part(box(0.2, 0.02, 0.02), "#7a5638", -0.18, 0.33 - i * 0.075, 0.33 + i * 0.1), 0.6, 0, 0));
+    coop.add(part(box(0.18, 0.14, 0.02), "#b9dfe6", 0.2, 0.62, 0.29), part(rbox(0.24, 0.035, 0.05, 0.01), "#fbf5e8", 0.2, 0.54, 0.3));
+    coop.add(part(rbox(0.22, 0.24, 0.42, 0.03), tint(wood, -0.05), 0.53, 0.52, 0), part(rbox(0.26, 0.04, 0.46, 0.02), "#6f8f4e", 0.53, 0.66, 0));
+    propsRoot.add(coop);
+    for (let i = 0; i < 6; i += 1) leafAt(foliageRoot, i % 2 ? "#e9cc6a" : "#d8b44e", x + 0.62, 0.44, z - 0.17 + i * 0.07, Math.PI / 2, -0.7, 0.1, 0.03, 0, 0.2);
+    keepClear.push([x, z, 0.72]);
+    groundShade.push([x, z, 0.95, 0.22]);
+    // Straw nests beside it.
+    for (const [nx, nz] of [[x - 0.4, z + 0.78], [x + 0.25, z + 0.86]]) {
+      propsRoot.add(part(cylinder(0.17, 0.2, 0.07, 10), "#e2c25f", nx, 0.035, nz), part(cylinder(0.1, 0.1, 0.075, 10), "#c9a443", nx, 0.04, nz));
+      for (let i = 0; i < 7; i += 1) leafAt(foliageRoot, i % 2 ? "#e9cc6a" : "#d8b44e", nx, 0.06, nz, (i / 7) * Math.PI * 2, 0.2, 0.15, 0.03, 0, 0.15);
+      keepClear.push([nx, nz, 0.22]);
+    }
+  }
+  {
+    // The duck pond: a stony edge, reeds and cattails at the back, lily pads on the water.
+    const { x, z, rx, rz } = DUCK_POND;
+    const bed = part(cylinder(1, 1, 0.03, 24), "#557a63", x, 0.012, z);
+    bed.scale.set(rx + 0.05, 1, rz + 0.05);
+    propsRoot.add(bed);
+    const random = mulberry32(19);
+    for (let i = 0; i < 16; i += 1) {
+      const a = (i / 16) * Math.PI * 2 + random() * 0.2;
+      const stone = part(ico(0.07 + random() * 0.04, 1), random() < 0.5 ? "#a9a79a" : "#9b998c", x + Math.cos(a) * (rx + 0.07), 0.035, z + Math.sin(a) * (rz + 0.07));
+      stone.scale.set(1.25, 0.6, 1);
+      stone.rotation.y = random() * 3;
+      propsRoot.add(stone);
+    }
+    for (let i = 0; i < 10; i += 1) {
+      const a = Math.PI * (1.05 + i * 0.075);
+      const px = x + Math.cos(a) * (rx + 0.02), pz = z + Math.sin(a) * (rz + 0.02);
+      leafAt(foliageRoot, i % 2 ? "#5f9a45" : "#6faa4f", px, 0.02, pz, random() * 6, 1.25, 0.32 + random() * 0.18, 0.05, -0.1, 0.8);
+      if (i % 3 === 1) {
+        foliageRoot.add(leafy(cylinder(0.007, 0.007, 0.5, 4), "#6f8f3a", px, 0.25, pz, 0.7));
+        const head = leafy(sphere(0.026, 6, 5), "#6b4528", px, 0.47, pz, 0.8);
+        head.scale.y = 2.4;
+        foliageRoot.add(head);
+      }
+    }
+    for (const [lx, lz, flower] of [[x + 0.22, z + 0.1, true], [x - 0.15, z + 0.2, false], [x + 0.05, z - 0.18, false]] as const) {
+      propsRoot.add(part(cylinder(0.085, 0.085, 0.008, 10), "#4f9a48", lx, 0.07, lz));
+      if (flower) propsRoot.add(part(sphere(0.035, 8, 6), "#f6a5c0", lx, 0.09, lz));
+    }
+    keepClear.push([x, z, Math.max(rx, rz) + 0.15]);
+  }
+  {
+    // Sheep shelter: a lean-to with a plank back wall, straw bedding and a hay rack.
+    const { x, z } = FIXTURES.sheepShelter;
+    const shed = new THREE.Group();
+    shed.position.set(x, 0, z);
+    const wood = "#a8784a";
+    shed.add(part(rbox(1.0, 0.64, 0.06, 0.02), wood, 0, 0.32, -0.25));
+    for (let i = 0; i < 6; i += 1) shed.add(part(box(0.012, 0.6, 0.07), tint(wood, -0.12), -0.42 + i * 0.17, 0.32, -0.25));
+    for (const sx of [-1, 1]) shed.add(part(rbox(0.06, 0.5, 0.5, 0.02), tint(wood, 0.04), sx * 0.5, 0.25, 0), part(rbox(0.07, 0.84, 0.07, 0.02), "#7a5638", sx * 0.5, 0.42, 0.27));
+    const roof = new THREE.Group();
+    roof.position.set(0, 0.8, 0.02);
+    roof.rotation.x = 0.24;
+    roof.add(part(rbox(1.18, 0.05, 0.78, 0.02), "#5f8a8a", 0, 0, 0));
+    for (let i = 0; i < 4; i += 1) roof.add(part(box(1.19, 0.018, 0.025), tint("#5f8a8a", -0.14), 0, 0.03, -0.3 + i * 0.2));
+    shed.add(roof);
+    shed.add(part(rbox(0.9, 0.025, 0.45, 0.01), "#e2c25f", 0, 0.013, 0.02), part(rbox(0.62, 0.18, 0.12, 0.02), "#8f5d3a", 0, 0.44, -0.17));
+    propsRoot.add(shed);
+    for (let i = 0; i < 7; i += 1) leafAt(foliageRoot, i % 2 ? "#e2c25f" : "#cfae4b", x - 0.27 + i * 0.09, 0.5, z - 0.17, Math.PI, -1.0, 0.14, 0.04, 0.1, 0.2);
+    keepClear.push([x, z, 0.7]);
+    groundShade.push([x, z, 0.9, 0.2]);
+  }
+  {
+    // Cow shed: an open-fronted red barn with white corner posts, a shingled roof, straw and hay.
+    const { x, z } = FIXTURES.cowShed;
+    const shed = new THREE.Group();
+    shed.position.set(x, 0, z);
+    const red = "#b5523b";
+    shed.add(part(rbox(1.5, 0.92, 0.07, 0.02), red, 0, 0.46, -0.4));
+    for (let i = -6; i <= 6; i += 1) shed.add(part(box(0.012, 0.86, 0.08), tint(red, -0.1), i * 0.11, 0.46, -0.4));
+    for (const sx of [-1, 1]) {
+      shed.add(part(rbox(0.07, 0.92, 0.82, 0.02), red, sx * 0.73, 0.46, 0));
+      shed.add(part(rbox(0.1, 1.0, 0.1, 0.025), "#f4ead6", sx * 0.74, 0.5, 0.42), part(rbox(0.1, 1.0, 0.1, 0.025), "#f4ead6", sx * 0.74, 0.5, -0.42));
+    }
+    shed.add(part(gable(1.5, 0.86, 0.4), red, 0, 0.92, 0), part(rbox(1.5, 0.08, 0.08, 0.02), "#f4ead6", 0, 0.92, 0.43));
+    const roof = shingleRoof(1.72, 1.08, 0.42, "#8e3b2c", mulberry32(83));
+    roof.position.y = 0.92;
+    shed.add(roof);
+    shed.add(part(rbox(1.4, 0.025, 0.76, 0.01), "#e2c25f", 0, 0.013, 0), part(rbox(1.0, 0.3, 0.14, 0.02), "#8f5d3a", 0, 0.5, -0.3));
+    for (let i = 0; i < 4; i += 1) shed.add(part(box(0.02, 0.3, 0.02), "#6b4a30", -0.45 + i * 0.3, 0.5, -0.22));
+    propsRoot.add(shed);
+    for (let i = 0; i < 10; i += 1) leafAt(foliageRoot, i % 2 ? "#e2c25f" : "#cfae4b", x - 0.45 + i * 0.1, 0.64, z - 0.3, Math.PI, -1.1, 0.16, 0.05, 0.1, 0.15);
+    keepClear.push([x, z, 0.9]);
+    groundShade.push([x, z, 1.15, 0.24]);
+  }
+  {
+    // The lane: sacks of feed and a grain bin at the back, a hand pump with a bucket.
+    const { x, z } = FIXTURES.feedStore;
+    propsRoot.add(part(cylinder(0.19, 0.19, 0.55, 12), "#b9c2c6", x + 0.22, 0.28, z), part(cone(0.21, 0.14, 12), "#9aa4a8", x + 0.22, 0.62, z));
+    for (const [sx, sy, sz] of [[-0.18, 0.11, -0.1], [-0.2, 0.11, 0.14], [-0.19, 0.3, 0.02]] as const) {
+      const sack = part(rbox(0.3, 0.2, 0.22, 0.08), "#e8dcc0", x + sx, sy, z + sz);
+      sack.rotation.y = sz * 3;
+      propsRoot.add(sack, part(cylinder(0.035, 0.05, 0.06, 6), "#c9b48a", x + sx + 0.15, sy + 0.04, z + sz));
+    }
+    keepClear.push([x, z, 0.5]);
+    groundShade.push([x, z, 0.6, 0.15]);
+    const pump = FIXTURES.pump;
+    propsRoot.add(part(rbox(0.15, 0.62, 0.15, 0.03), "#3b6f8f", pump.x, 0.31, pump.z), part(cylinder(0.03, 0.03, 0.2, 8), "#3b6f8f", pump.x + 0.1, 0.5, pump.z));
+    propsRoot.add(turn(part(rbox(0.04, 0.04, 0.36, 0.015), "#2f5a75", pump.x, 0.68, pump.z - 0.12), -0.5, 0, 0));
+    propsRoot.add(part(cylinder(0.11, 0.09, 0.15, 12), "#8f5d3a", pump.x + 0.2, 0.075, pump.z + 0.02), part(cylinder(0.2, 0.2, 0.004, 14), "#8fc3cc", pump.x + 0.14, 0.006, pump.z + 0.08));
+    keepClear.push([pump.x, pump.z, 0.3]);
+  }
+  /** Each pen's trough: one hit box each opening the feed sheet, and the feed showing in it. */
+  const troughFills: THREE.Mesh[] = [];
+  for (const pen of ["poultry", "sheep", "cow"] as const) {
+    const { x, z, hx, hz } = FIXTURES[TROUGH_OF[pen]];
+    const w = hx * 2, d = hz * 2;
+    propsRoot.add(part(rbox(w, 0.24, d, 0.03), "#9c6a3c", x, 0.12, z), part(box(w - 0.1, 0.04, d - 0.1), "#5a3d24", x, 0.23, z));
+    for (const side of [-1, 1]) propsRoot.add(part(box(hx > hz ? 0.06 : w + 0.04, 0.08, hx > hz ? d + 0.04 : 0.06), "#7a5638", hx > hz ? x + side * (hx - 0.05) : x, 0.04, hx > hz ? z : z + side * (hz - 0.05)));
+    groundShade.push([x, z, Math.max(hx, hz) + 0.4, 0.15]);
+    keepClear.push([x, z, Math.max(hx, hz) + 0.15]);
+    const fillRoot = new THREE.Group();
+    // Origin at the bottom so scaling raises the feed level from the trough floor.
+    fillRoot.add(part(box(w - 0.14, 0.1, d - 0.14), pen === "poultry" ? "#e9c46a" : "#d8b44e", 0, 0.05, 0));
+    const fill = bake(fillRoot, false, true);
+    fill.userData.ownsGeometry = true;
+    fill.raycast = () => {};
+    fill.position.set(x, 0.2, z);
+    const hit = hitBox(box(w + 0.35, 0.8, d + 0.35), { kind: "trough" });
+    hit.position.set(x, 0.3, z);
+    world.add(fill, hit);
+    troughFills.push(fill);
+  }
+
   function addPot(x: number, z: number, size: number, bloom: string) {
     propsRoot.add(part(cylinder(0.14 * size, 0.1 * size, 0.22 * size, 14), "#c8734a", x, 0.11 * size, z), part(cylinder(0.15 * size, 0.15 * size, 0.04 * size, 14), "#b5643e", x, 0.22 * size, z));
     for (let i = 0; i < 5; i += 1) {
@@ -1164,9 +1335,9 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
 
   for (const [x, z, s, bloom] of [
     [-3.65, -3.7, 0.9, "#f28fb1"], [-8.35, -4.0, 0.85, "#ffd166"], [10.0, -1.6, 1.0, ""], [10.4, -2.7, 0.8, "#ffffff"],
-    [3.3, 3.2, 0.8, ""], [6.0, 4.45, 0.85, "#f28fb1"], [-1.6, 6.3, 0.9, "#ffd166"], [-14.6, -4.5, 1.1, ""],
+    [3.3, 3.2, 0.8, ""], [6.0, 4.45, 0.85, "#f28fb1"], [-14.6, -4.5, 1.1, ""],
     [-15.0, 3.0, 1.0, "#f28fb1"], [13.9, -5.8, 1.0, ""], [-6.2, 14.6, 1.1, "#ffffff"], [8.9, 12.4, 1.0, "#ffd166"],
-    [-11.6, 6.35, 0.9, ""], [-3.5, 11.4, 0.7, "#ffffff"], [5.25, 11.5, 0.8, ""], [-10.6, -1.6, 0.8, "#ffffff"],
+    [-11.6, 6.35, 0.9, ""], [-4.15, 12.3, 0.7, "#ffffff"], [5.95, 11.9, 0.8, ""], [-10.6, -1.6, 0.8, "#ffffff"],
     [-13.2, -7.8, 1.0, "#f28fb1"], [12.1, -8.6, 0.9, ""], [0.9, 14.9, 0.9, "#ffd166"], [-9.5, 12.3, 1.0, ""],
     [10.6, 9.1, 0.85, "#ffffff"], [-0.3, -5.6, 0.9, ""], [4.2, -4.8, 0.8, "#f28fb1"],
   ] as const) addBush(x, z, s, bloom || undefined);
@@ -1227,7 +1398,8 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     [0.3, FARM_CENTER.z + 0.1, 3.9, FARM_CENTER.z + 0.3, 0.32],
     [FARM_CENTER.x, FARM_CENTER.z + 3.7, -2.6, ROAD_Z, 0.36],
     [-2.4, ROAD_Z + 0.1, ORCHARD.x, ORCHARD.z - 2.45, 0.36],
-    [0.6, ROAD_Z, 0.9, PASTURE.z - PASTURE.hz, 0.4],
+    // The ranch's middle lane, from the road down past the pens to the incubator hut.
+    [(LANE.x0 + LANE.x1) / 2, ROAD_Z, (LANE.x0 + LANE.x1) / 2, FIXTURES.incubator.z - 0.4, 0.62],
     [ROAD_END_X - 7, ROAD_Z, 8.1, 8.2, 0.34],
   ];
   {
@@ -1242,7 +1414,12 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       const n1 = noise2(x * 0.2 + 3, z * 0.2 + 1);
       const n2 = noise2(x * 0.85 + 7, z * 0.85 + 3);
       c.copy(grassA).lerp(grassB, n1).lerp(grassDark, smooth(0.55, 0.9, n2) * 0.45);
-      c.lerp(pastureColor, rectMask(x, z, PASTURE.x, PASTURE.z, PASTURE.hx - 0.1, PASTURE.hz - 0.1, 0.5) * 0.55);
+      // Lusher grass in the pens (painted at their full size), scratched earth round the hen house.
+      for (const pen of ["poultry", "sheep", "cow"] as const) {
+        const r = penRect(pen, TOP_LEVEL);
+        c.lerp(pastureColor, rectMask(x, z, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, (r.x1 - r.x0) / 2 - 0.1, (r.z1 - r.z0) / 2 - 0.1, 0.5) * 0.55);
+      }
+      c.lerp(dirt, (1 - smooth(0.5, 1.5, Math.hypot(x - FIXTURES.henHouse.x - 0.2, (z - FIXTURES.henHouse.z - 0.7) * 1.2))) * (0.35 + n2 * 0.25));
       c.lerp(orchardColor, rectMask(x, z, ORCHARD.x, ORCHARD.z, 3.5, 2.3, 0.5) * 0.5);
       for (const [ax, az, bx, bz, width] of footpaths) {
         const d = segmentDistance(x, z, ax, az, bx, bz);
@@ -1269,7 +1446,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       const [px, pz] = plotPosition(i);
       groundShade.push([px, pz, 1.25, 0.1]);
     }
-    groundShade.push([-2.1, -4.75, 2.1, 0.3], [1.6, -3.3, 1.3, 0.22], [TROUGH[0], TROUGH[1], 1.0, 0.15], [INCUBATOR_SPOT[0], INCUBATOR_SPOT[1], 1.2, 0.2]);
+    groundShade.push([-2.1, -4.75, 2.1, 0.3], [1.6, -3.3, 1.3, 0.22], [FIXTURES.incubator.x, FIXTURES.incubator.z, 1.2, 0.2]);
     for (const [wx, wz] of Object.values(WORKSHOP_SPOTS)) groundShade.push([wx, wz, 1.3, 0.2]);
     // A square grid clipped to the circle: vertices outside are pulled onto the rim.
     const side = n + 1;
@@ -1393,8 +1570,9 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       if (Math.hypot(sx - x, sz - z) < 1.0) return false;
     }
     for (const [wx, wz] of Object.values(WORKSHOP_SPOTS)) if (Math.hypot(wx - x, wz - z) < 1.15) return false;
-    if (Math.hypot(TROUGH[0] - x, TROUGH[1] - z) < 1.0) return false;
-    if (Math.hypot(INCUBATOR_SPOT[0] - x, INCUBATOR_SPOT[1] - z) < 1.05) return false;
+    // Ranch: the lane is a dirt path, and nothing grows in the pond, on the troughs or buildings.
+    if (inside(LANE, x, z, -0.1) || inDuckPond(x, z, 0.2)) return false;
+    for (const name of Object.keys(FIXTURES) as (keyof typeof FIXTURES)[]) if (inside(fixtureRect(name), x, z, -0.3)) return false;
     if (Math.hypot(-2.1 - x, -4.75 - z) < 1.75 || Math.hypot(1.6 - x, -3.3 - z) < 1.15) return false;
     for (const [cx, cz, radius] of keepClear) if (Math.hypot(cx - x, cz - z) < radius) return false;
     for (const [ax, az, bx, bz, width] of footpaths) if (segmentDistance(x, z, ax, az, bx, bz) < width * 0.8) return false;
@@ -1408,7 +1586,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       const cx = (random() - 0.5) * 32, cz = (random() - 0.5) * 32;
       if (!grassFree(cx, cz)) continue;
       // The pasture is grazed short: fewer tufts there.
-      if (Math.abs(cx - PASTURE.x) < PASTURE.hx && Math.abs(cz - PASTURE.z) < PASTURE.hz && random() < 0.6) continue;
+      if (inside(RANCH_BOUNDS, cx, cz) && random() < 0.55) continue;
       for (let k = 0; k < clump && result.length < count; k += 1) {
         const x = cx + (random() - 0.5) * 0.7, z = cz + (random() - 0.5) * 0.7;
         if (k > 0 && !grassFree(x, z)) continue;
@@ -1435,6 +1613,8 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   interface GrazePatch {
     x: number;
     z: number;
+    /** The pen it grows in (it is only grazed once that pen reaches it). */
+    pen: PenId;
     /** Its tufts in the grass instances, and how much is left to eat (0.2 grazed short, 1 full). */
     first: number;
     count: number;
@@ -1448,10 +1628,21 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   {
     const random = mulberry32(213);
     const dummy = new THREE.Object3D();
-    for (let tries = 0; tries < 120 && grazePatches.length < 10; tries += 1) {
-      const [x, z] = pasturePoint(random() * 1.8 - 0.9, random() * 1.8 - 0.9);
-      if (!grassFree(x, z) || grazePatches.some((other) => Math.hypot(other.x - x, other.z - z) < 1.3)) continue;
-      const patch: GrazePatch = { x, z, first: tufts.length, count: 5, food: 1, shown: 1, claim: null, bitten: -10 };
+    // Grass for the sheep and cows across their pens at full size, a little in the poultry yard.
+    const wanted: Record<PenId, number> = { poultry: 2, sheep: 5, cow: 6 };
+    const candidates: [PenId, number, number][] = [];
+    for (const pen of ["poultry", "sheep", "cow"] as const) {
+      const r = penRect(pen, TOP_LEVEL);
+      let found = 0;
+      for (let tries = 0; tries < 200 && found < wanted[pen]; tries += 1) {
+        const x = r.x0 + 0.5 + random() * (r.x1 - r.x0 - 1), z = r.z0 + 0.5 + random() * (r.z1 - r.z0 - 1);
+        if (!walkable(pen, TOP_LEVEL, x, z) || !grassFree(x, z) || candidates.some(([, ox, oz]) => Math.hypot(ox - x, oz - z) < 1.1)) continue;
+        candidates.push([pen, x, z]);
+        found += 1;
+      }
+    }
+    for (const [pen, x, z] of candidates) {
+      const patch: GrazePatch = { x, z, pen, first: tufts.length, count: 5, food: 1, shown: 1, claim: null, bitten: -10 };
       for (let k = 0; k < patch.count; k += 1) {
         const angle = (k / patch.count) * Math.PI * 2 + random();
         const r = k === 0 ? 0 : 0.12 + random() * 0.13;
@@ -1555,17 +1746,6 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     root.add(turn(part(rbox(0.36, 0.44, 0.03, 0.01), "#3c4a3e", 0.95, 0.35, 0.45), -0.2, -0.3, 0), turn(part(rbox(0.4, 0.04, 0.04, 0.01), "#a77a4c", 0.95, 0.58, 0.45), -0.2, -0.3, 0));
     for (const x of [-0.68, 0.68]) root.add(part(cylinder(0.04, 0.04, 1.45, 8), "#7a5638", x, 0.72, 0.4));
   }, { kind: "shop" }, 1.6, -3.3, -0.4, box(1.8, 1.8, 1.2), 0.8);
-  addBuilding((root) => {
-    root.add(part(box(1.4, 0.34, 0.6), "#9c6a3c", 0, 0.17, 0), part(box(1.24, 0.06, 0.44), "#5a3d24", 0, 0.32, 0));
-    for (const x of [-0.6, 0.6]) root.add(part(box(0.1, 0.12, 0.6), "#7a5638", x, 0.04, 0));
-  }, { kind: "trough" }, TROUGH[0], TROUGH[1], 0, box(1.6, 0.8, 0.9), 0.3);
-  const feedFillRoot = new THREE.Group();
-  // Origin at the bottom so scaling raises the feed level from the trough floor.
-  feedFillRoot.add(part(box(1.2, 0.14, 0.42), "#e9c46a", 0, 0.07, 0));
-  const feedFill = bake(feedFillRoot, false, true);
-  feedFill.userData.ownsGeometry = true;
-  feedFill.position.set(TROUGH[0], 0.3, TROUGH[1]);
-  world.add(feedFill);
 
   // Windmill blades turn, so they stay a separate (single) mesh.
   const bladesRoot = new THREE.Group();
@@ -1611,6 +1791,18 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   water.userData.hit = { kind: "pond" } satisfies SceneHit;
   water.renderOrder = 2;
   world.add(water);
+  // The ranch's little duck pond shares the pond's water; it is scenery, not a tap target.
+  const duckWater = new THREE.Mesh(pondSurface ?? circle(28), waterMaterial);
+  if (pondSurface) {
+    duckWater.scale.set(DUCK_POND.rx * 2 + 0.06, 1, DUCK_POND.rz * 2 + 0.06);
+  } else {
+    duckWater.rotation.x = -Math.PI / 2;
+    duckWater.scale.set(DUCK_POND.rx + 0.03, DUCK_POND.rz + 0.03, 1);
+  }
+  duckWater.position.set(DUCK_POND.x, 0.055, DUCK_POND.z);
+  duckWater.raycast = () => {};
+  duckWater.renderOrder = 2;
+  world.add(duckWater);
 
   /** The river's surface with `aSide` (−1 west bank … 1 east bank) and `aFlow` downstream. */
   function riverSurface(): THREE.BufferGeometry {
@@ -2646,6 +2838,8 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     speed: number;
     /** A per-animal number that varies its idle habits. */
     hop: number;
+    /** How far a duck has settled into the water (0 on land, 1 swimming). */
+    swim: number;
   }
   const animalViews = new Map<string, AnimalView>();
   const dropViews = new Map<string, THREE.Group>();
@@ -2752,12 +2946,44 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     return mesh;
   }
 
-  function randomPasturePoint(seed: number): THREE.Vector2 {
+  /** The ranch's capacity level, which sets how big the pens are. */
+  let ranchLevel = 0;
+  /** A free spot in each pen, whatever its size (used when a random spot keeps landing on something). */
+  const PEN_REST: Record<PenId, [number, number]> = { poultry: [-2.0, 8.4], sheep: [-1.0, 11.65], cow: [3.25, 9.6] };
+  /** A random free spot in a pen; a swimmer may get one on the duck pond. */
+  function randomPenPoint(pen: PenId, seed: number, swim = false): THREE.Vector2 {
     const random = mulberry32(seed);
-    const [x, z] = pasturePoint(random() * 2 - 1, random() * 2 - 1);
-    // Keep animals off the trough.
-    if (Math.abs(x - TROUGH[0]) < 1 && Math.abs(z - TROUGH[1]) < 0.6) return new THREE.Vector2(x + 1.4, z + 0.8);
-    return new THREE.Vector2(x, z);
+    if (swim) {
+      const a = random() * Math.PI * 2, r = Math.sqrt(random()) * 0.62;
+      return new THREE.Vector2(DUCK_POND.x + Math.cos(a) * r * DUCK_POND.rx, DUCK_POND.z + Math.sin(a) * r * DUCK_POND.rz);
+    }
+    const rect = penRect(pen, ranchLevel);
+    for (let i = 0; i < 16; i += 1) {
+      const x = rect.x0 + random() * (rect.x1 - rect.x0), z = rect.z0 + random() * (rect.z1 - rect.z0);
+      if (walkable(pen, ranchLevel, x, z)) return new THREE.Vector2(x, z);
+    }
+    return new THREE.Vector2(...PEN_REST[pen]);
+  }
+  /** Where an animal stands to eat at its pen's trough (on the pen's side, spread along it). */
+  function troughPoint(pen: PenId, seed: number): THREE.Vector2 {
+    const { x, z, hx, hz } = FIXTURES[TROUGH_OF[pen]];
+    const spread = (((seed % 9) - 4) / 4) * 0.8;
+    if (pen === "poultry") return new THREE.Vector2(x + spread * hx, z + hz + 0.2);
+    if (pen === "sheep") return new THREE.Vector2(x - hx - 0.32, z + spread * hz);
+    return new THREE.Vector2(x + hx + 0.45, z + spread * hz);
+  }
+  const PEN_OF_PRODUCT: Record<ProductId, PenId> = { egg: "poultry", duckEgg: "poultry", wool: "sheep", milk: "cow" };
+  /** A product left lying in its pen: drops keep their place in -1..1 across the pen. */
+  function dropPoint(drop: RanchDrop): [number, number] {
+    const pen = PEN_OF_PRODUCT[drop.product] ?? "poultry";
+    const rect = penRect(pen, ranchLevel);
+    const room = PEN_ROOM[pen] + 0.1;
+    for (let i = 0; i < 8; i += 1) {
+      const u = (((drop.x + 1) / 2 + i * 0.37) % 1), v = (((drop.z + 1) / 2 + i * 0.61) % 1);
+      const x = rect.x0 + room + u * (rect.x1 - rect.x0 - room * 2), z = rect.z0 + room + v * (rect.z1 - rect.z0 - room * 2);
+      if (walkable(pen, ranchLevel, x, z)) return [x, z];
+    }
+    return PEN_REST[pen];
   }
 
   function buildAnimal(animal: RanchAnimal, index: number): AnimalView {
@@ -2773,7 +2999,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     pose.add(body);
     holder.add(pose);
     group.add(holder, new THREE.Mesh(sphere(Math.max(0.45, size * 0.6), 8, 6), hiddenMaterial));
-    const start = randomPasturePoint(hashString(animal.id) + index);
+    const start = randomPenPoint(PEN_OF[animal.species], hashString(animal.id) + index);
     group.position.set(start.x, 0, start.y);
     const bowl = icon("bowl", 0.55);
     bowl.position.set(0, size + 0.45, 0);
@@ -2801,7 +3027,8 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       species: animal.species,
       young,
       modelsVersion,
-      target: randomPasturePoint(hashString(animal.id) * 7 + 1),
+      target: randomPenPoint(PEN_OF[animal.species], hashString(animal.id) * 7 + 1),
+      swim: 0,
       wait: 0,
       speed: animal.species === "chicken" ? 0.9 : animal.species === "duck" ? 0.7 : 0.45,
       hop: hashString(animal.id) % 10,
@@ -2832,7 +3059,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     const mesh = new THREE.Mesh(dropTemplate(drop.product), surface);
     mesh.castShadow = shadowsOn;
     group.add(mesh, new THREE.Mesh(sphere(0.42, 8, 6), hiddenMaterial));
-    const [x, z] = pasturePoint(drop.x, drop.z);
+    const [x, z] = dropPoint(drop);
     group.position.set(x, 0, z);
     group.rotation.y = hashString(drop.id) % 6;
     world.add(group);
@@ -2891,6 +3118,173 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     return { group, key, smoke, star, running };
   }
 
+  /* ───────────── ranch yard: fences and extras that grow with the pens ───────────── */
+  interface RanchYardView { level: number; group: THREE.Group }
+  let ranchYard: RanchYardView | null = null;
+  /** A picket fence from (x1, z1) to (x2, z2): posts, two rails and pointed pickets. */
+  function picketFence(root: THREE.Object3D, x1: number, z1: number, x2: number, z2: number, color: string) {
+    const length = Math.hypot(x2 - x1, z2 - z1);
+    if (length < 0.1) return;
+    const yaw = -Math.atan2(z2 - z1, x2 - x1);
+    const posts = Math.max(2, Math.round(length / 1.0) + 1);
+    for (let i = 0; i < posts; i += 1) {
+      const t = i / (posts - 1);
+      root.add(part(rbox(0.1, 0.56, 0.1, 0.03), tint(color, -0.04), x1 + (x2 - x1) * t, 0.28, z1 + (z2 - z1) * t));
+    }
+    for (const y of [0.15, 0.36]) root.add(turn(part(rbox(length, 0.045, 0.035, 0.015), tint(color, -0.08), (x1 + x2) / 2, y, (z1 + z2) / 2), 0, yaw, 0));
+    const pickets = Math.max(2, Math.round(length / 0.15));
+    for (let i = 0; i < pickets; i += 1) {
+      const t = (i + 0.5) / pickets;
+      const px = x1 + (x2 - x1) * t, pz = z1 + (z2 - z1) * t;
+      root.add(turn(part(rbox(0.065, 0.4, 0.022, 0.01), color, px, 0.24, pz), 0, yaw, 0), turn(part(cone(0.042, 0.07, 4), color, px, 0.475, pz), 0, yaw + Math.PI / 4, 0));
+    }
+  }
+  /** Gate posts either side of an opening, the gate swung open into the pen. */
+  function gateAt(root: THREE.Object3D, x: number, z0: number, z1: number, into: number, color: string) {
+    for (const z of [z0, z1]) root.add(part(rbox(0.13, 0.78, 0.13, 0.035), tint(color, -0.08), x, 0.39, z), part(sphere(0.07, 8, 6), tint(color, -0.08), x, 0.8, z));
+    const width = z1 - z0 - 0.08;
+    const gate = new THREE.Group();
+    gate.position.set(x, 0, z0 + 0.04);
+    gate.rotation.y = into * 1.0;
+    for (const y of [0.18, 0.42]) gate.add(part(rbox(0.04, 0.05, width, 0.015), color, 0, y, width / 2));
+    for (let i = 0; i <= 3; i += 1) gate.add(part(rbox(0.04, 0.32, 0.04, 0.012), color, 0, 0.3, (i / 3) * width));
+    gate.add(turn(part(rbox(0.035, 0.035, Math.hypot(width, 0.24), 0.01), color, 0, 0.3, width / 2), Math.atan2(0.24, width), 0, 0));
+    root.add(gate);
+  }
+  /** Small triangular flags on a sagging string between two points. */
+  function bunting(root: THREE.Object3D, ax: number, az: number, bx: number, bz: number, y: number) {
+    const colors = ["#e2533d", "#f2c94c", "#5fa043", "#3e8fd6", "#f28fb1"];
+    const length = Math.hypot(bx - ax, bz - az);
+    const flags = Math.max(3, Math.round(length / 0.22));
+    const yaw = -Math.atan2(bz - az, bx - ax);
+    for (let i = 0; i <= flags; i += 1) {
+      const t = i / flags;
+      const sag = 0.16 * 4 * t * (1 - t);
+      const fx = ax + (bx - ax) * t, fz = az + (bz - az) * t;
+      if (i < flags) {
+        const flag = part(cone(0.07, 0.16, 3), colors[i % colors.length], fx + ((bx - ax) / flags) * 0.5, y - sag - 0.09, fz + ((bz - az) / flags) * 0.5);
+        flag.rotation.set(Math.PI, yaw, 0);
+        flag.scale.set(1, 1, 0.2);
+        root.add(flag);
+      }
+      if (i > 0) {
+        const pt = i - 1;
+        const t0 = pt / flags;
+        const x0 = ax + (bx - ax) * t0, z0 = az + (bz - az) * t0, y0 = y - 0.16 * 4 * t0 * (1 - t0);
+        const wire = part(cylinder(0.006, 0.006, Math.hypot(fx - x0, y - sag - y0, fz - z0), 4), "#5a4a3a", (fx + x0) / 2, (y - sag + y0) / 2, (fz + z0) / 2);
+        wire.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(fx - x0, y - sag - y0, fz - z0).normalize());
+        root.add(wire);
+      }
+    }
+  }
+
+  function buildRanchYard(level: number): RanchYardView {
+    const props = new THREE.Group();
+    const leaves = new THREE.Group();
+    const glow = new THREE.Group();
+    const poultry = penRect("poultry", level), sheep = penRect("sheep", level), cow = penRect("cow", level);
+    // Poultry: a white picket fence; its gate onto the lane between the trough and the pond.
+    const white = "#f4efe2";
+    picketFence(props, poultry.x0, poultry.z0, poultry.x1, poultry.z0, white);
+    picketFence(props, poultry.x0, poultry.z0, poultry.x0, poultry.z1, white);
+    picketFence(props, poultry.x0, poultry.z1, poultry.x1, poultry.z1, white);
+    picketFence(props, poultry.x1, poultry.z0, poultry.x1, 7.3, white);
+    picketFence(props, poultry.x1, 7.95, poultry.x1, poultry.z1, white);
+    gateAt(props, poultry.x1, 7.3, 7.95, 1, white);
+    // Sheep: cream rails; cows: rustic wood rails; each with a gate onto the lane.
+    const cream = "#f1e4c8", wood = "#b98a55";
+    addFence(props, 0, 0, [
+      [sheep.x0, sheep.z0, sheep.x1, sheep.z0],
+      [sheep.x0, sheep.z0, sheep.x0, sheep.z1],
+      [sheep.x0, sheep.z1, sheep.x1, sheep.z1],
+      [sheep.x1, sheep.z0, sheep.x1, 11.05],
+      [sheep.x1, 11.75, sheep.x1, sheep.z1],
+    ], cream);
+    gateAt(props, sheep.x1, 11.05, 11.75, 1, cream);
+    addFence(props, 0, 0, [
+      [cow.x0, cow.z0, cow.x1, cow.z0],
+      [cow.x1, cow.z0, cow.x1, cow.z1],
+      [cow.x0, cow.z1, cow.x1, cow.z1],
+      [cow.x0, cow.z0, cow.x0, 9.45],
+      [cow.x0, 10.25, cow.x0, cow.z1],
+    ], wood);
+    gateAt(props, cow.x0, 9.45, 10.25, -1, wood);
+
+    const lane = (LANE.x0 + LANE.x1) / 2;
+    if (level >= 1) {
+      // A stack of hay bales in the lane, a wheelbarrow of hay, straw piles for the hens.
+      addBale(props, lane + 0.25, 0, 10.0, 0.1);
+      addBale(props, lane - 0.22, 0, 10.05, -0.15);
+      addBale(props, lane + 0.02, 0.42, 10.02, 0.05);
+      const barrow = new THREE.Group();
+      barrow.position.set(lane - 0.35, 0, 11.35);
+      barrow.rotation.y = 0.6;
+      barrow.add(part(rbox(0.36, 0.16, 0.5, 0.03), "#5f8a8a", 0, 0.24, 0), turn(part(cylinder(0.1, 0.1, 0.04, 12), "#3b3530", 0, 0.1, 0.3), 0, 0, Math.PI / 2));
+      for (const side of [-1, 1]) barrow.add(turn(part(rbox(0.03, 0.03, 0.42, 0.01), "#7a5638", side * 0.14, 0.24, -0.36), 0.25, 0, 0), part(rbox(0.03, 0.18, 0.03, 0.01), "#7a5638", side * 0.13, 0.09, -0.12));
+      props.add(barrow);
+      for (let i = 0; i < 6; i += 1) leafAt(leaves, "#e2c25f", lane - 0.35 + Math.cos(i) * 0.06, 0.33, 11.35 + Math.sin(i) * 0.08, i * 1.1, 0.5, 0.14, 0.04, 0, 0.2);
+      for (const [hx, hz] of [[poultry.x0 + 0.45, poultry.z1 - 0.45], [poultry.x0 + 0.5, 7.4]]) {
+        const heap = part(sphere(0.26, 10, 6), "#e2c25f", hx, 0.03, hz);
+        heap.scale.set(1, 0.32, 0.8);
+        props.add(heap);
+        for (let i = 0; i < 6; i += 1) leafAt(leaves, i % 2 ? "#e9cc6a" : "#d8b44e", hx, 0.06, hz, i * 1.05, 0.4, 0.16, 0.03, 0, 0.2);
+      }
+    }
+    if (level >= 2) {
+      // A bench, milk cans by the cow pen's gate, a water barrel, flower boxes along the lane.
+      const bench = new THREE.Group();
+      bench.position.set(lane + 0.5, 0, 11.75);
+      bench.rotation.y = -Math.PI / 2;
+      bench.add(part(rbox(0.62, 0.05, 0.2, 0.015), "#8f5d3a", 0, 0.28, 0), part(rbox(0.62, 0.16, 0.04, 0.015), "#8f5d3a", 0, 0.42, -0.09));
+      for (const side of [-1, 1]) bench.add(part(rbox(0.05, 0.28, 0.18, 0.012), "#6b4a30", side * 0.26, 0.14, 0));
+      props.add(bench);
+      for (const [mx, mz] of [[lane + 0.62, 9.05], [lane + 0.55, 9.3]]) props.add(part(cylinder(0.09, 0.1, 0.3, 12), "#c9cfd2", mx, 0.15, mz), part(cylinder(0.05, 0.08, 0.08, 12), "#c9cfd2", mx, 0.34, mz), part(cylinder(0.06, 0.06, 0.02, 12), "#9aa4a8", mx, 0.39, mz));
+      props.add(part(cylinder(0.17, 0.15, 0.4, 12), "#8f5d3a", lane - 0.6, 0.2, 9.3), part(cylinder(0.172, 0.172, 0.03, 12), "#5a4a3a", lane - 0.6, 0.12, 9.3), part(cylinder(0.172, 0.172, 0.03, 12), "#5a4a3a", lane - 0.6, 0.3, 9.3), part(cylinder(0.15, 0.15, 0.01, 12), "#7fb6c0", lane - 0.6, 0.39, 9.3));
+      const blooms = ["#f28fb1", "#ffd166", "#ef6f6c", "#ffffff"];
+      for (const [bx, bz] of [[LANE.x0 + 0.12, 9.85], [LANE.x0 + 0.12, 12.6], [LANE.x1 - 0.12, 7.6], [LANE.x1 - 0.12, 11.3]]) {
+        props.add(part(rbox(0.16, 0.12, 0.42, 0.02), "#8f5d3a", bx, 0.06, bz));
+        for (let i = 0; i < 4; i += 1) {
+          leafAt(leaves, "#4f8f3b", bx, 0.12, bz - 0.15 + i * 0.1, i * 1.7, 0.7, 0.12, 0.06, 0.3, 0.5);
+          leaves.add(leafy(sphere(0.04, 7, 5), blooms[(i + Math.round(bz)) % blooms.length], bx, 0.2, bz - 0.15 + i * 0.1, 0.6));
+        }
+      }
+    }
+    if (level >= 3) {
+      // Bunting over the lane, lanterns at its entrance, a round bale in the cow pen.
+      for (const z of [7.55, 11.95]) {
+        for (const x of [LANE.x0 + 0.06, LANE.x1 - 0.06]) props.add(part(rbox(0.06, 1.45, 0.06, 0.02), "#7a5638", x, 0.72, z));
+        bunting(props, LANE.x0 + 0.06, z, LANE.x1 - 0.06, z, 1.4);
+      }
+      for (const x of [LANE.x0 + 0.2, LANE.x1 - 0.2]) {
+        props.add(part(rbox(0.08, 1.1, 0.08, 0.02), "#4a3a2c", x, 0.55, 6.4), part(rbox(0.16, 0.18, 0.16, 0.03), "#3b3530", x, 1.15, 6.4), part(cone(0.13, 0.09, 4), "#3b3530", x, 1.28, 6.4));
+        glow.add(part(box(0.11, 0.13, 0.17), "#ffcf7a", x, 1.15, 6.4), part(box(0.17, 0.13, 0.11), "#ffcf7a", x, 1.15, 6.4));
+      }
+      addBale(props, cow.x1 - 0.6, 0, cow.z1 - 0.6, 0.8);
+      addBale(props, sheep.x0 + 0.6, 0, sheep.z1 - 0.55, -0.4);
+    }
+
+    const group = new THREE.Group();
+    const mesh = bake(props);
+    mesh.userData.ownsGeometry = true;
+    mesh.raycast = () => {};
+    const foliage = new THREE.Mesh(bakeGeometry(leaves, true, true) ?? new THREE.BufferGeometry(), foliageMaterial);
+    foliage.castShadow = shadowsOn;
+    foliage.receiveShadow = true;
+    foliage.userData.ownsGeometry = true;
+    owned.add(foliage.geometry);
+    foliage.raycast = () => {};
+    group.add(mesh, foliage);
+    if (glow.children.length) {
+      const lights = new THREE.Mesh(bakeGeometry(glow, false) ?? new THREE.BufferGeometry(), glowMaterial);
+      lights.userData.ownsGeometry = true;
+      owned.add(lights.geometry);
+      lights.raycast = () => {};
+      group.add(lights);
+    }
+    world.add(group);
+    return { level, group };
+  }
+
   interface IncubatorView { group: THREE.Group; key: string; icon: THREE.Sprite | null }
   let incubatorView: IncubatorView | null = null;
 
@@ -2905,10 +3299,10 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     const needTurn = eggs.some(eggNeedsTurn);
     const locked = levelFromXp(game.xp) < INCUBATOR.level;
     const key = `${incubator ? "built" : locked ? "locked" : "open"}|${eggs.map((egg) => `${egg.kind}${isHatched(egg) ? "!" : ""}`).join(",")}|${needTurn}`;
-    const [x, z] = INCUBATOR_SPOT;
+    const { x, z } = FIXTURES.incubator;
     const group = new THREE.Group();
     group.position.set(x, 0, z);
-    group.rotation.y = 0.3;
+    group.rotation.y = 0.15;
     const root = new THREE.Group();
     const lamp = new THREE.Group();
     let marker: THREE.Sprite | null = null;
@@ -3625,6 +4019,21 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
 
   function update(game: GameState) {
     latest = game;
+    // Pens grow with the ranch's capacity upgrades: rebuild the fences and extras when it changes.
+    const level = Math.min(TOP_LEVEL, Math.max(0, game.ranch.capacityLevel));
+    if (!ranchYard || ranchYard.level !== level) {
+      ranchLevel = level;
+      if (ranchYard) releaseGeometry(ranchYard.group);
+      ranchYard = buildRanchYard(level);
+      // Drops sit by pen size: move them with it.
+      for (const [id, group] of dropViews) {
+        const drop = game.ranch.drops.find((item) => item.id === id);
+        if (drop) {
+          const [x, z] = dropPoint(drop);
+          group.position.set(x, 0, z);
+        }
+      }
+    }
     const now = clock.getElapsedTime();
     const before = previous;
     previous = game;
@@ -3761,8 +4170,10 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       }
     }
 
-    feedFill.scale.y = 0.35 + 0.65 * Math.min(1, game.items.feed / 20);
-    feedFill.visible = game.items.feed > 0;
+    for (const fill of troughFills) {
+      fill.scale.y = 0.35 + 0.65 * Math.min(1, game.items.feed / 20);
+      fill.visible = game.items.feed > 0;
+    }
     if (truckModelsVersion !== modelsVersion && models.truck) buildTruck();
   }
 
@@ -3777,13 +4188,23 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   }
 
   function setView(view: FarmView) {
+    if (view === viewName) return;
     viewName = view;
+    // A new area starts at its usual place, at the zoom the player chose (within its limits).
+    zoom = clampZoom(zoom, VIEWS[viewName], aspect, cover());
+    panned = false;
+    homePan(pan);
+    reportZoom();
   }
 
   /* ───────────── input ───────────── */
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
   let down: { x: number; y: number; time: number; id: number } | null = null;
+  /** Pointers on the canvas (for pinching), a one-finger or mouse drag looking around, and a pinch. */
+  const pointers = new Map<number, { x: number; y: number }>();
+  let panning: { id: number; grab: THREE.Vector3 } | null = null;
+  let pinch: { distance: number; zoom: number; x: number; y: number } | null = null;
   let lastHover = 0;
   /** A drag with a tool across plots or trees: each one is worked once. */
   let work: { id: number; seen: Set<number> } | null = null;
@@ -3876,7 +4297,25 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     return fallback;
   }
 
+  function pinchMiddle() {
+    const [a, b] = [...pointers.values()];
+    return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, distance: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)) };
+  }
   function onPointerDown(event: PointerEvent) {
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pointers.size === 2 && !(viewName === "river" && options.fishing)) {
+      // A second finger: pinch to zoom (and move both to look around); whatever the first
+      // finger was doing stops.
+      work = null;
+      cursorLeft = 0.45;
+      down = null;
+      panning = null;
+      const middle = pinchMiddle();
+      pinch = { distance: middle.distance, zoom, x: middle.x, y: middle.y };
+      for (const id of pointers.keys()) renderer.domElement.setPointerCapture?.(id);
+      return;
+    }
+    if (pointers.size > 2 || pinch) return;
     if (viewName === "river" && options.fishing) {
       // Any press strikes or reels; a press on the water near the jetty also aims the cast.
       const input = options.fishing.input.current;
@@ -3900,6 +4339,23 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       return;
     }
     down = { x: event.clientX, y: event.clientY, time: performance.now(), id: event.pointerId };
+    // Keep this pointer's events (and its release) even if it slides off the canvas, so a
+    // finger lifted over the HUD is not left behind as a phantom second finger.
+    renderer.domElement.setPointerCapture?.(event.pointerId);
+  }
+  function endPointer(event: PointerEvent) {
+    pointers.delete(event.pointerId);
+    if (pinch && pointers.size < 2) {
+      pinch = null;
+      down = null;
+      return true;
+    }
+    if (panning && panning.id === event.pointerId) {
+      panning = null;
+      down = null;
+      return true;
+    }
+    return false;
   }
   function endPress(event: PointerEvent) {
     if (fishingPointer === event.pointerId) {
@@ -3915,6 +4371,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     return false;
   }
   function onPointerUp(event: PointerEvent) {
+    if (endPointer(event)) return;
     if (endPress(event)) return;
     if (!down || down.id !== event.pointerId) return;
     const moved = Math.hypot(event.clientX - down.x, event.clientY - down.y);
@@ -3925,10 +4382,38 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     if (hit) options.onHit(hit);
   }
   function onPointerCancel(event: PointerEvent) {
+    endPointer(event);
     endPress(event);
     down = null;
   }
   function onPointerMove(event: PointerEvent) {
+    if (pointers.has(event.pointerId)) pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pinch && pointers.size >= 2) {
+      const middle = pinchMiddle();
+      const from = new THREE.Vector3();
+      const moved = groundAt(pinch.x, pinch.y, from);
+      zoomTo(pinch.zoom * (middle.distance / pinch.distance), middle.x, middle.y);
+      if (moved) dragGround(from, middle.x, middle.y);
+      pinch.x = middle.x;
+      pinch.y = middle.y;
+      pinch.distance = middle.distance;
+      pinch.zoom = zoom;
+      return;
+    }
+    if (panning && panning.id === event.pointerId) {
+      dragGround(panning.grab, event.clientX, event.clientY);
+      return;
+    }
+    if (down && down.id === event.pointerId && Math.hypot(event.clientX - down.x, event.clientY - down.y) > 8 && canPan()) {
+      // A drag on empty ground looks around: the ground under the pointer follows it.
+      const grab = new THREE.Vector3();
+      if (groundAt(down.x, down.y, grab)) {
+        panning = { id: event.pointerId, grab };
+        renderer.domElement.setPointerCapture?.(event.pointerId);
+        dragGround(grab, event.clientX, event.clientY);
+        return;
+      }
+    }
     if (work && work.id === event.pointerId) {
       moveCursor(event.clientX, event.clientY);
       const target = workTarget(event.clientX, event.clientY);
@@ -3957,6 +4442,14 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     if (viewName === "river" || work || workTarget(touch.clientX, touch.clientY)) event.preventDefault();
   }
   renderer.domElement.addEventListener("touchstart", onTouchStart, { passive: false });
+  // Ctrl/⌘ + wheel (and a trackpad pinch, which arrives that way) zooms about the pointer; a
+  // plain wheel keeps scrolling the page.
+  function onWheel(event: WheelEvent) {
+    if (!(event.ctrlKey || event.metaKey)) return;
+    event.preventDefault();
+    zoomTo(zoom * Math.exp(-event.deltaY * 0.01), event.clientX, event.clientY);
+  }
+  renderer.domElement.addEventListener("wheel", onWheel, { passive: false });
 
   /* ───────────── layout & loop ───────────── */
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -3969,9 +4462,101 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   let perfFrames = 0;
   let slowWindows = 0;
 
+  /** Pixels the page's bars and cards cover at the top and bottom of the canvas, and its height. */
+  const coverPx = { top: 0, bottom: 0 };
+  let canvasHeight = 1;
+  /** A narrow screen frames the area in the part the page leaves open; a wide one keeps the old framing. */
+  function cover(): Cover {
+    if (!isNarrow(aspect)) return NO_COVER;
+    return { top: Math.min(0.3, coverPx.top / canvasHeight), bottom: Math.min(0.4, coverPx.bottom / canvasHeight) };
+  }
+
   function desiredHeight() {
+    return defaultHeight(VIEWS[viewName], aspect, cover()) / zoom;
+  }
+
+  /* ───────────── zoom & pan ───────────── */
+  /** Keeps a pan (by default the player's) within the area. */
+  function clampPan(value = pan) {
+    const limit = panLimits(VIEWS[viewName], aspect, zoom, cover());
+    const x = Math.max(-limit.x, Math.min(limit.x, value.dot(SCREEN_RIGHT)));
+    const y = Math.max(-limit.y, Math.min(limit.y, value.dot(SCREEN_UP) * UP_SCALE));
+    value.copy(SCREEN_RIGHT).multiplyScalar(x).addScaledVector(SCREEN_UP, y / UP_SCALE);
+  }
+  /** Where an area starts: its centre, or on a phone its focus. */
+  function homePan(out: THREE.Vector3) {
     const view = VIEWS[viewName];
-    return Math.max(view.height, view.width / aspect);
+    if (view.focus && isNarrow(aspect)) out.copy(view.focus).sub(view.target).setY(0);
+    else out.set(0, 0, 0);
+    clampPan(out);
+    return out;
+  }
+  /** Whether the player moved the view since the area opened; until then it stays at the area's start. */
+  let panned = false;
+  function settlePan() {
+    if (panned) clampPan();
+    else homePan(pan);
+  }
+  /** Where the camera looks: the area's centre plus the pan, lowered so that point sits in the middle of the open part. */
+  function lookAt(out: THREE.Vector3) {
+    return out.copy(VIEWS[viewName].target).add(pan).addScaledVector(SCREEN_UP, -coverLift(desiredHeight(), cover()) / UP_SCALE);
+  }
+  function canPan() {
+    const limit = panLimits(VIEWS[viewName], aspect, zoom, cover());
+    return limit.x > 0.05 || limit.y > 0.05;
+  }
+  let reported = "";
+  function reportZoom() {
+    const state: ZoomState = {
+      atMin: zoom <= zoomMin(VIEWS[viewName], aspect, cover()) + 1e-3,
+      atMax: zoom >= ZOOM_MAX - 1e-3,
+      moved: Math.abs(zoom - 1) > 1e-3 || panned,
+    };
+    // Zoomed in, every drag on empty ground looks around; otherwise the page still scrolls up
+    // and down over the game and sideways drags look around.
+    renderer.domElement.style.touchAction = zoom > 1.02 ? "none" : "pan-y";
+    const key = `${state.atMin}${state.atMax}${state.moved}`;
+    if (key === reported) return;
+    reported = key;
+    options.onZoom?.(state);
+  }
+  /** The point on the ground under a screen position. */
+  function groundAt(clientX: number, clientY: number, out: THREE.Vector3): boolean {
+    const rect = renderer.domElement.getBoundingClientRect();
+    pointer.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+    raycaster.setFromCamera(pointer, camera);
+    return raycaster.ray.intersectPlane(groundPlane, out) !== null;
+  }
+  /** Puts the camera where the zoom and pan say at once (no easing), for direct gestures. */
+  function snapCamera() {
+    viewHeight = desiredHeight();
+    lookAt(cameraTarget);
+    applyCamera();
+  }
+  const grabBefore = new THREE.Vector3();
+  const grabAfter = new THREE.Vector3();
+  const grabDelta = new THREE.Vector3();
+  /** Zooms to `next`; with a screen point, the ground under it stays put. */
+  function zoomTo(next: number, clientX?: number, clientY?: number) {
+    const anchored = clientX !== undefined && clientY !== undefined && groundAt(clientX, clientY, grabBefore);
+    zoom = clampZoom(next, VIEWS[viewName], aspect, cover());
+    if (anchored) {
+      snapCamera();
+      if (groundAt(clientX, clientY, grabAfter)) pan.add(grabBefore.sub(grabAfter));
+      panned = true;
+    }
+    settlePan();
+    if (anchored) snapCamera();
+    reportZoom();
+  }
+  /** Moves the view so the ground point `from` ends up under the screen point. */
+  function dragGround(from: THREE.Vector3, clientX: number, clientY: number) {
+    if (!groundAt(clientX, clientY, grabAfter)) return;
+    pan.add(grabDelta.copy(from).sub(grabAfter));
+    panned = true;
+    clampPan();
+    snapCamera();
+    reportZoom();
   }
 
   function applyCamera() {
@@ -3991,11 +4576,15 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     const width = Math.max(280, container.clientWidth);
     const height = Math.max(260, container.clientHeight);
     aspect = width / height;
+    canvasHeight = height;
     renderer.setSize(width, height, false);
     post?.setSize(width, height, dpr);
+    zoom = clampZoom(zoom, VIEWS[viewName], aspect, cover());
+    settlePan();
+    reportZoom();
     if (!started) {
       viewHeight = desiredHeight();
-      cameraTarget.copy(VIEWS[viewName].target);
+      lookAt(cameraTarget);
     }
     applyCamera();
   });
@@ -4072,7 +4661,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     started = true;
     const elapsed = clock.getElapsedTime();
     const ease = reducedMotion ? 1 : 1 - Math.exp(-dt * 4.5);
-    cameraTarget.lerp(VIEWS[viewName].target, ease);
+    cameraTarget.lerp(lookAt(panGoal), ease);
     viewHeight += (desiredHeight() - viewHeight) * ease;
     applyCamera();
 
@@ -4243,6 +4832,11 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       const bird = view.species === "chicken" || view.species === "duck";
       const follower = view.young && bird;
       const size = ANIMAL_HEIGHT[view.species];
+      const pen = PEN_OF[view.species];
+      const penArea = penRect(pen, ranchLevel);
+      // Ducks settle into the water on the pond and paddle instead of walking.
+      const swimming = view.species === "duck" && inDuckPond(position.x, position.z);
+      view.swim += ((swimming ? 1 : 0) - view.swim) * Math.min(1, dt * 4);
       let pitch = 0;
       let roll = 0;
       // How far the head is lowered (as a share of the species' reach to the ground).
@@ -4296,7 +4890,8 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
           view.goal = -1;
           view.wait = (bird ? 3.5 : 5.5) + (seed % 35) / 10;
         }
-        let next = randomPasturePoint(hashString(id) + Math.floor(elapsed * 10));
+        // Ducks spend a good part of their time on the pond.
+        let next = randomPenPoint(pen, hashString(id) + Math.floor(elapsed * 10), view.species === "duck" && seed % 10 < 4);
         if (follower) {
           // Follow a grown hen or duck of the same kind, a little behind and to one side.
           const mother = [...animalViews.values()].find((other) => other.species === view.species && !other.young);
@@ -4308,7 +4903,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
           let bestD = Infinity;
           grazePatches.forEach((patch, index) => {
             const d = Math.hypot(patch.x - position.x, patch.z - position.z);
-            if (!patch.claim && patch.food > 0.55 && d < bestD) {
+            if (patch.pen === pen && inside(penArea, patch.x, patch.z, PEN_ROOM[pen]) && !patch.claim && patch.food > 0.55 && d < bestD) {
               best = index;
               bestD = d;
             }
@@ -4316,17 +4911,23 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
           if (best >= 0) headFor(view, id, best);
           else view.target = next;
         } else if (seed % 4 === 0) {
-          // Off to the trough for a bite.
-          view.target = new THREE.Vector2(TROUGH[0] + ((seed % 9) - 4) * 0.15, TROUGH[1] + 0.55 + ((seed >>> 4) % 3) * 0.12);
+          // Off to its pen's trough for a bite.
+          view.target = troughPoint(pen, seed);
         } else {
           view.target = next;
         }
       } else if (motion) {
-        walking = true;
-        const speed = view.speed * (view.young ? 1.25 : 1);
+        walking = !swimming;
+        const speed = view.speed * (view.young ? 1.25 : 1) * (swimming ? 0.6 : 1);
         const step = Math.min(distance, speed * dt);
-        position.x += (dx / distance) * step;
-        position.z += (dz / distance) * step;
+        const nx = position.x + (dx / distance) * step, nz = position.z + (dz / distance) * step;
+        if (view.species !== "duck" && inDuckPond(nx, nz, 0.1)) {
+          // Hens and chicks walk round the water, not through it.
+          view.target = randomPenPoint(pen, hashString(id) + Math.floor(elapsed * 7));
+        } else {
+          position.x = nx;
+          position.z = nz;
+        }
         // Turn smoothly towards where it is going.
         const want = Math.atan2(dx, dz);
         let turn = want - view.heading;
@@ -4343,10 +4944,15 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
           head = 0.16 * Math.max(0, Math.sin(phase * 2));
           headSpeed = 22;
         }
+        if (swimming) {
+          // Paddling: no steps, just a gentle bob.
+          view.body.position.y = 0;
+          roll = 0;
+        }
         // Grass on the way: stop for a bite if nobody is at it.
-        if (!follower && view.goal < 0 && view.eat < 0) {
+        if (!follower && !swimming && view.goal < 0 && view.eat < 0) {
           const reach = LEGS[view.species].reach * view.holder.scale.x + 0.35;
-          const near = grazePatches.findIndex((patch) => !patch.claim && patch.food > 0.7 && Math.hypot(patch.x - position.x, patch.z - position.z) < reach);
+          const near = grazePatches.findIndex((patch) => patch.pen === pen && inside(penArea, patch.x, patch.z, PEN_ROOM[pen]) && !patch.claim && patch.food > 0.7 && Math.hypot(patch.x - position.x, patch.z - position.z) < reach);
           if (near >= 0) headFor(view, id, near);
         }
       }
@@ -4355,6 +4961,8 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       view.legs.uHead.value += (head * LEGS[view.species].graze * motion - view.legs.uHead.value) * lower;
       view.legs.uDrop.value += (head * view.drop * motion - view.legs.uDrop.value) * lower;
       view.group.rotation.y = view.heading;
+      // Afloat: the body sinks to the waterline (the legs go under) and bobs.
+      if (view.swim > 0.001) view.body.position.y += -view.swim * view.legs.uHip.value * 1.05 + Math.sin(elapsed * 2.2 + view.hop) * 0.012 * view.swim * motion;
       // Lying down: lower and wider, with slow breaths.
       const breath = 1 + Math.sin(elapsed * 1.6 + view.hop) * 0.025 * view.lie * motion;
       view.pose.position.y = -0.12 * size * view.lie;
@@ -4382,8 +4990,18 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       }
       for (const view of herd) {
         const position = view.group.position;
-        position.x = Math.min(PASTURE.x + PASTURE.hx - 0.4, Math.max(PASTURE.x - PASTURE.hx + 0.4, position.x));
-        position.z = Math.min(PASTURE.z + PASTURE.hz - 0.4, Math.max(PASTURE.z - PASTURE.hz + 0.4, position.z));
+        const pen = PEN_OF[view.species];
+        const area = penRect(pen, ranchLevel);
+        const room = Math.min(PEN_ROOM[pen], 0.3);
+        position.x = Math.min(area.x1 - room, Math.max(area.x0 + room, position.x));
+        position.z = Math.min(area.z1 - room, Math.max(area.z0 + room, position.z));
+        if (view.species !== "duck" && inDuckPond(position.x, position.z, 0.05)) {
+          // Nudged into the pond by a neighbour: step back onto the bank.
+          const ax = (position.x - DUCK_POND.x) / DUCK_POND.rx, az = (position.z - DUCK_POND.z) / DUCK_POND.rz;
+          const r = Math.hypot(ax, az) || 1;
+          position.x = DUCK_POND.x + (ax / r) * (DUCK_POND.rx + 0.08);
+          position.z = DUCK_POND.z + (az / r) * (DUCK_POND.rz + 0.08);
+        }
       }
     }
     for (const group of dropViews.values()) {
@@ -4438,6 +5056,28 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     setView,
     setSelectedPlot,
     setTool,
+    zoomBy(factor: number) {
+      zoomTo(zoom * factor);
+    },
+    panBy(x: number, y: number) {
+      pan.addScaledVector(SCREEN_RIGHT, x * viewHeight * aspect).addScaledVector(SCREEN_UP, (y * viewHeight) / UP_SCALE);
+      panned = true;
+      clampPan();
+      reportZoom();
+    },
+    resetZoom() {
+      zoom = clampZoom(1, VIEWS[viewName], aspect, cover());
+      panned = false;
+      homePan(pan);
+      reportZoom();
+    },
+    setCover(top: number, bottom: number) {
+      coverPx.top = Math.max(0, top);
+      coverPx.bottom = Math.max(0, bottom);
+      zoom = clampZoom(zoom, VIEWS[viewName], aspect, cover());
+      settlePan();
+      reportZoom();
+    },
     dispose() {
       disposed = true;
       window.cancelAnimationFrame(frame);
@@ -4448,6 +5088,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       renderer.domElement.removeEventListener("pointercancel", onPointerCancel);
       renderer.domElement.removeEventListener("pointermove", onPointerMove);
       renderer.domElement.removeEventListener("touchstart", onTouchStart);
+      renderer.domElement.removeEventListener("wheel", onWheel);
       catchGeometries.forEach((item) => item.dispose());
       primitives.forEach((item) => item.dispose());
       owned.forEach((item) => item.dispose());

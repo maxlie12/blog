@@ -179,7 +179,7 @@ export function ShopSheet({ game, tab, onTab, onAct }: { game: Farm.GameState; t
             <span className="fg-list__icon" aria-hidden="true">🏡</span>
             <div>
               <strong>Mở rộng chuồng <em>· {Farm.ranchCapacity(game)} con</em></strong>
-              <small>{ranch ? `${ranch.cost} xu · cần cấp ${ranch.level} · nuôi tối đa ${Farm.RANCH_CAPACITIES[game.ranch.capacityLevel + 1]} con.` : "Chuồng đã rộng nhất."}</small>
+              <small>{ranch ? `${ranch.cost} xu · cần cấp ${ranch.level} · nuôi tối đa ${Farm.RANCH_CAPACITIES[game.ranch.capacityLevel + 1]} con · các chuồng to ra, thêm rơm, cỏ khô và đồ trang trí.` : "Chuồng đã rộng nhất."}</small>
             </div>
             <div className="fg-list__buy">
               {ranch ? <button type="button" disabled={level < ranch.level || game.coins < ranch.cost} onClick={() => onAct((current) => Farm.upgradeRanch(current))}>Mở rộng</button> : null}
@@ -606,6 +606,7 @@ export function GiftSheet({
 export function HelpSheet() {
   return (
     <ol className="fg-help">
+      <li><strong>Phóng to, nhìn quanh:</strong> nút + và − ở bên trái (hoặc chụm hai ngón, Ctrl + cuộn chuột) để phóng to; khi đã phóng to, kéo trên chỗ đất trống để nhìn quanh, nút ⤢ để về khung ban đầu. Trên điện thoại, kéo ngang để xem phần hai bên.</li>
       <li><strong>Ruộng:</strong> chạm ô đất bằng 👋 Tay để tự làm việc phù hợp — cuốc, gieo, chăm hoặc thu hoạch. Các công cụ bên dưới làm từng việc riêng. Giữ và kéo công cụ qua nhiều ô để làm một lượt.</li>
       <li><strong>Ngày và mùa:</strong> một ngày trong nông trại dài 24 phút thật (một giờ game là một phút thật), có sáng, chiều, tối, đêm. Mỗi mùa xuân, hạ, thu, đông kéo dài 7 ngày. Mỗi loại cây hợp mùa riêng (xem ở chợ); trái mùa cây vẫn lớn nhưng chậm một nửa và mau khô.</li>
       <li><strong>Chăm cây:</strong> 💧 đất khô dần theo giờ, nhanh hơn vào mùa hạ và ban ngày; đất khô hẳn thì cây gần như ngừng lớn, tưới là đất ẩm lại. 🌿 cỏ và 🐛 sâu làm mất sản lượng lúc thu hoạch. ⭐ là cây đã chín.</li>
@@ -613,7 +614,7 @@ export function HelpSheet() {
       <li><strong>Vườn cây:</strong> đào hố, trồng cây giống (mua ở chợ), tưới khi đất khô. Cây ăn quả lớn mất vài ngày, rồi ra quả mãi, nhanh nhất vào mùa quả của nó; khi có ⭐ thì chạm hoặc kéo qua để rung cây, quả rơi vào kho.</li>
       <li><strong>Câu cá ở sông:</strong> chạm mặt sông để thả câu. Phao rung nhẹ là cá rỉa, chưa giật; phao chìm hẳn và hiện dấu ! thì chạm ngay để giật. Rồi giữ để kéo, thả tay khi dây căng đỏ kẻo đứt. Mỗi lần cá cắn tốn một 🪱 mồi.</li>
       <li><strong>Ao cá:</strong> mua cá giống ở chợ, cho ăn để cá lớn đủ tốc độ, vớt rác để nước sạch. Cá có ⭐ là đã lớn — chạm để vớt.</li>
-      <li><strong>Trang trại:</strong> mua về là gà con, vịt con, cừu non, bê con; chúng ăn từ máng để lớn. Lớn rồi thì ban ngày đẻ trứng, cho len, sữa; đêm (20:00–5:00) chúng ngủ. Chạm sản phẩm trên cỏ (hoặc nút 🧺) để nhặt. Con có biểu tượng bát là đang chờ thức ăn.</li>
+      <li><strong>Trang trại:</strong> chia khu gà vịt (chuồng gà, ổ rơm, ao nhỏ cho vịt bơi), chuồng cừu, chuồng bò và lối đi ở giữa; mỗi chuồng có máng riêng và to dần mỗi lần mở rộng. Mua về là gà con, vịt con, cừu non, bê con; chúng ăn từ máng để lớn. Lớn rồi thì ban ngày đẻ trứng, cho len, sữa; đêm (20:00–5:00) chúng ngủ. Chạm sản phẩm trên cỏ (hoặc nút 🧺) để nhặt. Con có biểu tượng bát là đang chờ thức ăn.</li>
       <li><strong>Lò ấp trứng:</strong> xây ở trang trại (cấp 2), đặt trứng gà hoặc trứng vịt từ kho vào. Đảo trứng ít nhất mỗi 12 giờ game, không thì trứng ngừng phát triển; vài ngày cuối thì để yên. Trứng gà nở sau 21 giờ, trứng vịt sau 28 giờ game, rồi đưa con non ra chuồng.</li>
       <li><strong>Xưởng:</strong> trứng vịt thành trứng muối, trứng gà + lúa thành bánh, len thành khăn, sữa thành phô mai — đắt hơn bán thô.</li>
       <li><strong>Bán hàng:</strong> bán ngay tại kho, hoặc chất lên 🚚 xe tải chở lên phố để được giá cao hơn. Mỗi ngày có một món rau và một loại cá được giá +25%.</li>

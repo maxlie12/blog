@@ -2475,7 +2475,7 @@ body { line-height: 1.65; }
 
 /* ---------- Learning Farm ---------- */
 
-.learning-world { display: grid; gap: 1.5rem; }
+.learning-world { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
 .world-breadcrumb { display: flex; justify-content: space-between; gap: 1rem; align-items: center; color: var(--text-muted); font-size: .8rem; }
 .world-breadcrumb a { color: var(--forest); font-weight: 650; text-underline-offset: 4px; }
 .world-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2rem; align-items: end; padding: clamp(1.25rem, 3vw, 2.3rem); background: linear-gradient(135deg, var(--sage), color-mix(in srgb, var(--butter) 46%, var(--sage))); border: 1px solid var(--border); border-radius: 24px; overflow: hidden; }
@@ -2527,11 +2527,11 @@ body { line-height: 1.65; }
 .world-learn .world-quest { grid-column: 2; grid-row: 1 / span 2; }
 
 /* ---------- Learning Farm game (nông trại + ao cá) ---------- */
-.fg { --fg-ink: #1f3d2c; --fg-muted: #50624f; --fg-cream: #fffdf2; --fg-line: #24583e; display: grid; gap: .6rem; }
+.fg { --fg-ink: #1f3d2c; --fg-muted: #50624f; --fg-cream: #fffdf2; --fg-line: #24583e; display: grid; grid-template-columns: minmax(0, 1fr); gap: .6rem; }
 .fg-stage { position: relative; height: clamp(32rem, 76vh, 46rem); overflow: hidden; isolation: isolate; color: var(--fg-ink); background: #cfe8d4; border: 1px solid #c6d9bd; border-radius: 24px; box-shadow: 0 24px 50px -40px #173f30aa; }
 .fg-stage--loading { display: grid; place-items: center; color: #24583e; background: linear-gradient(160deg, #dfeecf, #f2e7ae); font-family: var(--font-mono), monospace; letter-spacing: .08em; }
 .fg-scene { position: absolute; inset: 0; }
-.fg-scene canvas { display: block; width: 100%; height: 100%; touch-action: manipulation; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.fg-scene canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .fg-hud { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; justify-content: space-between; gap: .5rem; padding: .75rem; pointer-events: none; }
 .fg-hud button { font: inherit; }
 .fg-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; }
@@ -2557,6 +2557,12 @@ body { line-height: 1.65; }
 .fg-toast { position: absolute; top: 4.1rem; left: 50%; z-index: 3; width: max-content; max-width: min(32rem, calc(100% - 1.5rem)); padding: .6rem 1rem; color: var(--fg-cream); background: #173f30f2; border-radius: 14px; box-shadow: 0 12px 24px -14px #000c; font-size: .82rem; line-height: 1.4; text-align: center; transform: translateX(-50%); animation: fg-pop .25s ease-out; }
 .fg-toast[data-tone="warn"] { background: #8a3b1ef2; }
 .fg-side { position: absolute; top: 50%; right: .75rem; display: grid; gap: .45rem; transform: translateY(-50%); }
+/* Zoom buttons at the left edge, over the 3D scene. */
+.fg-zoom { position: absolute; z-index: 1; top: 50%; left: .75rem; display: grid; gap: .3rem; padding: .25rem; background: #fffdf2ee; border: 2px solid var(--fg-line); border-radius: 16px; box-shadow: 0 4px 0 #24583e33; transform: translateY(-50%); }
+.fg-zoom button { width: 44px; height: 44px; display: grid; place-items: center; padding: 0; color: var(--fg-ink); background: transparent; border: 0; border-radius: 12px; font-size: 1.45rem; font-weight: 800; line-height: 1; cursor: pointer; }
+.fg-zoom button:hover:not(:disabled) { background: #f6dc76; }
+.fg-zoom button:focus-visible { outline: 3px solid #f2b705; outline-offset: 1px; }
+.fg-zoom button:disabled { opacity: .35; cursor: default; }
 .fg-side button { position: relative; width: 3.7rem; display: grid; justify-items: center; gap: .1rem; padding: .45rem .15rem .4rem; color: var(--fg-ink); border-radius: 16px; font-size: .6rem; font-weight: 750; cursor: pointer; transition: transform .15s ease; }
 .fg-side button:hover { transform: translateY(-2px); }
 .fg-side button span { font-size: 1.3rem; line-height: 1; }
@@ -2569,7 +2575,7 @@ body { line-height: 1.65; }
 .fg-tools button span { font-size: 1.35rem; line-height: 1.1; }
 .fg-tools button[aria-pressed="true"] { background: #f6dc76; box-shadow: inset 0 -3px 0 #d0ad2d; }
 .fg-tools b { top: .05rem; right: .1rem; background: var(--fg-line); }
-.fg-card { pointer-events: auto; width: min(31rem, 100%); padding: .7rem .85rem .8rem; background: #fffdf2f4; border: 2px solid var(--fg-line); border-radius: 18px; box-shadow: 0 6px 0 #24583e26; font-size: .8rem; animation: fg-rise .2s ease-out; }
+.fg-card { pointer-events: auto; box-sizing: border-box; width: min(31rem, 100%); padding: .7rem .85rem .8rem; background: #fffdf2f4; border: 2px solid var(--fg-line); border-radius: 18px; box-shadow: 0 6px 0 #24583e26; font-size: .8rem; animation: fg-rise .2s ease-out; }
 .fg-card p { margin: .3rem 0 0; color: #3d5546; }
 .fg-card__head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
 .fg-card__actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .55rem; }
@@ -2663,7 +2669,7 @@ body { line-height: 1.65; }
 .fg-help { display: grid; gap: .55rem; margin: 0; padding-left: 1.2rem; font-size: .82rem; line-height: 1.5; }
 .fg-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem; color: var(--text-muted); font-size: .72rem; }
 .fg-foot p { margin: 0; }
-.fg-foot div { display: flex; gap: .5rem; }
+.fg-foot div { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
 .fg-foot button { padding: .35rem .8rem; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; font-size: .72rem; cursor: pointer; }
 /* 2D board: DOM + CSS transforms only, so it stays smooth and cheap on any device. */
 .fg2 { position: absolute; inset: 0; display: grid; place-items: center; padding: 5rem 5rem 7rem 1rem; overflow: hidden; background: radial-gradient(120% 70% at 50% 100%, #9fcd72 0 55%, #8dbb62 56% 100%), #8dbb62; }
@@ -2734,6 +2740,12 @@ body { line-height: 1.65; }
   .fg-topright { grid-auto-flow: column; align-items: center; }
   .fg-clock { order: -1; padding: .2rem .5rem; }
   .fg-clock__day { display: none; }
+  /* Level, clock and coins share the first row on a phone: the level shows its bar only. */
+  .fg-level { padding-right: .55rem; }
+  .fg-level > b { width: 1.9rem; height: 1.9rem; font-size: .95rem; }
+  .fg-level > div { min-width: 3.6rem; }
+  .fg-level small { display: none; }
+  .fg-coins { padding: .35rem .65rem; font-size: .9rem; }
   .fg-toast { top: 7.3rem; }
   .fg-side { top: 7.6rem; right: .55rem; transform: none; gap: .35rem; }
   .fg-side button { width: 3.25rem; padding: .35rem .1rem .3rem; font-size: .56rem; white-space: nowrap; }
@@ -2747,6 +2759,16 @@ body { line-height: 1.65; }
   .fg2--ranch { padding-bottom: 10.5rem; }
   .fg-stage[data-view="ranch"] .fg-side, .fg-stage[data-view="pond"] .fg-side { gap: .3rem; }
   .fg-split { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  /* On a phone the zoom buttons sit in a row just above the bottom bar, at the left, where
+     they cover scenery rather than the plots or the pond. */
+  .fg-zoom { top: auto; bottom: 9rem; left: .55rem; grid-auto-flow: column; gap: .15rem; padding: .15rem; transform: none; }
+  .fg-stage[data-view="farm"] .fg-zoom, .fg-stage[data-view="orchard"] .fg-zoom { bottom: 4.5rem; }
+}
+@media (max-width: 400px) {
+  /* Seven tools still fit a 360px phone, each at least 44px wide. */
+  .fg-tools button { width: 2.75rem; }
 }
 
 .world-dashboard { display: grid; grid-template-columns: 1.2fr .8fr; gap: 1rem; }

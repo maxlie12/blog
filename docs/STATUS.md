@@ -1,6 +1,17 @@
 # Status
 
-Last verified: 2026-11-06 (farm heads and fruit; harness browser checks).
+Last verified: 2026-11-06 (farm zoom and ranch pens; harness browser checks).
+
+## 2026-11-06 — Farm: zoom and look around, easier on phones; a ranch with separate pens
+
+- Every 3D area has zoom buttons (+, −, fit), pinch and Ctrl/⌘ + scroll; zoomed in, a drag on
+  empty ground looks around. Phones show each area closer, framed between the top bar and the
+  bottom bar or card; the page no longer lays out wider than the phone.
+- The ranch is split into a poultry yard (hen house, straw nests, a duck pond where ducks swim),
+  a sheep pen, a cow pen, each with its own trough, and a middle lane with feed, a pump and the
+  incubator. Pens grow with each capacity upgrade and gain hay, straw, flowers and lanterns.
+- Checks: `farmLayout.test.ts` (4), ESLint, `tsc`; browser harness at 360/390/412 px and desktop.
+  See `docs/changes/GAME-017-farm-zoom-ranch-pens.md`.
 
 ## 2026-11-06 — Farm: animals lower their heads to eat, nicer fruit
 
