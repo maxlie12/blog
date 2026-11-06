@@ -71,7 +71,7 @@ Inspiron 15 3000 (hand-made art, Unreal Engine lighting), but the look can move 
 - [x] Draw calls and triangles per view (shadow pass included): low 8–47 and 69–170k, medium
       26–79 and 167–369k, high 41–96 and 191–401k (before: about 14k triangles). Screenshots
       reviewed at every preset, desktop and phone, empty and fully planted, before and after.
-- [ ] Vercel build + production deploy.
+- [x] Vercel build + production deploy (`05e6cc9`).
 
 ## Result
 
