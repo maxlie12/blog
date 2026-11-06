@@ -1,0 +1,90 @@
+{
+  "date": "2026-11-06",
+  "title": "Khởi động 5 phút — nghe ý định, hỏi lại khi chưa rõ",
+  "kind": "restart",
+  "note": "Sau gói kiểm tra 28 ngày ngày 05/11, chưa có bài làm mới để nhận xét hoặc đổi mức. Giữ B1+ tự đánh giá và bước nghe/đọc hiểu với cùng nguồn Cambridge; không tự chuyển sang shadowing. Chỉ nhiệm vụ nghe là chính; các kỹ năng còn lại và tiếng Trung đều tùy chọn, có thể học ở phiên khác. Đây không phải yêu cầu làm bù gói hôm trước.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-06-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Nhiệm vụ chính 5 phút — nghe để nhận ra người nói muốn gì",
+      "level": "B1+ restart / B1–B2 source",
+      "instructions": "Nhiệm vụ do trợ lý soạn, không phải đề hoặc đáp án chính thức Cambridge. Dùng lại nguồn miễn phí Listening to dialogues, B1–B2, có hoạt động nghe và câu hỏi; toàn hoạt động 5–10 phút. Chỉ chọn một hội thoại trong 5 phút, nghe tối đa hai lượt. Không xem đáp án trước; không mặc định nguồn có transcript.",
+      "material": "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues",
+      "exercises": "Trước khi nghe, tự hỏi: người nói muốn hỏi, đề nghị, giải thích hay xác nhận điều gì? Sau khi nghe, viết hai dòng bằng lời của mình: mục đích cuộc trao đổi và một chi tiết nghe chắc. Nếu chưa rõ, ghi cụ thể chỗ chưa rõ thay vì đoán. Ghi số lượt nghe, hỗ trợ và thời gian; hôm nay không cần hoàn thành cả trang.",
+      "completionCriteria": "Lưu hai dòng tự tạo, một điều chưa chắc nếu có và điều kiện làm bài. Done chỉ ghi thực hành; chưa đủ để kết luận tăng trình độ. Có thể gửi bản đầu về ChatGPT để nhận một góp ý."
+    },
+    {
+      "id": "daily-2026-11-06-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — đọc cách hỏi lại một yêu cầu",
+      "level": "B1+ practical task",
+      "instructions": "Hội thoại ngắn dưới đây do trợ lý tự soạn, không phải transcript của audio Cambridge và không phải bài thi. Cùng mục tiêu giao tiếp: hiểu yêu cầu và làm rõ điều chưa chắc. Đọc trước rồi trả lời bằng lời của bạn.",
+      "material": "Alex: Could you send the updated screen before lunch?\nMinh: Do you mean the design or the working page?\nAlex: The working page, please. The design is already approved.\nMinh: I can send the main screen by eleven, but the error messages will be ready later.\nAlex: That works. Please tell me when the rest is ready.",
+      "exercises": "Trả lời ngắn: Alex cần sản phẩm nào? Minh đã làm rõ điều gì? Phần nào sẽ xong muộn hơn? Chọn một câu hỏi làm rõ trong đoạn, giải thích khi nào bạn có thể dùng nó; không xem bản dịch trước bản đầu.",
+      "completionCriteria": "Lưu ba câu trả lời và tình huống sử dụng câu hỏi. Không tính đọc hội thoại này là đã nghe audio Cambridge."
+    },
+    {
+      "id": "daily-2026-11-06-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — tự hỏi lại trước khi đồng ý",
+      "level": "B1+ practical task",
+      "instructions": "Tình huống do trợ lý soạn, không phải câu hỏi Cambridge chính thức. Không cần học xong bài đọc; dùng vốn từ hiện có. Chuẩn bị tối đa ba từ khóa, không viết cả đoạn trước khi nói.",
+      "material": null,
+      "exercises": "Một đồng nghiệp nói: “Can you send it today?” Bạn chưa rõ cần gửi bản thiết kế hay trang đã chạy. Tự nói một câu hỏi làm rõ, rồi nêu bạn gửi được gì và lúc nào. Sau đó đổi điều kiện: họ cần sớm hơn dự kiến; trả lời thêm một lượt. Nói 30–45 giây rồi ghi lại một chỗ bị bí. Nếu muốn nhận xét phát âm, gửi ChatGPT audio; bản gõ chỉ giúp nhận xét ý và ngôn ngữ.",
+      "completionCriteria": "Tự nói ít nhất hai lượt phản hồi, lưu 1–2 câu đã nói cùng điểm muốn sửa. Không yêu cầu ghi âm vào website hoặc repo."
+    },
+    {
+      "id": "daily-2026-11-06-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5 phút — viết tin nhắn xác nhận yêu cầu",
+      "level": "B1+ practical task",
+      "instructions": "Bài viết do trợ lý soạn, không phải đề thi. Giữ cùng mục tiêu hỏi lại và xác nhận một việc; viết bằng chi tiết tự chọn, không chép hội thoại hoặc dùng AI sửa bản đầu.",
+      "material": null,
+      "exercises": "Viết 30–50 từ cho một đồng nghiệp: hỏi rõ họ cần bản thiết kế hay trang đã chạy, nêu thời gian bạn có thể gửi và hỏi họ xác nhận. Sau khi lưu, chỉ kiểm tra một điều: người nhận có biết bạn đang hỏi gì và hứa điều gì không? Chưa cần sửa tất cả lỗi.",
+      "completionCriteria": "Lưu bản đầu, thời gian và một điểm tự sửa nếu có. Có thể gửi ChatGPT bản viết để nhận một lỗi ưu tiên và một lần luyện lại ngắn."
+    },
+    {
+      "id": "daily-2026-11-06-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — gọi đồ uống rồi hỏi lại",
+      "level": "Beginner practical task",
+      "instructions": "Bài luyện do trợ lý soạn, không phải bài hoặc đáp án chính thức của Mandarin Bean/HSK. Dùng lại Mandarin Bean trên web: hội thoại, pinyin và audio miễn phí; bài tập, bản dịch đầy đủ thuộc Premium. Không cần mua gói. Nhớ lại mẫu đã gặp trước khi mở gợi ý.",
+      "material": "https://mandarinbean.com/im-thirsty/",
+      "exercises": "Nhìn cụm mẫu một lần rồi che chữ và pinyin. Tự nói bạn muốn uống gì bằng đồ uống khác mẫu. Đóng vai người bán hỏi lại lựa chọn nóng hay lạnh; tự trả lời rồi gõ cặp hỏi–đáp mới. Nếu cần tra từ, ghi rõ. Viết tay một chữ chỉ là tùy chọn, không lưu và không tự chấm.",
+      "completionCriteria": "Chỉ Done khi có câu/cặp hỏi–đáp tự tạo và đã nói không nhìn mẫu; chép nguyên câu chưa đủ. Không suy ra năng lực từ streak.",
+      "chinesePractice": {
+        "sentence": "我想喝茶。",
+        "translation": "Tôi muốn uống trà.",
+        "tokens": [
+          {
+            "hanzi": "我想",
+            "pinyin": "wǒ xiǎng",
+            "meaning": "tôi muốn"
+          },
+          {
+            "hanzi": "喝茶",
+            "pinyin": "hē chá",
+            "meaning": "uống trà"
+          },
+          {
+            "hanzi": "热的",
+            "pinyin": "rè de",
+            "meaning": "loại nóng"
+          },
+          {
+            "hanzi": "冰的",
+            "pinyin": "bīng de",
+            "meaning": "loại lạnh"
+          }
+        ],
+        "outputPrompt": "Che mẫu, đổi đồ uống rồi gõ một cặp hỏi–đáp về lựa chọn nóng/lạnh do bạn tự tạo; đọc thành tiếng."
+      }
+    }
+  ]
+}
