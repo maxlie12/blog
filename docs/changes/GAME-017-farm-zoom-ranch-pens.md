@@ -74,7 +74,8 @@
       its pen, ducks swim, all three troughs, pens grow on upgrade); every plot in view on phones
       and the phone touch-drag sows two plots without scrolling the page; screenshots desktop and
       phone.
-- [ ] Vercel build + production deploy.
+- [x] Vercel build + production deploy (`697b0cc`). The local `npm run build` stops on packages this
+      container does not install (Clerk, Neon, transformers), outside the farm code.
 
 ## Result
 
