@@ -1,8 +1,10 @@
 /**
- * Walking legs and swimming bodies for static models (the built-in ones and Meshy's GLBs, which
- * come without bones). Each leg is found from the mesh itself, the vertices below the hip get a
- * gait phase and a weight, and the vertex shader swings them, so a chicken steps on two legs and a
- * cow walks on four (diagonal pairs). Fish bend in a travelling wave from head to tail.
+ * Walking legs, a bending neck and swimming bodies for static models (the built-in ones and
+ * Meshy's GLBs, which come without bones). Each leg is found from the mesh itself, the vertices
+ * below the hip get a gait phase and a weight, and the vertex shader swings them, so a chicken
+ * steps on two legs and a cow walks on four (diagonal pairs). The head and neck get a weight too,
+ * so the animal lowers its head to eat while its body stays level. Fish bend in a travelling wave
+ * from head to tail.
  */
 import * as THREE from "three";
 
@@ -83,27 +85,84 @@ export function legAttributes(positions: ArrayLike<number>, gait: Gait, hip: num
   return out;
 }
 
-export interface LegUniforms {
+/**
+ * Where an animal's neck starts, as shares of its body: `back` from the front of the body, `up`
+ * from the feet. Only points above `low` (a share of the height) bend with the head, so the legs
+ * and the chest under the neck stay put.
+ */
+export interface Neck {
+  back: number;
+  up: number;
+  low: number;
+}
+
+/**
+ * For positions in the animal's own frame (y up, feet at 0, facing +z), how much each vertex
+ * follows the head (0 body … 1 head), and the neck pivot as [y, z]. The weight grows along the
+ * neck, so it bends smoothly instead of breaking at one line.
+ */
+export function headAttributes(positions: ArrayLike<number>, neck: Neck): { weights: Float32Array; pivot: [number, number] } {
+  const count = positions.length / 3;
+  const weights = new Float32Array(count);
+  let top = 0;
+  let front = -Infinity;
+  let back = Infinity;
+  for (let i = 0; i < count; i += 1) {
+    top = Math.max(top, positions[i * 3 + 1]);
+    front = Math.max(front, positions[i * 3 + 2]);
+    back = Math.min(back, positions[i * 3 + 2]);
+  }
+  if (count === 0) return { weights, pivot: [0, 0] };
+  const length = front - back;
+  const pivotZ = front - neck.back * length;
+  const pivotY = neck.up * top;
+  const low = neck.low * top;
+  for (let i = 0; i < count; i += 1) {
+    const y = positions[i * 3 + 1], z = positions[i * 3 + 2];
+    weights[i] = smooth(pivotZ - length * 0.06, pivotZ + length * 0.12, z) * smooth(low, low + top * 0.08, y);
+  }
+  return { weights, pivot: [pivotY, pivotZ] };
+}
+
+export interface AnimalUniforms {
   uStep: { value: number };
   uStride: { value: number };
   uHip: { value: number };
   uSwing: { value: number };
+  /** How far the head turns down (radians) and sinks (scene units), and the neck pivot [y, z]. */
+  uHead: { value: number };
+  uDrop: { value: number };
+  uNeck: { value: THREE.Vector2 };
 }
 
-export function legUniforms(hip: number, swing: number): LegUniforms {
-  return { uStep: { value: 0 }, uStride: { value: 0 }, uHip: { value: hip }, uSwing: { value: swing } };
+export function animalUniforms(hip: number, swing: number): AnimalUniforms {
+  return { uStep: { value: 0 }, uStride: { value: 0 }, uHip: { value: hip }, uSwing: { value: swing }, uHead: { value: 0 }, uDrop: { value: 0 }, uNeck: { value: new THREE.Vector2() } };
 }
 
 /**
- * A copy of `source` whose legs swing with this animal's step: each leg rotates forward and back
- * about its hip and the foot lifts while it swings forward. Needs the `aLeg` attribute.
+ * A copy of `source` whose legs swing with this animal's step (each leg rotates forward and back
+ * about its hip and the foot lifts while it swings forward) and whose head and neck turn down
+ * about the neck pivot and sink (a long neck reaching down), normals turning with them. Needs the
+ * `aLeg` and `aHead` attributes.
  */
-export function legMaterial(source: THREE.Material, uniforms: LegUniforms): THREE.Material {
+export function animalMaterial(source: THREE.Material, uniforms: AnimalUniforms): THREE.Material {
   const material = source.clone();
   material.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
     shader.vertexShader = shader.vertexShader
-      .replace("#include <common>", "#include <common>\nattribute vec2 aLeg;\nuniform float uStep;\nuniform float uStride;\nuniform float uHip;\nuniform float uSwing;")
+      .replace(
+        "#include <common>",
+        "#include <common>\nattribute vec2 aLeg;\nattribute float aHead;\nuniform float uStep;\nuniform float uStride;\nuniform float uHip;\nuniform float uSwing;\nuniform float uHead;\nuniform float uDrop;\nuniform vec2 uNeck;",
+      )
+      .replace(
+        "#include <beginnormal_vertex>",
+        `#include <beginnormal_vertex>
+        if (aHead > 0.0) {
+          float headTurn = uHead * aHead;
+          float headC = cos(headTurn), headS = sin(headTurn);
+          objectNormal = vec3(objectNormal.x, objectNormal.y * headC - objectNormal.z * headS, objectNormal.y * headS + objectNormal.z * headC);
+        }`,
+      )
       .replace(
         "#include <begin_vertex>",
         `#include <begin_vertex>
@@ -112,10 +171,18 @@ export function legMaterial(source: THREE.Material, uniforms: LegUniforms): THRE
           float lever = max(0.0, uHip - transformed.y);
           transformed.z += sin(legPhase) * uStride * uSwing * lever * aLeg.y;
           transformed.y += max(0.0, cos(legPhase)) * uStride * uSwing * 0.35 * lever * aLeg.y;
+        }
+        if (aHead > 0.0) {
+          float neckTurn = uHead * aHead;
+          float neckC = cos(neckTurn), neckS = sin(neckTurn);
+          vec2 fromNeck = vec2(transformed.y - uNeck.x, transformed.z - uNeck.y);
+          transformed.y = uNeck.x + fromNeck.x * neckC - fromNeck.y * neckS;
+          transformed.z = uNeck.y + fromNeck.x * neckS + fromNeck.y * neckC;
+          transformed.y -= uDrop * aHead;
         }`,
       );
   };
-  material.customProgramCacheKey = () => `farm-legs-${source.type}-${source.customProgramCacheKey()}`;
+  material.customProgramCacheKey = () => `farm-animal-${source.type}-${source.customProgramCacheKey()}`;
   return material;
 }
 

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { legAttributes } from "./farm/legs.ts";
+import { headAttributes, legAttributes } from "./farm/legs.ts";
 
 /** Vertical columns of points at the given (x, z), from the ground up to `top`. */
 function columns(feet: [number, number][], top: number, extra: [number, number, number][] = []): number[] {
@@ -36,4 +36,19 @@ test("legs: four legs move in diagonal pairs and an udder between them stays sti
   assert.equal(phase[1], phase[2], "right front with left hind");
   assert.notEqual(phase[0], phase[1]);
   assert.equal(legs[(positions.length / 3 - 1) * 2 + 1], 0, "the udder does not swing");
+});
+
+test("head: the head and neck bend, the back, legs and chest under the neck do not", () => {
+  // A cow-like body facing +z: back at z -0.6, chest at z 0.45, head out front at z 0.6 and up.
+  const back: [number, number, number] = [0, 0.7, -0.6];
+  const chest: [number, number, number] = [0, 0.3, 0.45];
+  const foreleg: [number, number, number] = [0.15, 0.05, 0.4];
+  const head: [number, number, number] = [0, 0.95, 0.6];
+  const positions = [...back, ...chest, ...foreleg, ...head, 0, 1, 0];
+  const { weights, pivot } = headAttributes(positions, { back: 0.2, up: 0.65, low: 0.45 });
+  assert.equal(weights[0], 0, "the back stays");
+  assert.equal(weights[1], 0, "the chest stays");
+  assert.equal(weights[2], 0, "the foreleg stays");
+  assert.ok(weights[3] > 0.99, "the head bends fully");
+  assert.ok(Math.abs(pivot[0] - 0.65) < 1e-9 && Math.abs(pivot[1] - 0.36) < 1e-9, `neck pivot at the shoulders: ${pivot}`);
 });

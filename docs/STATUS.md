@@ -1,6 +1,15 @@
 # Status
 
-Last verified: 2026-11-06 (farm legs, grazing and fish; harness browser checks).
+Last verified: 2026-11-06 (farm heads and fruit; harness browser checks).
+
+## 2026-11-06 — Farm: animals lower their heads to eat, nicer fruit
+
+- Chickens peck, ducks dabble, sheep and cows graze by lowering the head and neck; the body stays
+  level (Meshy and built-in models; bent in the vertex shader).
+- Every fruit has its own shape and colouring: lemons, oranges, mangoes, coconuts and banana
+  hands on the trees; tomatoes, strawberries, pumpkins, watermelons and corn in the fields.
+- Checks: `farmLegs.test.ts` (3), ESLint, `tsc`; 4 new browser checks plus 30/30, 15/15, 11/11;
+  worst-case triangles within 5–13% of before. See `docs/changes/GAME-016-farm-heads-fruit.md`.
 
 ## 2026-11-06 — Farm: animals walk on their legs and graze, new pond fish
 

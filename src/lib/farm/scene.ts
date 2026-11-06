@@ -20,9 +20,9 @@
  */
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { pondGeometry, waterMaterial as villageWater, waterUniforms } from "../village/graphics";
-import { legAttributes, legMaterial, legUniforms, swimMaterial, type Gait, type LegUniforms, type SwimUniforms } from "./legs";
+import { animalMaterial, animalUniforms, headAttributes, legAttributes, swimMaterial, type AnimalUniforms, type Gait, type Neck, type SwimUniforms } from "./legs";
 import { SEASON_LOOK, addSeason, addWind, flowerGeometry, lightAt, makePost, paintSky, season as seasonTint, skyTexture, starField, tuftGeometry, wind, type FarmPost } from "./look";
 import {
   ANIMAL_MAP,
@@ -115,13 +115,15 @@ const FISH_IDS: FishId[] = ["tilapia", "carp", "puffer", "goldfish", "koi", "stu
  * How each animal walks: two legs or four, the hip as a share of its height, and how far each leg
  * swings (foot travel per unit of leg length). The step rate follows from these, so feet do not slide.
  * `reach` is how far ahead of the body its mouth meets the grass; `room` how close another animal
- * may come (grown size).
+ * may come (grown size). `neck` is where a Meshy model's head bends down to eat; eating, the head
+ * turns down by `graze` radians and sinks by `drop` (a share of the height). The built-in models
+ * mark their head parts themselves and turn them about `builtInPivot` ([y, z]) without sinking.
  */
-const LEGS: Record<AnimalId, { gait: Gait; hip: number; swing: number; reach: number; room: number }> = {
-  chicken: { gait: "biped", hip: 0.28, swing: 0.45, reach: 0.2, room: 0.2 },
-  duck: { gait: "biped", hip: 0.24, swing: 0.4, reach: 0.22, room: 0.2 },
-  sheep: { gait: "quadruped", hip: 0.29, swing: 0.42, reach: 0.42, room: 0.36 },
-  cow: { gait: "quadruped", hip: 0.31, swing: 0.4, reach: 0.6, room: 0.46 },
+const LEGS: Record<AnimalId, { gait: Gait; hip: number; swing: number; reach: number; room: number; neck: Neck; builtInPivot: [number, number]; graze: number; drop: number }> = {
+  chicken: { gait: "biped", hip: 0.28, swing: 0.45, reach: 0.2, room: 0.2, neck: { back: 0.25, up: 0.6, low: 0.58 }, builtInPivot: [0.45, 0.1], graze: 1.35, drop: 0.14 },
+  duck: { gait: "biped", hip: 0.24, swing: 0.4, reach: 0.22, room: 0.2, neck: { back: 0.28, up: 0.55, low: 0.52 }, builtInPivot: [0.42, 0.14], graze: 1.1, drop: 0.16 },
+  sheep: { gait: "quadruped", hip: 0.29, swing: 0.42, reach: 0.42, room: 0.36, neck: { back: 0.28, up: 0.62, low: 0.4 }, builtInPivot: [0.6, 0.3], graze: 1.0, drop: 0.22 },
+  cow: { gait: "quadruped", hip: 0.31, swing: 0.4, reach: 0.6, room: 0.46, neck: { back: 0.34, up: 0.65, low: 0.45 }, builtInPivot: [0.7, 0.44], graze: 0.9, drop: 0.2 },
 };
 
 const FARM_CENTER = new THREE.Vector3(-4.6, 0, 0.7);
@@ -348,6 +350,41 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       const width = Math.pow(Math.sin(Math.PI * Math.min(1, v * 1.04)), 0.75);
       position.setXYZ(i, u * width, Math.abs(u) * width * 0.28 - curl * v * v, v);
     }
+    front.computeVertexNormals();
+    const back = front.clone();
+    const index = back.index as THREE.BufferAttribute;
+    for (let i = 0; i < index.count; i += 3) {
+      const a = index.getX(i + 1);
+      index.setX(i + 1, index.getX(i + 2));
+      index.setX(i + 2, a);
+    }
+    const normals = back.attributes.normal;
+    for (let i = 0; i < normals.count; i += 1) normals.setXYZ(i, -normals.getX(i), -normals.getY(i), -normals.getZ(i));
+    const both = mergeGeometries([front, back], false) ?? front;
+    if (both !== front) {
+      front.dispose();
+      back.dispose();
+    }
+    return both;
+  });
+
+  /**
+   * A star of `points` sepals one unit across, facing up with its tips drooping, with a back face:
+   * the green cap on a tomato or a strawberry (a few triangles, unlike a ring of leaves).
+   */
+  const star = (points: number) => primitive(`star:${points}`, () => {
+    const outline = new THREE.Shape();
+    for (let i = 0; i < points * 2; i += 1) {
+      const a = (i / (points * 2)) * Math.PI * 2;
+      const r = i % 2 ? 0.16 : 0.5;
+      if (i === 0) outline.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+      else outline.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+    }
+    const front = new THREE.ShapeGeometry(outline);
+    front.rotateX(-Math.PI / 2);
+    front.deleteAttribute("uv");
+    const position = front.attributes.position;
+    for (let i = 0; i < position.count; i += 1) position.setY(i, -0.5 * (position.getX(i) ** 2 + position.getZ(i) ** 2));
     front.computeVertexNormals();
     const back = front.clone();
     const index = back.index as THREE.BufferAttribute;
@@ -1787,6 +1824,229 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     return { group, icon: iconSprite };
   }
 
+  /* ───────────── fruit ───────────── */
+  /**
+   * A fruit-shaped piece with its own colours: a unit sphere moved point by point by `shape` and
+   * coloured by `paint` (both are given the point on the unit sphere; `paint` also gets the
+   * vertex's column around and row down, for seeds and stripes that sit on the mesh), smooth
+   * across its seam. Cached by `key`, so every fruit of a kind and ripeness shares one geometry.
+   * Columns are kept a multiple of four so patterns meet at the seam.
+   */
+  function fruitGeometry(key: string, w: number, h: number, shape: (point: THREE.Vector3, unit: THREE.Vector3) => void, paint: (unit: THREE.Vector3, color: THREE.Color, column: number, row: number) => void): THREE.BufferGeometry {
+    return primitive(`fruit:${key}`, () => {
+      const columns = Math.max(8, Math.round((w * coarse) / 4) * 4);
+      const rows = Math.max(6, Math.round(h * coarse));
+      const ball = new THREE.SphereGeometry(1, columns, rows);
+      ball.deleteAttribute("uv");
+      ball.deleteAttribute("normal");
+      const position = ball.attributes.position;
+      const colors = new Float32Array(position.count * 3);
+      const unit = new THREE.Vector3();
+      const point = new THREE.Vector3();
+      const color = new THREE.Color();
+      for (let i = 0; i < position.count; i += 1) {
+        unit.fromBufferAttribute(position, i);
+        point.copy(unit);
+        shape(point, unit);
+        paint(unit, color, i % (columns + 1), Math.floor(i / (columns + 1)));
+        position.setXYZ(i, point.x, point.y, point.z);
+        colors[i * 3] = color.r;
+        colors[i * 3 + 1] = color.g;
+        colors[i * 3 + 2] = color.b;
+      }
+      ball.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+      const merged = mergeVertices(ball);
+      ball.dispose();
+      merged.computeVertexNormals();
+      return merged;
+    });
+  }
+  /** From unripe green to the ripe colour: stage 1 green, 2 turning, 3 ripe. */
+  const ripening = (green: string, ripe: string, ripeness: number) => new THREE.Color(green).lerp(new THREE.Color(ripe), [0, 0, 0.5, 1][ripeness] ?? 1);
+  /** A soft light on top and shade underneath, painted into a fruit's colour. */
+  function shadeFruit(color: THREE.Color, base: THREE.Color, unit: THREE.Vector3, light = 0.12, dark = 0.22) {
+    color.copy(base);
+    if (unit.y > 0) color.lerp(tmpColor.copy(base).offsetHSL(0, -0.05, 0.12), unit.y * light * 4);
+    else color.multiplyScalar(1 + unit.y * dark);
+  }
+  const longitude = (unit: THREE.Vector3) => Math.atan2(unit.z, unit.x);
+
+  function orangeGeometry(ripeness: number) {
+    const base = ripening("#7fae45", "#f28a22", ripeness);
+    return fruitGeometry(`orange:${ripeness}`, 14, 10, (p, u) => {
+      // Slightly flattened with a pitted skin and a dip where the stem joins.
+      p.y *= 0.92;
+      p.multiplyScalar(1 + 0.018 * Math.sin(u.x * 41 + u.y * 29) * Math.sin(u.z * 37 - u.y * 23));
+      if (u.y > 0.9) p.y -= (u.y - 0.9) * 0.6;
+    }, (u, c) => shadeFruit(c, base, u));
+  }
+  function lemonGeometry(ripeness: number) {
+    const base = ripening("#86b84a", "#f1da3a", ripeness);
+    const green = new THREE.Color("#8cbf4a");
+    return fruitGeometry(`lemon:${ripeness}`, 12, 12, (p, u) => {
+      // An oval with a nub at each end, the lower one longer.
+      const tip = Math.max(0, Math.abs(u.y) - 0.8) / 0.2;
+      p.x *= 0.92;
+      p.z *= 0.92;
+      p.y = u.y * 1.2 + Math.sign(u.y) * tip * tip * (u.y < 0 ? 0.3 : 0.14);
+      p.multiplyScalar(1 + 0.012 * Math.sin(u.x * 47 + u.z * 31));
+    }, (u, c) => {
+      shadeFruit(c, base, u);
+      c.lerp(green, Math.max(0, Math.abs(u.y) - 0.75) * 1.6 * (ripeness >= 3 ? 0.5 : 0));
+    });
+  }
+  function mangoGeometry(ripeness: number) {
+    const top = ripening("#6f9f3f", "#b7c043", ripeness);
+    const bottom = ripening("#7fae45", "#f5a524", ripeness);
+    const blush = new THREE.Color("#e2553a");
+    return fruitGeometry(`mango:${ripeness}`, 12, 12, (p, u) => {
+      // A long oval, bent like a bean, with a little beak at the bottom on one side.
+      p.set(u.x * 0.76, u.y * 1.3, u.z * 0.66);
+      p.x += 0.12 * (1 - u.y * u.y) - 0.2 * u.y * u.y;
+      if (u.y < -0.55) p.x += 0.2 * ((-u.y - 0.55) / 0.45) ** 2;
+    }, (u, c) => {
+      shadeFruit(c, bottom, u, 0.05);
+      c.lerp(top, Math.min(1, Math.max(0, (u.y + 0.2) / 1.2)));
+      if (ripeness >= 3) c.lerp(blush, Math.max(0, u.x) * Math.min(1, Math.max(0, (u.y + 0.3) / 0.9)) * 0.7);
+    });
+  }
+  function coconutGeometry(ripeness: number) {
+    const base = ripening("#6f9a3a", "#9a7444", ripeness);
+    return fruitGeometry(`coconut:${ripeness}`, 12, 10, (p, u) => {
+      // Rounded with three soft ridges and a point at the bottom.
+      const ridge = 1 + 0.07 * Math.cos(3 * longitude(u)) * (1 - u.y * u.y);
+      p.set(u.x * 0.95 * ridge, u.y * 1.08, u.z * 0.95 * ridge);
+      if (u.y < -0.85) p.y -= (-u.y - 0.85) * 0.5;
+    }, (u, c) => {
+      shadeFruit(c, base, u, 0.1, 0.25);
+      c.multiplyScalar(1 - 0.1 * Math.max(0, Math.cos(3 * longitude(u))));
+    });
+  }
+  /** One banana, a unit long, from the stalk along +y, curving towards +x. */
+  function bananaGeometry(ripeness: number) {
+    return primitive(`fruit:banana:${ripeness}:${coarse}`, () => {
+      const profile: THREE.Vector2[] = [];
+      for (let i = 0; i <= 10; i += 1) {
+        const t = i / 10;
+        const r = t < 0.12 ? 0.07 + (t / 0.12) * 0.07 : 0.14 * (1 - Math.pow((t - 0.12) / 0.88, 2.4) * 0.7);
+        profile.push(new THREE.Vector2(Math.max(0.03, r), t));
+      }
+      const lathe = new THREE.LatheGeometry(profile, coarse < 1 ? 5 : 6);
+      lathe.deleteAttribute("uv");
+      lathe.deleteAttribute("normal");
+      const position = lathe.attributes.position;
+      const colors = new Float32Array(position.count * 3);
+      const body = ripening("#79a83c", "#f4d23e", ripeness);
+      const green = new THREE.Color("#6f9a34");
+      const tip = new THREE.Color("#4a3a24");
+      const color = new THREE.Color();
+      const bend = 0.95;
+      const radius = 1 / bend;
+      for (let i = 0; i < position.count; i += 1) {
+        const x = position.getX(i), y = position.getY(i), z = position.getZ(i);
+        const a = y * bend;
+        position.setXYZ(i, radius - (radius - x) * Math.cos(a), (radius - x) * Math.sin(a), z);
+        color.copy(body).lerp(green, Math.max(0, 1 - y / 0.2) * 0.8);
+        if (y > 0.94) color.lerp(tip, 0.85);
+        colors.set([color.r, color.g, color.b], i * 3);
+      }
+      lathe.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+      const merged = mergeVertices(lathe);
+      lathe.dispose();
+      merged.computeVertexNormals();
+      return merged;
+    });
+  }
+  function tomatoGeometry(ripe: boolean) {
+    const base = new THREE.Color(ripe ? "#e2453a" : "#9acb63");
+    return fruitGeometry(`tomato:${ripe}`, 12, 9, (p, u) => {
+      // Flattened, with soft lobes and a dip at the stem.
+      const lobe = 1 + 0.05 * Math.cos(5 * longitude(u)) * (1 - Math.abs(u.y));
+      p.set(u.x * lobe, u.y * 0.8, u.z * lobe);
+      if (u.y > 0.8) p.y -= (u.y - 0.8) * 0.4;
+    }, (u, c) => shadeFruit(c, base, u, 0.16));
+  }
+  function strawberryGeometry(ripe: boolean) {
+    const base = new THREE.Color(ripe ? "#d92f3f" : "#e3eec3");
+    const seed = new THREE.Color(ripe ? "#f3d36b" : "#b9cf8a");
+    return fruitGeometry(`strawberry:${ripe}`, 12, 10, (p, u) => {
+      // Wide at the shoulders, coming to a rounded point.
+      const width = 0.08 + 0.92 * Math.pow((u.y + 1) / 2, 0.6);
+      p.set(u.x * width, u.y * 1.1, u.z * width);
+    }, (u, c, column, row) => {
+      shadeFruit(c, base, u, 0.08);
+      // Seeds: single vertices on a diagonal lattice, so each shows as a small speck.
+      if ((column + 2 * row) % 4 === 0 && u.y < 0.8 && u.y > -0.9) c.lerp(seed, 0.8);
+    });
+  }
+  function melonGeometry(ripe: boolean) {
+    const light = new THREE.Color(ripe ? "#8cc46a" : "#b5da86");
+    const dark = new THREE.Color(ripe ? "#2f6a2f" : "#7fb35a");
+    const spot = new THREE.Color("#e6d98a");
+    const up = new THREE.Vector3();
+    // The sphere's poles become the melon's ends (turned a quarter about z), so its stripes run
+    // along the mesh's columns from end to end.
+    return fruitGeometry(`melon:${ripe}`, 24, 12, (p, u) => {
+      p.set(u.y * 1.3, -u.x * 0.85, u.z * 0.9);
+    }, (u, c, column, row) => {
+      up.set(u.y, -u.x, u.z);
+      const wave = Math.round(Math.sin(row * 0.9) * 0.8);
+      shadeFruit(c, (column + wave + 8) % 4 < 2 ? dark : light, up, 0.06, 0.18);
+      // The pale patch it lay on.
+      if (ripe && up.y < -0.7) c.lerp(spot, (-up.y - 0.7) * 2.2);
+    });
+  }
+  function pumpkinGeometry(ripe: boolean) {
+    const base = new THREE.Color(ripe ? "#ef8a2a" : "#b9c25a");
+    return fruitGeometry(`pumpkin:${ripe}`, 24, 12, (p, u) => {
+      // Eight ribs, squat, dipped in at the top and bottom.
+      const rib = Math.abs(Math.cos(4 * longitude(u)));
+      const k = 0.9 + 0.1 * Math.sqrt(rib);
+      p.set(u.x * k, u.y * 0.72 - Math.sign(u.y) * Math.pow(Math.abs(u.y), 6) * 0.2, u.z * k);
+    }, (u, c) => {
+      shadeFruit(c, base, u, 0.1);
+      c.multiplyScalar(0.8 + 0.2 * Math.sqrt(Math.abs(Math.cos(4 * longitude(u)))));
+    });
+  }
+  function cobGeometry() {
+    const kernel = new THREE.Color("#f4cf45");
+    const kernelDark = new THREE.Color("#e2b232");
+    return fruitGeometry("cob", 12, 14, (p, u) => {
+      p.set(u.x * 0.4 * (1 - 0.3 * Math.max(0, u.y) ** 2), u.y * 1.2, u.z * 0.4 * (1 - 0.3 * Math.max(0, u.y) ** 2));
+    }, (u, c) => {
+      // Rows of kernels.
+      const row = Math.floor(((longitude(u) + Math.PI) / (Math.PI * 2)) * 12) + Math.floor((u.y + 1) * 9);
+      shadeFruit(c, row % 2 ? kernel : kernelDark, u, 0.05, 0.15);
+    });
+  }
+
+  /**
+   * A fruit hanging from a tree, its stalk at the origin: stalk, fruit and (for oranges, lemons and
+   * mangoes) a leaf. `size` is the fruit's radius.
+   */
+  function treeFruit(fruit: "lemon" | "orange" | "mango" | "coconut", ripeness: number, size: number, random: () => number): THREE.Group {
+    const group = new THREE.Group();
+    const leafColor = TREE_MAP[fruit].leaf;
+    if (fruit === "coconut") {
+      const nut = part(coconutGeometry(ripeness), "vertex", 0, -size * 0.95, 0);
+      nut.scale.setScalar(size);
+      nut.rotation.z = (random() - 0.5) * 0.6;
+      group.add(nut, part(cylinder(size * 0.28, size * 0.36, size * 0.18, 5), ripeness >= 3 ? "#6b4f2c" : "#5f7a2c", 0, -size * 0.05, 0));
+      return group;
+    }
+    const stalk = fruit === "mango" ? size * 1.3 : size * 0.35;
+    group.add(part(cylinder(size * 0.05, size * 0.07, stalk, 4), "#6b5a32", 0, -stalk / 2, 0));
+    const geometry = fruit === "orange" ? orangeGeometry(ripeness) : fruit === "lemon" ? lemonGeometry(ripeness) : mangoGeometry(ripeness);
+    const reach = fruit === "orange" ? 0.92 : fruit === "lemon" ? 1.2 : 1.3;
+    const body = part(geometry, "vertex", 0, -stalk - size * reach, 0);
+    body.scale.setScalar(size);
+    body.rotation.y = random() * Math.PI * 2;
+    if (fruit !== "mango") body.rotation.z = (random() - 0.5) * 0.35;
+    group.add(body, part(cylinder(size * 0.16, size * 0.2, size * 0.08, 5), "#5d7a2e", 0, -stalk - size * 0.02, 0));
+    leafAt(group, tint(leafColor, 0.05), 0, -stalk * 0.3, 0, random() * Math.PI * 2, 0.5, size * 1.9, size * 0.8, 0.3);
+    return group;
+  }
+
   function buildPlant(crop: CropId, stage: 0 | 1 | 2 | 3, random: () => number): THREE.Group {
     const plant = new THREE.Group();
     const leafDark = "#4a8f3a";
@@ -1833,12 +2093,19 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
         for (const [cx, cy, cz, r] of [[0.08, 0.3, 0.05, 0.12], [-0.08, 0.4, -0.04, 0.11], [0.02, 0.5, -0.08, 0.09]] as const) {
           plant.add(part(sphere(r * (ripe ? 1 : 0.8), 10, 8), leafMid, cx, cy * (ripe ? 1 : 0.85), cz));
         }
+        // Trusses of lobed tomatoes, each with its star of green sepals and a stalk.
         for (let i = 0; i < (ripe ? 6 : 3); i += 1) {
           const a = random() * Math.PI * 2;
           const y = 0.18 + random() * 0.3;
           const size = ripe ? 0.075 : 0.055;
-          plant.add(part(sphere(size, 12, 9), ripe ? (i % 2 ? "#e2483a" : "#d93b2f") : "#9acb63", Math.cos(a) * 0.18, y, Math.sin(a) * 0.18));
-          plant.add(part(cone(0.032, 0.025, 5), "#3f7a2c", Math.cos(a) * 0.18, y + size, Math.sin(a) * 0.18));
+          const x = Math.cos(a) * 0.18, z = Math.sin(a) * 0.18;
+          const tomato = part(tomatoGeometry(ripe), "vertex", x, y, z);
+          tomato.scale.setScalar(size);
+          tomato.rotation.y = random() * Math.PI * 2;
+          const cap = part(star(5), "#3f7a2c", x, y + size * 0.74, z);
+          cap.scale.set(size * 1.5, size * 1.5, size * 1.5);
+          cap.rotation.y = a;
+          plant.add(tomato, cap, part(cylinder(0.006, 0.008, 0.07, 4), "#4f7a2c", x, y + size * 0.8 + 0.03, z));
         }
         break;
       }
@@ -1847,11 +2114,16 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
         plant.add(part(cylinder(0.028, 0.045, height, 8), "#6aa84a", 0, height / 2, 0));
         for (let i = 0; i < 5; i += 1) leafAt(plant, i % 2 ? leafLight : leafMid, 0, 0.1 + i * height * 0.16, 0, i * 2.4, 0.45, 0.42 + (i < 3 ? 0.06 : 0), 0.085, 0.55);
         if (ripe) {
-          const cob = part(cylinder(0.055, 0.07, 0.26, 10), "#f4cf45", 0.08, 0.6, 0);
-          cob.rotation.z = -0.3;
-          const husk = part(cone(0.075, 0.22, 8), "#a6c96a", 0.13, 0.43, 0);
-          husk.rotation.z = Math.PI - 0.3;
-          plant.add(cob, husk);
+          // An ear of corn, its kernels showing at the top of the opened husk, with silk.
+          const ear = new THREE.Group();
+          ear.position.set(0.05, 0.46, 0);
+          ear.rotation.z = -0.35;
+          const cob = part(cobGeometry(), "vertex", 0, 0.14, 0);
+          cob.scale.setScalar(0.115);
+          ear.add(cob);
+          for (let k = 0; k < 4; k += 1) leafAt(ear, k % 2 ? "#a6c96a" : "#94bb5a", 0, 0.01, 0, (k / 4) * Math.PI * 2 + 0.4, 1.25, 0.2, 0.075, -0.12);
+          for (let k = 0; k < 4; k += 1) leafAt(ear, "#c9a15a", 0, 0.27, 0, k * 1.6, 0.7, 0.07, 0.012, 0.3);
+          plant.add(ear);
           for (let i = 0; i < 5; i += 1) leafAt(plant, "#d8b36a", 0, height, 0, i * 1.26, 1.1, 0.16, 0.025, 0.3);
         }
         break;
@@ -1872,11 +2144,24 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       }
       case "strawberry": {
         for (let i = 0; i < 5; i += 1) leafAt(plant, i % 2 ? "#3f8a3a" : "#4f9a40", 0, 0.03, 0, (i / 5) * Math.PI * 2 + random() * 0.3, 0.35, 0.19, 0.17, 0.25);
+        // Berries lying out on the leaves, seeds on their skin, leafy caps and stalks back to the crown.
         for (let i = 0; i < (ripe ? 4 : 2); i += 1) {
-          const a = random() * Math.PI * 2;
-          const berry = part(cone(0.055, 0.12, 10), ripe ? "#df3646" : "#e8f0c9", Math.cos(a) * 0.17, 0.07, Math.sin(a) * 0.17);
-          berry.rotation.x = Math.PI;
-          plant.add(berry, part(cone(0.04, 0.03, 5), "#3f7a2c", Math.cos(a) * 0.17, 0.135, Math.sin(a) * 0.17));
+          const a = (i / (ripe ? 4 : 2)) * Math.PI * 2 + random() * 0.8;
+          const x = Math.cos(a) * 0.19, z = Math.sin(a) * 0.19;
+          const holder = new THREE.Group();
+          holder.position.set(x, 0.06, z);
+          holder.rotation.y = -a;
+          const berry = part(strawberryGeometry(ripe), "vertex", 0, 0, 0);
+          berry.scale.setScalar(ripe ? 0.062 : 0.045);
+          // Lying on its side, tip pointing out.
+          berry.rotation.z = Math.PI / 2 + 0.25;
+          holder.add(berry);
+          const cap = part(star(6), "#3f8a3a", -0.06, 0.015, 0);
+          cap.scale.setScalar(0.085);
+          cap.rotation.z = Math.PI / 2 + 0.25;
+          holder.add(cap);
+          holder.add(turn(part(cylinder(0.005, 0.006, 0.16, 4), "#5f8a3a", -0.12, 0.03, 0), 0, 0, 1.2));
+          plant.add(holder);
         }
         break;
       }
@@ -1885,29 +2170,18 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
         for (let i = 0; i < 4; i += 1) leafAt(plant, i % 2 ? leafDark : leafMid, 0, 0.03, 0, (i / 4) * Math.PI * 2 + 0.6, 0.2, 0.3, 0.27, 0.3);
         const isPumpkin = crop === "pumpkin";
         const size = ripe ? 0.24 : 0.12;
-        const color = isPumpkin ? (ripe ? "#ef8a2a" : "#b9c25a") : ripe ? "#3d7c3a" : "#8fbf62";
+        // A vine with a curl of tendril leads to the fruit.
+        plant.add(turn(part(cylinder(0.01, 0.012, 0.32, 4), "#5f8a3a", -0.2, 0.03, 0.05), 0, 0, Math.PI / 2 - 0.1));
         if (isPumpkin) {
-          // Ribs: a ring of squashed lobes around the core.
-          for (let i = 0; i < 7; i += 1) {
-            const a = (i / 7) * Math.PI * 2;
-            const lobe = part(sphere(size * 0.55, 10, 8), tint(color, (i % 2) * 0.03), Math.cos(a) * size * 0.48, size * 0.62, Math.sin(a) * size * 0.48);
-            lobe.scale.set(1, 1.15, 1);
-            plant.add(lobe);
-          }
-          plant.add(part(sphere(size * 0.7, 12, 9), color, 0, size * 0.66, 0));
-          if (ripe) plant.add(part(cylinder(0.022, 0.035, 0.12, 6), "#6b8a3a", 0, size * 1.3, 0));
+          // Ribbed and squat, with a thick woody stem.
+          const pumpkin = part(pumpkinGeometry(ripe), "vertex", 0, size * 0.72, 0);
+          pumpkin.scale.setScalar(size * 1.02);
+          plant.add(pumpkin, turn(part(cylinder(0.022, 0.034, 0.12, 6), ripe ? "#7a6a3a" : "#6b8a3a", 0.01, size * 1.42, 0), 0, 0, -0.35));
         } else {
-          const fruit = part(sphere(size, 14, 10), color, 0, size * 0.75, 0);
-          fruit.scale.set(1.3, 0.85, 0.9);
-          plant.add(fruit);
-          if (ripe) {
-            for (let i = 0; i < 4; i += 1) {
-              const band = part(sphere(size * 1.01, 14, 10), "#86c46a", 0, size * 0.75, 0);
-              band.scale.set(1.31, 0.86, 0.12);
-              band.rotation.x = (i - 1.5) * 0.45;
-              plant.add(band);
-            }
-          }
+          // Striped, lying on its pale patch.
+          const melon = part(melonGeometry(ripe), "vertex", 0, size * 0.75, 0);
+          melon.scale.setScalar(size);
+          plant.add(melon, part(cylinder(0.01, 0.014, 0.06, 4), "#6b8a3a", -size * 1.28, size * 0.85, 0));
         }
         break;
       }
@@ -2031,14 +2305,25 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     return frame;
   }
 
-  /** Marks each vertex of a grown animal's model with its leg and how much it swings. */
+  /**
+   * Marks each vertex with its leg and how much it swings; keeps the hip height and the body's
+   * height on `owner` for the shader.
+   */
+  function markLegs(positions: Float32Array, species: AnimalId, owner: { userData: Record<string, unknown> }): Float32Array {
+    let top = 0;
+    for (let i = 1; i < positions.length; i += 3) top = Math.max(top, positions[i]);
+    owner.userData.hip = LEGS[species].hip * top;
+    owner.userData.top = top;
+    return legAttributes(positions, LEGS[species].gait, owner.userData.hip as number);
+  }
+
+  /** Marks the vertices of a grown animal's model with its legs and head. */
   function prepareLegs(model: THREE.Object3D, species: AnimalId): THREE.Object3D {
     const meshes: THREE.Mesh[] = [];
     model.traverse((child) => {
       if (child instanceof THREE.Mesh) meshes.push(child);
     });
-    const height = new THREE.Box3().setFromObject(model).max.y;
-    // Legs are found across the whole model at once (a GLB may split one animal into parts).
+    // Legs and head are found across the whole model at once (a GLB may split one animal into parts).
     const all = new Float32Array(meshes.reduce((sum, mesh) => sum + mesh.geometry.attributes.position.array.length, 0));
     let filled = 0;
     for (const mesh of meshes) {
@@ -2046,13 +2331,15 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       all.set(array, filled);
       filled += array.length;
     }
-    const hip = LEGS[species].hip * height;
-    const legs = legAttributes(all, LEGS[species].gait, hip);
-    model.userData.hip = hip;
+    const legs = markLegs(all, species, model);
+    const { weights: head, pivot } = headAttributes(all, LEGS[species].neck);
+    model.userData.neck = pivot;
+    model.userData.drop = LEGS[species].drop * (model.userData.top as number);
     let offset = 0;
     for (const mesh of meshes) {
       const count = mesh.geometry.attributes.position.count;
       mesh.geometry.setAttribute("aLeg", new THREE.BufferAttribute(legs.slice(offset * 2, (offset + count) * 2), 2));
+      mesh.geometry.setAttribute("aHead", new THREE.BufferAttribute(head.slice(offset, offset + count), 1));
       offset += count;
     }
     return model;
@@ -2342,8 +2629,9 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     idle: number;
     lie: number;
     heading: number;
-    /** Its own leg shader values and the material copies that carry them. */
-    legs: LegUniforms;
+    /** Its own leg and head shader values, how far its head sinks to eat, and the material copies. */
+    legs: AnimalUniforms;
+    drop: number;
     materials: THREE.Material[];
     /** The grass patch it is walking to, and the one it is eating now (-1 for none). */
     goal: number;
@@ -2373,6 +2661,9 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     const base = ANIMAL_MAP[species];
     const def = downy ? { ...base, color: "#f6d55c", accent: species === "chicken" ? "#f2a541" : "#f0a030" } : base;
     const root = new THREE.Group();
+    // The head's parts go in their own group, marked so they can turn down to eat.
+    const head = new THREE.Group();
+    root.add(head);
     if (species === "chicken") {
       const body = part(sphere(0.22, 10, 8), def.color, 0, 0.3, 0);
       body.scale.set(1, 0.9, 1.15);
@@ -2380,57 +2671,64 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       tail.rotation.x = -0.7;
       const beak = part(cone(0.05, 0.12, 4), "#f2a541", 0, 0.5, 0.3);
       beak.rotation.x = Math.PI / 2;
-      root.add(body, tail, part(sphere(0.12, 8, 6), def.color, 0, 0.52, 0.17), part(box(0.04, 0.09, 0.12), def.accent, 0, 0.66, 0.17), part(sphere(0.035, 5, 4), def.accent, 0, 0.44, 0.27), beak);
+      root.add(body, tail);
+      head.add(part(sphere(0.12, 8, 6), def.color, 0, 0.52, 0.17), part(box(0.04, 0.09, 0.12), def.accent, 0, 0.66, 0.17), part(sphere(0.035, 5, 4), def.accent, 0, 0.44, 0.27), beak);
       for (const side of [-1, 1]) {
         root.add(part(cylinder(0.02, 0.02, 0.18, 4), "#e9a23b", side * 0.08, 0.09, 0));
-        root.add(part(sphere(0.025, 5, 4), "#222222", side * 0.075, 0.55, 0.26));
+        head.add(part(sphere(0.025, 5, 4), "#222222", side * 0.075, 0.55, 0.26));
       }
     } else if (species === "duck") {
       const body = part(sphere(0.24, 10, 8), def.color, 0, 0.26, 0);
       body.scale.set(0.9, 0.72, 1.3);
       const tail = part(cone(0.1, 0.18, 5), def.color, 0, 0.36, -0.3);
       tail.rotation.x = -1;
-      root.add(body, tail, part(sphere(0.13, 8, 6), def.color, 0, 0.5, 0.22), part(box(0.13, 0.05, 0.16), def.accent, 0, 0.46, 0.38));
+      root.add(body, tail);
+      head.add(part(sphere(0.13, 8, 6), def.color, 0, 0.5, 0.22), part(box(0.13, 0.05, 0.16), def.accent, 0, 0.46, 0.38));
       for (const side of [-1, 1]) {
-        root.add(part(sphere(0.025, 5, 4), "#222222", side * 0.08, 0.54, 0.31));
+        head.add(part(sphere(0.025, 5, 4), "#222222", side * 0.08, 0.54, 0.31));
         root.add(part(box(0.08, 0.03, 0.12), def.accent, side * 0.09, 0.02, 0.05));
       }
     } else if (species === "sheep") {
       const fleece = part(ico(0.36, 1), def.color, 0, 0.5, 0);
       fleece.scale.set(1, 0.85, 1.25);
-      root.add(fleece, part(box(0.22, 0.24, 0.26), def.accent, 0, 0.56, 0.46), part(ico(0.13, 0), def.color, 0, 0.72, 0.42));
+      root.add(fleece);
+      head.add(part(box(0.22, 0.24, 0.26), def.accent, 0, 0.56, 0.46), part(ico(0.13, 0), def.color, 0, 0.72, 0.42));
       for (const side of [-1, 1]) {
         const ear = part(box(0.14, 0.05, 0.07), def.accent, side * 0.16, 0.62, 0.44);
         ear.rotation.z = side * 0.4;
-        root.add(ear, part(sphere(0.025, 5, 4), "#ffffff", side * 0.07, 0.6, 0.6));
+        head.add(ear, part(sphere(0.025, 5, 4), "#ffffff", side * 0.07, 0.6, 0.6));
         for (const z of [-0.22, 0.22]) root.add(part(cylinder(0.05, 0.05, 0.32, 5), def.accent, side * 0.17, 0.16, z));
       }
     } else {
       root.add(part(box(0.56, 0.46, 0.96), def.color, 0, 0.6, 0));
       root.add(part(box(0.57, 0.24, 0.3), def.accent, 0, 0.66, -0.15), part(box(0.3, 0.2, 0.25), def.accent, 0.05, 0.74, 0.3));
-      root.add(part(box(0.36, 0.34, 0.36), def.color, 0, 0.78, 0.6), part(box(0.3, 0.16, 0.12), "#f1b5b0", 0, 0.68, 0.8));
+      head.add(part(box(0.36, 0.34, 0.36), def.color, 0, 0.78, 0.6), part(box(0.3, 0.16, 0.12), "#f1b5b0", 0, 0.68, 0.8));
       root.add(part(sphere(0.1, 7, 5), "#f1b5b0", 0, 0.36, -0.1));
       for (const side of [-1, 1]) {
         const horn = part(cone(0.04, 0.14, 4), "#efe3c4", side * 0.15, 1.0, 0.55);
         horn.rotation.z = -side * 0.5;
-        root.add(horn, part(sphere(0.03, 5, 4), "#222222", side * 0.13, 0.84, 0.78));
+        head.add(horn, part(sphere(0.03, 5, 4), "#222222", side * 0.13, 0.84, 0.78));
         for (const z of [-0.34, 0.34]) root.add(part(cylinder(0.06, 0.06, 0.4, 5), "#f6f2ea", side * 0.2, 0.2, z), part(box(0.13, 0.06, 0.13), "#3a332c", side * 0.2, 0.03, z));
       }
     }
-    template = bakeGeometry(root) ?? new THREE.BufferGeometry();
+    head.traverse((item) => {
+      item.userData.sway = 1;
+    });
+    template = bakeGeometry(root, true, true) ?? new THREE.BufferGeometry();
     animalTemplates.set(key as AnimalId, template);
     return template;
   }
 
-  /** The animal's body with its own copy of the material, so its legs keep their own step. */
-  function animalBody(species: AnimalId, young: boolean, legs: LegUniforms, materials: THREE.Material[]): THREE.Object3D {
+  /** The animal's body with its own copy of the material, so its legs and head move on their own. */
+  function animalBody(species: AnimalId, young: boolean, legs: AnimalUniforms, materials: THREE.Material[]): THREE.Object3D {
     const model = models[species];
     if (model) {
       legs.uHip.value = model.userData.hip as number;
+      legs.uNeck.value.fromArray(model.userData.neck as [number, number]);
       const body = model.clone(true);
       body.traverse((child) => {
         if (!(child instanceof THREE.Mesh)) return;
-        const material = legMaterial(child.material as THREE.Material, legs);
+        const material = animalMaterial(child.material as THREE.Material, legs);
         materials.push(material);
         child.material = material;
       });
@@ -2438,13 +2736,16 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     }
     const geometry = animalTemplate(species, young);
     if (!geometry.getAttribute("aLeg")) {
-      geometry.computeBoundingBox();
-      const hip = LEGS[species].hip * (geometry.boundingBox?.max.y ?? ANIMAL_HEIGHT[species]);
-      geometry.setAttribute("aLeg", new THREE.BufferAttribute(legAttributes(geometry.attributes.position.array as Float32Array, LEGS[species].gait, hip), 2));
-      geometry.userData.hip = hip;
+      geometry.setAttribute("aLeg", new THREE.BufferAttribute(markLegs(geometry.attributes.position.array as Float32Array, species, geometry), 2));
+      // The head parts were marked while building (as sway); they turn as one piece.
+      geometry.setAttribute("aHead", geometry.getAttribute("aSway"));
+      geometry.deleteAttribute("aSway");
+      geometry.userData.neck = LEGS[species].builtInPivot;
+      geometry.userData.drop = 0;
     }
     legs.uHip.value = geometry.userData.hip as number;
-    const material = legMaterial(surface, legs);
+    legs.uNeck.value.fromArray(geometry.userData.neck as [number, number]);
+    const material = animalMaterial(surface, legs);
     materials.push(material);
     const mesh = new THREE.Mesh(geometry, material);
     mesh.castShadow = shadowsOn;
@@ -2464,7 +2765,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     group.userData.hit = { kind: "animal", id: animal.id } satisfies SceneHit;
     const young = !isGrown(animal);
     const size = ANIMAL_HEIGHT[animal.species];
-    const legs = legUniforms(0, LEGS[animal.species].swing);
+    const legs = animalUniforms(0, LEGS[animal.species].swing);
     const materials: THREE.Material[] = [];
     const body = animalBody(animal.species, young, legs, materials);
     const holder = new THREE.Group();
@@ -2491,6 +2792,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       lie: 0,
       heading: 0,
       legs,
+      drop: (models[animal.species]?.userData.drop as number | undefined) ?? 0,
       materials,
       goal: -1,
       eat: -1,
@@ -2732,7 +3034,6 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       return { root, height: 0.6 };
     }
     const s = stage === 1 ? 0.62 : 1;
-    const fruitColor = ripeness >= 2 ? def.color : "#86b84f";
     const fruitSize = [0, 0.045, 0.07, 0.095][ripeness] * (fruit === "coconut" ? 1.5 : fruit === "mango" ? 1.15 : 1) * s;
     const frond = (holder: THREE.Group, angle: number, length: number, width: number, droop: number, color: string) => {
       const arm = new THREE.Group();
@@ -2753,12 +3054,30 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       for (let i = 0; i < 6; i += 1) frond(crown, (i / 6) * Math.PI * 2 + random() * 0.3, 1.05 * s, 0.34 * s, 0.45 + random() * 0.3, i % 2 ? def.leaf : "#7fc35a");
       root.add(crown);
       if (ripeness > 0) {
-        for (let i = 0; i < 8; i += 1) {
-          const finger = part(cylinder(0.03 * s, 0.035 * s, (0.1 + ripeness * 0.03) * s, 5), fruitColor, 0.2 * s + Math.cos(i * 1.7) * 0.06 * s, top - 0.22 * s - Math.floor(i / 3) * 0.09 * s, Math.sin(i * 1.7) * 0.06 * s);
-          finger.rotation.z = 0.5;
-          root.add(finger);
+        // A bunch on a stalk hanging from the crown: hands of bananas curving up, the purple bell below.
+        const bunch = new THREE.Group();
+        bunch.position.set(0.2 * s, top - 0.08 * s, 0);
+        bunch.rotation.z = 0.25;
+        const drop = 0.62 * s;
+        bunch.add(part(cylinder(0.018 * s, 0.024 * s, drop, 5), "#7f8f45", 0, -drop / 2, 0));
+        const length = [0, 0.14, 0.19, 0.23][ripeness] * s;
+        for (let hand = 0; hand < 3; hand += 1) {
+          for (let k = 0; k < 6; k += 1) {
+            const arm = new THREE.Group();
+            arm.position.y = -0.1 * s - hand * 0.11 * s;
+            arm.rotation.y = (k / 6) * Math.PI * 2 + hand * 0.5;
+            const finger = part(bananaGeometry(ripeness), "vertex", 0.02 * s, 0, 0);
+            // Starts out from the stalk (along +x here) and curves up.
+            finger.rotation.set(0, Math.PI, Math.PI / 2);
+            finger.scale.setScalar(length * (1 - hand * 0.08));
+            arm.add(finger);
+            bunch.add(arm);
+          }
         }
-        root.add(part(cone(0.05 * s, 0.14 * s, 6), "#7a2f4f", 0.2 * s, top - 0.55 * s, 0));
+        const bell = part(sphere(0.06 * s, 8, 6), "#7a2f4f", 0, -drop - 0.04 * s, 0);
+        bell.scale.set(0.8, 1.5, 0.8);
+        bunch.add(bell);
+        root.add(bunch);
       }
       return { root, height: top + 0.6 * s };
     }
@@ -2774,7 +3093,13 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       crown.position.set(x, y, 0);
       for (let i = 0; i < 8; i += 1) frond(crown, (i / 8) * Math.PI * 2 + random() * 0.2, 1.1 * s, 0.18 * s, 0.55 + random() * 0.3, i % 2 ? def.leaf : "#6fae52");
       root.add(crown);
-      if (ripeness > 0) for (let i = 0; i < 4; i += 1) root.add(part(sphere(fruitSize, 8, 6), ripeness >= 2 ? def.color : "#86b84f", x + Math.cos(i * 1.6) * 0.13 * s, y - 0.1 * s, Math.sin(i * 1.6) * 0.13 * s));
+      if (ripeness > 0) {
+        for (let i = 0; i < 5; i += 1) {
+          const nut = treeFruit("coconut", ripeness, fruitSize, random);
+          nut.position.set(x + Math.cos(i * 1.3) * 0.12 * s, y - 0.02 * s - (i % 2) * 0.06 * s, Math.sin(i * 1.3) * 0.12 * s);
+          root.add(nut);
+        }
+      }
       return { root, height: y + 0.35 * s };
     }
     // Round-crowned fruit trees: lemon, orange, mango.
@@ -2791,14 +3116,15 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     }
     blobs.forEach(([bx, by, bz, r]) => root.add(part(sphere(crown * r, 12, 9), tint(def.leaf, by * 0.15 + (random() - 0.5) * 0.04), bx * crown * 1.15, middle + by * crown, bz * crown * 1.15)));
     if (ripeness > 0) {
+      // Fruit hang on short stalks from the outside of the crown (mangoes on long ones), mostly
+      // around its middle and lower half, where they show.
       const count = fruit === "lemon" ? 8 : fruit === "orange" ? 9 : 7;
       for (let i = 0; i < count; i += 1) {
-        const angle = random() * Math.PI * 2;
-        const lift = -0.35 + random() * 0.8;
-        const reach = crown * 1.02;
-        const node = part(sphere(fruitSize * 1.3, 10, 8), fruitColor, Math.cos(angle) * Math.cos(lift) * reach, middle + Math.sin(lift) * reach, Math.sin(angle) * Math.cos(lift) * reach);
-        if (fruit === "mango") node.scale.set(0.8, 1.2, 0.8);
-        if (fruit === "lemon") node.scale.set(1.15, 0.9, 0.9);
+        const angle = (i / count) * Math.PI * 2 + random() * 0.6;
+        const lift = -0.45 + random() * 0.75;
+        const reach = crown * 1.0 + fruitSize * 0.3;
+        const node = treeFruit(fruit, ripeness, fruitSize * 1.25, random);
+        node.position.set(Math.cos(angle) * Math.cos(lift) * reach, middle + Math.sin(lift) * reach + fruitSize, Math.sin(angle) * Math.cos(lift) * reach);
         root.add(node);
       }
     }
@@ -3919,9 +4245,13 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       const size = ANIMAL_HEIGHT[view.species];
       let pitch = 0;
       let roll = 0;
+      // How far the head is lowered (as a share of the species' reach to the ground).
+      let head = 0;
+      let headSpeed = 8;
       let walking = false;
       view.body.position.y = 0;
       if (sleeping) {
+        head = 0.2;
         if (view.goal >= 0 || view.eat >= 0) release(view, id);
         view.sleep.position.y = size * (1 - 0.25 * view.lie) + 0.35 + Math.sin(elapsed * 1.5) * 0.05 * motion;
       } else if (view.wait > 0) {
@@ -3938,16 +4268,23 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
           meal.bitten = elapsed;
           if (view.wait <= 0) release(view, id);
         }
+        // The head and neck go down to eat; the body stays level.
         if (view.species === "chicken") {
           // Quick pecks in bursts; steady pecking at grass.
-          pitch = 0.6 * Math.pow(Math.max(0, Math.sin(t * 9)), 3) * (meal || Math.sin(t * 1.3 + view.hop) > -0.2 ? 1 : 0);
+          head = Math.pow(Math.max(0, Math.sin(t * 9)), 3) * (meal || Math.sin(t * 1.3 + view.hop) > -0.2 ? 1 : 0);
+          headSpeed = 22;
         } else if (view.species === "duck") {
           // Dabbling and a preen to the side.
-          pitch = (meal ? 0.45 : 0.35) * Math.pow(Math.max(0, Math.sin(t * 5)), 2);
+          head = (meal ? 1 : 0.7) * Math.pow(Math.max(0, Math.sin(t * 5)), 2);
+          headSpeed = 14;
           roll = meal ? 0 : 0.18 * Math.sin(t * 2.1) * (Math.sin(t * 0.7 + view.hop) > 0.4 ? 1 : 0);
+        } else if (meal) {
+          // Head down in the grass, chewing, now and then a pause.
+          head = 0.94 + 0.06 * Math.sin(t * 6) - 0.25 * Math.max(0, Math.sin(t * 0.8 + view.hop) - 0.7) / 0.3;
+          pitch = 0.04;
         } else {
-          // Head down to graze, chewing.
-          pitch = (meal ? 0.24 : 0.16) + 0.03 * Math.sin(t * 6);
+          // Nibbling at the short grass, looking up from time to time.
+          head = 0.45 + 0.3 * Math.max(0, Math.sin(t * 0.9 + view.hop));
         }
       } else if (distance < 0.08) {
         view.idle = 0;
@@ -4002,7 +4339,10 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
         // The body rises over each planted leg; ducks waddle, chickens bob their heads.
         view.body.position.y = Math.pow(Math.sin(phase), 2) * size * (bird ? 0.035 : 0.014) * view.legs.uStride.value;
         roll = Math.sin(phase) * (view.species === "duck" ? 0.16 : view.species === "chicken" ? 0.05 : 0.025);
-        if (view.species === "chicken") pitch = 0.1 * Math.max(0, Math.sin(phase * 2));
+        if (view.species === "chicken") {
+          head = 0.16 * Math.max(0, Math.sin(phase * 2));
+          headSpeed = 22;
+        }
         // Grass on the way: stop for a bite if nobody is at it.
         if (!follower && view.goal < 0 && view.eat < 0) {
           const reach = LEGS[view.species].reach * view.holder.scale.x + 0.35;
@@ -4011,6 +4351,9 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
         }
       }
       view.legs.uStride.value += ((walking ? 1 : 0) - view.legs.uStride.value) * Math.min(1, dt * 6);
+      const lower = Math.min(1, dt * headSpeed);
+      view.legs.uHead.value += (head * LEGS[view.species].graze * motion - view.legs.uHead.value) * lower;
+      view.legs.uDrop.value += (head * view.drop * motion - view.legs.uDrop.value) * lower;
       view.group.rotation.y = view.heading;
       // Lying down: lower and wider, with slow breaths.
       const breath = 1 + Math.sin(elapsed * 1.6 + view.hop) * 0.025 * view.lie * motion;
