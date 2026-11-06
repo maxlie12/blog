@@ -19,7 +19,10 @@
  * fishing state every frame and writes the player's presses into the shared fishing input.
  */
 import * as THREE from "three";
+import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { pondGeometry, waterMaterial as villageWater, waterUniforms } from "../village/graphics";
+import { addWind, flowerGeometry, makePost, skyTexture, tuftGeometry, wind, type FarmPost } from "./look";
 import {
   ANIMAL_MAP,
   FISH_MAP,
@@ -152,6 +155,41 @@ export function spotPosition(index: number): [number, number] {
 
 const tint = (color: string, lightness: number) => `#${new THREE.Color(color).offsetHSL(0, 0, lightness).getHexString()}`;
 
+function hash2(x: number, z: number): number {
+  const s = Math.sin(x * 127.1 + z * 311.7) * 43758.5453;
+  return s - Math.floor(s);
+}
+
+/** Smooth value noise in 0..1, for painting the ground and roughening the cliff. */
+function noise2(x: number, z: number): number {
+  const ix = Math.floor(x);
+  const iz = Math.floor(z);
+  let fx = x - ix;
+  let fz = z - iz;
+  fx = fx * fx * (3 - 2 * fx);
+  fz = fz * fz * (3 - 2 * fz);
+  const a = hash2(ix, iz), b = hash2(ix + 1, iz), c = hash2(ix, iz + 1), d = hash2(ix + 1, iz + 1);
+  return a + (b - a) * fx + (c - a) * fz + (a - b - c + d) * fx * fz;
+}
+
+const smooth = (edge0: number, edge1: number, x: number) => {
+  const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+};
+
+/** 1 inside the rectangle, fading to 0 over `soft` outside it. */
+function rectMask(x: number, z: number, cx: number, cz: number, hx: number, hz: number, soft: number): number {
+  const outside = Math.max(Math.abs(x - cx) - hx, Math.abs(z - cz) - hz);
+  return 1 - smooth(-soft * 0.5, soft, outside);
+}
+
+/** Distance from (x, z) to the segment a–b. */
+function segmentDistance(x: number, z: number, ax: number, az: number, bx: number, bz: number): number {
+  const dx = bx - ax, dz = bz - az;
+  const t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / Math.max(1e-6, dx * dx + dz * dz)));
+  return Math.hypot(x - (ax + dx * t), z - (az + dz * t));
+}
+
 function pondPoint(x: number, z: number): [number, number] {
   return [POND_CENTER.x + x * POND_RX, POND_CENTER.z + z * POND_RZ];
 }
@@ -183,6 +221,9 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   renderer.shadowMap.enabled = shadowsOn;
   renderer.shadowMap.type = options.quality === "high" ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  // Soft highlight roll-off without washing out the hand-picked colours.
+  renderer.toneMapping = THREE.NeutralToneMapping;
+  renderer.toneMappingExposure = 1.0;
   renderer.domElement.setAttribute("role", "img");
   renderer.domElement.setAttribute(
     "aria-label",
@@ -191,9 +232,10 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   container.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  const skyColor = new THREE.Color("#cfe8d4");
-  scene.background = skyColor;
-  scene.fog = new THREE.Fog(skyColor, 46, 80);
+  const sky = skyTexture();
+  scene.background = sky;
+  // Haze the far islands and the underside of the cliff into the pale horizon.
+  scene.fog = new THREE.Fog("#dcebe6", 48, 112);
 
   const camera = new THREE.OrthographicCamera(-8, 8, 6, -6, 0.1, 140);
   const cameraTarget = VIEWS.farm.target.clone();
@@ -201,28 +243,40 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   let viewHeight = VIEWS.farm.height;
   let aspect = 1;
 
-  scene.add(new THREE.HemisphereLight("#fff8dc", "#5d7f54", preset.pbr ? 2.0 : 1.7));
-  const sun = new THREE.DirectionalLight("#fff1c2", preset.pbr ? 3.1 : 2.4);
+  // Cool sky light in the shade, warm afternoon sun: the contrast reads as cosy.
+  scene.add(new THREE.HemisphereLight("#d9ecff", "#6f8f4f", preset.pbr ? 1.55 : 1.45));
+  const sun = new THREE.DirectionalLight("#ffe4b0", preset.pbr ? 3.6 : 2.75);
   sun.position.set(-10, 18, 9);
   sun.castShadow = shadowsOn;
   sun.shadow.mapSize.set(preset.shadowSize, preset.shadowSize);
   Object.assign(sun.shadow.camera, { left: -19, right: 19, top: 18, bottom: -17, near: 1, far: 70 });
   sun.shadow.camera.updateProjectionMatrix();
-  sun.shadow.bias = -0.0008;
+  sun.shadow.bias = -0.0006;
+  sun.shadow.normalBias = 0.025;
   scene.add(sun);
 
   /* ───────────── shared resources ───────────── */
   // One material for every baked object: colours live in the geometry, so the GPU switches
   // state once for the whole island.
-  const surface: THREE.Material = preset.pbr
-    ? new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.85, metalness: 0 })
-    : new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true });
+  // Smooth shading: rounded parts read soft and hand-made; boxes, rocks and few-sided roofs keep
+  // their facets (see `flat` below).
+  const makeSurface = (): THREE.Material => preset.pbr
+    ? new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.82, metalness: 0 })
+    : new THREE.MeshLambertMaterial({ vertexColors: true });
+  const surface = makeSurface();
+  // Static leaves, vines and bushes: the same look, swaying in the wind.
+  const foliageMaterial = makeSurface();
+  addWind(foliageMaterial, "baked", 0.05);
+  // Lantern and string-light bulbs: unlit and brighter than white, so the High preset's bloom
+  // picks them up; elsewhere they simply look lit.
+  const glowMaterial = new THREE.MeshBasicMaterial({ vertexColors: true });
+  glowMaterial.color.setScalar(preset.post ? 2.6 : 1.25);
   const hiddenMaterial = new THREE.MeshBasicMaterial({ visible: false });
   const carrier = new THREE.MeshBasicMaterial();
   const primitives = new Map<string, THREE.BufferGeometry>();
   const owned = new Set<THREE.BufferGeometry>();
-  const textures: THREE.Texture[] = [];
-  const extraMaterials: THREE.Material[] = [hiddenMaterial, carrier];
+  const textures: THREE.Texture[] = [sky];
+  const extraMaterials: THREE.Material[] = [hiddenMaterial, carrier, foliageMaterial, glowMaterial];
   const tmpColor = new THREE.Color();
 
   function primitive<T extends THREE.BufferGeometry>(key: string, make: () => T): T {
@@ -233,14 +287,54 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     }
     return value as T;
   }
+  /** Few-sided cones and cylinders (roofs, posts, reeds) keep crisp facets under smooth shading. */
+  const faceted = <T extends THREE.BufferGeometry>(geometry: T, sides: number): T => {
+    if (sides <= 6) geometry.userData.flat = true;
+    return geometry;
+  };
   const box = (w: number, h: number, d: number) => primitive(`box:${w}:${h}:${d}`, () => new THREE.BoxGeometry(w, h, d));
-  const sphere = (r: number, w = 10, h = 8) => primitive(`sphere:${r}:${w}:${h}`, () => new THREE.SphereGeometry(r, w, h));
-  const cone = (r: number, h: number, s = 7) => primitive(`cone:${r}:${h}:${s}`, () => new THREE.ConeGeometry(r, h, s));
+  /** A box with softly rounded edges: planks, beds, furniture. */
+  const rbox = (w: number, h: number, d: number, r = 0.035, s = 1) =>
+    primitive(`rbox:${w}:${h}:${d}:${r}:${s}`, () => new RoundedBoxGeometry(w, h, d, s, Math.min(r, w / 2.1, h / 2.1, d / 2.1)));
+  // Low trades a little roundness for far fewer triangles on weak GPUs.
+  const coarse = options.quality === "low" ? 0.65 : 1;
+  const sphere = (r: number, w = 10, h = 8) => primitive(`sphere:${r}:${w}:${h}`, () => new THREE.SphereGeometry(r, Math.max(6, Math.round(w * coarse)), Math.max(4, Math.round(h * coarse))));
+  const cone = (r: number, h: number, s = 7) => primitive(`cone:${r}:${h}:${s}`, () => faceted(new THREE.ConeGeometry(r, h, s), s));
   const cylinder = (rt: number, rb: number, h: number, s = 8) =>
-    primitive(`cyl:${rt}:${rb}:${h}:${s}`, () => new THREE.CylinderGeometry(rt, rb, h, s));
+    primitive(`cyl:${rt}:${rb}:${h}:${s}`, () => faceted(new THREE.CylinderGeometry(rt, rb, h, s), s));
   const ico = (r: number, d = 0) => primitive(`ico:${r}:${d}`, () => new THREE.IcosahedronGeometry(r, d));
   const dodeca = (r: number) => primitive(`dodeca:${r}`, () => new THREE.DodecahedronGeometry(r, 0));
   const circle = (s: number) => primitive(`circle:${s}`, () => new THREE.CircleGeometry(1, s));
+  /**
+   * A leaf blade one unit long down +z from its stalk: tapered at both ends, cupped, its tip
+   * curling down by `curl`, with a back face so it reads from below too. Scale x for width.
+   */
+  const leaf = (curl = 0.25) => primitive(`leaf:${curl}`, () => {
+    const front = new THREE.PlaneGeometry(1, 1, 2, 4);
+    const position = front.attributes.position;
+    for (let i = 0; i < position.count; i += 1) {
+      const u = position.getX(i);
+      const v = position.getY(i) + 0.5;
+      const width = Math.pow(Math.sin(Math.PI * Math.min(1, v * 1.04)), 0.75);
+      position.setXYZ(i, u * width, Math.abs(u) * width * 0.28 - curl * v * v, v);
+    }
+    front.computeVertexNormals();
+    const back = front.clone();
+    const index = back.index as THREE.BufferAttribute;
+    for (let i = 0; i < index.count; i += 3) {
+      const a = index.getX(i + 1);
+      index.setX(i + 1, index.getX(i + 2));
+      index.setX(i + 2, a);
+    }
+    const normals = back.attributes.normal;
+    for (let i = 0; i < normals.count; i += 1) normals.setXYZ(i, -normals.getX(i), -normals.getY(i), -normals.getZ(i));
+    const both = mergeGeometries([front, back], false) ?? front;
+    if (both !== front) {
+      front.dispose();
+      back.dispose();
+    }
+    return both;
+  });
 
   /** A coloured building block. Never drawn itself: it only feeds `bake`. */
   function part(geometry: THREE.BufferGeometry, color: string, x = 0, y = 0, z = 0): THREE.Mesh {
@@ -250,13 +344,38 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     return item;
   }
 
+  /** A part for the swaying foliage mesh: `sway` 0 (still) … 1 (moves the most). */
+  function leafy(geometry: THREE.BufferGeometry, color: string, x: number, y: number, z: number, sway = 1): THREE.Mesh {
+    const item = part(geometry, color, x, y, z);
+    item.userData.sway = sway;
+    return item;
+  }
+
+  /** A leaf on a stalk at (x, y, z), pointing along `yaw`, tilted up or down by `pitch`. */
+  function leafAt(root: THREE.Object3D, color: string, x: number, y: number, z: number, yaw: number, pitch: number, length: number, width: number, curl = 0.25, sway = 0) {
+    const holder = new THREE.Group();
+    holder.position.set(x, y, z);
+    holder.rotation.set(0, yaw, 0);
+    const blade = part(leaf(curl), color);
+    blade.rotation.x = -pitch;
+    blade.scale.set(width, length, length);
+    if (sway) blade.userData.sway = sway;
+    holder.add(blade);
+    root.add(holder);
+  }
+
   function turn(mesh: THREE.Mesh, x: number, y: number, z: number): THREE.Mesh {
     mesh.rotation.set(x, y, z);
     return mesh;
   }
 
-  /** Merges every coloured part under `root` into one vertex-coloured geometry. */
-  function bakeGeometry(root: THREE.Object3D): THREE.BufferGeometry | null {
+  /**
+   * Merges every coloured part under `root` into one vertex-coloured geometry. Parts whose
+   * `userData.color` is "vertex" bring their own colours. With `shade`, sides close to the
+   * ground darken a little (baked contact shadow, free at run time; y = 0 is the ground in the
+   * root's space). With `sway`, each vertex gets its part's `userData.sway` for the wind.
+   */
+  function bakeGeometry(root: THREE.Object3D, shade = true, sway = false): THREE.BufferGeometry | null {
     root.updateMatrixWorld(true);
     const inverse = root.matrixWorld.clone().invert();
     const matrix = new THREE.Matrix4();
@@ -264,19 +383,43 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     root.traverse((object) => {
       if (!(object instanceof THREE.Mesh) || typeof object.userData.color !== "string") return;
       const source = object.geometry as THREE.BufferGeometry;
+      const own = object.userData.color === "vertex";
       const geometry = source.index ? source.toNonIndexed() : source.clone();
-      for (const name of Object.keys(geometry.attributes)) if (name !== "position" && name !== "normal") geometry.deleteAttribute(name);
+      for (const name of Object.keys(geometry.attributes)) if (name !== "position" && name !== "normal" && !(own && name === "color")) geometry.deleteAttribute(name);
       matrix.multiplyMatrices(inverse, object.matrixWorld);
       geometry.applyMatrix4(matrix);
-      tmpColor.set(object.userData.color as string);
+      if (source.userData.flat) geometry.computeVertexNormals();
       const count = geometry.attributes.position.count;
-      const colors = new Float32Array(count * 3);
-      for (let i = 0; i < count; i += 1) {
-        colors[i * 3] = tmpColor.r;
-        colors[i * 3 + 1] = tmpColor.g;
-        colors[i * 3 + 2] = tmpColor.b;
+      let colors: Float32Array;
+      if (own) {
+        colors = (geometry.attributes.color as THREE.BufferAttribute).array as Float32Array;
+      } else {
+        tmpColor.set(object.userData.color as string);
+        colors = new Float32Array(count * 3);
+        for (let i = 0; i < count; i += 1) {
+          colors[i * 3] = tmpColor.r;
+          colors[i * 3 + 1] = tmpColor.g;
+          colors[i * 3 + 2] = tmpColor.b;
+        }
+      }
+      if (shade) {
+        const position = geometry.attributes.position;
+        const normal = geometry.attributes.normal;
+        for (let i = 0; i < count; i += 1) {
+          const y = position.getY(i);
+          if (y > 0.5) continue;
+          const t = Math.max(0, y) / 0.5;
+          const near = 1 - t * t * (3 - 2 * t);
+          // Upward faces (rugs, soil, deck tops) stay bright; sides and undersides darken.
+          const side = 1 - Math.max(0, normal.getY(i)) * 0.85;
+          const factor = 1 - near * side * 0.34;
+          colors[i * 3] *= factor;
+          colors[i * 3 + 1] *= factor;
+          colors[i * 3 + 2] *= factor * 1.02;
+        }
       }
       geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+      if (sway) geometry.setAttribute("aSway", new THREE.BufferAttribute(new Float32Array(count).fill(Number(object.userData.sway ?? 0)), 1));
       pieces.push(geometry);
     });
     if (pieces.length === 0) return null;
@@ -286,8 +429,8 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     return merged;
   }
 
-  function bake(root: THREE.Object3D, cast = true, receive = true): THREE.Mesh {
-    const geometry = bakeGeometry(root) ?? new THREE.BufferGeometry();
+  function bake(root: THREE.Object3D, cast = true, receive = true, shade = true): THREE.Mesh {
+    const geometry = bakeGeometry(root, shade) ?? new THREE.BufferGeometry();
     owned.add(geometry);
     const item = new THREE.Mesh(geometry, surface);
     item.castShadow = cast && shadowsOn;
@@ -333,18 +476,22 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     return sprite;
   }
 
-  /* ───────────── static world (two draw calls) ───────────── */
+  /* ───────────── static world (a few baked draw calls) ───────────── */
   const world = new THREE.Group();
   scene.add(world);
+  // Ground and river bed; buildings, fences and furniture; leaves that sway; glowing bulbs;
+  // far islands in the haze. Each is baked into one mesh at the end of this section.
   const groundRoot = new THREE.Group();
   const propsRoot = new THREE.Group();
+  const foliageRoot = new THREE.Group();
+  const glowRoot = new THREE.Group();
+  const farRoot = new THREE.Group();
+  /** Soft darkening painted into the ground under things: x, z, radius, strength. */
+  const groundShade: [number, number, number, number][] = [];
+  /** Places grass and flowers must avoid: x, z, radius. */
+  const keepClear: [number, number, number][] = [];
+  const decorRandom = mulberry32(2026);
 
-  const ground = part(cylinder(16, 16.8, 1, 12), "#89b46a", 0, -0.55, 0);
-  const cliff = part(cylinder(16.8, 15.4, 2.2, 12), "#7b6248", 0, -2.15, 0);
-  const yard = part(box(8.9, 0.06, 6.7), "#a9875a", FARM_CENTER.x, -0.02, FARM_CENTER.z);
-  const pasture = part(box(PASTURE.hx * 2, 0.05, PASTURE.hz * 2), "#a6d377", PASTURE.x, -0.02, PASTURE.z);
-  const road = part(box(ROAD_END_X + 2.2, 0.05, 1.05), "#d6c08f", (ROAD_END_X - 2.2) / 2, -0.015, ROAD_Z);
-  groundRoot.add(ground, cliff, yard, pasture, road);
   for (let i = 0; i < 6; i += 1) {
     const stone = part(cylinder(0.32, 0.36, 0.08, 7), "#d8d0b8", 0.55 + i * 0.62, -0.01, FARM_CENTER.z + 0.15 + Math.sin(i * 1.3) * 0.25);
     stone.rotation.y = i;
@@ -355,29 +502,125 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   pondBed.scale.set(POND_RX + 0.2, POND_RZ + 0.2, 1);
   groundRoot.add(pondBed);
 
+  /** A rail fence with rounded posts and rails. */
   function addFence(root: THREE.Object3D, cx: number, cz: number, segments: [number, number, number, number][], color: string) {
     for (const [x1, z1, x2, z2] of segments) {
       const length = Math.hypot(x2 - x1, z2 - z1);
       const posts = Math.max(2, Math.round(length / 1.15) + 1);
       for (let i = 0; i < posts; i += 1) {
         const t = i / (posts - 1);
-        root.add(part(box(0.14, 0.62, 0.14), color, cx + x1 + (x2 - x1) * t, 0.28, cz + z1 + (z2 - z1) * t));
+        const px = cx + x1 + (x2 - x1) * t, pz = cz + z1 + (z2 - z1) * t;
+        root.add(part(rbox(0.15, 0.66, 0.15, 0.04), tint(color, (decorRandom() - 0.5) * 0.05), px, 0.29, pz));
+        root.add(part(rbox(0.17, 0.05, 0.17, 0.02), tint(color, -0.06), px, 0.63, pz));
       }
-      for (const y of [0.22, 0.44]) {
-        const rail = part(box(length, 0.07, 0.06), color, cx + (x1 + x2) / 2, y, cz + (z1 + z2) / 2);
-        rail.rotation.y = -Math.atan2(z2 - z1, x2 - x1);
-        root.add(rail);
-      }
+      const yaw = -Math.atan2(z2 - z1, x2 - x1);
+      for (const y of [0.22, 0.45]) root.add(turn(part(rbox(length, 0.075, 0.065, 0.025), tint(color, 0.03), cx + (x1 + x2) / 2, y, cz + (z1 + z2) / 2), 0, yaw, 0));
     }
   }
+
+  /**
+   * A tall garden trellis with a vine climbing it: posts, a top beam and a lattice of slats,
+   * leaves and grape bunches (in the swaying foliage) and a string of lights along the top.
+   */
+  function addTrellis(x1: number, z1: number, x2: number, z2: number, height: number) {
+    const length = Math.hypot(x2 - x1, z2 - z1);
+    const yaw = -Math.atan2(z2 - z1, x2 - x1);
+    const ux = (x2 - x1) / length, uz = (z2 - z1) / length;
+    const at = (t: number) => [x1 + ux * t, z1 + uz * t] as const;
+    const wood = "#8f5d3a";
+    const posts = Math.max(2, Math.round(length / 1.6) + 1);
+    const postAt: number[] = [];
+    for (let i = 0; i < posts; i += 1) {
+      const t = (i / (posts - 1)) * length;
+      postAt.push(t);
+      const [px, pz] = at(t);
+      propsRoot.add(part(rbox(0.15, height, 0.15, 0.04), wood, px, height / 2 - 0.04, pz));
+      propsRoot.add(part(rbox(0.19, 0.06, 0.19, 0.02), tint(wood, -0.05), px, height - 0.02, pz));
+    }
+    const [mx, mz] = at(length / 2);
+    propsRoot.add(turn(part(rbox(length + 0.26, 0.11, 0.12, 0.035), wood, mx, height - 0.12, mz), 0, yaw, 0));
+    for (const y of [0.32, 0.66, 1.0].filter((y) => y < height - 0.2)) propsRoot.add(turn(part(box(length, 0.035, 0.03), "#a06d45", mx, y, mz), 0, yaw, 0));
+    for (let t = 0.2; t < length - 0.1; t += 0.3) {
+      const [sx, sz] = at(t);
+      propsRoot.add(turn(part(box(0.035, height - 0.2, 0.03), "#a06d45", sx, (height - 0.2) / 2, sz), 0, yaw, 0));
+    }
+    // Leaves face both ways out of the lattice, thicker near the top and the foot.
+    const greens = ["#4f8f3b", "#5fa043", "#6fb04c", "#457f35"];
+    for (let t = 0.05; t < length; t += 0.11) {
+      const [lx, lz] = at(t);
+      const count = 2 + Math.floor(decorRandom() * 2);
+      for (let k = 0; k < count; k += 1) {
+        const r = decorRandom();
+        const y = r < 0.45 ? height - 0.2 - decorRandom() * 0.35 : r < 0.75 ? 0.1 + decorRandom() * 0.35 : 0.3 + decorRandom() * (height - 0.5);
+        const out = decorRandom() < 0.5 ? 1 : -1;
+        const yawLeaf = yaw + Math.PI / 2 + (out < 0 ? Math.PI : 0) + (decorRandom() - 0.5) * 1.6;
+        leafAt(foliageRoot, greens[Math.floor(decorRandom() * greens.length)], lx + (decorRandom() - 0.5) * 0.06, y, lz + (decorRandom() - 0.5) * 0.06, yawLeaf, -0.2 + decorRandom() * 0.7, 0.17 + decorRandom() * 0.08, 0.15 + decorRandom() * 0.05, 0.2, 0.5 + y / height * 0.5);
+      }
+    }
+    // Grape bunches hanging under the top beam.
+    for (let t = 0.5; t < length - 0.3; t += 0.85 + decorRandom() * 0.4) {
+      const [gx, gz] = at(t);
+      const side = decorRandom() < 0.5 ? 1 : -1;
+      const ox = -uz * 0.09 * side, oz = ux * 0.09 * side;
+      const grape = ["#6b3fa0", "#7d4fb8", "#5a3388"];
+      for (let k = 0; k < 9; k += 1) {
+        const layer = k < 4 ? 0 : k < 7 ? 1 : 2;
+        const spread = [0.06, 0.04, 0.0][layer];
+        const a = k * 2.3;
+        foliageRoot.add(leafy(sphere(0.038, 6, 5), grape[k % 3], gx + ox + Math.cos(a) * spread, height - 0.32 - layer * 0.07, gz + oz + Math.sin(a) * spread, 0.6));
+      }
+    }
+    // Fairy lights sagging between the posts.
+    for (let i = 0; i < postAt.length - 1; i += 1) {
+      const [ax, az] = at(postAt[i]);
+      const [bx, bz] = at(postAt[i + 1]);
+      addStringLights(ax, az, bx, bz, height + 0.02, 0.18);
+    }
+  }
+
+  /** Warm bulbs on a wire between two points, sagging in the middle. */
+  function addStringLights(ax: number, az: number, bx: number, bz: number, y: number, sag: number) {
+    const length = Math.hypot(bx - ax, bz - az);
+    const bulbs = Math.max(3, Math.round(length / 0.28));
+    const colors = ["#ffd27a", "#ffb35c", "#fff1b8", "#ff9e7a"];
+    let previous: THREE.Vector3 | null = null;
+    for (let i = 0; i <= bulbs; i += 1) {
+      const t = i / bulbs;
+      const point = new THREE.Vector3(ax + (bx - ax) * t, y - sag * 4 * t * (1 - t), az + (bz - az) * t);
+      if (previous) {
+        const span = point.distanceTo(previous);
+        const wire = part(cylinder(0.008, 0.008, span, 4), "#3d3a33", (point.x + previous.x) / 2, (point.y + previous.y) / 2, (point.z + previous.z) / 2);
+        wire.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), point.clone().sub(previous).normalize());
+        propsRoot.add(wire);
+      }
+      if (i > 0 && i < bulbs) glowRoot.add(part(ico(0.05, 1), colors[i % colors.length], point.x, point.y - 0.055, point.z));
+      previous = point;
+    }
+  }
+
+  /** A post lantern with a glowing core. */
+  function addLantern(x: number, z: number, height = 1.25) {
+    propsRoot.add(part(rbox(0.09, height, 0.09, 0.025), "#4a3a2c", x, height / 2, z));
+    propsRoot.add(part(rbox(0.28, 0.06, 0.06, 0.02), "#4a3a2c", x + 0.1, height - 0.04, z));
+    propsRoot.add(part(rbox(0.17, 0.2, 0.17, 0.03), "#3b3530", x + 0.22, height - 0.22, z));
+    propsRoot.add(part(cone(0.15, 0.1, 4), "#3b3530", x + 0.22, height - 0.07, z));
+    glowRoot.add(part(box(0.12, 0.15, 0.185), "#ffcf7a", x + 0.22, height - 0.22, z), part(box(0.185, 0.15, 0.12), "#ffcf7a", x + 0.22, height - 0.22, z));
+    propsRoot.add(part(cylinder(0.11, 0.13, 0.05, 10), "#9a8f7c", x, 0.0, z));
+    keepClear.push([x, z, 0.3]);
+  }
+
+  // The fields: tall trellis with vines at the back (north and west, so it never hides a plot),
+  // low rail fence in front.
   addFence(propsRoot, FARM_CENTER.x, FARM_CENTER.z, [
-    [-4.75, -3.65, 4.75, -3.65],
     [-4.75, 3.65, -0.9, 3.65],
     [0.9, 3.65, 4.75, 3.65],
-    [-4.75, -3.65, -4.75, 3.65],
     [4.75, -3.65, 4.75, -0.9],
     [4.75, 0.9, 4.75, 3.65],
   ], "#b98a55");
+  addTrellis(FARM_CENTER.x - 4.75, FARM_CENTER.z - 3.65, FARM_CENTER.x + 4.75, FARM_CENTER.z - 3.65, 1.35);
+  addTrellis(FARM_CENTER.x - 4.75, FARM_CENTER.z - 3.65, FARM_CENTER.x - 4.75, FARM_CENTER.z + 3.65, 1.35);
+  addLantern(FARM_CENTER.x - 1.15, FARM_CENTER.z + 3.95);
+  addLantern(FARM_CENTER.x + 5.05, FARM_CENTER.z + 1.15);
   const hx = PASTURE.hx;
   const hz = PASTURE.hz;
   addFence(propsRoot, PASTURE.x, PASTURE.z, [
@@ -388,26 +631,110 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     [hx, -hz, hx, hz],
   ], "#f1e4c8");
   for (const [x, z] of [[-3.4, 10.7], [-2.7, 10.85], [4.3, 10.6]]) {
-    const bale = part(cylinder(0.32, 0.32, 0.5, 10), "#e2c25f", x, 0.3, z);
+    const bale = part(cylinder(0.32, 0.32, 0.5, 14), "#e2c25f", x, 0.3, z);
     bale.rotation.z = Math.PI / 2;
     propsRoot.add(bale);
+    for (const side of [-1, 1]) propsRoot.add(turn(part(cylinder(0.325, 0.325, 0.03, 14), "#c9a443", x + side * 0.13, 0.3, z), 0, 0, Math.PI / 2));
+    groundShade.push([x, z, 0.6, 0.2]);
+  }
+
+  /**
+   * A gable roof of overlapping rounded shingles, its ridge along x, sitting on walls `depth`
+   * deep at y = 0, rising `rise` to the ridge.
+   */
+  function shingleRoof(length: number, depth: number, rise: number, color: string, random: () => number): THREE.Group {
+    const roof = new THREE.Group();
+    const angle = Math.atan2(rise, depth / 2);
+    const slope = Math.hypot(depth / 2, rise) + 0.16;
+    const rows = Math.max(3, Math.round(slope / 0.2));
+    const rowDepth = slope / rows;
+    const cols = Math.max(3, Math.round((length + 0.2) / 0.3));
+    const tileWidth = (length + 0.2) / cols;
+    for (const side of [-1, 1]) {
+      const face = new THREE.Group();
+      face.position.y = rise;
+      face.rotation.x = side * angle;
+      face.add(part(box(length + 0.2, 0.03, slope), tint(color, -0.12), 0, 0, (side * slope) / 2));
+      for (let r = 0; r < rows; r += 1) {
+        const stagger = r % 2 ? tileWidth / 2 : 0;
+        for (let c = 0; c < cols + (r % 2 ? 1 : 0); c += 1) {
+          const x = -(length + 0.2) / 2 + tileWidth / 2 + c * tileWidth - stagger;
+          const width = Math.min(tileWidth, (length + 0.2) / 2 - Math.abs(x) + tileWidth / 2) * 0.94;
+          if (width < 0.05) continue;
+          const tile = part(box(width, 0.045, rowDepth * 1.3), tint(color, (random() - 0.5) * 0.09), x, 0.035, side * (r + 0.62) * rowDepth);
+          tile.rotation.x = -side * 0.07;
+          face.add(tile);
+        }
+      }
+      roof.add(face);
+    }
+    roof.add(part(rbox(length + 0.26, 0.09, 0.17, 0.035), tint(color, -0.08), 0, rise + 0.035, 0));
+    return roof;
+  }
+
+  /** The triangular gable wall under a roof: ridge along x. */
+  const gable = (length: number, depth: number, rise: number) => primitive(`gable:${length}:${depth}:${rise}`, () => {
+    const shape = new THREE.Shape([new THREE.Vector2(-depth / 2, 0), new THREE.Vector2(depth / 2, 0), new THREE.Vector2(0, rise)]);
+    const geometry = new THREE.ExtrudeGeometry(shape, { depth: length, bevelEnabled: false });
+    geometry.translate(0, 0, -length / 2);
+    geometry.rotateY(Math.PI / 2);
+    geometry.userData.flat = true;
+    return geometry;
+  });
+
+  /** A window with a white frame, cross bars and a flower box under it; faces +z. */
+  function addWindow(root: THREE.Object3D, x: number, y: number, z: number, width: number, height: number, flowers: THREE.Object3D | null) {
+    root.add(part(box(width, height, 0.04), "#b9dfe6", x, y, z));
+    root.add(part(rbox(width + 0.1, 0.06, 0.07, 0.02), "#fbf5e8", x, y + height / 2, z + 0.01), part(rbox(width + 0.12, 0.06, 0.09, 0.02), "#fbf5e8", x, y - height / 2, z + 0.02));
+    for (const side of [-1, 1]) root.add(part(rbox(0.06, height, 0.07, 0.02), "#fbf5e8", x + side * (width / 2 + 0.01), y, z + 0.01));
+    root.add(part(box(0.03, height, 0.05), "#fbf5e8", x, y, z + 0.01), part(box(width, 0.03, 0.05), "#fbf5e8", x, y, z + 0.01));
+    if (!flowers) return;
+    root.add(part(rbox(width + 0.08, 0.12, 0.14, 0.03), "#8f5d3a", x, y - height / 2 - 0.09, z + 0.08));
+    const petals = ["#f28fb1", "#ffd166", "#ffffff", "#ef6f6c"];
+    for (let i = 0; i < 6; i += 1) {
+      const fx = x - width / 2 + 0.05 + (i / 5) * (width - 0.1);
+      flowers.add(leafy(sphere(0.055, 8, 6), i % 2 ? "#5fa043" : "#4f8f3b", fx, y - height / 2 - 0.01, z + 0.08, 0.3));
+      flowers.add(leafy(sphere(0.035, 7, 5), petals[i % petals.length], fx + 0.02, y - height / 2 + 0.04, z + 0.11, 0.35));
+    }
   }
 
   const house = new THREE.Group();
-  house.add(
-    part(box(2, 1.35, 1.6), "#f3d99a", 0, 0.68, 0),
-    turn(part(cone(1.65, 1.05, 4), "#3f7a52", 0, 1.86, 0), 0, Math.PI / 4, 0),
-    part(box(0.4, 0.75, 0.05), "#6a4a35", 0.35, 0.38, 0.81),
-    part(box(0.4, 0.34, 0.05), "#bfe3e8", -0.45, 0.82, 0.81),
-  );
+  {
+    const random = mulberry32(17);
+    house.add(part(rbox(2, 1.35, 1.6, 0.05), "#f3d99a", 0, 0.68, 0));
+    // Timber frame on the plaster.
+    for (const side of [-1, 1]) {
+      house.add(part(rbox(0.1, 1.38, 0.1, 0.02), "#8f5d3a", side * 0.99, 0.69, 0.8), part(rbox(0.1, 1.38, 0.1, 0.02), "#8f5d3a", side * 0.99, 0.69, -0.8));
+    }
+    house.add(part(rbox(2.04, 0.09, 1.64, 0.02), "#8f5d3a", 0, 1.33, 0), part(rbox(2.06, 0.12, 1.66, 0.03), "#b8a789", 0, 0.05, 0));
+    house.add(part(gable(2, 1.6, 0.85), "#f3d99a", 0, 1.37, 0));
+    const roof = shingleRoof(2.25, 1.75, 0.92, "#7a5aa6", random);
+    roof.position.y = 1.36;
+    house.add(roof);
+    // Chimney with a stone cap.
+    house.add(part(rbox(0.3, 0.7, 0.3, 0.04), "#b0705a", -0.55, 2.05, -0.3), part(rbox(0.36, 0.08, 0.36, 0.03), "#8e8a80", -0.55, 2.42, -0.3));
+    // Door with a step and a lamp.
+    house.add(part(rbox(0.46, 0.82, 0.07, 0.03), "#7a4e32", 0.38, 0.47, 0.81), part(rbox(0.54, 0.06, 0.1, 0.02), "#fbf5e8", 0.38, 0.9, 0.82));
+    house.add(part(sphere(0.03, 6, 5), "#e9c46a", 0.54, 0.47, 0.86), part(rbox(0.7, 0.08, 0.32, 0.03), "#b8a789", 0.38, 0.04, 0.96));
+    addWindow(house, -0.42, 0.84, 0.81, 0.44, 0.38, house);
+    addWindow(house, 0.0, 1.62, 0.66, 0.28, 0.24, null);
+  }
   house.position.set(-7.1, 0, -4.9);
   house.rotation.y = 0.12;
   propsRoot.add(house);
+  groundShade.push([-7.1, -4.9, 1.8, 0.3]);
+  keepClear.push([-7.1, -4.9, 1.6]);
+  // Porch light by the house door (on the house's front wall, in world space).
+  glowRoot.add(part(sphere(0.06, 8, 6), "#ffd99a", -7.1 + Math.cos(0.12) * 0.78 + Math.sin(0.12) * 0.86, 0.98, -4.9 - Math.sin(0.12) * 0.78 + Math.cos(0.12) * 0.86));
 
   const tower = new THREE.Group();
-  tower.add(part(cylinder(0.32, 0.55, 2.6, 6), "#efe6d2", 0, 1.3, 0), part(cone(0.48, 0.55, 6), "#c4553f", 0, 2.85, 0));
+  tower.add(part(cylinder(0.32, 0.55, 2.6, 12), "#efe6d2", 0, 1.3, 0), part(cone(0.5, 0.6, 12), "#c4553f", 0, 2.88, 0));
+  tower.add(part(cylinder(0.56, 0.6, 0.12, 12), "#b8a789", 0, 0.06, 0), part(cylinder(0.36, 0.36, 0.08, 12), "#a9573f", 0, 2.6, 0));
+  tower.add(part(rbox(0.26, 0.48, 0.05, 0.02), "#7a4e32", 0.02, 0.28, 0.5), part(rbox(0.16, 0.2, 0.04, 0.02), "#b9dfe6", 0.0, 1.55, 0.4));
   tower.position.set(-9.9, 0, -2.4);
   propsRoot.add(tower);
+  groundShade.push([-9.9, -2.4, 1.0, 0.25]);
+  keepClear.push([-9.9, -2.4, 0.8]);
 
   // Pond decoration.
   const rimRandom = mulberry32(7);
@@ -421,13 +748,10 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     propsRoot.add(stone);
   }
   for (const [px, pz] of [[-0.95, -0.35], [-0.9, -0.55], [0.85, -0.6], [0.95, -0.4], [0.7, 0.75]]) {
-    for (let i = 0; i < 4; i += 1) {
-      const [x, z] = pondPoint(px + i * 0.03, pz + i * 0.025);
-      const reed = part(cylinder(0.02, 0.03, 0.75 + i * 0.12, 4), "#4f8a3f", x, 0.38, z);
-      reed.rotation.z = (i - 1.5) * 0.08;
-      propsRoot.add(reed);
-    }
+    const [x, z] = pondPoint(px + 0.05, pz + 0.04);
+    addReeds(x, z, 6);
   }
+  groundShade.push([POND_CENTER.x, POND_CENTER.z, POND_RX + 1.0, 0.12]);
   for (const [px, pz, s] of [[0.45, -0.55, 1], [0.6, -0.35, 0.7], [-0.55, 0.5, 0.85]]) {
     const [x, z] = pondPoint(px, pz);
     propsRoot.add(part(cylinder(0.32 * s, 0.32 * s, 0.03, 9), "#5c9d48", x, WATER_Y + 0.02, z));
@@ -435,8 +759,8 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   const [fx, fz] = pondPoint(0.45, -0.55);
   propsRoot.add(part(sphere(0.09, 6, 5), "#f6b6c8", fx + 0.05, WATER_Y + 0.09, fz));
   const dock = new THREE.Group();
-  for (let i = 0; i < 5; i += 1) dock.add(part(box(0.34, 0.07, 1.25), i % 2 ? "#a77a4c" : "#b98a55", i * 0.36, 0.36, 0));
-  for (const [x, z] of [[0, -0.55], [0, 0.55], [1.45, -0.55], [1.45, 0.55]]) dock.add(part(cylinder(0.06, 0.06, 0.7, 5), "#7a5638", x, 0.05, z));
+  for (let i = 0; i < 5; i += 1) dock.add(part(rbox(0.33, 0.08, 1.25, 0.03), i % 2 ? "#a77a4c" : "#b98a55", i * 0.36, 0.36, 0));
+  for (const [x, z] of [[0, -0.55], [0, 0.55], [1.45, -0.55], [1.45, 0.55]]) dock.add(part(cylinder(0.065, 0.065, 0.7, 10), "#7a5638", x, 0.05, z));
   const [dx, dz] = pondPoint(-1.25, 0.55);
   dock.position.set(dx, 0, dz);
   dock.rotation.y = -0.5;
@@ -449,26 +773,80 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   sign.position.set(ROAD_END_X - 0.8, 0, ROAD_Z - 0.9);
   propsRoot.add(sign);
 
-  // Trees, mountains.
+  // Trees: a trunk in the props, a clumpy crown (or a stack of drooping tiers) in the foliage.
   function addTree(x: number, z: number, scale: number, round: boolean) {
-    const tree = new THREE.Group();
-    tree.add(part(cylinder(0.12, 0.18, 0.95, 6), "#7a5638", 0, 0.47, 0));
-    if (round) tree.add(part(ico(0.75), "#5e9e4a", 0, 1.35, 0));
-    else tree.add(part(cone(0.75, 1.25, 7), "#2f7048", 0, 1.25, 0), part(cone(0.52, 0.95, 7), "#3a8255", 0, 1.85, 0));
-    tree.position.set(x, 0, z);
-    tree.scale.setScalar(scale);
-    tree.rotation.y = x * 1.7;
-    propsRoot.add(tree);
+    const trunk = new THREE.Group();
+    const crown = new THREE.Group();
+    const random = mulberry32(Math.round(x * 100 + z * 7));
+    trunk.add(part(cylinder(0.11, 0.19, 1.05, 8), "#7a5638", 0, 0.5, 0));
+    if (round) {
+      for (const side of [-1, 1]) trunk.add(turn(part(cylinder(0.04, 0.07, 0.5, 6), "#7a5638", side * 0.16, 0.95, 0.03), 0, 0, -side * 0.7));
+      const base = ["#5e9e4a", "#6aa84f", "#579645"][Math.floor(random() * 3)];
+      const clumps: [number, number, number, number][] = [[0, 1.55, 0, 0.62], [0, 2.02, 0.02, 0.46]];
+      for (let i = 0; i < 6; i += 1) {
+        const a = (i / 6) * Math.PI * 2 + random() * 0.5;
+        clumps.push([Math.cos(a) * 0.5, 1.38 + random() * 0.3, Math.sin(a) * 0.5, 0.38 + random() * 0.12]);
+      }
+      clumps.forEach(([cx, cy, cz, r]) => crown.add(leafy(sphere(r, 10, 8), tint(base, (cy - 1.6) * 0.12 + (random() - 0.5) * 0.03), cx, cy, cz, Math.min(1, (cy - 1.1) * 0.9))));
+    } else {
+      const tiers: [number, number, number][] = [[0.86, 0.85, 0.85], [0.7, 0.75, 1.3], [0.52, 0.68, 1.72], [0.32, 0.55, 2.1]];
+      tiers.forEach(([r, h, y], i) => crown.add(turn(leafy(cone(r, h, 12), tint("#2f6e48", i * 0.035), 0, y, 0, 0.15 + i * 0.25), (random() - 0.5) * 0.08, random() * 3, (random() - 0.5) * 0.08)));
+    }
+    for (const root of [trunk, crown]) {
+      root.position.set(x, 0, z);
+      root.scale.setScalar(scale);
+      root.rotation.y = x * 1.7;
+    }
+    propsRoot.add(trunk);
+    foliageRoot.add(crown);
+    groundShade.push([x + 0.35 * scale, z - 0.25 * scale, 1.45 * scale, 0.32]);
+    keepClear.push([x, z, 0.35 * scale]);
   }
   const treeSpots: [number, number, number, boolean][] = [
     [-11.5, -5.5, 1.1, false], [-12.6, -2.6, 0.95, true], [-12.2, 1.8, 1.05, false], [-11.6, 5.4, 0.9, true],
     [-4.2, -7.6, 1.15, false], [-0.6, -7.2, 0.95, true], [2.6, -6.6, 1.1, false],
     [5.5, -5.6, 0.9, true], [9.2, -5.2, 1.15, false], [14.6, -2.8, 1, true], [14.7, 1.9, 0.9, false],
     [-1.4, 13.2, 0.95, true], [3.8, 12.9, 1.1, false], [-12.6, 7.6, 0.95, false],
+    [-14.1, -0.4, 0.85, true], [7.2, -8.1, 1.0, true], [-8.6, -8.4, 1.05, true],
   ];
   treeSpots.forEach(([x, z, s, round]) => addTree(x, z, s, round));
   for (const [x, z, s] of [[-6, -12, 3.4], [-1, -13, 4.4], [4.5, -12.5, 3.6], [9.5, -11.5, 2.8]]) {
     propsRoot.add(part(cone(s, s * 1.6, 6), "#7f9a78", x, s * 0.7 - 0.6, z), part(cone(s * 0.32, s * 0.5, 6), "#f5f1e3", x, s * 0.7 - 0.6 + s * 0.56, z));
+    keepClear.push([x, z, s * 1.02]);
+    groundShade.push([x, z, s * 1.35, 0.25]);
+  }
+
+  /** A round bush of soft clumps, sometimes in flower. */
+  function addBush(x: number, z: number, size: number, flowers?: string) {
+    const random = mulberry32(Math.round(x * 31 + z * 17));
+    const base = ["#4f8f3b", "#5fa043", "#4a8a45"][Math.floor(random() * 3)];
+    const count = 3 + Math.floor(random() * 3);
+    for (let i = 0; i < count; i += 1) {
+      const a = (i / count) * Math.PI * 2 + random();
+      const r = (0.2 + random() * 0.12) * size;
+      const off = i === 0 ? 0 : 0.2 * size;
+      foliageRoot.add(leafy(sphere(r, 10, 8), tint(base, (random() - 0.5) * 0.06), x + Math.cos(a) * off, r * 0.75, z + Math.sin(a) * off, 0.25));
+      if (flowers) {
+        for (let k = 0; k < 3; k += 1) {
+          const b = random() * Math.PI * 2;
+          foliageRoot.add(leafy(sphere(0.035 * size + 0.01, 6, 5), flowers, x + Math.cos(a) * off + Math.cos(b) * r * 0.8, r * (0.95 + random() * 0.5), z + Math.sin(a) * off + Math.sin(b) * r * 0.8, 0.3));
+        }
+      }
+    }
+    groundShade.push([x, z, 0.55 * size, 0.22]);
+    keepClear.push([x, z, 0.35 * size]);
+  }
+
+  /** A big decorative banana plant with arching leaves. */
+  function addBanana(x: number, z: number, size: number) {
+    const random = mulberry32(Math.round(x * 13 + z * 29));
+    propsRoot.add(part(cylinder(0.08 * size, 0.13 * size, 0.85 * size, 8), "#8aa04e", x, 0.42 * size, z));
+    for (let i = 0; i < 7; i += 1) {
+      const yaw = (i / 7) * Math.PI * 2 + random() * 0.4;
+      leafAt(foliageRoot, i % 2 ? "#5fa847" : "#4e9640", x, 0.8 * size, z, yaw, 0.35 + random() * 0.45, (0.95 + random() * 0.3) * size, 0.42 * size, 0.55, 0.8);
+    }
+    groundShade.push([x, z, 1.1 * size, 0.25]);
+    keepClear.push([x, z, 0.3 * size]);
   }
 
   /* River: bed, sandy banks, stones, a bridge for the road and a jetty with someone fishing. */
@@ -532,24 +910,36 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     rock.scale.set(size * 1.2, size * 0.8, size);
     propsRoot.add(rock);
   }
+  /** A clump of reeds: narrow swaying blades and a few brown cattails. */
+  function addReeds(x: number, z: number, count: number) {
+    for (let i = 0; i < count; i += 1) {
+      const a = i * 2.4 + x;
+      const height = 0.55 + ((i * 37) % 5) * 0.08;
+      leafAt(foliageRoot, i % 2 ? "#4f8a3f" : "#5f9a48", x + Math.cos(a) * 0.06, 0, z + Math.sin(a) * 0.06, a, 1.25 + (i % 3) * 0.08, height, 0.06, 0.12, 0.9);
+      if (i % 3 === 0) {
+        foliageRoot.add(leafy(cylinder(0.008, 0.008, height + 0.1, 4), "#5f8a3f", x + Math.cos(a) * 0.03, (height + 0.1) / 2, z + Math.sin(a) * 0.03, 0.6));
+        foliageRoot.add(leafy(cylinder(0.028, 0.028, 0.13, 8), "#7a4e2d", x + Math.cos(a) * 0.03, height + 0.12, z + Math.sin(a) * 0.03, 1));
+      }
+    }
+    keepClear.push([x, z, 0.25]);
+  }
   // Reeds by the banks.
   for (const [index, side] of [[14, -1], [34, 1], [62, -1], [72, 1]] as const) {
     const point = riverPoints[index];
     const normal = across(riverTangents[index]);
-    for (let i = 0; i < 4; i += 1) {
-      const offset = side * (RIVER_HALF - 0.05 + i * 0.07);
-      const reed = part(cylinder(0.02, 0.03, 0.7 + i * 0.1, 4), "#4f8a3f", point.x + normal.x * offset + i * 0.05, 0.35, point.z + normal.z * offset);
-      reed.rotation.z = (i - 1.5) * 0.08;
-      propsRoot.add(reed);
-    }
+    const offset = side * (RIVER_HALF + 0.02);
+    addReeds(point.x + normal.x * offset, point.z + normal.z * offset, 7);
   }
-  // Bridge where the road crosses.
+  // Bridge where the road crosses: rounded deck planks across, rails on posts.
   const bridgeLength = RIVER_HALF * 2 + 1.3;
-  propsRoot.add(part(box(bridgeLength, 0.09, 1.25), "#b98a55", bridgeX, 0.1, ROAD_Z));
-  for (let i = 0; i < 7; i += 1) propsRoot.add(part(box(0.05, 0.1, 1.27), "#9c6a3c", bridgeX - bridgeLength / 2 + 0.25 + i * ((bridgeLength - 0.5) / 6), 0.11, ROAD_Z));
+  const planks = Math.round(bridgeLength / 0.21);
+  for (let i = 0; i < planks; i += 1) {
+    const x = bridgeX - bridgeLength / 2 + (i + 0.5) * (bridgeLength / planks);
+    propsRoot.add(part(rbox(bridgeLength / planks - 0.02, 0.08, 1.25, 0.025), tint("#b98a55", (decorRandom() - 0.5) * 0.07), x, 0.1, ROAD_Z));
+  }
   for (const side of [-1, 1]) {
-    propsRoot.add(part(box(bridgeLength, 0.07, 0.07), "#8b5a35", bridgeX, 0.5, ROAD_Z + side * 0.6));
-    for (let i = 0; i < 4; i += 1) propsRoot.add(part(box(0.08, 0.45, 0.08), "#7a5638", bridgeX - bridgeLength / 2 + 0.15 + i * ((bridgeLength - 0.3) / 3), 0.3, ROAD_Z + side * 0.6));
+    propsRoot.add(part(rbox(bridgeLength, 0.075, 0.075, 0.025), "#8b5a35", bridgeX, 0.5, ROAD_Z + side * 0.6));
+    for (let i = 0; i < 4; i += 1) propsRoot.add(part(rbox(0.09, 0.46, 0.09, 0.025), "#7a5638", bridgeX - bridgeLength / 2 + 0.15 + i * ((bridgeLength - 0.3) / 3), 0.3, ROAD_Z + side * 0.6));
   }
   // Jetty from the west bank, and the angler sitting at its end in a conical hat.
   const jettyRoot = new THREE.Group();
@@ -574,7 +964,6 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   propsRoot.add(jettyRoot);
 
   /* Orchard: a fenced garden south-west of the fields. */
-  groundRoot.add(part(box(7.2, 0.05, 4.7), "#9cc874", ORCHARD.x, -0.025, ORCHARD.z));
   addFence(propsRoot, ORCHARD.x, ORCHARD.z, [
     [-3.7, -2.45, -0.7, -2.45],
     [0.7, -2.45, 3.7, -2.45],
@@ -587,13 +976,382 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     stone.rotation.y = i;
     groundRoot.add(stone);
   }
+  // Lanterns at the orchard gate with lights strung between them.
+  addLantern(ORCHARD.x - 1.0, ORCHARD.z - 2.75, 1.3);
+  addLantern(ORCHARD.x + 0.75, ORCHARD.z - 2.75, 1.3);
+  addStringLights(ORCHARD.x - 1.0, ORCHARD.z - 2.75, ORCHARD.x + 0.97, ORCHARD.z - 2.75, 1.12, 0.12);
 
-  const groundMesh = bake(groundRoot, false, true);
+  /* Cosy corner between the fields and the pond: a patchwork rug, bean bags, a tea table, an
+     umbrella, an easel and a lantern. */
+  const COZY = { x: 1.35, z: -1.05, yaw: 0.35 };
+  {
+    const corner = new THREE.Group();
+    const patches = ["#e07a5f", "#f2cc8f", "#81b29a", "#e9c46a", "#9c89b8", "#f4a261", "#6d9dc5", "#f7b2c4", "#a3c47a"];
+    corner.add(part(rbox(1.42, 0.02, 1.04, 0.008), "#f6ead2", 0, 0.012, 0));
+    for (let i = 0; i < 4; i += 1) {
+      for (let j = 0; j < 3; j += 1) corner.add(part(box(0.31, 0.014, 0.29), patches[(i * 3 + j * 2) % patches.length], -0.5 + i * 0.333, 0.026, -0.32 + j * 0.32));
+    }
+    // A slouchy bean bag: a wide squashed body, a backrest behind and a dent where you sit.
+    const beanBag = (x: number, z: number, color: string, yaw: number) => {
+      const bag = new THREE.Group();
+      const body = part(sphere(0.3, 16, 12), color, 0, 0.14, 0);
+      body.scale.set(1.05, 0.5, 1);
+      const back = part(sphere(0.26, 14, 10), tint(color, 0.03), 0, 0.26, -0.16);
+      back.scale.set(1.05, 0.85, 0.55);
+      const seat = part(sphere(0.2, 12, 8), tint(color, -0.06), 0, 0.23, 0.07);
+      seat.scale.set(1, 0.3, 0.9);
+      bag.add(body, back, seat);
+      bag.position.set(x, 0, z);
+      bag.rotation.y = yaw;
+      corner.add(bag);
+    };
+    beanBag(-0.36, 0.18, "#7a6fd6", 0.4);
+    beanBag(0.42, -0.2, "#4fb3c8", -2.4);
+    corner.add(part(cylinder(0.2, 0.2, 0.04, 18), "#d9b27a", 0.05, 0.3, 0.32), part(cylinder(0.03, 0.05, 0.28, 8), "#8f5d3a", 0.05, 0.15, 0.32));
+    corner.add(part(sphere(0.055, 10, 8), "#f6f1e6", 0.02, 0.37, 0.3), part(cylinder(0.025, 0.02, 0.04, 8), "#e07a5f", 0.13, 0.34, 0.38), part(cylinder(0.025, 0.02, 0.04, 8), "#81b29a", -0.07, 0.34, 0.4));
+    // Umbrella: a pole and eight alternating panels.
+    corner.add(part(cylinder(0.022, 0.022, 1.55, 8), "#e9e3d6", 0.62, 0.77, 0.45));
+    const panels = ["#7a6fd6", "#ffd166", "#4fb3c8", "#ef6f6c"];
+    for (let i = 0; i < 8; i += 1) {
+      const panel = new THREE.Mesh(primitive(`umbrella:${i}`, () => new THREE.ConeGeometry(0.78, 0.3, 3, 1, true, (i / 8) * Math.PI * 2, Math.PI / 4)), carrier);
+      panel.userData.color = panels[i % panels.length];
+      panel.position.set(0.62, 1.48, 0.45);
+      corner.add(panel);
+    }
+    corner.add(part(sphere(0.04, 8, 6), "#e9e3d6", 0.62, 1.64, 0.45));
+    // Easel with a small painting.
+    for (const [lx, lz, tilt] of [[-0.12, 0, -0.18], [0.12, 0, 0.18], [0, -0.16, 0]] as const) {
+      corner.add(turn(part(rbox(0.035, 0.9, 0.035, 0.012), "#9c6a3c", -0.62 + lx, 0.44, -0.52 + lz), tilt === 0 ? 0.35 : -0.08, 0, tilt));
+    }
+    corner.add(turn(part(rbox(0.4, 0.46, 0.03, 0.01), "#fbf6ea", -0.62, 0.72, -0.49), -0.12, 0, 0));
+    for (const [px, py, color] of [[-0.08, 0.06, "#f28fb1"], [0.07, -0.05, "#6d9dc5"], [0.05, 0.1, "#ffd166"], [-0.06, -0.09, "#81b29a"]] as const) {
+      corner.add(turn(part(sphere(0.06, 8, 6), color, -0.62 + px, 0.72 + py, -0.47), -0.12, 0, 0));
+    }
+    corner.children.slice(-4).forEach((dot) => dot.scale.set(1, 1, 0.2));
+    corner.position.set(COZY.x, 0, COZY.z);
+    corner.rotation.y = COZY.yaw;
+    propsRoot.add(corner);
+    keepClear.push([COZY.x, COZY.z, 1.05]);
+    groundShade.push([COZY.x, COZY.z, 1.1, 0.1]);
+  }
+  addLantern(COZY.x + 0.95, COZY.z + 0.65, 1.2);
+
+  // Flower pots, crates of produce, sunflowers.
+  function addPot(x: number, z: number, size: number, bloom: string) {
+    propsRoot.add(part(cylinder(0.14 * size, 0.1 * size, 0.22 * size, 14), "#c8734a", x, 0.11 * size, z), part(cylinder(0.15 * size, 0.15 * size, 0.04 * size, 14), "#b5643e", x, 0.22 * size, z));
+    for (let i = 0; i < 5; i += 1) {
+      const a = (i / 5) * Math.PI * 2;
+      leafAt(foliageRoot, i % 2 ? "#5fa043" : "#4f8f3b", x, 0.22 * size, z, a, 0.55, 0.2 * size, 0.12 * size, 0.3, 0.5);
+    }
+    foliageRoot.add(leafy(sphere(0.06 * size, 8, 6), bloom, x, 0.36 * size, z, 0.6), leafy(sphere(0.045 * size, 7, 5), bloom, x + 0.07 * size, 0.31 * size, z - 0.04 * size, 0.6));
+    keepClear.push([x, z, 0.2 * size]);
+  }
+  function addCrate(x: number, z: number, yaw: number, produce: string) {
+    const crate = new THREE.Group();
+    crate.add(part(rbox(0.42, 0.3, 0.36, 0.03), "#c8935a", 0, 0.15, 0));
+    for (const y of [0.08, 0.2]) crate.add(part(box(0.43, 0.015, 0.37), "#a77a4c", 0, y, 0));
+    for (let i = 0; i < 6; i += 1) crate.add(part(sphere(0.075, 10, 8), tint(produce, (i % 3) * 0.03), -0.12 + (i % 3) * 0.12, 0.33, -0.07 + Math.floor(i / 3) * 0.14));
+    crate.position.set(x, 0, z);
+    crate.rotation.y = yaw;
+    propsRoot.add(crate);
+    keepClear.push([x, z, 0.35]);
+    groundShade.push([x, z, 0.5, 0.18]);
+  }
+  function addSunflower(x: number, z: number, height: number) {
+    foliageRoot.add(leafy(cylinder(0.025, 0.035, height, 6), "#5d9a3f", x, height / 2, z, 0.2));
+    for (const [side, y] of [[1, 0.35], [-1, 0.6]] as const) leafAt(foliageRoot, "#6aa84f", x, height * y, z, side > 0 ? 0.8 : 3.9, 0.2, 0.26, 0.18, 0.35, 0.4);
+    const head = new THREE.Group();
+    head.position.set(x, height, z);
+    head.rotation.set(-0.5, 0.6, 0);
+    for (let i = 0; i < 12; i += 1) {
+      const petal = new THREE.Group();
+      petal.rotation.z = (i / 12) * Math.PI * 2;
+      const blade = leafy(leaf(0), "#f6c629", 0, 0.05, 0, 0.9);
+      blade.rotation.x = -Math.PI / 2;
+      blade.scale.set(0.07, 0.12, 0.12);
+      petal.add(blade);
+      head.add(petal);
+    }
+    head.add(turn(leafy(cylinder(0.07, 0.07, 0.04, 12), "#6b3f22", 0, 0, 0.01, 0.9), Math.PI / 2, 0, 0));
+    foliageRoot.add(head);
+    keepClear.push([x, z, 0.15]);
+  }
+  addPot(-6.0, -3.72, 1.1, "#ffd166");
+  addPot(-7.25, -3.82, 0.9, "#f28fb1");
+  addPot(-1.55, -3.45, 1.0, "#ef6f6c");
+  addCrate(-0.75, -3.55, 0.2, "#e2483a");
+  addCrate(2.62, -2.55, -0.5, "#7fc35a");
+  addCrate(2.95, -2.15, -0.2, "#f08a2c");
+  addSunflower(-5.7, -4.55, 1.05);
+  addSunflower(-5.5, -5.15, 1.2);
+  addSunflower(-5.85, -5.55, 0.95);
+
+  for (const [x, z, s, bloom] of [
+    [-3.65, -3.7, 0.9, "#f28fb1"], [-8.35, -4.0, 0.85, "#ffd166"], [10.0, -1.6, 1.0, ""], [10.4, -2.7, 0.8, "#ffffff"],
+    [3.3, 3.2, 0.8, ""], [6.0, 4.45, 0.85, "#f28fb1"], [-1.6, 6.3, 0.9, "#ffd166"], [-14.6, -4.5, 1.1, ""],
+    [-15.0, 3.0, 1.0, "#f28fb1"], [13.9, -5.8, 1.0, ""], [-6.2, 14.6, 1.1, "#ffffff"], [8.9, 12.4, 1.0, "#ffd166"],
+    [-11.6, 6.35, 0.9, ""], [-3.5, 11.4, 0.7, "#ffffff"], [5.25, 11.5, 0.8, ""], [-10.6, -1.6, 0.8, "#ffffff"],
+    [-13.2, -7.8, 1.0, "#f28fb1"], [12.1, -8.6, 0.9, ""], [0.9, 14.9, 0.9, "#ffd166"], [-9.5, 12.3, 1.0, ""],
+    [10.6, 9.1, 0.85, "#ffffff"], [-0.3, -5.6, 0.9, ""], [4.2, -4.8, 0.8, "#f28fb1"],
+  ] as const) addBush(x, z, s, bloom || undefined);
+  for (const [x, z, s] of [[-9.3, -6.4, 1.1], [8.6, -3.6, 1.0], [-12.0, 9.4, 1.1], [6.2, 12.8, 1.0], [-14.0, 4.2, 1.0]] as const) addBanana(x, z, s);
+
+  /* Far islands drifting in the haze around the farm, placed by where they show on screen:
+     (right, up) in view units and how far behind the farm. */
+  {
+    const back = CAMERA_OFFSET.clone().normalize();
+    const up = new THREE.Vector3(0, 1, 0).addScaledVector(back, -back.y).normalize();
+    const right = new THREE.Vector3().crossVectors(up, back);
+    // A loose ring just outside the farm's outline on screen (about 16 wide, 9.5 tall).
+    const islands: [number, number, number, number][] = [];
+    for (let i = 0; i < 14; i += 1) {
+      const random = mulberry32(i * 13 + 3);
+      const angle = (i / 14) * Math.PI * 2 + random() * 0.25;
+      const gap = 1.2 + random() * 3.2;
+      islands.push([Math.cos(angle) * (16.2 + gap), Math.sin(angle) * (9.7 + gap * 0.7), 26 + random() * 24, 0.9 + random() * 1.8]);
+    }
+    islands.forEach(([sx, sy, depth, size], index) => {
+      const random = mulberry32(index * 71 + 5);
+      const island = new THREE.Group();
+      island.position.copy(right.clone().multiplyScalar(sx).addScaledVector(up, sy).addScaledVector(back, -depth));
+      const under = part(cone(size, size * 1.7, 9), "#8a7966", 0, -size * 0.85 - 0.15, 0);
+      under.rotation.x = Math.PI;
+      island.add(under, part(cylinder(size * 1.02, size * 0.98, size * 0.3, 16), "#7a5d43", 0, -0.1, 0), part(cylinder(size * 1.04, size * 1.02, 0.12, 16), "#8fbf62", 0, 0.06, 0));
+      const trees = 1 + Math.floor(random() * 3);
+      for (let i = 0; i < trees; i += 1) {
+        const a = random() * Math.PI * 2;
+        const d = random() * size * 0.55;
+        const s = size * (0.22 + random() * 0.12);
+        const tx = Math.cos(a) * d, tz = Math.sin(a) * d;
+        island.add(part(cylinder(0.12 * s, 0.18 * s, s, 6), "#7a5638", tx, s * 0.5, tz));
+        if (random() < 0.5) island.add(part(cone(s * 0.75, s * 2, 10), "#3f7a52", tx, s * 1.6, tz));
+        else for (let k = 0; k < 3; k += 1) island.add(part(sphere(s * (0.6 - k * 0.1), 10, 8), "#5e9e4a", tx + (k - 1) * s * 0.3, s * (1.4 + (k % 2) * 0.25), tz));
+      }
+      if (index % 3 === 0) {
+        // A little wind turbine.
+        const tx = size * 0.45;
+        island.add(part(cylinder(0.025 * size, 0.045 * size, size * 1.3, 6), "#f4f1ea", tx, size * 0.65, 0), part(sphere(0.05 * size, 8, 6), "#f4f1ea", tx, size * 1.3, 0.04 * size));
+        for (let k = 0; k < 3; k += 1) {
+          const blade = part(box(0.05 * size, size * 0.6, 0.015 * size), "#f4f1ea", 0, size * 0.3, 0);
+          const hub = new THREE.Group();
+          hub.position.set(tx, size * 1.3, 0.06 * size);
+          hub.rotation.z = (k / 3) * Math.PI * 2 + index;
+          hub.add(blade);
+          island.add(hub);
+        }
+      }
+      island.rotation.y = random() * 3;
+      farRoot.add(island);
+    });
+  }
+
+  /* The island itself: painted ground (grass with patches, dirt yard, sandy road, worn paths,
+     soft shade under trees and buildings), a grassy lip and a rocky cliff tapering underneath. */
+  const footpaths: [number, number, number, number, number][] = [
+    [0.3, FARM_CENTER.z + 0.1, 3.9, FARM_CENTER.z + 0.3, 0.32],
+    [FARM_CENTER.x, FARM_CENTER.z + 3.7, -2.6, ROAD_Z, 0.36],
+    [-2.4, ROAD_Z + 0.1, ORCHARD.x, ORCHARD.z - 2.45, 0.36],
+    [0.6, ROAD_Z, 0.9, PASTURE.z - PASTURE.hz, 0.4],
+    [ROAD_END_X - 7, ROAD_Z, 8.1, 8.2, 0.34],
+  ];
+  {
+    const R = 16;
+    const step = 0.3;
+    const n = Math.ceil((2 * R) / step);
+    const grassA = new THREE.Color("#8cbf5e"), grassB = new THREE.Color("#a6cf69"), grassDark = new THREE.Color("#73a64e");
+    const dirt = new THREE.Color("#b48e5f"), dirtDark = new THREE.Color("#9c7a50"), sand = new THREE.Color("#d9c592"), rut = new THREE.Color("#c4ab79");
+    const pastureColor = new THREE.Color("#a9d47a"), orchardColor = new THREE.Color("#9ccd6f"), lip = new THREE.Color("#6e9e48");
+    const c = new THREE.Color();
+    const groundColor = (x: number, z: number) => {
+      const n1 = noise2(x * 0.2 + 3, z * 0.2 + 1);
+      const n2 = noise2(x * 0.85 + 7, z * 0.85 + 3);
+      c.copy(grassA).lerp(grassB, n1).lerp(grassDark, smooth(0.55, 0.9, n2) * 0.45);
+      c.lerp(pastureColor, rectMask(x, z, PASTURE.x, PASTURE.z, PASTURE.hx - 0.1, PASTURE.hz - 0.1, 0.5) * 0.55);
+      c.lerp(orchardColor, rectMask(x, z, ORCHARD.x, ORCHARD.z, 3.5, 2.3, 0.5) * 0.5);
+      for (const [ax, az, bx, bz, width] of footpaths) {
+        const d = segmentDistance(x, z, ax, az, bx, bz);
+        c.lerp(dirt, (1 - smooth(width * 0.4, width, d)) * (0.55 + n2 * 0.2));
+      }
+      const road = rectMask(x, z, (ROAD_END_X - 2.2) / 2, ROAD_Z, (ROAD_END_X + 2.2) / 2, 0.45, 0.3);
+      if (road > 0) c.lerp(sand, road).lerp(rut, road * (1 - smooth(0.04, 0.14, Math.abs(Math.abs(z - ROAD_Z) - 0.24))) * 0.8);
+      const yard = rectMask(x, z, FARM_CENTER.x, FARM_CENTER.z, 4.4, 3.3, 0.45);
+      if (yard > 0) c.lerp(dirt, yard).lerp(dirtDark, yard * smooth(0.45, 0.85, n2) * 0.6);
+      const r = Math.hypot(x, z);
+      c.lerp(lip, smooth(15.2, 16, r) * 0.5);
+      let shade = 0;
+      for (const [sx, sz, radius, strength] of groundShade) {
+        const d = Math.hypot(x - sx, z - sz);
+        if (d < radius) shade += strength * (1 - d / radius) * (1 - d / radius);
+      }
+      shade = Math.min(0.42, shade);
+      c.r *= 1 - shade;
+      c.g *= 1 - shade * 0.92;
+      c.b *= 1 - shade * 0.7;
+      return c;
+    };
+    for (let i = 0; i < 12; i += 1) {
+      const [px, pz] = plotPosition(i);
+      groundShade.push([px, pz, 1.25, 0.1]);
+    }
+    groundShade.push([-2.1, -4.75, 2.1, 0.3], [1.6, -3.3, 1.3, 0.22], [TROUGH[0], TROUGH[1], 1.0, 0.15]);
+    for (const [wx, wz] of Object.values(WORKSHOP_SPOTS)) groundShade.push([wx, wz, 1.3, 0.2]);
+    // A square grid clipped to the circle: vertices outside are pulled onto the rim.
+    const side = n + 1;
+    const gridPositions = new Float32Array(side * side * 3);
+    const gridColors = new Float32Array(side * side * 3);
+    const outside = new Uint8Array(side * side);
+    for (let i = 0; i < side; i += 1) {
+      for (let j = 0; j < side; j += 1) {
+        let x = -R + i * step, z = -R + j * step;
+        const r = Math.hypot(x, z);
+        const k = i * side + j;
+        if (r > R) {
+          x *= R / r;
+          z *= R / r;
+          outside[k] = 1;
+        }
+        gridPositions.set([x, -0.05, z], k * 3);
+        const color = groundColor(x, z);
+        gridColors.set([color.r, color.g, color.b], k * 3);
+      }
+    }
+    const indices: number[] = [];
+    for (let i = 0; i < n; i += 1) {
+      for (let j = 0; j < n; j += 1) {
+        const a = i * side + j, b = (i + 1) * side + j, cc = i * side + j + 1, d = (i + 1) * side + j + 1;
+        if (!(outside[a] && outside[cc] && outside[b])) indices.push(a, cc, b);
+        if (!(outside[b] && outside[cc] && outside[d])) indices.push(b, cc, d);
+      }
+    }
+    const top = new THREE.BufferGeometry();
+    top.setAttribute("position", new THREE.BufferAttribute(gridPositions, 3));
+    top.setAttribute("normal", new THREE.BufferAttribute(new Float32Array(side * side * 3).map((_, k) => (k % 3 === 1 ? 1 : 0)), 3));
+    top.setAttribute("color", new THREE.BufferAttribute(gridColors, 3));
+    top.setIndex(indices);
+    owned.add(top);
+    const topPart = part(top, "vertex");
+    groundRoot.add(topPart);
+
+    // Cliff rings from the grassy lip down to the point underneath; rough and faceted.
+    const rings: [number, number, number, string][] = [
+      [-0.05, 16, 0, "#6f9f4a"], [-0.17, 16.12, 0.05, "#5c8a3c"], [-0.42, 16.02, 0.12, "#6e4c33"], [-0.9, 15.85, 0.3, "#a38f74"],
+      [-1.5, 15.6, 0.35, "#8f7b64"], [-2.1, 15.4, 0.35, "#b29d80"], [-2.7, 15.0, 0.4, "#857160"], [-3.6, 13.6, 0.9, "#7d6b59"],
+      [-4.9, 11.2, 1.1, "#74624f"], [-6.3, 8.2, 1.0, "#6a5a49"], [-7.8, 5.0, 0.8, "#625343"], [-9.2, 2.0, 0.5, "#5b4d3f"], [-10.2, 0.25, 0, "#574a3d"],
+    ];
+    const segments = 120;
+    const ringPoint = (ring: number, k: number): [number, number, number] => {
+      const [y, radius, rough] = rings[ring];
+      const angle = (k / segments) * Math.PI * 2;
+      const wobble = rough * (noise2(k * 0.45, ring * 1.7) - 0.5) * 2;
+      const lift = ring > 6 ? (noise2(k * 0.3 + 9, ring) - 0.5) * 0.6 : 0;
+      return [Math.cos(angle) * (radius + wobble), y + lift, Math.sin(angle) * (radius + wobble)];
+    };
+    const cliffPositions: number[] = [];
+    const cliffColors: number[] = [];
+    for (let ring = 0; ring < rings.length - 1; ring += 1) {
+      const upper = new THREE.Color(rings[ring][3]), lower = new THREE.Color(rings[ring + 1][3]);
+      for (let k = 0; k < segments; k += 1) {
+        const a = ringPoint(ring, k), b = ringPoint(ring, (k + 1) % segments), cc = ringPoint(ring + 1, k), d = ringPoint(ring + 1, (k + 1) % segments);
+        const jitter = 0.94 + hash2(k, ring) * 0.12;
+        for (const [p, col] of [[a, upper], [cc, lower], [b, upper], [b, upper], [cc, lower], [d, lower]] as const) {
+          cliffPositions.push(...p);
+          cliffColors.push(col.r * jitter, col.g * jitter, col.b * jitter);
+        }
+      }
+    }
+    const cliffGeometry = new THREE.BufferGeometry();
+    cliffGeometry.setAttribute("position", new THREE.Float32BufferAttribute(cliffPositions, 3));
+    cliffGeometry.setAttribute("color", new THREE.Float32BufferAttribute(cliffColors, 3));
+    cliffGeometry.computeVertexNormals();
+    owned.add(cliffGeometry);
+    groundRoot.add(part(cliffGeometry, "vertex"));
+  }
+
+  const groundMesh = bake(groundRoot, false, true, false);
   const propsMesh = bake(propsRoot, true, true);
+  const foliageMesh = new THREE.Mesh(bakeGeometry(foliageRoot, true, true) ?? new THREE.BufferGeometry(), foliageMaterial);
+  foliageMesh.castShadow = shadowsOn;
+  foliageMesh.receiveShadow = true;
+  const glowMesh = new THREE.Mesh(bakeGeometry(glowRoot, false) ?? new THREE.BufferGeometry(), glowMaterial);
+  const farMesh = new THREE.Mesh(bakeGeometry(farRoot, false) ?? new THREE.BufferGeometry(), surface);
   // Purely decorative: skip them when picking so taps go straight to interactive objects.
-  for (const item of [groundMesh, propsMesh]) {
+  for (const item of [groundMesh, propsMesh, foliageMesh, glowMesh, farMesh]) {
     item.raycast = () => {};
     item.userData.ownsGeometry = true;
+    world.add(item);
+  }
+  // The thousands of build-time parts are baked now; let them go.
+  for (const root of [groundRoot, propsRoot, foliageRoot, glowRoot, farRoot]) root.clear();
+
+  /* Grass tufts and wild flowers, in clumps wherever nothing else stands. */
+  const riverClear = RIVER_HALF + 0.5;
+  function grassFree(x: number, z: number): boolean {
+    if (Math.hypot(x, z) > 15.75) return false;
+    if (Math.abs(x - FARM_CENTER.x) < 4.9 && Math.abs(z - FARM_CENTER.z) < 3.8) return false;
+    if (Math.abs(z - ROAD_Z) < 0.62 && x > -2.5 && x < ROAD_END_X + 1) return false;
+    const px = (x - POND_CENTER.x) / (POND_RX + 0.5), pz = (z - POND_CENTER.z) / (POND_RZ + 0.5);
+    if (px * px + pz * pz < 1) return false;
+    for (const point of riverPoints) if (Math.abs(point.x - x) < riverClear && Math.abs(point.z - z) < riverClear && Math.hypot(point.x - x, point.z - z) < riverClear) return false;
+    for (let i = 0; i < 6; i += 1) {
+      const [sx, sz] = spotPosition(i);
+      if (Math.hypot(sx - x, sz - z) < 1.0) return false;
+    }
+    for (const [wx, wz] of Object.values(WORKSHOP_SPOTS)) if (Math.hypot(wx - x, wz - z) < 1.15) return false;
+    if (Math.hypot(TROUGH[0] - x, TROUGH[1] - z) < 1.0) return false;
+    if (Math.hypot(-2.1 - x, -4.75 - z) < 1.75 || Math.hypot(1.6 - x, -3.3 - z) < 1.15) return false;
+    for (const [cx, cz, radius] of keepClear) if (Math.hypot(cx - x, cz - z) < radius) return false;
+    for (const [ax, az, bx, bz, width] of footpaths) if (segmentDistance(x, z, ax, az, bx, bz) < width * 0.8) return false;
+    return true;
+  }
+  function scatter(count: number, clump: number, seed: number): THREE.Matrix4[] {
+    const random = mulberry32(seed);
+    const result: THREE.Matrix4[] = [];
+    const dummy = new THREE.Object3D();
+    for (let attempt = 0; attempt < count * 4 && result.length < count; attempt += 1) {
+      const cx = (random() - 0.5) * 32, cz = (random() - 0.5) * 32;
+      if (!grassFree(cx, cz)) continue;
+      // The pasture is grazed short: fewer tufts there.
+      if (Math.abs(cx - PASTURE.x) < PASTURE.hx && Math.abs(cz - PASTURE.z) < PASTURE.hz && random() < 0.6) continue;
+      for (let k = 0; k < clump && result.length < count; k += 1) {
+        const x = cx + (random() - 0.5) * 0.7, z = cz + (random() - 0.5) * 0.7;
+        if (k > 0 && !grassFree(x, z)) continue;
+        dummy.position.set(x, -0.05, z);
+        dummy.rotation.set(0, random() * Math.PI * 2, 0);
+        const s = 0.75 + random() * 0.45;
+        dummy.scale.set(s, s * (0.75 + random() * 0.55), s);
+        dummy.updateMatrix();
+        result.push(dummy.matrix.clone());
+      }
+    }
+    return result;
+  }
+  const grassMaterial = makeSurface();
+  addWind(grassMaterial, "instanced", 0.09);
+  extraMaterials.push(grassMaterial);
+  const tuft = tuftGeometry();
+  const flower = flowerGeometry();
+  owned.add(tuft);
+  owned.add(flower);
+  const tufts = scatter(preset.grass, 5, 91);
+  const grass = new THREE.InstancedMesh(tuft, grassMaterial, Math.max(1, tufts.length));
+  tufts.forEach((matrix, i) => {
+    grass.setMatrixAt(i, matrix);
+    const warm = decorRandom();
+    grass.setColorAt(i, tmpColor.setRGB(0.9 + warm * 0.16, 0.96 + decorRandom() * 0.08, 0.86 - warm * 0.1));
+  });
+  grass.count = tufts.length;
+  const blooms = scatter(preset.flowers, 4, 47);
+  const flowers = new THREE.InstancedMesh(flower, grassMaterial, Math.max(1, blooms.length));
+  const petalColors = ["#ffffff", "#f7a8c4", "#ffe27a", "#c7a6f0", "#ffb26b", "#ffffff"];
+  blooms.forEach((matrix, i) => {
+    flowers.setMatrixAt(i, matrix);
+    flowers.setColorAt(i, tmpColor.set(petalColors[Math.floor(decorRandom() * petalColors.length)]));
+  });
+  flowers.count = blooms.length;
+  for (const item of [grass, flowers]) {
+    item.raycast = () => {};
+    item.frustumCulled = false;
+    item.receiveShadow = shadowsOn;
     world.add(item);
   }
 
@@ -602,6 +1360,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     const root = new THREE.Group();
     build(root);
     const mesh = bake(root);
+    mesh.raycast = () => {};
     const group = new THREE.Group();
     group.add(mesh, hitBox(hitGeometry, hit, hitY));
     group.position.set(x, 0, z);
@@ -610,20 +1369,57 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     return group;
   }
   addBuilding((root) => {
-    const roof = part(cylinder(1.02, 1.02, 2.6, 3), "#6f4b3a", 0, 2.11, 0);
-    roof.rotation.set(-Math.PI / 2, 0, Math.PI / 2);
-    const cross = part(box(1.18, 0.08, 0.03), "#c4553f", 0, 0.53, 0.95);
-    cross.rotation.z = 0.86;
-    root.add(part(box(2.4, 1.6, 1.8), "#c4553f", 0, 0.8, 0), roof, part(box(0.9, 1.05, 0.06), "#f5e7c8", 0, 0.53, 0.91), cross);
+    const random = mulberry32(5);
+    const red = "#c4553f";
+    root.add(part(rbox(2.4, 1.6, 1.8, 0.05), red, 0, 0.8, 0), part(rbox(2.46, 0.14, 1.86, 0.04), "#8e8a80", 0, 0.05, 0));
+    // Vertical boards on the long walls.
+    for (let i = -5; i <= 5; i += 1) {
+      for (const side of [-1, 1]) root.add(part(box(0.016, 1.42, 0.012), tint(red, -0.1), i * 0.2, 0.82, side * 0.905));
+    }
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) root.add(part(rbox(0.11, 1.62, 0.11, 0.025), "#f4ead6", sx * 1.18, 0.81, sz * 0.88));
+    root.add(part(gable(2.4, 1.8, 0.88), red, 0, 1.6, 0));
+    const roof = shingleRoof(2.75, 2.05, 1.0, "#6f4b3a", random);
+    roof.position.y = 1.58;
+    root.add(roof);
+    // Double doors with white frames and cross braces.
+    for (const side of [-1, 1]) {
+      const x = side * 0.24;
+      root.add(part(rbox(0.46, 1.04, 0.05, 0.015), tint(red, -0.05), x, 0.56, 0.92));
+      root.add(part(rbox(0.5, 0.06, 0.06, 0.015), "#f4ead6", x, 1.06, 0.94), part(rbox(0.5, 0.06, 0.06, 0.015), "#f4ead6", x, 0.06, 0.94));
+      root.add(part(rbox(0.06, 1.04, 0.06, 0.015), "#f4ead6", x + side * 0.22, 0.56, 0.94));
+      root.add(turn(part(rbox(0.05, 1.12, 0.05, 0.015), "#f4ead6", x, 0.56, 0.945), 0, 0, side * 0.42));
+    }
+    // Hay loft door under the gable, a lantern over the doors and a weathervane.
+    root.add(part(rbox(0.5, 0.42, 0.05, 0.015), "#f4ead6", 0, 1.95, 0.88), part(rbox(0.38, 0.32, 0.06, 0.015), tint(red, -0.08), 0, 1.95, 0.89));
+    root.add(part(box(0.06, 0.1, 0.12), "#3b3530", 0, 1.32, 0.97));
+    root.add(part(cylinder(0.015, 0.015, 0.5, 5), "#3b3530", 0.6, 2.85, 0), part(cone(0.06, 0.18, 4), "#3b3530", 0.6, 3.05, 0));
+    root.add(turn(part(box(0.3, 0.05, 0.015), "#3b3530", 0.6, 2.98, 0), 0, 0.6, 0));
   }, { kind: "barn" }, -2.1, -4.75, -0.18, box(2.5, 2.6, 1.9), 1.2);
+  // The barn's lamp, in world space over the doors.
+  glowRoot.add(part(sphere(0.055, 8, 6), "#ffd99a", -2.1 + Math.sin(-0.18) * 1.0, 1.24, -4.75 + Math.cos(-0.18) * 1.0));
   addBuilding((root) => {
-    const awning = part(box(1.75, 0.08, 1.05), "#f2c94c", 0, 1.45, 0.08);
+    const awning = part(rbox(1.75, 0.06, 1.05, 0.02), "#f2c94c", 0, 1.45, 0.08);
     awning.rotation.x = 0.18;
-    const stripe = part(box(1.76, 0.09, 0.22), "#e2533d", 0, 1.47, 0.08);
-    stripe.rotation.x = 0.18;
-    root.add(part(box(1.5, 0.7, 0.75), "#c8935a", 0, 0.35, 0), awning, stripe, part(box(0.42, 0.28, 0.32), "#a26f3f", -0.35, 0.84, 0));
-    root.add(part(sphere(0.14, 7, 5), "#e2533d", -0.35, 1.03, 0), part(sphere(0.12, 7, 5), "#f08a2c", 0.25, 0.82, 0.05));
-    for (const x of [-0.68, 0.68]) root.add(part(cylinder(0.04, 0.04, 1.45, 5), "#7a5638", x, 0.72, 0.4));
+    root.add(awning);
+    for (let i = 0; i < 4; i += 1) {
+      const stripe = part(rbox(0.22, 0.07, 1.06, 0.02), "#e2533d", -0.66 + i * 0.44, 1.452, 0.08);
+      stripe.rotation.x = 0.18;
+      root.add(stripe);
+    }
+    // Scalloped edge along the front of the awning.
+    for (let i = 0; i < 8; i += 1) {
+      const scallop = part(sphere(0.11, 10, 6), i % 2 ? "#e2533d" : "#f2c94c", -0.77 + i * 0.22, 1.36, 0.6);
+      scallop.scale.set(1, 0.7, 0.25);
+      root.add(scallop);
+    }
+    root.add(part(rbox(1.5, 0.7, 0.75, 0.04), "#c8935a", 0, 0.35, 0), part(rbox(1.56, 0.06, 0.8, 0.02), "#a77a4c", 0, 0.72, 0));
+    for (const y of [0.2, 0.45]) root.add(part(box(1.51, 0.015, 0.76), "#a77a4c", 0, y, 0));
+    root.add(part(rbox(0.42, 0.26, 0.32, 0.03), "#a26f3f", -0.35, 0.88, 0), part(rbox(0.36, 0.2, 0.3, 0.03), "#b4834f", 0.3, 0.85, -0.05));
+    for (let i = 0; i < 5; i += 1) root.add(part(sphere(0.075, 10, 8), "#e2533d", -0.48 + (i % 3) * 0.13, 1.04, -0.06 + Math.floor(i / 3) * 0.13));
+    for (let i = 0; i < 4; i += 1) root.add(part(sphere(0.065, 10, 8), "#f08a2c", 0.22 + (i % 2) * 0.14, 0.99, -0.12 + Math.floor(i / 2) * 0.13));
+    // A chalkboard sign.
+    root.add(turn(part(rbox(0.36, 0.44, 0.03, 0.01), "#3c4a3e", 0.95, 0.35, 0.45), -0.2, -0.3, 0), turn(part(rbox(0.4, 0.04, 0.04, 0.01), "#a77a4c", 0.95, 0.58, 0.45), -0.2, -0.3, 0));
+    for (const x of [-0.68, 0.68]) root.add(part(cylinder(0.04, 0.04, 1.45, 8), "#7a5638", x, 0.72, 0.4));
   }, { kind: "shop" }, 1.6, -3.3, -0.4, box(1.8, 1.8, 1.2), 0.8);
   addBuilding((root) => {
     root.add(part(box(1.4, 0.34, 0.6), "#9c6a3c", 0, 0.17, 0), part(box(1.24, 0.06, 0.44), "#5a3d24", 0, 0.32, 0));
@@ -650,25 +1446,62 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   blades.position.set(-9.9, 2.45, -1.98);
   world.add(blades);
 
-  // Water stays separate because it is transparent.
-  const waterMaterial = preset.pbr
-    ? new THREE.MeshStandardMaterial({ color: "#67c3b8", roughness: 0.18, metalness: 0.05, transparent: true, opacity: 0.4, depthWrite: false })
+  // Water stays separate because it is transparent. Medium and High use Làng Rêu's water: it
+  // ripples, flows, takes the sky's colour at a glance and foams at the bank; Low stays flat.
+  const shaderWater = preset.pbr;
+  const pondWater = waterUniforms();
+  const riverWaterUniforms = waterUniforms();
+  for (const uniforms of [pondWater, riverWaterUniforms]) {
+    uniforms.uSunDir.value.copy(sun.position).normalize();
+    uniforms.uSunColor.value.set("#fff0d0");
+    uniforms.uSky.value.set("#d6ecef");
+  }
+  pondWater.uDeep.value.set("#2c7672");
+  pondWater.uShallow.value.set("#67c3b8");
+  riverWaterUniforms.uDeep.value.set("#2f7d88");
+  riverWaterUniforms.uShallow.value.set("#73c6cb");
+  const waterMaterial: THREE.Material = shaderWater
+    ? villageWater(pondWater, [0.4, 0.84])
     : new THREE.MeshLambertMaterial({ color: "#67c3b8", transparent: true, opacity: 0.45, depthWrite: false });
   extraMaterials.push(waterMaterial);
-  const water = new THREE.Mesh(circle(36), waterMaterial);
-  water.rotation.x = -Math.PI / 2;
-  water.scale.set(POND_RX + 0.15, POND_RZ + 0.15, 1);
+  const pondSurface = shaderWater ? pondGeometry() : null;
+  if (pondSurface) owned.add(pondSurface);
+  const water = new THREE.Mesh(pondSurface ?? circle(36), waterMaterial);
+  if (pondSurface) {
+    water.scale.set((POND_RX + 0.15) * 2, 1, (POND_RZ + 0.15) * 2);
+  } else {
+    water.rotation.x = -Math.PI / 2;
+    water.scale.set(POND_RX + 0.15, POND_RZ + 0.15, 1);
+  }
   water.position.set(POND_CENTER.x, WATER_Y, POND_CENTER.z);
   water.userData.hit = { kind: "pond" } satisfies SceneHit;
   water.renderOrder = 2;
   world.add(water);
 
+  /** The river's surface with `aSide` (−1 west bank … 1 east bank) and `aFlow` downstream. */
+  function riverSurface(): THREE.BufferGeometry {
+    const geometry = riverRibbon(-RIVER_HALF - 0.02, RIVER_HALF + 0.02, RIVER_Y);
+    const side: number[] = [];
+    const flow: number[] = [];
+    for (let i = 0; i < riverPoints.length - 1; i += 1) {
+      const a = riverTangents[i], b = riverTangents[i + 1];
+      // Same corner order as riverRibbon: a(from) c(next from) b(to) b c d(next to).
+      for (const [s, t] of [[-1, a], [-1, b], [1, a], [1, a], [-1, b], [1, b]] as const) {
+        side.push(s);
+        flow.push(t.x * 0.55, t.z * 0.55);
+      }
+    }
+    geometry.setAttribute("aSide", new THREE.Float32BufferAttribute(side, 1));
+    geometry.setAttribute("aFlow", new THREE.Float32BufferAttribute(flow, 2));
+    return geometry;
+  }
+
   // The river's surface, flow streaks, fish shadows and the waterfall off the cliff.
-  const riverMaterial = preset.pbr
-    ? new THREE.MeshStandardMaterial({ color: "#5fb8b4", roughness: 0.2, metalness: 0.05, transparent: true, opacity: 0.55, depthWrite: false })
+  const riverMaterial: THREE.Material = shaderWater
+    ? villageWater(riverWaterUniforms, [0.58, 0.9])
     : new THREE.MeshLambertMaterial({ color: "#5fb8b4", transparent: true, opacity: 0.58, depthWrite: false });
   extraMaterials.push(riverMaterial);
-  const riverWater = new THREE.Mesh(riverRibbon(-RIVER_HALF - 0.02, RIVER_HALF + 0.02, RIVER_Y), riverMaterial);
+  const riverWater = new THREE.Mesh(shaderWater ? riverSurface() : riverRibbon(-RIVER_HALF - 0.02, RIVER_HALF + 0.02, RIVER_Y), riverMaterial);
   riverWater.userData.hit = { kind: "river" } satisfies SceneHit;
   riverWater.renderOrder = 2;
   world.add(riverWater);
@@ -775,50 +1608,70 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     const random = mulberry32(index * 97 + 13);
     let iconSprite: THREE.Sprite | null = null;
 
+    // A raised bed: a frame of rounded planks with corner posts around the soil.
+    const frame = (wood: string, tall: number) => {
+      const t = 0.13;
+      const inner = PLOT_SIZE - t * 2;
+      for (const side of [-1, 1]) {
+        content.add(part(rbox(PLOT_SIZE, tall, t, 0.035, 2), tint(wood, side * 0.02), 0, tall / 2 - 0.05, side * (PLOT_SIZE / 2 - t / 2)));
+        content.add(part(rbox(t, tall, inner, 0.035, 2), tint(wood, -side * 0.02), side * (PLOT_SIZE / 2 - t / 2), tall / 2 - 0.05, 0));
+        // The seam between the two stacked boards.
+        content.add(part(box(PLOT_SIZE + 0.004, 0.014, t + 0.004), tint(wood, -0.12), 0, tall / 2 - 0.06, side * (PLOT_SIZE / 2 - t / 2)));
+        content.add(part(box(t + 0.004, 0.014, inner), tint(wood, -0.12), side * (PLOT_SIZE / 2 - t / 2), tall / 2 - 0.06, 0));
+      }
+      for (const [cx, cz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) content.add(part(rbox(0.17, tall + 0.08, 0.17, 0.04), tint(wood, -0.07), cx * (PLOT_SIZE / 2 - 0.07), (tall + 0.08) / 2 - 0.05, cz * (PLOT_SIZE / 2 - 0.07)));
+      return inner;
+    };
     if (plot.status === "locked") {
-      content.add(part(box(PLOT_SIZE, 0.14, PLOT_SIZE), "#9cc27a", 0, 0.03, 0), part(box(0.08, 0.6, 0.08), "#7a5638", 0, 0.35, 0), part(box(0.62, 0.36, 0.06), "#d9b27a", 0, 0.62, 0.02));
+      const inner = frame("#c9b08a", 0.22);
+      content.add(part(box(inner, 0.2, inner), "#94bd70", 0, 0.05, 0), part(rbox(0.08, 0.62, 0.08, 0.02), "#7a5638", 0, 0.36, 0), part(rbox(0.62, 0.36, 0.06, 0.02), "#d9b27a", 0, 0.62, 0.02));
+      for (let i = 0; i < 5; i += 1) content.add(part(sphere(0.09, 8, 6), i % 2 ? "#7fb45a" : "#8fc265", (random() - 0.5) * 1.1, 0.16, (random() - 0.5) * 1.1));
       iconSprite = icon("lock", 0.55);
       iconSprite.position.set(0, 1.12, 0);
     } else {
-      const soilColor = plot.status === "wild" ? "#8d7048" : plot.thirsty ? "#a9845c" : plot.status === "withered" ? "#7a573b" : "#6b4630";
-      content.add(part(box(PLOT_SIZE, 0.22, PLOT_SIZE), soilColor, 0, 0.06, 0));
+      const soilColor = plot.status === "wild" ? "#8d7048" : plot.thirsty ? "#a9845c" : plot.status === "withered" ? "#7a573b" : "#5e3d29";
+      const inner = frame(plot.thirsty ? "#c39a68" : "#b07a4a", 0.3);
+      content.add(part(box(inner, 0.26, inner), soilColor, 0, 0.08, 0));
+      // Crumbs of soil on top.
+      for (let i = 0; i < 10; i += 1) content.add(part(dodeca(0.035 + random() * 0.03), tint(soilColor, (random() - 0.5) * 0.08), (random() - 0.5) * (inner - 0.1), 0.215, (random() - 0.5) * (inner - 0.1)));
       if (plot.status === "wild") {
-        for (let i = 0; i < 7; i += 1) {
-          const tuft = part(cone(0.12, 0.34, 4), i % 2 ? "#6fa24f" : "#88b65d", (random() - 0.5) * 1.4, 0.32, (random() - 0.5) * 1.4);
-          tuft.rotation.z = (random() - 0.5) * 0.5;
-          content.add(tuft);
+        for (let i = 0; i < 9; i += 1) {
+          const a = random() * Math.PI * 2;
+          leafAt(content, i % 2 ? "#6fa24f" : "#88b65d", (random() - 0.5) * 1.2, 0.2, (random() - 0.5) * 1.2, a, 0.9 + random() * 0.4, 0.3 + random() * 0.12, 0.1, 0.2);
         }
-        for (let i = 0; i < 3; i += 1) content.add(part(dodeca(0.1), "#b7b19c", (random() - 0.5) * 1.3, 0.2, (random() - 0.5) * 1.3));
+        for (let i = 0; i < 3; i += 1) content.add(part(dodeca(0.1), "#b7b19c", (random() - 0.5) * 1.2, 0.24, (random() - 0.5) * 1.2));
       } else {
-        const ridgeColor = plot.thirsty ? "#987351" : "#5c3b28";
-        for (let row = -1; row <= 1; row += 1) content.add(part(box(PLOT_SIZE * 0.9, 0.07, 0.2), ridgeColor, 0, 0.2, row * 0.5));
+        const moundColor = tint(soilColor, plot.thirsty ? 0.02 : 0.035);
+        const spots: [number, number][] = [[-0.38, -0.38], [0.38, -0.38], [-0.38, 0.38], [0.38, 0.38]];
+        for (const [px, pz] of spots) {
+          const mound = part(sphere(0.25, 12, 6), moundColor, px, 0.2, pz);
+          mound.scale.set(1, 0.32, 1);
+          content.add(mound);
+        }
         if (plot.status === "withered") {
           for (let i = 0; i < 8; i += 1) {
-            const stalk = part(cylinder(0.02, 0.03, 0.42, 4), "#a47d4e", (random() - 0.5) * 1.3, 0.38, (random() - 0.5) * 1.3);
+            const stalk = part(cylinder(0.02, 0.03, 0.42, 4), "#a47d4e", (random() - 0.5) * 1.2, 0.42, (random() - 0.5) * 1.2);
             stalk.rotation.set((random() - 0.5) * 0.9, 0, (random() - 0.5) * 0.9);
             content.add(stalk);
           }
         }
         if (plot.status === "growing" && plot.crop) {
           const stage = cropStage(plot);
-          const spots: [number, number][] = [[-0.42, -0.42], [0.42, -0.42], [-0.42, 0.42], [0.42, 0.42]];
           spots.forEach(([px, pz], plantIndex) => {
             const plantNode = buildPlant(plot.crop as CropId, stage, mulberry32(index * 31 + plantIndex));
-            plantNode.position.set(px + (random() - 0.5) * 0.08, 0.2, pz + (random() - 0.5) * 0.08);
+            plantNode.position.set(px + (random() - 0.5) * 0.06, 0.26, pz + (random() - 0.5) * 0.06);
             plantNode.rotation.y = random() * Math.PI * 2;
             content.add(plantNode);
           });
           for (let i = 0; i < plot.weeds; i += 1) {
-            for (let j = 0; j < 4; j += 1) {
-              const blade = part(cone(0.06, 0.38, 3), "#3f6b2c", (i === 0 ? -0.72 : 0.7) + (j - 1.5) * 0.06, 0.38, (i === 0 ? 0.05 : -0.1) + (j % 2) * 0.05);
-              blade.rotation.z = (j - 1.5) * 0.25;
-              content.add(blade);
+            for (let j = 0; j < 5; j += 1) {
+              leafAt(content, j % 2 ? "#3f6b2c" : "#4d7d35", (i === 0 ? -0.62 : 0.6) + (j - 2) * 0.03, 0.22, (i === 0 ? 0.02 : -0.08) + (j % 2) * 0.04, j * 1.3, 1.0 + (j % 3) * 0.15, 0.34, 0.07, 0.25);
             }
           }
           for (let i = 0; i < plot.bugs; i += 1) {
-            const beetle = part(sphere(0.08, 7, 5), "#c8382c", i === 0 ? 0.08 : -0.15, stage >= 2 ? 0.62 : 0.32, i === 0 ? 0.05 : -0.22);
+            const beetle = part(sphere(0.08, 10, 8), "#c8382c", i === 0 ? 0.08 : -0.15, stage >= 2 ? 0.68 : 0.38, i === 0 ? 0.05 : -0.22);
             beetle.scale.set(1, 0.6, 1.2);
-            content.add(beetle);
+            content.add(beetle, part(sphere(0.035, 6, 5), "#2b2b2b", (i === 0 ? 0.08 : -0.15), stage >= 2 ? 0.7 : 0.4, (i === 0 ? 0.05 : -0.22) + 0.09));
           }
           const iconName: IconName | null = isRipe(plot) ? "star" : plot.bugs > 0 ? "bug" : plot.thirsty ? "drop" : null;
           if (iconName) {
@@ -830,6 +1683,8 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     }
     const mesh = bake(content);
     mesh.userData.ownsGeometry = true;
+    // The hit box answers taps; testing the detailed bed and crops too would only cost time.
+    mesh.raycast = () => {};
     group.add(mesh, hitBox(box(PLOT_PITCH * 0.98, 0.5, PLOT_PITCH * 0.98), { kind: "plot", index }, 0.2));
     if (iconSprite) group.add(iconSprite);
     return { group, icon: iconSprite };
@@ -837,151 +1692,146 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
 
   function buildPlant(crop: CropId, stage: 0 | 1 | 2 | 3, random: () => number): THREE.Group {
     const plant = new THREE.Group();
-    const leaf = "#4f9a3d";
-    const leafLight = "#7fc35a";
+    const leafDark = "#4a8f3a";
+    const leafMid = "#5fa646";
+    const leafLight = "#86c65c";
     if (stage === 0) {
-      const mound = part(sphere(0.12, 6, 4), "#5a3a26");
-      mound.scale.y = 0.45;
-      plant.add(mound, part(sphere(0.035, 5, 4), "#e9d9a6", 0, 0.05, 0));
+      const hole = part(sphere(0.1, 10, 6), "#4a3020", 0, -0.02, 0);
+      hole.scale.y = 0.35;
+      plant.add(hole, part(sphere(0.032, 8, 6), "#e9d9a6", 0.01, 0.015, 0));
       return plant;
     }
     if (stage === 1) {
-      for (const side of [-1, 1]) {
-        const sprout = part(sphere(0.08, 6, 4), leafLight, side * 0.07, 0.12, 0);
-        sprout.scale.set(1.5, 0.35, 0.8);
-        sprout.rotation.z = side * 0.4;
-        plant.add(sprout);
-      }
-      plant.add(part(cylinder(0.015, 0.02, 0.12, 4), leaf, 0, 0.06, 0));
+      plant.add(part(cylinder(0.012, 0.016, 0.12, 6), leafMid, 0, 0.05, 0));
+      for (const side of [0, Math.PI]) leafAt(plant, leafLight, 0, 0.1, 0, side + 0.3, 0.35, 0.13, 0.11, 0.15);
       return plant;
     }
     const ripe = stage === 3;
     switch (crop) {
       case "cabbage": {
-        const head = part(sphere(ripe ? 0.27 : 0.18, 8, 6), ripe ? "#a5d877" : "#77b75a", 0, ripe ? 0.17 : 0.12, 0);
-        head.scale.y = 0.75;
-        plant.add(head);
-        for (let i = 0; i < 4; i += 1) {
-          const a = (i / 4) * Math.PI * 2;
-          const outer = part(sphere(0.16, 6, 4), "#4e9a3e", Math.cos(a) * 0.16, 0.06, Math.sin(a) * 0.16);
-          outer.scale.set(1.4, 0.35, 0.9);
-          outer.rotation.y = -a;
-          plant.add(outer);
+        const outer = ripe ? 8 : 6;
+        for (let i = 0; i < outer; i += 1) {
+          leafAt(plant, i % 2 ? "#4f9a3e" : "#5aa548", 0, 0.03, 0, (i / outer) * Math.PI * 2 + random() * 0.3, 0.22 + random() * 0.2, ripe ? 0.32 : 0.24, ripe ? 0.27 : 0.2, 0.35);
         }
+        const head = part(sphere(ripe ? 0.19 : 0.12, 14, 10), ripe ? "#b4dc84" : "#86c062", 0, ripe ? 0.15 : 0.1, 0);
+        head.scale.y = 0.85;
+        plant.add(head);
+        for (let i = 0; i < 4; i += 1) leafAt(plant, "#9fd273", 0, 0.05, 0, i * 1.57 + 0.4, 1.0, ripe ? 0.24 : 0.17, ripe ? 0.22 : 0.16, -0.12);
         break;
       }
       case "carrot": {
-        for (let i = 0; i < 3; i += 1) {
-          const top = part(cone(0.05, ripe ? 0.5 : 0.36, 4), leaf, (i - 1) * 0.06, ripe ? 0.32 : 0.22, 0);
-          top.rotation.z = (i - 1) * 0.3;
-          plant.add(top);
+        for (let i = 0; i < 7; i += 1) {
+          leafAt(plant, i % 2 ? leafMid : "#4c9a3a", 0, 0.02, 0, (i / 7) * Math.PI * 2 + random() * 0.4, 1.0 + random() * 0.3, ripe ? 0.46 : 0.32, 0.075, 0.22);
         }
-        if (ripe) {
-          const root = part(cone(0.1, 0.24, 6), "#f08a2c", 0, 0.05, 0);
-          root.rotation.x = Math.PI;
-          plant.add(root);
-        }
+        if (ripe) plant.add(part(cylinder(0.075, 0.06, 0.09, 12), "#f08a2c", 0, 0.01, 0), part(sphere(0.075, 12, 6), "#f39a45", 0, 0.055, 0));
         break;
       }
       case "tomato": {
-        const bush = part(ico(0.26), leaf, 0, ripe ? 0.4 : 0.3, 0);
-        bush.scale.setScalar(ripe ? 1 : 0.8);
-        plant.add(part(cylinder(0.015, 0.015, 0.85, 4), "#b98a55", 0.12, 0.42, 0), bush);
-        for (let i = 0; i < (ripe ? 5 : 2); i += 1) {
+        const height = ripe ? 0.62 : 0.46;
+        plant.add(part(cylinder(0.014, 0.014, 0.85, 6), "#b98a55", 0.13, 0.4, 0), part(cylinder(0.018, 0.028, height, 6), "#4f8a3a", 0, height / 2, 0));
+        const tiers = ripe ? 4 : 3;
+        for (let i = 0; i < tiers * 3; i += 1) {
+          leafAt(plant, i % 2 ? leafMid : leafDark, 0, 0.1 + Math.floor(i / 3) * 0.14, 0, i * 2.2 + random() * 0.5, 0.05 + random() * 0.3, 0.22, 0.17, 0.35);
+        }
+        for (const [cx, cy, cz, r] of [[0.08, 0.3, 0.05, 0.12], [-0.08, 0.4, -0.04, 0.11], [0.02, 0.5, -0.08, 0.09]] as const) {
+          plant.add(part(sphere(r * (ripe ? 1 : 0.8), 10, 8), leafMid, cx, cy * (ripe ? 1 : 0.85), cz));
+        }
+        for (let i = 0; i < (ripe ? 6 : 3); i += 1) {
           const a = random() * Math.PI * 2;
-          plant.add(part(sphere(ripe ? 0.085 : 0.06, 7, 5), ripe ? "#e2483a" : "#9acb63", Math.cos(a) * 0.24, 0.3 + random() * 0.2, Math.sin(a) * 0.24));
+          const y = 0.18 + random() * 0.3;
+          const size = ripe ? 0.075 : 0.055;
+          plant.add(part(sphere(size, 12, 9), ripe ? (i % 2 ? "#e2483a" : "#d93b2f") : "#9acb63", Math.cos(a) * 0.18, y, Math.sin(a) * 0.18));
+          plant.add(part(cone(0.032, 0.025, 5), "#3f7a2c", Math.cos(a) * 0.18, y + size, Math.sin(a) * 0.18));
         }
         break;
       }
       case "corn": {
         const height = ripe ? 1.05 : 0.65;
-        plant.add(part(cylinder(0.035, 0.05, height, 5), "#6aa84a", 0, height / 2, 0));
-        for (let i = 0; i < 3; i += 1) {
-          const blade = part(box(0.05, 0.02, 0.42), leafLight, 0, 0.25 + i * 0.22, 0.15);
-          blade.rotation.set(-0.5, (i * 2.1) % 6, 0);
-          plant.add(blade);
-        }
+        plant.add(part(cylinder(0.028, 0.045, height, 8), "#6aa84a", 0, height / 2, 0));
+        for (let i = 0; i < 5; i += 1) leafAt(plant, i % 2 ? leafLight : leafMid, 0, 0.1 + i * height * 0.16, 0, i * 2.4, 0.45, 0.42 + (i < 3 ? 0.06 : 0), 0.085, 0.55);
         if (ripe) {
-          const cob = part(cylinder(0.06, 0.075, 0.28, 7), "#f4cf45", 0.09, 0.62, 0);
+          const cob = part(cylinder(0.055, 0.07, 0.26, 10), "#f4cf45", 0.08, 0.6, 0);
           cob.rotation.z = -0.3;
-          const husk = part(cone(0.07, 0.2, 5), "#a6c96a", 0.14, 0.43, 0);
+          const husk = part(cone(0.075, 0.22, 8), "#a6c96a", 0.13, 0.43, 0);
           husk.rotation.z = Math.PI - 0.3;
-          plant.add(cob, husk, part(cone(0.05, 0.18, 4), "#d8b36a", 0, height + 0.06, 0));
+          plant.add(cob, husk);
+          for (let i = 0; i < 5; i += 1) leafAt(plant, "#d8b36a", 0, height, 0, i * 1.26, 1.1, 0.16, 0.025, 0.3);
         }
         break;
       }
       case "rice": {
         const color = ripe ? "#e2bf4f" : "#79b354";
-        for (let i = 0; i < 6; i += 1) {
+        for (let i = 0; i < 8; i += 1) {
+          const a = (i / 8) * Math.PI * 2 + random() * 0.3;
           const height = (ripe ? 0.62 : 0.45) + random() * 0.08;
-          const a = (i / 6) * Math.PI * 2;
-          const stem = part(cylinder(0.012, 0.018, height, 3), color, Math.cos(a) * 0.06, height / 2, Math.sin(a) * 0.06);
-          stem.rotation.set(Math.sin(a) * 0.25, 0, -Math.cos(a) * 0.25);
-          plant.add(stem);
+          leafAt(plant, i % 2 ? color : tint(color, -0.05), Math.cos(a) * 0.03, 0, Math.sin(a) * 0.03, a, 1.2 + random() * 0.15, height, 0.035, ripe ? 0.32 : 0.15);
           if (ripe) {
-            const grain = part(sphere(0.04, 5, 4), "#f1d36b", Math.cos(a) * 0.2, height - 0.02, Math.sin(a) * 0.2);
-            grain.scale.set(0.7, 1.8, 0.7);
+            const grain = part(sphere(0.035, 7, 6), "#f1d36b", Math.cos(a) * 0.19, height - 0.08, Math.sin(a) * 0.19);
+            grain.scale.set(0.7, 2.0, 0.7);
             plant.add(grain);
           }
         }
         break;
       }
       case "strawberry": {
-        for (let i = 0; i < 3; i += 1) {
-          const a = (i / 3) * Math.PI * 2;
-          const leafNode = part(sphere(0.13, 6, 4), "#3f8a3a", Math.cos(a) * 0.1, 0.1, Math.sin(a) * 0.1);
-          leafNode.scale.set(1.2, 0.4, 1);
-          plant.add(leafNode);
-        }
+        for (let i = 0; i < 5; i += 1) leafAt(plant, i % 2 ? "#3f8a3a" : "#4f9a40", 0, 0.03, 0, (i / 5) * Math.PI * 2 + random() * 0.3, 0.35, 0.19, 0.17, 0.25);
         for (let i = 0; i < (ripe ? 4 : 2); i += 1) {
           const a = random() * Math.PI * 2;
-          const berry = part(cone(0.06, 0.12, 6), ripe ? "#df3646" : "#e8f0c9", Math.cos(a) * 0.2, 0.08, Math.sin(a) * 0.2);
+          const berry = part(cone(0.055, 0.12, 10), ripe ? "#df3646" : "#e8f0c9", Math.cos(a) * 0.17, 0.07, Math.sin(a) * 0.17);
           berry.rotation.x = Math.PI;
-          plant.add(berry);
+          plant.add(berry, part(cone(0.04, 0.03, 5), "#3f7a2c", Math.cos(a) * 0.17, 0.135, Math.sin(a) * 0.17));
         }
         break;
       }
       case "pumpkin":
       case "watermelon": {
-        for (let i = 0; i < 3; i += 1) {
-          const a = (i / 3) * Math.PI * 2 + 0.6;
-          const leafNode = part(dodeca(0.15), leaf, Math.cos(a) * 0.22, 0.08, Math.sin(a) * 0.22);
-          leafNode.scale.set(1.3, 0.35, 1.1);
-          plant.add(leafNode);
-        }
+        for (let i = 0; i < 4; i += 1) leafAt(plant, i % 2 ? leafDark : leafMid, 0, 0.03, 0, (i / 4) * Math.PI * 2 + 0.6, 0.2, 0.3, 0.27, 0.3);
         const isPumpkin = crop === "pumpkin";
-        const size = ripe ? 0.25 : 0.12;
-        const fruit = part(sphere(size, 10, 7), isPumpkin ? (ripe ? "#ef8a2a" : "#b9c25a") : ripe ? "#3d7c3a" : "#8fbf62", 0, size * 0.7, 0);
-        fruit.scale.set(isPumpkin ? 1.1 : 1.25, isPumpkin ? 0.75 : 0.85, isPumpkin ? 1.1 : 0.9);
-        plant.add(fruit);
-        if (ripe && isPumpkin) plant.add(part(cylinder(0.025, 0.035, 0.12, 5), "#6b8a3a", 0, size * 1.4, 0));
-        if (ripe && !isPumpkin) {
-          const band = part(cylinder(size * 0.9, size * 0.9, 0.05, 10), "#7fbf5f", 0, size * 0.7, 0);
-          band.rotation.z = Math.PI / 2;
-          band.scale.set(1, 1.2, 0.85);
-          plant.add(band);
+        const size = ripe ? 0.24 : 0.12;
+        const color = isPumpkin ? (ripe ? "#ef8a2a" : "#b9c25a") : ripe ? "#3d7c3a" : "#8fbf62";
+        if (isPumpkin) {
+          // Ribs: a ring of squashed lobes around the core.
+          for (let i = 0; i < 7; i += 1) {
+            const a = (i / 7) * Math.PI * 2;
+            const lobe = part(sphere(size * 0.55, 10, 8), tint(color, (i % 2) * 0.03), Math.cos(a) * size * 0.48, size * 0.62, Math.sin(a) * size * 0.48);
+            lobe.scale.set(1, 1.15, 1);
+            plant.add(lobe);
+          }
+          plant.add(part(sphere(size * 0.7, 12, 9), color, 0, size * 0.66, 0));
+          if (ripe) plant.add(part(cylinder(0.022, 0.035, 0.12, 6), "#6b8a3a", 0, size * 1.3, 0));
+        } else {
+          const fruit = part(sphere(size, 14, 10), color, 0, size * 0.75, 0);
+          fruit.scale.set(1.3, 0.85, 0.9);
+          plant.add(fruit);
+          if (ripe) {
+            for (let i = 0; i < 4; i += 1) {
+              const band = part(sphere(size * 1.01, 14, 10), "#86c46a", 0, size * 0.75, 0);
+              band.scale.set(1.31, 0.86, 0.12);
+              band.rotation.x = (i - 1.5) * 0.45;
+              plant.add(band);
+            }
+          }
         }
         break;
       }
       case "sunflower": {
         const height = ripe ? 1.15 : 0.7;
-        plant.add(part(cylinder(0.03, 0.045, height, 5), "#5d9a3f", 0, height / 2, 0));
-        for (const side of [-1, 1]) {
-          const leafNode = part(sphere(0.11, 6, 4), leafLight, side * 0.13, height * 0.45, 0);
-          leafNode.scale.set(1.6, 0.3, 0.9);
-          plant.add(leafNode);
-        }
+        plant.add(part(cylinder(0.026, 0.04, height, 8), "#5d9a3f", 0, height / 2, 0));
+        for (const [side, y] of [[1, 0.35], [-1, 0.55], [1, 0.75]] as const) leafAt(plant, leafLight, 0, height * y, 0, side > 0 ? 0.8 + y : 3.9 + y, 0.15, 0.24, 0.17, 0.35);
         const head = new THREE.Group();
-        const petals = part(cylinder(ripe ? 0.24 : 0.12, ripe ? 0.24 : 0.12, 0.04, 10), ripe ? "#f6c629" : "#a7cf6b");
-        petals.rotation.x = Math.PI / 2;
-        head.add(petals);
-        if (ripe) {
-          const center = part(cylinder(0.12, 0.12, 0.06, 10), "#6b3f22", 0, 0, 0.02);
-          center.rotation.x = Math.PI / 2;
-          head.add(center);
-        }
         head.position.y = height;
-        head.rotation.x = -0.35;
+        head.rotation.x = -0.5;
+        const petals = ripe ? 14 : 8;
+        for (let i = 0; i < petals; i += 1) {
+          const petal = new THREE.Group();
+          petal.rotation.z = (i / petals) * Math.PI * 2;
+          const blade = part(leaf(0), ripe ? "#f6c629" : "#a7cf6b", 0, ripe ? 0.08 : 0.04, 0);
+          blade.rotation.x = -Math.PI / 2;
+          blade.scale.set(ripe ? 0.08 : 0.05, ripe ? 0.14 : 0.08, ripe ? 0.14 : 0.08);
+          petal.add(blade);
+          head.add(petal);
+        }
+        if (ripe) head.add(turn(part(cylinder(0.1, 0.1, 0.05, 14), "#6b3f22", 0, 0, 0.012), Math.PI / 2, 0, 0));
         plant.add(head);
         break;
       }
@@ -1330,16 +2180,17 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     const smoke: THREE.Mesh[] = [];
     let star: THREE.Sprite | null = null;
     if (!state) {
-      root.add(part(box(1.7, 0.08, 1.5), "#b99a6b", 0, 0, 0), part(box(0.08, 0.7, 0.08), "#7a5638", -0.55, 0.35, 0.55), part(box(0.6, 0.34, 0.06), "#e8d3a6", -0.55, 0.66, 0.58));
-      for (const [bx, bz] of [[0.35, -0.3], [0.55, 0.15]]) root.add(part(box(0.32, 0.22, 0.32), "#c8935a", bx, 0.11, bz));
+      root.add(part(rbox(1.7, 0.08, 1.5, 0.03), "#b99a6b", 0, 0, 0), part(rbox(0.08, 0.7, 0.08, 0.02), "#7a5638", -0.55, 0.35, 0.55), part(rbox(0.6, 0.34, 0.06, 0.02), "#e8d3a6", -0.55, 0.66, 0.58));
+      for (const [bx, bz] of [[0.35, -0.3], [0.55, 0.15]]) root.add(part(rbox(0.32, 0.22, 0.32, 0.03), "#c8935a", bx, 0.11, bz));
       const sprite = icon(locked ? "lock" : "build", 0.6);
       sprite.position.set(0, 1.25, 0);
       group.add(sprite);
     } else {
-      root.add(part(box(1.6, 1.0, 1.3), "#f3e3c3", 0, 0.5, 0));
-      const roof = part(cone(1.32, 0.75, 4), def.roof, 0, 1.37, 0);
-      roof.rotation.y = Math.PI / 4;
-      root.add(roof, part(box(0.42, 0.62, 0.05), "#7a5638", 0.3, 0.31, 0.66), part(box(0.38, 0.3, 0.05), "#bfe3e8", -0.38, 0.6, 0.66), part(box(0.22, 0.55, 0.22), "#a9573f", -0.45, 1.55, -0.2));
+      root.add(part(rbox(1.6, 1.0, 1.3, 0.04), "#f3e3c3", 0, 0.5, 0), part(rbox(1.66, 0.12, 1.36, 0.03), "#b8a789", 0, 0.05, 0), part(gable(1.6, 1.3, 0.62), "#f3e3c3", 0, 1.0, 0));
+      const roof = shingleRoof(1.85, 1.45, 0.7, def.roof, mulberry32(hashString(id)));
+      roof.position.y = 0.98;
+      root.add(roof, part(rbox(0.42, 0.62, 0.05, 0.015), "#7a5638", 0.3, 0.31, 0.66), part(rbox(0.22, 0.55, 0.22, 0.03), "#a9573f", -0.45, 1.55, -0.2));
+      addWindow(root, -0.38, 0.6, 0.66, 0.36, 0.3, root);
       for (let i = 0; i < 2; i += 1) {
         const puff = new THREE.Mesh(sphere(0.14 + i * 0.05, 7, 5), smokeMaterial);
         puff.position.set(-0.45, 1.9 + i * 0.3, -0.2);
@@ -1355,6 +2206,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     }
     const mesh = bake(root);
     mesh.userData.ownsGeometry = true;
+    mesh.raycast = () => {};
     group.add(mesh, hitBox(box(1.8, 2.2, 1.6), { kind: "workshop", id }, 0.9));
     world.add(group);
     return { group, key, smoke, star, running };
@@ -1430,10 +2282,11 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     const frond = (holder: THREE.Group, angle: number, length: number, width: number, droop: number, color: string) => {
       const arm = new THREE.Group();
       arm.rotation.y = angle;
-      const leaf = part(box(width, 0.025, length), color, 0, 0, length / 2);
+      const blade = part(leaf(0.4), color);
+      blade.scale.set(width, length, length);
       const hinge = new THREE.Group();
       hinge.rotation.x = droop;
-      hinge.add(leaf);
+      hinge.add(blade);
       arm.add(hinge);
       holder.add(arm);
     };
@@ -1474,14 +2327,21 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     const crown = (fruit === "mango" ? 0.7 : 0.6) * s;
     const middle = trunk + crown * 0.8;
     root.add(part(cylinder(0.08 * s, 0.13 * s, trunk, 6), "#7a5638", 0, trunk / 2, 0));
-    const blobs: [number, number, number, number][] = [[0, 0, 0, 1], [0.32, -0.08, 0.1, 0.72], [-0.28, -0.05, -0.12, 0.75], [0.05, 0.25, -0.2, 0.7]];
-    blobs.forEach(([bx, by, bz, r], i) => root.add(part(ico(crown * r, 1), i === 0 ? def.leaf : tint(def.leaf, i % 2 ? 0.06 : -0.05), bx * s, middle + by * s, bz * s)));
+    for (const side of [-1, 1]) root.add(turn(part(cylinder(0.03 * s, 0.05 * s, 0.4 * s, 6), "#7a5638", side * 0.12 * s, trunk * 0.92, 0), 0, 0, -side * 0.7));
+    // A clumpy crown: a core, a ring of smaller clumps and a top, lighter towards the sun.
+    const blobs: [number, number, number, number][] = [[0, 0, 0, 0.85], [0, 0.62, 0, 0.62]];
+    for (let i = 0; i < 6; i += 1) {
+      const a = (i / 6) * Math.PI * 2 + random() * 0.4;
+      blobs.push([Math.cos(a) * 0.42, -0.1 + random() * 0.25, Math.sin(a) * 0.42, 0.5 + random() * 0.12]);
+    }
+    blobs.forEach(([bx, by, bz, r]) => root.add(part(sphere(crown * r, 12, 9), tint(def.leaf, by * 0.15 + (random() - 0.5) * 0.04), bx * crown * 1.15, middle + by * crown, bz * crown * 1.15)));
     if (ripeness > 0) {
-      const count = fruit === "lemon" ? 7 : fruit === "orange" ? 8 : 6;
+      const count = fruit === "lemon" ? 8 : fruit === "orange" ? 9 : 7;
       for (let i = 0; i < count; i += 1) {
         const angle = random() * Math.PI * 2;
-        const lift = -0.2 + random() * 0.9;
-        const node = part(sphere(fruitSize, 7, 5), fruitColor, Math.cos(angle) * Math.cos(lift) * crown * 0.95, middle + Math.sin(lift) * crown * 0.95, Math.sin(angle) * Math.cos(lift) * crown * 0.95);
+        const lift = -0.35 + random() * 0.8;
+        const reach = crown * 1.02;
+        const node = part(sphere(fruitSize * 1.3, 10, 8), fruitColor, Math.cos(angle) * Math.cos(lift) * reach, middle + Math.sin(lift) * reach, Math.sin(angle) * Math.cos(lift) * reach);
         if (fruit === "mango") node.scale.set(0.8, 1.2, 0.8);
         if (fruit === "lemon") node.scale.set(1.15, 0.9, 0.9);
         root.add(node);
@@ -1507,9 +2367,8 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       base.add(part(cylinder(0.82, 0.86, 0.07, 16), "#8fbd67", 0, 0, 0));
       if (spot.status === "grass") {
         for (let i = 0; i < 6; i += 1) {
-          const tuft = part(cone(0.1, 0.3, 4), i % 2 ? "#6fa24f" : "#88b65d", (random() - 0.5) * 1.1, 0.16, (random() - 0.5) * 1.1);
-          tuft.rotation.z = (random() - 0.5) * 0.5;
-          base.add(tuft);
+          const x = (random() - 0.5) * 1.1, z = (random() - 0.5) * 1.1;
+          for (let k = 0; k < 4; k += 1) leafAt(base, (i + k) % 2 ? "#6fa24f" : "#88b65d", x, 0.03, z, k * 1.6 + i, 1.0 + (k % 2) * 0.25, 0.26 + (k % 3) * 0.04, 0.07, 0.2);
         }
       } else if (spot.status === "hole") {
         const mound = part(sphere(0.26, 8, 6), "#7a573b", 0.48, 0.03, 0.22);
@@ -1531,6 +2390,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     }
     const mesh = bake(base);
     mesh.userData.ownsGeometry = true;
+    mesh.raycast = () => {};
     group.add(mesh, hitBox(box(1.9, 2.4, 1.9), { kind: "tree", index }, 1.2));
     if (tree) group.add(tree);
     if (iconSprite) group.add(iconSprite);
@@ -1986,7 +2846,10 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       trashViews.delete(id);
     }
     hungry = game.pond.fish.length > 0 && game.pond.fedUntil <= game.lastTick;
-    waterMaterial.color.set(game.pond.trash.length >= 4 ? "#8fb79a" : game.pond.trash.length >= 2 ? "#79bfa9" : "#67c3b8");
+    const pondColor = game.pond.trash.length >= 4 ? "#8fb79a" : game.pond.trash.length >= 2 ? "#79bfa9" : "#67c3b8";
+    if (waterMaterial instanceof THREE.MeshLambertMaterial) waterMaterial.color.set(pondColor);
+    pondWater.uShallow.value.set(pondColor);
+    pondWater.uDeep.value.set(pondColor).offsetHSL(0, 0, -0.2);
 
     syncRanch(game);
   }
@@ -2260,11 +3123,14 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     camera.updateProjectionMatrix();
   }
 
+  let post: FarmPost | null = preset.post ? makePost(renderer, scene, camera) : null;
+
   const resizeObserver = new ResizeObserver(() => {
     const width = Math.max(280, container.clientWidth);
     const height = Math.max(260, container.clientHeight);
     aspect = width / height;
     renderer.setSize(width, height, false);
+    post?.setSize(width, height, dpr);
     if (!started) {
       viewHeight = desiredHeight();
       cameraTarget.copy(VIEWS[viewName].target);
@@ -2278,8 +3144,13 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   });
   intersection.observe(container);
 
-  /** One step down the ladder: resolution, then shadows, then frame rate. */
+  /** One step down the ladder: glow and blur, resolution, then shadows, then frame rate. */
   function downgrade(): string | null {
+    if (post) {
+      post.dispose();
+      post = null;
+      return "Tắt hiệu ứng phát sáng và làm mờ viền để mượt hơn.";
+    }
     if (dpr > 1) {
       dpr = Math.max(1, dpr - 0.5);
       renderer.setPixelRatio(dpr);
@@ -2290,8 +3161,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       shadowsOn = false;
       renderer.shadowMap.enabled = false;
       sun.castShadow = false;
-      surface.needsUpdate = true;
-      waterMaterial.needsUpdate = true;
+      for (const material of [surface, ...extraMaterials]) material.needsUpdate = true;
       return "Tắt bóng đổ để mượt hơn.";
     }
     if (fpsCap > 30) {
@@ -2345,12 +3215,21 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     applyCamera();
 
     const motion = reducedMotion ? 0 : 1;
+    wind.uTime.value = elapsed;
+    wind.uWind.value = motion;
     blades.rotation.z += dt * 1.2 * motion;
     clouds.forEach((cloud, index) => {
       cloud.position.x += dt * (0.25 + index * 0.06) * motion;
       if (cloud.position.x > 18) cloud.position.x = -18;
     });
-    waterMaterial.opacity = (preset.pbr ? 0.4 : 0.45) + Math.sin(elapsed * 1.6) * 0.04 * motion;
+    if (shaderWater) {
+      for (const uniforms of [pondWater, riverWaterUniforms]) {
+        uniforms.uTime.value = elapsed;
+        uniforms.uMotion.value = motion;
+      }
+    } else {
+      waterMaterial.opacity = 0.45 + Math.sin(elapsed * 1.6) * 0.04 * motion;
+    }
 
     plotViews.forEach((view) => {
       if (!view) return;
@@ -2504,7 +3383,8 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       }
     }
 
-    renderer.render(scene, camera);
+    if (post) post.composer.render(dt);
+    else renderer.render(scene, camera);
     measure(time);
   }
   frame = window.requestAnimationFrame(render);
@@ -2536,6 +3416,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       trashTemplates.forEach((item) => item.dispose());
       clouds.forEach((cloud) => cloud.geometry.dispose());
       selector.geometry.dispose();
+      post?.dispose();
       surface.dispose();
       extraMaterials.forEach((item) => item.dispose());
       iconMaterials.forEach((item) => item.dispose());

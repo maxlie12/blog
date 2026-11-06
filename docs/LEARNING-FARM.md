@@ -23,18 +23,26 @@ Background music (`src/lib/cozyMusic.ts`, made in the browser with Web Audio, no
 
 The menu under the game ("Đồ họa") offers Automatic, 3D beautiful / balanced / smooth, and 2D battery saver. The choice is stored per browser (`learning-farm-graphics-v1`).
 
-| Preset | Pixel ratio | Shadows | Shading | Frame cap |
-|---|---|---|---|---|
-| high | up to 2× | 2048 soft | PBR | 60 |
-| medium | up to 1.5× | 1024 | PBR | 60 |
-| low | 1× | off | Lambert | 30 |
+| Preset | Pixel ratio | Shadows | Shading | Water | Grass / flowers | Glow, edge blur, vignette | Frame cap |
+|---|---|---|---|---|---|---|---|
+| high | up to 2× | 2048 soft | PBR | rippling | 4200 / 650 | yes | 60 |
+| medium | up to 1.5× | 1024 | PBR | rippling | 2400 / 360 | no | 60 |
+| low | 1× | off | Lambert, coarser spheres | flat | 1000 / 140 | no | 30 |
 
-Automatic picks a starting preset from the GPU name (`quality.ts`): Apple GPUs (e.g. iPhone 14 Pro Max) start high; Intel UHD 620/Iris start medium; older Intel HD/UHD 600–610, entry Mali/Adreno/PowerVR and software renderers start low (typical Inspiron 15 3000 configurations land on medium or low). In automatic mode the scene then measures real frame rate and steps down — resolution, then shadows, then a 30 fps cap — telling the player in a toast.
+Automatic picks a starting preset from the GPU name (`quality.ts`): Apple GPUs (e.g. iPhone 14 Pro Max) start high; Intel UHD 620/Iris start medium; older Intel HD/UHD 600–610, entry Mali/Adreno/PowerVR and software renderers start low (typical Inspiron 15 3000 configurations land on medium or low). In automatic mode the scene then measures real frame rate and steps down — glow and edge blur, then resolution, then shadows, then a 30 fps cap — telling the player in a toast.
+
+### The cozy look (GAME-012)
+
+- **Light:** neutral tone mapping, a warm sun with a cool sky light, soft shadows on Medium/High. Sides of things darken a little near the ground and the ground darkens under trees, buildings, beds and bushes; both are baked into vertex colours, so they cost nothing per frame and still show on Low. A gradient sky, haze (fog) and a ring of small floating islands in the distance; the island has a grassy lip and a rough rock cliff tapering underneath.
+- **High only** (`look.ts`, `makePost`): a multisampled HDR pass so lanterns and string lights bloom, a gentle tilt-shift blur towards the top and bottom (the middle stays sharp for tapping) and a soft vignette.
+- **Ground:** one painted grid (grass patches, dirt yard, sandy road with ruts, worn footpaths, shade) instead of flat boxes. Grass tufts and wild flowers are one instanced mesh each, scattered in clumps away from paths, water, buildings and tree spots, and sway in the wind (`addWind`), as do the baked leaves, vines and bushes (`aSway`).
+- **Models:** smooth shading for rounded parts (few-sided roofs, posts and rocks keep facets); rounded boxes for planks and furniture; a reusable leaf blade for crops, vines, reeds, banana plants and sunflowers; raised wooden beds with soil mounds; shingled gable roofs, timber trims, windows with flower boxes; a vine-covered trellis with grapes and fairy lights at the back of the fields; lanterns; a cosy corner (patchwork rug, bean bags, tea table, umbrella, easel) between the fields and the pond; pots, crates, sunflowers, bushes and big banana plants.
+- **Water:** Medium/High reuse Làng Rêu's water shader (`src/lib/village/graphics.ts`, with a lower opacity so pond fish stay visible): it ripples, flows down the river, takes the sky colour at a glance and foams at the banks. Low keeps the flat transparent surface.
 
 What keeps it light:
 
-- **Baked geometry.** Every object is assembled from primitives, then merged into one geometry with per-vertex colours and drawn with one shared material. The static island (ground, fences, trees, buildings, mountains) is two draw calls; each plot, animal, workshop or fish is one or two. Measured in Chromium: 344–376 draw calls per frame before, 27–29 on the low preset and 53–61 on high with shadows (shadow pass included). With the orchard and river (GAME-011): 10–42 per view on the low preset. The river bed, banks, bridge, jetty and angler are baked into the static island; the river surface, flow streaks, fish shadows and particles are one draw call each (instanced where there are many).
-- No textures except tiny canvas icons; decorative meshes are excluded from tap picking; the loop pauses when the game is off-screen or the tab is hidden; three.js only downloads after "Vào nông trại".
+- **Baked geometry.** Every object is assembled from primitives, then merged into one geometry with per-vertex colours and drawn with one shared material. The static island is seven draw calls (ground, props, swaying foliage, glowing bulbs, far islands, instanced grass, instanced flowers); each plot, animal, workshop or fish is one or two. Measured in Chromium: 344–376 draw calls per frame before, 27–29 on the low preset and 53–61 on high with shadows (shadow pass included). With the orchard and river (GAME-011): 10–42 per view on the low preset. With the cozy look (GAME-012), per view: low 8–47 draw calls and 69–170k triangles, medium 26–79 and 167–369k, high 41–96 and 191–401k (shadow pass included; before it was about 14k triangles). Software rendering in the test browser runs about 2.4× slower than before; real GPUs have not been measured yet. The river bed, banks, bridge, jetty and angler are baked into the static island; the river surface, flow streaks, fish shadows and particles are one draw call each (instanced where there are many).
+- No textures except tiny canvas icons and the sky gradient; decorative meshes are excluded from tap picking, and so are the detailed looks of plots, buildings and workshops (their hit boxes answer taps); the loop pauses when the game is off-screen or the tab is hidden; three.js only downloads after "Vào nông trại".
 - The 2D board is plain DOM with transform-only CSS animations.
 
 ## Meshy models (optional)
@@ -56,6 +64,7 @@ The scene loads the manifest at runtime; anything missing, broken or slow simply
 | `src/lib/farm/quality.ts` | Graphics presets, device detection and the stored choice (no three.js import). |
 | `src/lib/farm/fishing.ts` | Rod fishing as a pure state machine (cast, nibbles, bite window, reeling tension); tested in `src/lib/farm.test.ts`. |
 | `src/lib/farm/scene.ts` | three.js scene: baking, ranch, adaptive quality, optional GLB models. Renders a `GameState`, reports taps as `SceneHit`. Holds no rules. |
+| `src/lib/farm/look.ts` | The cozy look: sky gradient, grass tuft and flower geometry, the wind patch, and High's post-processing. |
 | `src/components/farm/FarmScene3D.tsx` | Mounts the scene; imports `scene.ts` (and three.js) only on demand; remounts when the preset changes. |
 | `src/components/farm/FarmGame.tsx` | Game state (reducer), ticking, saving, HUD, tools, view switching. |
 | `src/components/farm/cards.tsx`, `sheets.tsx`, `Board2D.tsx` | Bottom cards (plot, tree, pond, ranch); market, barn, seeds, saplings, mill, workshops, truck, gifts and help sheets; the 2D board (with the orchard and river). |

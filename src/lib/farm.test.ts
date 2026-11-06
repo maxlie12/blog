@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import * as Farm from "./farm/engine.ts";
 import { BITE_WINDOW, castLine, idleFishing, rollCatch, stepFishing, type FishingState } from "./farm/fishing.ts";
+import { QUALITY_PRESETS } from "./farm/quality.ts";
 
 const NOW = Date.UTC(2026, 10, 4, 3, 0, 0);
 
@@ -107,4 +108,12 @@ test("fishing: only fish open at the player's level bite, and a catch uses one b
   const boot = Farm.landCatch(game, "boot", 0.7);
   assert.deepEqual(boot.game.barn.wild, {});
   assert.equal(Farm.loseBait(game, "snapped").game.items.bait, game.items.bait - 1);
+});
+
+test("graphics presets: only High runs the full-screen effects, and lighter presets draw less", () => {
+  assert.deepEqual(Object.entries(QUALITY_PRESETS).filter(([, preset]) => preset.post).map(([name]) => name), ["high"]);
+  const { high, medium, low } = QUALITY_PRESETS;
+  assert.ok(high.grass > medium.grass && medium.grass > low.grass);
+  assert.ok(high.flowers > medium.flowers && medium.flowers > low.flowers);
+  assert.equal(low.shadows, false);
 });

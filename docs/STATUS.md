@@ -1,6 +1,19 @@
 # Status
 
-Last verified: 2026-11-04 (farm river fishing, orchard and hands-on work; harness browser checks).
+Last verified: 2026-11-06 (farm cozy graphics; harness browser checks).
+
+## 2026-11-06 — Farm: cozy graphics
+
+- Warmer light with soft shadows, baked shade under trees and buildings, a gradient sky with
+  floating islands in the haze and a rocky cliff under the island. On High, lanterns and fairy
+  lights glow, the top and bottom edges blur like a miniature and the corners darken a little.
+- Lush greenery: swaying grass tufts and wild flowers, clumpy tree crowns, bushes, reeds, banana
+  plants, a vine trellis with grapes at the back of the fields.
+- Raised wooden beds with soil mounds, crops with real leaves and fruit, shingled roofs, windows
+  with flower boxes, a cosy corner (rug, bean bags, umbrella, easel), lanterns, pots and crates.
+  Medium/High water ripples and foams (Làng Rêu's water shader). Gameplay and saves unchanged.
+- Checks: `farm.test.ts`, ESLint, `tsc`; harness 30/30; Làng Rêu 41/41; reduced motion; draw
+  calls and triangles per preset. See `docs/changes/GAME-012-farm-cozy-graphics.md`.
 
 ## 2026-11-04 — Farm: river fishing, a fruit orchard and hands-on field work
 

@@ -19,12 +19,17 @@ export interface QualityPreset {
   clouds: number;
   /** Physically based shading looks softer; Lambert is cheaper per pixel. */
   pbr: boolean;
+  /** Bloom on lights, miniature blur at the edges and a vignette (full-screen passes). */
+  post: boolean;
+  /** Instanced grass tufts and wild flowers across the island. */
+  grass: number;
+  flowers: number;
 }
 
 export const QUALITY_PRESETS: Record<Quality, QualityPreset> = {
-  high: { dprCap: 2, antialias: true, shadows: true, shadowSize: 2048, fps: 60, clouds: 4, pbr: true },
-  medium: { dprCap: 1.5, antialias: true, shadows: true, shadowSize: 1024, fps: 60, clouds: 3, pbr: true },
-  low: { dprCap: 1, antialias: false, shadows: false, shadowSize: 512, fps: 30, clouds: 2, pbr: false },
+  high: { dprCap: 2, antialias: true, shadows: true, shadowSize: 2048, fps: 60, clouds: 4, pbr: true, post: true, grass: 4200, flowers: 650 },
+  medium: { dprCap: 1.5, antialias: true, shadows: true, shadowSize: 1024, fps: 60, clouds: 3, pbr: true, post: false, grass: 2400, flowers: 360 },
+  low: { dprCap: 1, antialias: false, shadows: false, shadowSize: 512, fps: 30, clouds: 2, pbr: false, post: false, grass: 1000, flowers: 140 },
 };
 
 export const QUALITY_LABELS: Record<GraphicsChoice, string> = {

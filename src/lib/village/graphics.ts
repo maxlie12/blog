@@ -47,7 +47,7 @@ export type WaterUniforms = ReturnType<typeof waterUniforms>;
  * Water that ripples (two layers of moving noise bend the normal), flows along `aFlow`, mixes the
  * sky in at grazing angles, glints where the sun reflects, and foams where `aSide` nears ±1 (the bank).
  */
-export function waterMaterial(uniforms: WaterUniforms) {
+export function waterMaterial(uniforms: WaterUniforms, alpha: [number, number] = [0.8, 0.96]) {
   return new THREE.ShaderMaterial({
     uniforms: { ...THREE.UniformsLib.fog, ...uniforms },
     fog: true,
@@ -102,7 +102,7 @@ export function waterMaterial(uniforms: WaterUniforms) {
         col += uSunColor * pow(max(dot(r, view), 0.0), 140.0) * 1.8;
         float foam = smoothstep(0.8, 0.97, edge + (vgNoise(vWorld.xz * 5.0 + t * 0.6) - 0.5) * 0.22);
         col = mix(col, uFoam * max(uLight, 0.3), foam * 0.75);
-        gl_FragColor = vec4(col, mix(0.8, 0.96, max(fres, foam)));
+        gl_FragColor = vec4(col, mix(${alpha[0].toFixed(3)}, ${alpha[1].toFixed(3)}, max(fres, foam)));
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
         #include <fog_fragment>
