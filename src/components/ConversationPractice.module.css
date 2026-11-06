@@ -1,0 +1,22 @@
+.shell { margin-block: 1.5rem 2.5rem; color: var(--text); max-width: 900px; }
+.shell h1,.shell h2,.shell h3 { line-height: 1.25; text-wrap: balance; }
+.shell p { line-height: 1.7; }
+.eyebrow { color: var(--accent); font-weight: 700; }
+.grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; }
+.card { background: var(--surface-raised); border: 1px solid var(--border); border-radius: 20px; padding: clamp(1rem,3vw,2rem); margin-block: 1rem; }
+.shell button,.shell summary { min-height: 44px; cursor: pointer; }
+.shell button { padding: .65rem 1rem; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; }
+.shell button:disabled { opacity: .5; cursor: not-allowed; }
+.shell button:focus-visible,.shell summary:focus-visible,.shell input:focus-visible,.shell textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.steps,.actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-block: 1rem; }
+.steps [aria-current] { background: var(--accent); color: var(--accent-contrast); }
+.field { display: grid; gap: .5rem; margin-block: 1.25rem; }
+.field textarea,.field input { width: 100%; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text); padding: .8rem; font: inherit; font-size: 16px; }
+.field textarea { min-height: 110px; resize: vertical; }
+.field input[type=checkbox] { width: auto; }
+.model { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; line-height: 1.8; }
+.shell blockquote { margin: 1rem 0; padding: 1rem; border-left: 4px solid var(--accent); font-size: 1.3rem; }
+.shell details { border-bottom: 1px solid var(--border); padding-block: .75rem; }
+.history { display: block; margin-block: .6rem; }
+.shell audio { width: 100%; max-width: 300px; min-width: 0; min-height: 44px; }
+@media(max-width: 600px) { .grid { grid-template-columns: 1fr; } .actions button { flex: 1 1 140px; } }

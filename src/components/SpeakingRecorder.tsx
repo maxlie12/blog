@@ -20,16 +20,30 @@ export function SpeakingRecorder({ language, onTranscript, hint }: { language: s
   const chunksRef = useRef<Blob[]>([]);
   const blobRef = useRef<Blob | null>(null);
   const workerRef = useRef<Worker | null>(null);
+  const mountedRef = useRef(true);
 
-  useEffect(() => () => workerRef.current?.terminate(), []);
+  useEffect(() => { mountedRef.current = true; return () => {
+    mountedRef.current = false;
+    workerRef.current?.terminate();
+    const recorder = recorderRef.current;
+    if (recorder) {
+      recorder.onstop = null;
+      recorder.ondataavailable = null;
+      if (recorder.state !== "inactive") recorder.stop();
+      recorder.stream.getTracks().forEach(t => t.stop());
+    }
+  }; }, []);
+  useEffect(() => () => { if (audioUrl) URL.revokeObjectURL(audioUrl); }, [audioUrl]);
 
   async function startRecording() {
+    document.dispatchEvent(new Event("study-voice-start"));
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
       setUnsupported(true);
       return;
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (!mountedRef.current) { stream.getTracks().forEach(t => t.stop()); return; }
       const recorder = new MediaRecorder(stream);
       chunksRef.current = [];
       recorder.ondataavailable = (e) => chunksRef.current.push(e.data);
@@ -49,7 +63,7 @@ export function SpeakingRecorder({ language, onTranscript, hint }: { language: s
   }
 
   function stopRecording() {
-    recorderRef.current?.stop();
+    if (recorderRef.current?.state === "recording") recorderRef.current.stop();
     setRecording(false);
   }
 

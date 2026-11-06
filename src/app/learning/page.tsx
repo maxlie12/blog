@@ -6,6 +6,7 @@ import { getAllLessons } from "@/lib/lessonsData";
 import { StartLearning } from "@/components/StartLearning";
 import { getAuthenticatedLearnerId } from "@/lib/learnerAuth";
 import { getLearningPathData } from "@/lib/learningPathData";
+import { ConversationLaunch } from "@/components/ConversationPractice";
 
 export const metadata: Metadata = { title: "Learning" };
 export const dynamic = "force-dynamic";
@@ -18,16 +19,19 @@ export default async function LearningPage() {
     <div className="learning-page">
       <header className="section-page__header">
         <h1>Learning</h1>
-        <p>Không cần đăng nhập. Mở là học: tiếp tục bản nháp, ôn bài đến hạn hoặc làm bài phù hợp tiếp theo. Mỗi phiên chỉ cần 5–10 phút và tiến trình được giữ trên thiết bị này.</p>
+        <p>Không cần đăng nhập. Tập nói trong tình huống thật, nghe và đọc hỗ trợ, rồi dùng lại bằng câu của bạn. Học lúc rảnh, không có bài bù bắt buộc.</p>
       </header>
 
+      <ConversationLaunch />
+      <details><summary>Bài Daily, bản nháp cũ và nguồn học</summary>
       <StartLearning lessons={lessons} />
+      <LearningPath {...path} />
+      </details>
       <nav className="learning-games" aria-label="Trò chơi">
         <p><strong>Góc thư giãn</strong> Không tính vào Done hay trình độ.</p>
         <Link href="/learning/village" className="button button--ghost">Làng Rêu →</Link>
         <Link href="/learning/world" className="button button--ghost">Nông trại →</Link>
       </nav>
-      <LearningPath {...path} />
       <LocalProgressSummary />
     </div>
   );
