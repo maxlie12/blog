@@ -1,0 +1,21 @@
+.panel { margin: 1rem 0 1.5rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--surface); color: var(--text); scroll-margin-top: 6rem; }
+.summary { min-height: 64px; padding: 1rem 1.25rem; cursor: pointer; font-weight: 700; }
+.summary small { display: block; margin: .25rem 0 0 1rem; color: var(--text-muted); font-size: .8rem; font-weight: 400; }
+.content { padding: 0 1.25rem 1.25rem; }
+.intro { max-width: 70ch; color: var(--text-muted); line-height: 1.7; margin: 0 0 1.25rem; }
+.grid { display: grid; gap: 1rem; }
+.card { min-width: 0; padding: 1.25rem; border: 1px solid var(--border); background: var(--surface-raised); border-radius: .75rem; }
+.card h2 { font-size: 1.15rem; line-height: 1.5; margin: .5rem 0 1rem; }
+.kicker { margin: 0; color: var(--accent); font-size: .75rem; font-weight: 700; letter-spacing: .1em; }
+.status { margin: 0 0 .75rem; font-size: 1rem; font-weight: 650; line-height: 1.6; }
+.note { font-size: .875rem; color: var(--text-muted); line-height: 1.7; overflow-wrap: anywhere; }
+.error { font-size: .875rem; color: var(--text); line-height: 1.7; border-left: 3px solid var(--accent); padding-left: .75rem; }
+.connection { margin-top: 1rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
+.connection label { display: block; font-weight: 650; }
+.connection input { width: 100%; min-height: 48px; box-sizing: border-box; font: inherit; padding: .75rem; color: var(--text); border: 1px solid var(--border); background: var(--surface-raised); border-radius: .5rem; }
+.actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1rem; }
+.content button, .content a { min-height: 44px; white-space: normal; text-align: center; }
+.content button:disabled { opacity: .6; cursor: wait; }
+.summary:focus-visible, .content button:focus-visible, .content a:focus-visible, .connection input:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+@media (min-width: 760px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 420px) { .summary { padding: 1rem; } .content { padding: 0 1rem 1rem; } .card { padding: 1rem; } .actions > * { width: 100%; } }
