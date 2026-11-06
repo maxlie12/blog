@@ -26,7 +26,7 @@ test("a tree is dug, planted, grows, fruits, is shaken and fruits again", () => 
   assert.equal(Farm.shakeTree(game, 0).ok, false, "a sapling has no fruit");
   const def = Farm.TREE_MAP.lemon;
   // Long enough even if the tree is dry the whole time.
-  game = Farm.advance(game, NOW + (def.growSeconds + def.fruitSeconds) * 2 * 1000 + 5000, 7);
+  game = Farm.advance(game, NOW + (def.growSeconds + def.fruitSeconds) / Farm.THIRSTY_GROWTH * 1000 + 5000, 7);
   assert.ok(Farm.isTreeRipe(game.orchard.spots[0]));
   const shaken = Farm.shakeTree(game, 0);
   assert.ok(shaken.ok);
@@ -116,4 +116,146 @@ test("graphics presets: only High runs the full-screen effects, and lighter pres
   assert.ok(high.grass > medium.grass && medium.grass > low.grass);
   assert.ok(high.flowers > medium.flowers && medium.flowers > low.flowers);
   assert.equal(low.shadows, false);
+});
+
+const HOUR_MS = Farm.GAME_HOUR_SECONDS * 1000;
+
+function setPlot(game: Farm.GameState, index: number, patch: Partial<Farm.Plot>): Farm.GameState {
+  const plots = game.plots.slice();
+  plots[index] = { ...plots[index], ...patch };
+  return { ...game, plots };
+}
+
+/** A farm whose clock reads `hour` on day `day` (1-based) at NOW. */
+function farmAt(day: number, hour: number): Farm.GameState {
+  const game = Farm.createGame(NOW);
+  return { ...game, clockStart: NOW - ((day - 1) * 24 + hour) * HOUR_MS };
+}
+
+/** Advances in one-game-hour ticks, watering every plot and tree whenever it needs it. */
+function tend(game: Farm.GameState, hours: number, waterIt = true): Farm.GameState {
+  let current = game;
+  for (let h = 0; h < hours; h += 1) {
+    current = Farm.advance(current, current.lastTick + HOUR_MS, h + 1);
+    if (!waterIt) continue;
+    current.plots.forEach((_, i) => {
+      const watered = Farm.water(current, i);
+      if (watered.ok) current = watered.game;
+    });
+  }
+  return current;
+}
+
+test("clock: a new farm starts at 6:00 on day 1 of spring; a day is 24 real minutes; seasons last a week", () => {
+  const game = Farm.createGame(NOW);
+  const start = Farm.gameClock(game, NOW);
+  assert.equal(start.day, 1);
+  assert.equal(Farm.formatClock(start.hour), "06:00");
+  assert.equal(start.season, "spring");
+  assert.equal(Farm.gameClock(game, NOW + 24 * 60 * 1000).day, 2);
+  assert.equal(Farm.gameClock(game, NOW + 7 * 24 * HOUR_MS).season, "summer");
+  assert.equal(Farm.gameClock(game, NOW + 28 * 24 * HOUR_MS).year, 2);
+  assert.equal(Farm.daylightAt(12), 1);
+  assert.equal(Farm.daylightAt(23), 0);
+  assert.ok(Farm.daylightAt(6) > 0 && Farm.daylightAt(6) < 1);
+  assert.equal(Farm.gameClock(game, NOW + 16 * HOUR_MS).asleep, true, "22:00");
+});
+
+test("water: soil dries over game hours, dry soil nearly stops growth, watering refills it", () => {
+  let game = farmAt(1, 6);
+  game = Farm.plant(game, 0, "cabbage").game;
+  assert.equal(game.plots[0].moisture, 1);
+  assert.equal(Farm.water(game, 0).ok, false, "freshly sown soil is moist");
+  const dry = tend(game, 14, false);
+  assert.equal(dry.plots[0].thirsty, true, "cabbage soil dries within a day");
+  const tended = tend(game, 14);
+  assert.equal(tended.plots[0].thirsty, false);
+  assert.ok(tended.plots[0].growth > dry.plots[0].growth * 1.4, "a watered crop grows faster");
+  const watered = Farm.water(dry, 0);
+  assert.ok(watered.ok);
+  assert.equal(watered.game.plots[0].moisture, 1);
+});
+
+test("seasons: out of season a crop grows at half speed; summer dries soil faster than winter", () => {
+  const spring = Farm.plant(farmAt(1, 8), 0, "carrot").game;
+  const summer = Farm.plant(farmAt(8, 8), 0, "carrot").game;
+  const a = tend(spring, 10);
+  const b = tend(summer, 10);
+  assert.ok(Math.abs(b.plots[0].growth / a.plots[0].growth - Farm.OFF_SEASON_GROWTH) < 0.02);
+  const summerDry = tend(Farm.plant(farmAt(8, 8), 0, "cabbage").game, 4, false).plots[0].moisture;
+  const winterDry = tend(Farm.plant(farmAt(22, 8), 0, "cabbage").game, 4, false).plots[0].moisture;
+  assert.ok(summerDry < winterDry);
+});
+
+test("crops: tomatoes harvest four times before the plant is spent; cabbage once", () => {
+  const start = farmAt(1, 6);
+  let game = Farm.plant({ ...start, xp: 9999, seeds: { ...start.seeds, tomato: 1 } }, 0, "tomato").game;
+  assert.equal(game.plots[0].crop, "tomato");
+  const def = Farm.CROP_MAP.tomato;
+  game = setPlot(game, 0, { growth: def.growSeconds });
+  for (let round = 1; round <= def.harvests; round += 1) {
+    assert.ok(Farm.isRipe(game.plots[0]), `ripe before harvest ${round}`);
+    game = Farm.harvest(setPlot(game, 0, { weeds: 0, bugs: 0 }), 0).game;
+    if (round < def.harvests) {
+      assert.equal(game.plots[0].status, "growing");
+      assert.equal(Farm.cropStage(game.plots[0]), 2, "fruiting again, not a sprout");
+      game = tend(game, def.regrowSeconds / Farm.GAME_HOUR_SECONDS + 1);
+    }
+  }
+  assert.equal(game.plots[0].status, "withered");
+  assert.equal(game.barn.crops.tomato, def.yield * def.harvests);
+  let cabbage = Farm.plant(farmAt(1, 6), 1, "cabbage").game;
+  cabbage = setPlot(cabbage, 1, { growth: Farm.CROP_MAP.cabbage.growSeconds });
+  assert.equal(Farm.harvest(cabbage, 1).game.plots[1].status, "withered");
+});
+
+test("animals: bought young, grow up eating from the trough, then lay only by day", () => {
+  let game = farmAt(1, 6);
+  game = { ...game, coins: 500, items: { ...game.items, feed: 40 }, ranch: { ...game.ranch, animals: [] } };
+  game = Farm.buyAnimal(game, "chicken").game;
+  const chick = game.ranch.animals[0];
+  assert.equal(Farm.isGrown(chick), false);
+  assert.equal(Farm.animalName(chick), "Gà con");
+  game = tend(game, Farm.ANIMAL_MAP.chicken.growSeconds / Farm.GAME_HOUR_SECONDS + 1, false);
+  assert.ok(Farm.isGrown(game.ranch.animals[0]), "grown after a game day of eating");
+  assert.equal(game.ranch.drops.length, 0, "the young lay nothing");
+  // From 20:00 to 5:00 the hen sleeps.
+  let night = { ...farmAt(1, 20), items: game.items, ranch: game.ranch };
+  night = tend(night, 9, false);
+  assert.equal(night.ranch.drops.length, 0);
+  const day = tend({ ...farmAt(1, 6), items: game.items, ranch: game.ranch }, 12, false);
+  assert.ok(day.ranch.drops.length >= 1);
+});
+
+test("orchard: an orange tree fruits in autumn and winter, slowly in spring", () => {
+  const grownOrange = (game: Farm.GameState) => ({
+    ...game,
+    orchard: { spots: game.orchard.spots.map((spot, i) => (i === 0 ? { ...spot, status: "tree" as const, tree: "orange" as const, growth: Farm.TREE_MAP.orange.growSeconds, fruit: 0, moisture: 1 } : spot)) },
+  });
+  const spring = tend(grownOrange(farmAt(1, 8)), 10);
+  const autumn = tend(grownOrange(farmAt(15, 8)), 10);
+  assert.ok(Math.abs(spring.orchard.spots[0].fruit / autumn.orchard.spots[0].fruit - Farm.OFF_SEASON_FRUIT) < 0.02);
+});
+
+test("old saves get a clock at 6:00 in spring, keep their animals grown and their dry plots dry", () => {
+  const game = Farm.createGame(NOW - 1000);
+  const raw = JSON.parse(JSON.stringify({ ...game, plots: game.plots.map((plot, i) => (i === 0 ? { ...plot, status: "growing", crop: "carrot", growth: 30, thirsty: true } : plot)) }));
+  delete raw.clockStart;
+  for (const plot of raw.plots) {
+    delete plot.moisture;
+    delete plot.harvests;
+  }
+  raw.ranch.animals = [{ id: "a1", species: "cow", progress: 10, fed: true }];
+  const loaded = Farm.parseSave(JSON.stringify(raw), NOW);
+  assert.ok(loaded);
+  assert.equal(Farm.formatClock(Farm.gameClock(loaded, NOW).hour), "06:00");
+  assert.equal(loaded.plots[0].moisture, 0);
+  assert.equal(loaded.plots[0].thirsty, true);
+  assert.equal(loaded.plots[0].harvests, 0);
+  assert.ok(Farm.isGrown(loaded.ranch.animals[0]));
+  // 30 of the old 180 seconds is a sixth of the way, and stays a sixth of the new carrot time.
+  assert.ok(Math.abs(loaded.plots[0].growth - Farm.CROP_MAP.carrot.growSeconds / 6) < 1);
+  const ripe = JSON.parse(JSON.stringify(raw));
+  ripe.plots[0].growth = 180;
+  assert.ok(Farm.isRipe(Farm.parseSave(JSON.stringify(ripe), NOW)!.plots[0]), "a crop that was ripe stays ripe");
 });

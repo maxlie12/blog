@@ -159,6 +159,8 @@ export default function Board2D({
           {game.ranch.animals.map((animal, index) => {
             const def = Farm.ANIMAL_MAP[animal.species];
             const waiting = Farm.animalSecondsLeft(game, animal) === null;
+            const grown = Farm.isGrown(animal);
+            const asleep = grown && Farm.gameClock(game, game.lastTick).asleep;
             const seed = Farm.hashString(animal.id);
             const style = {
               "--x": `${14 + (seed % 62)}%`,
@@ -167,9 +169,9 @@ export default function Board2D({
               "--delay": `${-(index * 1.3)}s`,
             } as CSSProperties;
             return (
-              <button key={animal.id} type="button" className="fg2-animal" style={style} data-waiting={waiting || undefined} onClick={() => onAnimal(animal.id)} aria-label={`${def.name}${waiting ? ", đang chờ thức ăn" : ""}`}>
-                <span aria-hidden="true">{def.emoji}</span>
-                {waiting ? <b aria-hidden="true">🥣</b> : null}
+              <button key={animal.id} type="button" className="fg2-animal" style={style} data-waiting={waiting || undefined} data-young={!grown || undefined} data-asleep={asleep || undefined} onClick={() => onAnimal(animal.id)} aria-label={`${Farm.animalName(animal)}${waiting ? ", đang chờ thức ăn" : asleep ? ", đang ngủ" : ""}`}>
+                <span aria-hidden="true">{animal.species === "chicken" && !grown ? "🐤" : def.emoji}</span>
+                {waiting ? <b aria-hidden="true">🥣</b> : asleep ? <b aria-hidden="true">💤</b> : null}
               </button>
             );
           })}

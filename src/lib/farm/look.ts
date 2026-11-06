@@ -1,8 +1,8 @@
 /**
  * The farm's cozy look, kept apart from the models in scene.ts: a gradient sky, grass tufts and
  * wild flowers as one instanced mesh each, a wind patch that sways them and the baked foliage,
- * and the High preset's post-processing (bloom on lanterns, a miniature blur at the edges and a
- * soft vignette).
+ * the season's colour on grass and leaves, the sky and stars for each hour, and the High preset's
+ * post-processing (bloom on lanterns, a miniature blur at the edges and a soft vignette).
  */
 import * as THREE from "three";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
@@ -19,18 +19,118 @@ export function skyTexture(): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
   canvas.width = 2;
   canvas.height = 256;
-  const ctx = canvas.getContext("2d");
-  if (ctx) {
-    const gradient = ctx.createLinearGradient(0, 0, 0, 256);
-    gradient.addColorStop(0, "#86bde6");
-    gradient.addColorStop(0.5, "#bcdcec");
-    gradient.addColorStop(1, "#e9f2e4");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 2, 256);
-  }
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
+  paintSky(texture, [new THREE.Color("#86bde6"), new THREE.Color("#bcdcec"), new THREE.Color("#e9f2e4")]);
   return texture;
+}
+
+/** Repaints the sky gradient: top, middle and horizon colours. */
+export function paintSky(texture: THREE.CanvasTexture, [top, middle, horizon]: THREE.Color[]) {
+  const canvas = texture.image as HTMLCanvasElement;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  const gradient = ctx.createLinearGradient(0, 0, 0, 256);
+  gradient.addColorStop(0, `#${top.getHexString()}`);
+  gradient.addColorStop(0.5, `#${middle.getHexString()}`);
+  gradient.addColorStop(1, `#${horizon.getHexString()}`);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 2, 256);
+  texture.needsUpdate = true;
+}
+
+/**
+ * The look of each part of the day: sky (top, middle, horizon), fog, sun and sky light. Keys are
+ * hours; `lightAt` blends between them.
+ */
+const DAY_KEYS: { hour: number; sky: string[]; fog: string; sun: string; sunPower: number; skyLight: string; groundLight: string; skyPower: number }[] = [
+  { hour: 0, sky: ["#0b1430", "#1a2850", "#33456e"], fog: "#1c2846", sun: "#a9bcff", sunPower: 0.95, skyLight: "#5468a0", groundLight: "#24322f", skyPower: 0.85 },
+  { hour: 4.5, sky: ["#0f1a3a", "#24335e", "#46557c"], fog: "#25314f", sun: "#aebfff", sunPower: 0.9, skyLight: "#586ca2", groundLight: "#26342f", skyPower: 0.85 },
+  { hour: 6, sky: ["#6a7fbf", "#f0a98a", "#ffd9a8"], fog: "#e9c3a6", sun: "#ffb27a", sunPower: 2.1, skyLight: "#c9c8ea", groundLight: "#6a6f4a", skyPower: 1.1 },
+  { hour: 8, sky: ["#86bde6", "#bcdcec", "#e9f2e4"], fog: "#dcebe6", sun: "#ffe4b0", sunPower: 3.6, skyLight: "#d9ecff", groundLight: "#6f8f4f", skyPower: 1.55 },
+  { hour: 16.5, sky: ["#86bde6", "#bcdcec", "#e9f2e4"], fog: "#dcebe6", sun: "#ffe4b0", sunPower: 3.6, skyLight: "#d9ecff", groundLight: "#6f8f4f", skyPower: 1.55 },
+  { hour: 18.5, sky: ["#4f5f9f", "#ee9a72", "#ffc98c"], fog: "#e8b896", sun: "#ff9a5a", sunPower: 2.0, skyLight: "#c4b4d8", groundLight: "#5f5a40", skyPower: 1.0 },
+  { hour: 20, sky: ["#1a2450", "#3a3f72", "#6a5a7e"], fog: "#3a3a5a", sun: "#aebfff", sunPower: 1.0, skyLight: "#5a6aa0", groundLight: "#26342f", skyPower: 0.9 },
+  { hour: 24, sky: ["#0b1430", "#1a2850", "#33456e"], fog: "#1c2846", sun: "#a9bcff", sunPower: 0.95, skyLight: "#5468a0", groundLight: "#24322f", skyPower: 0.85 },
+];
+
+export interface DayLight {
+  sky: THREE.Color[];
+  fog: THREE.Color;
+  sun: THREE.Color;
+  sunPower: number;
+  skyLight: THREE.Color;
+  groundLight: THREE.Color;
+  skyPower: number;
+}
+
+/** The blended look for an hour of the day (0 … 24). */
+export function lightAt(hour: number): DayLight {
+  const h = ((hour % 24) + 24) % 24;
+  let i = 0;
+  while (i < DAY_KEYS.length - 2 && DAY_KEYS[i + 1].hour <= h) i += 1;
+  const a = DAY_KEYS[i], b = DAY_KEYS[i + 1];
+  const t = (h - a.hour) / Math.max(1e-6, b.hour - a.hour);
+  const mix = (x: string, y: string) => new THREE.Color(x).lerp(new THREE.Color(y), t);
+  return {
+    sky: a.sky.map((color, k) => mix(color, b.sky[k])),
+    fog: mix(a.fog, b.fog),
+    sun: mix(a.sun, b.sun),
+    sunPower: a.sunPower + (b.sunPower - a.sunPower) * t,
+    skyLight: mix(a.skyLight, b.skyLight),
+    groundLight: mix(a.groundLight, b.groundLight),
+    skyPower: a.skyPower + (b.skyPower - a.skyPower) * t,
+  };
+}
+
+/** Faint stars scattered behind the island, shown at night. */
+export function starField(count: number, place: (random: () => number) => THREE.Vector3): THREE.Points {
+  let seed = 7;
+  const random = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const positions = new Float32Array(count * 3);
+  for (let i = 0; i < count; i += 1) positions.set(place(random).toArray(), i * 3);
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  const material = new THREE.PointsMaterial({ color: "#fff6dc", size: 2.2, sizeAttenuation: false, transparent: true, opacity: 0, fog: false, depthWrite: false });
+  return new THREE.Points(geometry, material);
+}
+
+/**
+ * Season colour for grass, leaves and the grassy ground. Only green surfaces are tinted (soil,
+ * wood and roofs keep their colour): fresh in spring, none in summer, orange in autumn and
+ * frosted pale in winter. `uSeasonMix` blends towards it; `uSeasonGain` sets how light it is.
+ */
+export const season = { uSeasonTint: { value: new THREE.Color() }, uSeasonMix: { value: 0 }, uSeasonGain: { value: 1.7 } };
+
+export const SEASON_LOOK: Record<string, { tint: string; mix: number; gain: number }> = {
+  spring: { tint: "#c4f08c", mix: 0.22, gain: 1.75 },
+  summer: { tint: "#ffffff", mix: 0, gain: 1.7 },
+  autumn: { tint: "#ff8f2e", mix: 0.62, gain: 1.65 },
+  winter: { tint: "#eef4ff", mix: 0.58, gain: 2.25 },
+};
+
+/** Adds the season tint to a material, `strength` 0 … 1, keeping any earlier shader patch. */
+export function addSeason(material: THREE.Material, strength: number) {
+  const before = material.onBeforeCompile;
+  const beforeKey = material.customProgramCacheKey();
+  material.onBeforeCompile = (shader, renderer) => {
+    before.call(material, shader, renderer);
+    shader.uniforms.uSeasonTint = season.uSeasonTint;
+    shader.uniforms.uSeasonMix = season.uSeasonMix;
+    shader.uniforms.uSeasonGain = season.uSeasonGain;
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <common>", "#include <common>\nuniform vec3 uSeasonTint;\nuniform float uSeasonMix;\nuniform float uSeasonGain;")
+      .replace(
+        "#include <color_fragment>",
+        `#include <color_fragment>
+        {
+          float greenness = clamp((diffuseColor.g - max(diffuseColor.r, diffuseColor.b)) * 5.0, 0.0, 1.0);
+          float lum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+          diffuseColor.rgb = mix(diffuseColor.rgb, uSeasonTint * lum * uSeasonGain, greenness * uSeasonMix * ${strength.toFixed(2)});
+        }`,
+      );
+  };
+  material.customProgramCacheKey = () => `${beforeKey}-season-${strength}`;
 }
 
 /** Shared wind clock; `uWind` is 0 with reduced motion. */

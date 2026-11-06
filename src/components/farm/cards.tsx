@@ -21,6 +21,7 @@ export function PlotCard({
 }) {
   const plot = game.plots[index];
   const level = Farm.levelFromXp(game.xp);
+  const season = Farm.gameClock(game, game.lastTick).season;
   let title = "";
   let detail: ReactNode = null;
   const buttons: ReactNode[] = [];
@@ -49,17 +50,22 @@ export function PlotCard({
     const ripe = Farm.isRipe(plot);
     const harvest = Farm.harvestYield(plot);
     const progress = Math.min(1, plot.growth / def.growSeconds);
+    const fits = Farm.inSeason(def.seasons, season);
+    const left = Farm.harvestsLeft(plot);
     title = `${def.emoji} ${def.name} · ${STAGE_LABELS[Farm.cropStage(plot)]}`;
     const issues = [plot.thirsty ? "khô đất" : null, plot.weeds ? `${plot.weeds} cụm cỏ` : null, plot.bugs ? `${plot.bugs} con sâu` : null].filter(Boolean);
     detail = (
       <>
         <span className="fg-progress" aria-hidden="true"><em style={{ width: `${Math.round(progress * 100)}%` }} /></span>
-        {ripe ? `Thu được ${harvest.amount} ${def.emoji}${harvest.lost ? ` (mất ${harvest.lost})` : ""}.` : `Chín sau ~${Farm.formatDuration(Farm.plotSecondsLeft(plot))}.`}
+        {ripe ? `Thu được ${harvest.amount} ${def.emoji}${harvest.lost ? ` (mất ${harvest.lost})` : ""}.` : `Chín sau ~${Farm.formatSpan(Farm.plotSecondsLeft(plot, season))}.`}
+        {def.harvests > 1 ? ` Còn ${left} lứa.` : ""}
+        {fits ? "" : ` Trái mùa ${Farm.SEASON_MAP[season].name.toLowerCase()}: lớn chậm, mau khô.`}
         {issues.length ? ` Cần chăm: ${issues.join(", ")}.` : ""}
+        <MoistureMeter moisture={plot.moisture} />
       </>
     );
     if (ripe) buttons.push(<button key="harvest" type="button" onClick={() => onAct((current) => Farm.harvest(current, index))}>🧺 Thu hoạch</button>);
-    if (plot.thirsty) buttons.push(<button key="water" type="button" onClick={() => onAct((current) => Farm.water(current, index))}>💧 Tưới</button>);
+    if (plot.moisture < Farm.MOIST_ENOUGH) buttons.push(<button key="water" type="button" onClick={() => onAct((current) => Farm.water(current, index))}>💧 Tưới</button>);
     if (plot.weeds) buttons.push(<button key="weed" type="button" onClick={() => onAct((current) => Farm.pullWeed(current, index))}>🌿 Nhổ cỏ</button>);
     if (plot.bugs) buttons.push(<button key="bug" type="button" onClick={() => onAct((current) => Farm.catchBug(current, index))}>🐛 Bắt sâu</button>);
     if (!ripe && !plot.fertilized) {
@@ -83,6 +89,19 @@ export function PlotCard({
   );
 }
 
+/** Soil moisture as a labelled bar: blue when moist, sand-coloured when dry. */
+function MoistureMeter({ moisture }: { moisture: number }) {
+  const percent = Math.round(moisture * 100);
+  return (
+    <span className="fg-moisture" data-dry={moisture <= 0 || undefined}>
+      <span>💧 Độ ẩm đất {percent}%</span>
+      <span className="fg-meter fg-meter--water" role="meter" aria-label="Độ ẩm đất" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}>
+        <em style={{ width: `${percent}%` }} />
+      </span>
+    </span>
+  );
+}
+
 export function TreeCard({
   game,
   index,
@@ -100,6 +119,7 @@ export function TreeCard({
 }) {
   const spot = game.orchard.spots[index];
   const level = Farm.levelFromXp(game.xp);
+  const season = Farm.gameClock(game, game.lastTick).season;
   // Cutting a tree down asks once more.
   const [confirmCut, setConfirmCut] = useState(false);
   let title = "";
@@ -138,13 +158,15 @@ export function TreeCard({
         {ripe
           ? `Quả đã chín: rung cây được ${def.yield} ${def.emoji}.`
           : grown
-            ? `Quả chín sau ~${Farm.formatDuration(Farm.treeSecondsLeft(spot))}.`
-            : `Ra quả đầu sau ~${Farm.formatDuration(Farm.treeSecondsLeft(spot))}.`}
-        {spot.thirsty ? " Đất khô: cây lớn chậm một nửa." : ""}
+            ? `Quả chín sau ~${Farm.formatSpan(Farm.treeSecondsLeft(spot, season))}.`
+            : `Ra quả đầu sau ~${Farm.formatSpan(Farm.treeSecondsLeft(spot, season))}.`}
+        {` Mùa quả: ${Farm.seasonNames(def.seasons)}${Farm.inSeason(def.seasons, season) ? "" : " (bây giờ quả lớn chậm)"}.`}
+        {spot.thirsty ? " Đất khô: cây gần như ngừng lớn." : ""}
+        <MoistureMeter moisture={spot.moisture} />
       </>
     );
     if (ripe) buttons.push(<button key="shake" type="button" onClick={() => onAct((current) => Farm.shakeTree(current, index))}>🧺 Rung cây</button>);
-    if (spot.thirsty) buttons.push(<button key="water" type="button" onClick={() => onAct((current) => Farm.waterTree(current, index))}>💧 Tưới</button>);
+    if (spot.moisture < Farm.MOIST_ENOUGH) buttons.push(<button key="water" type="button" onClick={() => onAct((current) => Farm.waterTree(current, index))}>💧 Tưới</button>);
     buttons.push(
       confirmCut ? (
         <button key="cut" type="button" className="fg-danger" onClick={() => { setConfirmCut(false); onAct((current) => Farm.removeTree(current, index)); }}>🪓 Chặt thật</button>

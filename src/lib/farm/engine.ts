@@ -22,16 +22,42 @@ export type FishId = "tilapia" | "carp" | "puffer" | "goldfish" | "koi" | "sturg
 export type WildFishId = "goby" | "perch" | "prawn" | "catfish" | "snakehead" | "featherback";
 export type FruitId = "lemon" | "orange" | "banana" | "mango" | "coconut";
 
+export type SeasonId = "spring" | "summer" | "autumn" | "winter";
+
+export const SEASONS: { id: SeasonId; name: string; emoji: string }[] = [
+  { id: "spring", name: "Xuân", emoji: "🌸" },
+  { id: "summer", name: "Hạ", emoji: "☀️" },
+  { id: "autumn", name: "Thu", emoji: "🍂" },
+  { id: "winter", name: "Đông", emoji: "❄️" },
+];
+export const SEASON_MAP = Object.fromEntries(SEASONS.map((season) => [season.id, season])) as Record<SeasonId, (typeof SEASONS)[number]>;
+const ALL_SEASONS: SeasonId[] = ["spring", "summer", "autumn", "winter"];
+
+/** One game hour is one real minute, so a game day lasts 24 real minutes. */
+export const GAME_HOUR_SECONDS = 60;
+export const GAME_DAY_SECONDS = 24 * GAME_HOUR_SECONDS;
+export const SEASON_DAYS = 7;
+const H = GAME_HOUR_SECONDS;
+
 export interface CropDef {
   id: CropId;
   name: string;
   emoji: string;
   level: number;
   seedPrice: number;
+  /** Real seconds of growth from seed to the first ripe harvest (1 game hour = 60 s). */
   growSeconds: number;
+  /** For plants that keep fruiting: seconds from one harvest to the next; 0 harvests once. */
+  regrowSeconds: number;
+  /** How many harvests one planting gives. */
+  harvests: number;
   yield: number;
   sellPrice: number;
   xp: number;
+  /** How long a full watering lasts in a mild spring day before the soil is dry. */
+  waterSeconds: number;
+  /** Seasons it grows well in; out of season it grows at half speed and dries faster. */
+  seasons: SeasonId[];
 }
 
 export interface FishDef {
@@ -47,16 +73,18 @@ export interface FishDef {
   accent: string;
 }
 
+// Cool-season leaves and roots, warm-season fruiting plants; tomatoes, strawberries and
+// watermelons keep fruiting after the first harvest. Times are in game hours (H).
 export const CROPS: CropDef[] = [
-  { id: "cabbage", name: "Rau cải", emoji: "🥬", level: 1, seedPrice: 4, growSeconds: 60, yield: 4, sellPrice: 2, xp: 2 },
-  { id: "carrot", name: "Cà rốt", emoji: "🥕", level: 1, seedPrice: 10, growSeconds: 180, yield: 5, sellPrice: 4, xp: 4 },
-  { id: "tomato", name: "Cà chua", emoji: "🍅", level: 2, seedPrice: 18, growSeconds: 360, yield: 6, sellPrice: 6, xp: 7 },
-  { id: "corn", name: "Ngô", emoji: "🌽", level: 3, seedPrice: 26, growSeconds: 600, yield: 6, sellPrice: 9, xp: 10 },
-  { id: "rice", name: "Lúa", emoji: "🌾", level: 4, seedPrice: 32, growSeconds: 900, yield: 8, sellPrice: 8, xp: 13 },
-  { id: "strawberry", name: "Dâu tây", emoji: "🍓", level: 5, seedPrice: 45, growSeconds: 1500, yield: 8, sellPrice: 11, xp: 18 },
-  { id: "pumpkin", name: "Bí ngô", emoji: "🎃", level: 6, seedPrice: 60, growSeconds: 2400, yield: 4, sellPrice: 32, xp: 24 },
-  { id: "sunflower", name: "Hướng dương", emoji: "🌻", level: 7, seedPrice: 80, growSeconds: 3600, yield: 6, sellPrice: 27, xp: 32 },
-  { id: "watermelon", name: "Dưa hấu", emoji: "🍉", level: 8, seedPrice: 120, growSeconds: 7200, yield: 4, sellPrice: 62, xp: 50 },
+  { id: "cabbage", name: "Rau cải", emoji: "🥬", level: 1, seedPrice: 5, growSeconds: 20 * H, regrowSeconds: 0, harvests: 1, yield: 5, sellPrice: 4, xp: 6, waterSeconds: 10 * H, seasons: ["spring", "autumn", "winter"] },
+  { id: "carrot", name: "Cà rốt", emoji: "🥕", level: 1, seedPrice: 10, growSeconds: 36 * H, regrowSeconds: 0, harvests: 1, yield: 6, sellPrice: 7, xp: 9, waterSeconds: 14 * H, seasons: ["spring", "autumn", "winter"] },
+  { id: "tomato", name: "Cà chua", emoji: "🍅", level: 2, seedPrice: 20, growSeconds: 48 * H, regrowSeconds: 18 * H, harvests: 4, yield: 4, sellPrice: 8, xp: 6, waterSeconds: 9 * H, seasons: ["spring", "summer"] },
+  { id: "corn", name: "Ngô", emoji: "🌽", level: 3, seedPrice: 28, growSeconds: 60 * H, regrowSeconds: 0, harvests: 1, yield: 6, sellPrice: 12, xp: 16, waterSeconds: 11 * H, seasons: ["spring", "summer"] },
+  { id: "rice", name: "Lúa", emoji: "🌾", level: 4, seedPrice: 34, growSeconds: 72 * H, regrowSeconds: 0, harvests: 1, yield: 10, sellPrice: 10, xp: 20, waterSeconds: 6 * H, seasons: ["summer", "autumn"] },
+  { id: "strawberry", name: "Dâu tây", emoji: "🍓", level: 5, seedPrice: 50, growSeconds: 48 * H, regrowSeconds: 24 * H, harvests: 5, yield: 4, sellPrice: 12, xp: 7, waterSeconds: 9 * H, seasons: ["spring", "winter"] },
+  { id: "pumpkin", name: "Bí ngô", emoji: "🎃", level: 6, seedPrice: 65, growSeconds: 96 * H, regrowSeconds: 0, harvests: 1, yield: 3, sellPrice: 55, xp: 34, waterSeconds: 12 * H, seasons: ["summer", "autumn"] },
+  { id: "sunflower", name: "Hướng dương", emoji: "🌻", level: 7, seedPrice: 85, growSeconds: 72 * H, regrowSeconds: 0, harvests: 1, yield: 6, sellPrice: 30, xp: 30, waterSeconds: 16 * H, seasons: ["summer"] },
+  { id: "watermelon", name: "Dưa hấu", emoji: "🍉", level: 8, seedPrice: 125, growSeconds: 96 * H, regrowSeconds: 48 * H, harvests: 2, yield: 3, sellPrice: 70, xp: 40, waterSeconds: 8 * H, seasons: ["summer"] },
 ];
 
 export const FISHES: FishDef[] = [
@@ -102,21 +130,25 @@ export interface TreeDef {
   saplingPrice: number;
   /** Seconds from sapling to a grown tree. */
   growSeconds: number;
-  /** Seconds for each crop of fruit once the tree is grown. */
+  /** Seconds for each crop of fruit once the tree is grown (in its fruiting seasons). */
   fruitSeconds: number;
   yield: number;
   sellPrice: number;
   xp: number;
+  /** Deep roots: a watering lasts longer than for field crops. */
+  waterSeconds: number;
+  /** Fruiting seasons; outside them fruit forms slowly. */
+  seasons: SeasonId[];
   leaf: string;
   color: string;
 }
 
 export const TREES: TreeDef[] = [
-  { id: "lemon", name: "Cây chanh", fruit: "Chanh", emoji: "🍋", level: 1, saplingPrice: 40, growSeconds: 300, fruitSeconds: 240, yield: 4, sellPrice: 5, xp: 4, leaf: "#4f9a3d", color: "#e9d84a" },
-  { id: "orange", name: "Cây cam", fruit: "Cam", emoji: "🍊", level: 2, saplingPrice: 70, growSeconds: 600, fruitSeconds: 360, yield: 5, sellPrice: 7, xp: 6, leaf: "#3f8a3a", color: "#f2902c" },
-  { id: "banana", name: "Cây chuối", fruit: "Chuối", emoji: "🍌", level: 3, saplingPrice: 100, growSeconds: 900, fruitSeconds: 600, yield: 6, sellPrice: 9, xp: 8, leaf: "#6aae45", color: "#f4d35e" },
-  { id: "mango", name: "Cây xoài", fruit: "Xoài", emoji: "🥭", level: 5, saplingPrice: 160, growSeconds: 1800, fruitSeconds: 1200, yield: 5, sellPrice: 20, xp: 14, leaf: "#2f7a3e", color: "#f5a524" },
-  { id: "coconut", name: "Cây dừa", fruit: "Dừa", emoji: "🥥", level: 7, saplingPrice: 240, growSeconds: 3600, fruitSeconds: 2400, yield: 4, sellPrice: 45, xp: 22, leaf: "#5c9d48", color: "#8a6a45" },
+  { id: "lemon", name: "Cây chanh", fruit: "Chanh", emoji: "🍋", level: 1, saplingPrice: 40, growSeconds: 72 * H, fruitSeconds: 30 * H, yield: 5, sellPrice: 5, xp: 6, waterSeconds: 30 * H, seasons: ALL_SEASONS, leaf: "#4f9a3d", color: "#e9d84a" },
+  { id: "orange", name: "Cây cam", fruit: "Cam", emoji: "🍊", level: 2, saplingPrice: 70, growSeconds: 120 * H, fruitSeconds: 40 * H, yield: 6, sellPrice: 8, xp: 9, waterSeconds: 30 * H, seasons: ["autumn", "winter"], leaf: "#3f8a3a", color: "#f2902c" },
+  { id: "banana", name: "Cây chuối", fruit: "Chuối", emoji: "🍌", level: 3, saplingPrice: 100, growSeconds: 96 * H, fruitSeconds: 48 * H, yield: 8, sellPrice: 8, xp: 10, waterSeconds: 20 * H, seasons: ALL_SEASONS, leaf: "#6aae45", color: "#f4d35e" },
+  { id: "mango", name: "Cây xoài", fruit: "Xoài", emoji: "🥭", level: 5, saplingPrice: 160, growSeconds: 168 * H, fruitSeconds: 60 * H, yield: 5, sellPrice: 20, xp: 16, waterSeconds: 36 * H, seasons: ["spring", "summer"], leaf: "#2f7a3e", color: "#f5a524" },
+  { id: "coconut", name: "Cây dừa", fruit: "Dừa", emoji: "🥥", level: 7, saplingPrice: 240, growSeconds: 240 * H, fruitSeconds: 72 * H, yield: 4, sellPrice: 40, xp: 24, waterSeconds: 48 * H, seasons: ALL_SEASONS, leaf: "#5c9d48", color: "#8a6a45" },
 ];
 
 export type AnimalId = "chicken" | "duck" | "sheep" | "cow";
@@ -131,6 +163,11 @@ export interface AnimalDef {
   level: number;
   price: number;
   product: ProductId;
+  /** Real seconds of eating and growing from young to grown. */
+  growSeconds: number;
+  /** Name while young. */
+  young: string;
+  /** One portion of feed lasts this long; a grown animal then gives one product (daytime only). */
   cycleSeconds: number;
   xp: number;
   color: string;
@@ -157,24 +194,24 @@ export interface WorkshopDef {
 }
 
 export const ANIMALS: AnimalDef[] = [
-  { id: "chicken", name: "Gà", emoji: "🐔", level: 1, price: 60, product: "egg", cycleSeconds: 90, xp: 2, color: "#fbf6ec", accent: "#d8432f" },
-  { id: "duck", name: "Vịt", emoji: "🦆", level: 2, price: 90, product: "duckEgg", cycleSeconds: 150, xp: 3, color: "#f6f1e3", accent: "#f0a030" },
-  { id: "sheep", name: "Cừu", emoji: "🐑", level: 4, price: 220, product: "wool", cycleSeconds: 360, xp: 6, color: "#f4f1ea", accent: "#3d3a36" },
-  { id: "cow", name: "Bò", emoji: "🐄", level: 5, price: 320, product: "milk", cycleSeconds: 480, xp: 8, color: "#fbfaf6", accent: "#2f2b28" },
+  { id: "chicken", name: "Gà", emoji: "🐔", level: 1, price: 60, product: "egg", growSeconds: 20 * H, young: "Gà con", cycleSeconds: 8 * H, xp: 3, color: "#fbf6ec", accent: "#d8432f" },
+  { id: "duck", name: "Vịt", emoji: "🦆", level: 2, price: 90, product: "duckEgg", growSeconds: 28 * H, young: "Vịt con", cycleSeconds: 10 * H, xp: 4, color: "#f6f1e3", accent: "#f0a030" },
+  { id: "sheep", name: "Cừu", emoji: "🐑", level: 4, price: 220, product: "wool", growSeconds: 48 * H, young: "Cừu non", cycleSeconds: 30 * H, xp: 9, color: "#f4f1ea", accent: "#3d3a36" },
+  { id: "cow", name: "Bò", emoji: "🐄", level: 5, price: 320, product: "milk", growSeconds: 60 * H, young: "Bê con", cycleSeconds: 12 * H, xp: 8, color: "#fbfaf6", accent: "#2f2b28" },
 ];
 
 export const PRODUCTS: (ProductDef & { id: ProductId })[] = [
-  { id: "egg", name: "Trứng gà", emoji: "🥚", sellPrice: 6 },
-  { id: "duckEgg", name: "Trứng vịt", emoji: "🥚", sellPrice: 9 },
-  { id: "wool", name: "Len cừu", emoji: "🧶", sellPrice: 22 },
-  { id: "milk", name: "Sữa bò", emoji: "🥛", sellPrice: 30 },
+  { id: "egg", name: "Trứng gà", emoji: "🥚", sellPrice: 14 },
+  { id: "duckEgg", name: "Trứng vịt", emoji: "🥚", sellPrice: 18 },
+  { id: "wool", name: "Len cừu", emoji: "🧶", sellPrice: 55 },
+  { id: "milk", name: "Sữa bò", emoji: "🥛", sellPrice: 40 },
 ];
 
 export const GOODS: (ProductDef & { id: GoodId })[] = [
-  { id: "saltedEgg", name: "Hũ trứng muối", emoji: "🏺", sellPrice: 42 },
-  { id: "cake", name: "Bánh bông lan", emoji: "🍰", sellPrice: 40 },
-  { id: "scarf", name: "Khăn len", emoji: "🧣", sellPrice: 70 },
-  { id: "cheese", name: "Phô mai", emoji: "🧀", sellPrice: 85 },
+  { id: "saltedEgg", name: "Hũ trứng muối", emoji: "🏺", sellPrice: 75 },
+  { id: "cake", name: "Bánh bông lan", emoji: "🍰", sellPrice: 60 },
+  { id: "scarf", name: "Khăn len", emoji: "🧣", sellPrice: 150 },
+  { id: "cheese", name: "Phô mai", emoji: "🧀", sellPrice: 120 },
 ];
 
 export const WORKSHOPS: WorkshopDef[] = [
@@ -210,7 +247,7 @@ export const TREE_MAP = Object.fromEntries(TREES.map((tree) => [tree.id, tree]))
 export const ITEMS = {
   fertilizer: { name: "Phân bón", emoji: "✨", price: 25, note: "Rút ngắn 30% thời gian còn lại của một vụ (mỗi vụ một lần)." },
   fishFood: { name: "Cám cá", emoji: "🍞", price: 8, note: "Một lần cho ăn giữ cả ao no trong 20 phút." },
-  feed: { name: "Thức ăn gia súc", emoji: "🥣", price: 3, note: "Vật nuôi tự ăn từ máng: mỗi phần đổi lấy một lượt ra sản phẩm. Xay từ nông sản thì rẻ hơn." },
+  feed: { name: "Thức ăn gia súc", emoji: "🥣", price: 3, note: "Vật nuôi tự ăn từ máng: con non ăn để lớn, con trưởng thành mỗi phần cho một sản phẩm. Xay từ nông sản thì rẻ hơn." },
   bait: { name: "Mồi câu", emoji: "🪱", price: 2, note: "Câu cá ở sông: mỗi lần cá cắn câu tốn một mồi. Thu dây trước khi cá cắn thì không mất." },
 } as const;
 export type ItemId = keyof typeof ITEMS;
@@ -257,7 +294,16 @@ export const TRUCK = { capacity: 20, tripSeconds: 90, bonus: 1.2 };
 
 export const FEED_DURATION_MS = 20 * 60 * 1000;
 export const HUNGRY_GROWTH = 0.35;
-export const THIRSTY_GROWTH = 0.5;
+/** Growth speed on dry soil: the plant barely grows until it is watered. */
+export const THIRSTY_GROWTH = 0.25;
+/** Out of season a crop grows at this speed, dries this much faster, and fruit trees fruit slowly. */
+export const OFF_SEASON_GROWTH = 0.5;
+export const OFF_SEASON_DRY = 1.25;
+export const OFF_SEASON_FRUIT = 0.4;
+/** How fast soil dries in each season (1 = a mild spring day on average). */
+export const SEASON_DRY: Record<SeasonId, number> = { spring: 1, summer: 1.35, autumn: 0.9, winter: 0.65 };
+/** Soil this moist (0..1) or wetter does not need water yet. */
+export const MOIST_ENOUGH = 0.6;
 export const MAX_TRASH = 6;
 export const FEATURED_BONUS = 1.25;
 const MAX_OFFLINE_MS = 14 * 24 * 60 * 60 * 1000;
@@ -267,12 +313,17 @@ export type PlotStatus = "locked" | "wild" | "tilled" | "growing" | "withered";
 export interface Plot {
   status: PlotStatus;
   crop: CropId | null;
-  /** Seconds of effective growth accumulated (thirst slows it down). */
+  /** Seconds of effective growth accumulated (dry soil and the wrong season slow it down). */
   growth: number;
+  /** Soil moisture, 1 just watered … 0 dry. */
+  moisture: number;
+  /** True when the soil is dry (moisture 0). */
   thirsty: boolean;
   weeds: number;
   bugs: number;
   fertilized: boolean;
+  /** Harvests already taken from this planting (plants that regrow). */
+  harvests: number;
 }
 
 export type SpotStatus = "locked" | "grass" | "hole" | "tree";
@@ -284,6 +335,7 @@ export interface TreeSpot {
   growth: number;
   /** Seconds into the current crop of fruit, once grown. */
   fruit: number;
+  moisture: number;
   thirsty: boolean;
 }
 
@@ -305,9 +357,11 @@ export interface PondTrash {
 export interface RanchAnimal {
   id: string;
   species: AnimalId;
-  /** Seconds into the current production cycle; only advances while `fed`. */
+  /** Seconds into the current portion of feed; only advances while `fed`. */
   progress: number;
   fed: boolean;
+  /** Seconds of growing up (while fed); grown at the species' `growSeconds`. */
+  age: number;
 }
 
 export interface RanchDrop {
@@ -336,6 +390,8 @@ export type GoodsKind = "crop" | "fish" | "product" | "good" | "fruit" | "wild";
 export interface GameState {
   version: 1;
   createdAt: number;
+  /** Real time when this farm's clock read day 1, 00:00. */
+  clockStart: number;
   lastTick: number;
   coins: number;
   xp: number;
@@ -431,25 +487,125 @@ export function levelProgress(xp: number) {
   return { level, into: xp - floor, needed: ceiling - floor, ratio: (xp - floor) / (ceiling - floor) };
 }
 
+/* ───────────────────────── clock & seasons ───────────────────────── */
+
+export interface GameClock {
+  /** Day number since the farm began, from 1. */
+  day: number;
+  /** Hour of the day, 0 … 24 (fractional). */
+  hour: number;
+  season: SeasonId;
+  /** Day within the season, 1 … SEASON_DAYS. */
+  seasonDay: number;
+  year: number;
+  /** 0 at night … 1 in full day, easing through dawn and dusk. */
+  daylight: number;
+  /** Grown animals sleep (no eating, no products) from 20:00 to 5:00. */
+  asleep: boolean;
+}
+
+const easeInOut = (t: number) => {
+  const x = Math.min(1, Math.max(0, t));
+  return x * x * (3 - 2 * x);
+};
+
+/** Daylight for an hour: dawn 5:00–7:00, dusk 18:00–20:00. */
+export function daylightAt(hour: number): number {
+  if (hour < 5 || hour >= 20) return 0;
+  if (hour < 7) return easeInOut((hour - 5) / 2);
+  if (hour >= 18) return 1 - easeInOut((hour - 18) / 2);
+  return 1;
+}
+
+export function gameClock(game: Pick<GameState, "clockStart">, now: number): GameClock {
+  const hours = Math.max(0, (now - game.clockStart) / 1000 / GAME_HOUR_SECONDS);
+  const dayIndex = Math.floor(hours / 24);
+  const hour = hours - dayIndex * 24;
+  const seasonCount = Math.floor(dayIndex / SEASON_DAYS);
+  return {
+    day: dayIndex + 1,
+    hour,
+    season: ALL_SEASONS[seasonCount % 4],
+    seasonDay: (dayIndex % SEASON_DAYS) + 1,
+    year: Math.floor(seasonCount / 4) + 1,
+    daylight: daylightAt(hour),
+    asleep: hour < 5 || hour >= 20,
+  };
+}
+
+/** "06:30" */
+export function formatClock(hour: number): string {
+  const minutes = Math.floor(hour * 60) % (24 * 60);
+  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+}
+
+/** A span of real seconds as game days and hours, e.g. "1 ngày 12 giờ". */
+export function formatGameSpan(seconds: number): string {
+  const hours = Math.max(0, Math.round(seconds / GAME_HOUR_SECONDS));
+  const days = Math.floor(hours / 24);
+  const rest = hours % 24;
+  if (days === 0) return `${Math.max(1, rest)} giờ`;
+  return rest ? `${days} ngày ${rest} giờ` : `${days} ngày`;
+}
+
+/** The same span in real time, rounded for reading: "36 phút", "1 giờ 12 phút". */
+export function formatRealSpan(seconds: number): string {
+  const total = Math.max(0, Math.round(seconds));
+  if (total < 60) return `${total} giây`;
+  const minutes = Math.round(total / 60);
+  if (minutes < 60) return `${minutes} phút`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m ? `${h} giờ ${m} phút` : `${h} giờ`;
+}
+
+/** "1 ngày 12 giờ (≈ 36 phút thật)" */
+export function formatSpan(seconds: number): string {
+  return `${formatGameSpan(seconds)} (≈ ${formatRealSpan(seconds)})`;
+}
+
+export function seasonNames(seasons: SeasonId[]): string {
+  if (seasons.length === 4) return "quanh năm";
+  return seasons.map((id) => `${SEASON_MAP[id].emoji} ${SEASON_MAP[id].name}`).join(", ");
+}
+
+export function inSeason(seasons: SeasonId[], season: SeasonId): boolean {
+  return seasons.includes(season);
+}
+
+/* ───────────────────────── crops, trees and animals ───────────────────────── */
+
 export function isRipe(plot: Plot): boolean {
   return plot.status === "growing" && plot.crop !== null && plot.growth >= CROP_MAP[plot.crop].growSeconds;
 }
 
-/** 0 = just sown, 1 = sprout, 2 = growing, 3 = ripe. */
+/** 0 = just sown, 1 = sprout, 2 = growing (or fruiting again after a harvest), 3 = ripe. */
 export function cropStage(plot: Plot): 0 | 1 | 2 | 3 {
   if (plot.status !== "growing" || !plot.crop) return 0;
   const ratio = plot.growth / CROP_MAP[plot.crop].growSeconds;
   if (ratio >= 1) return 3;
+  if (plot.harvests > 0) return 2;
   if (ratio < 0.12) return 0;
   if (ratio < 0.45) return 1;
   return 2;
 }
 
-/** Wall-clock seconds left, assuming the plot's current condition persists. */
-export function plotSecondsLeft(plot: Plot): number {
+/** Growth speed for a crop in a season on soil that is (or is not) dry. */
+export function cropRate(crop: CropId, season: SeasonId, thirsty: boolean): number {
+  return (thirsty ? THIRSTY_GROWTH : 1) * (inSeason(CROP_MAP[crop].seasons, season) ? 1 : OFF_SEASON_GROWTH);
+}
+
+/** Wall-clock seconds left, assuming the plot's current condition and season persist. */
+export function plotSecondsLeft(plot: Plot, season: SeasonId = "spring"): number {
   if (plot.status !== "growing" || !plot.crop) return 0;
   const left = Math.max(0, CROP_MAP[plot.crop].growSeconds - plot.growth);
-  return left / (plot.thirsty ? THIRSTY_GROWTH : 1);
+  return left / cropRate(plot.crop, season, plot.thirsty);
+}
+
+/** Harvests a planting still has to give, counting the one ripening now. */
+export function harvestsLeft(plot: Plot): number {
+  if (!plot.crop) return 0;
+  return Math.max(0, CROP_MAP[plot.crop].harvests - plot.harvests);
 }
 
 export function harvestYield(plot: Plot): { amount: number; lost: number } {
@@ -475,12 +631,13 @@ export function treeStage(spot: TreeSpot): 0 | 1 | 2 {
 }
 
 /** Seconds until the next ripe fruit (through the growing years for a young tree). */
-export function treeSecondsLeft(spot: TreeSpot): number {
+export function treeSecondsLeft(spot: TreeSpot, season: SeasonId = "spring"): number {
   if (!spot.tree) return 0;
   const def = TREE_MAP[spot.tree];
   const rate = spot.thirsty ? THIRSTY_GROWTH : 1;
-  if (spot.growth < def.growSeconds) return (def.growSeconds - spot.growth) / rate + def.fruitSeconds;
-  return Math.max(0, def.fruitSeconds - spot.fruit) / rate;
+  const fruitRate = rate * (inSeason(def.seasons, season) ? 1 : OFF_SEASON_FRUIT);
+  if (spot.growth < def.growSeconds) return (def.growSeconds - spot.growth) / rate + def.fruitSeconds / fruitRate;
+  return Math.max(0, def.fruitSeconds - spot.fruit) / fruitRate;
 }
 
 export function unlockedSpotCount(game: GameState): number {
@@ -553,7 +710,22 @@ export function nextRanchUpgrade(game: GameState) {
   return RANCH_UPGRADES[game.ranch.capacityLevel] ?? null;
 }
 
-/** Wall-clock seconds until this animal's next product, or null if it is waiting for feed. */
+export function isGrown(animal: RanchAnimal): boolean {
+  return animal.age >= ANIMAL_MAP[animal.species].growSeconds;
+}
+
+/** "Gà con" while young, "Gà" once grown. */
+export function animalName(animal: RanchAnimal): string {
+  const def = ANIMAL_MAP[animal.species];
+  return isGrown(animal) ? def.name : def.young;
+}
+
+/** Seconds of eating left until a young animal is grown (0 once grown). */
+export function animalGrowLeft(animal: RanchAnimal): number {
+  return Math.max(0, ANIMAL_MAP[animal.species].growSeconds - animal.age);
+}
+
+/** Seconds of daytime until this animal's next product, or null if it is waiting for feed. */
 export function animalSecondsLeft(game: GameState, animal: RanchAnimal): number | null {
   if (!animal.fed && (game.items.feed < 1 || game.ranch.drops.length >= MAX_DROPS)) return null;
   return Math.max(0, ANIMAL_MAP[animal.species].cycleSeconds - animal.progress);
@@ -622,7 +794,7 @@ export function formatDuration(seconds: number): string {
 }
 
 function emptyPlot(status: PlotStatus): Plot {
-  return { status, crop: null, growth: 0, thirsty: false, weeds: 0, bugs: 0, fertilized: false };
+  return { status, crop: null, growth: 0, moisture: 0, thirsty: false, weeds: 0, bugs: 0, fertilized: false, harvests: 0 };
 }
 
 function fail(game: GameState, message: string, tone: Tone = "warn"): ActionResult {
@@ -671,7 +843,7 @@ function withSpot(game: GameState, index: number, spot: TreeSpot): GameState {
 }
 
 function emptySpot(status: SpotStatus): TreeSpot {
-  return { status, tree: null, growth: 0, fruit: 0, thirsty: false };
+  return { status, tree: null, growth: 0, fruit: 0, moisture: 0, thirsty: false };
 }
 
 function createOrchard(): GameState["orchard"] {
@@ -680,10 +852,14 @@ function createOrchard(): GameState["orchard"] {
 
 /* ───────────────────────── creation & time ───────────────────────── */
 
+/** A new clock reads 6:00 on day 1 of spring. */
+const clockFor = (now: number) => now - 6 * GAME_HOUR_SECONDS * 1000;
+
 export function createGame(now: number): GameState {
   return {
     version: 1,
     createdAt: now,
+    clockStart: clockFor(now),
     lastTick: now,
     coins: 150,
     xp: 0,
@@ -710,7 +886,8 @@ export function createGame(now: number): GameState {
 function createRanch(): GameState["ranch"] {
   return {
     capacityLevel: 0,
-    animals: [{ id: "a1", species: "chicken", progress: 0, fed: false }],
+    // The starter hen is grown, so the first eggs come on day 1.
+    animals: [{ id: "a1", species: "chicken", progress: 0, fed: false, age: ANIMAL_MAP.chicken.growSeconds }],
     drops: [],
     workshops: {},
     truck: null,
@@ -718,9 +895,9 @@ function createRanch(): GameState["ranch"] {
 }
 
 /**
- * Advances growth, weeds, pests, thirst, hunger and pond litter from `game.lastTick` to `now`,
- * in steps of at most one minute so random events keep the same per-minute odds whether the
- * page was open the whole time or closed for days.
+ * Advances growth, weeds, pests, soil moisture, hunger and pond litter from `game.lastTick` to
+ * `now`, in steps of at most one minute (one game hour) so the season, the time of day and random
+ * events keep the same odds whether the page was open the whole time or closed for days.
  */
 export function advance(game: GameState, now: number, seed: number): GameState {
   const elapsed = Math.min(MAX_OFFLINE_MS, now - game.lastTick);
@@ -746,26 +923,35 @@ export function advance(game: GameState, now: number, seed: number): GameState {
     const step = Math.min(60, remaining);
     remaining -= step;
     const perMinute = step / 60;
+    const time = gameClock(game, clock);
+    const season = time.season;
+    // Soil dries faster under the sun and slower at night.
+    const dry = SEASON_DRY[season] * (0.6 + 0.65 * time.daylight);
+    const weedOdds = season === "spring" ? 1.3 : season === "winter" ? 0.4 : 1;
+    const bugOdds = season === "summer" ? 1.4 : season === "winter" ? 0.3 : 1;
 
     for (const plot of plots) {
       if (plot.status !== "growing" || !plot.crop) continue;
-      const grow = CROP_MAP[plot.crop].growSeconds;
+      const def = CROP_MAP[plot.crop];
+      const fits = inSeason(def.seasons, season);
+      plot.moisture = Math.max(0, plot.moisture - (step / def.waterSeconds) * dry * (fits ? 1 : OFF_SEASON_DRY));
+      plot.thirsty = plot.moisture <= 0;
+      const grow = def.growSeconds;
       if (plot.growth >= grow) continue;
-      plot.growth = Math.min(grow, plot.growth + step * (plot.thirsty ? THIRSTY_GROWTH : 1));
+      plot.growth = Math.min(grow, plot.growth + step * cropRate(plot.crop, season, plot.thirsty));
       if (plot.growth >= grow || plot.growth < grow * 0.12) continue;
-      if (!plot.thirsty && random() < 0.05 * perMinute) plot.thirsty = true;
-      if (plot.weeds < 2 && random() < 0.035 * perMinute) plot.weeds += 1;
-      if (plot.bugs < 2 && random() < 0.03 * perMinute) plot.bugs += 1;
+      if (plot.weeds < 2 && random() < 0.035 * weedOdds * perMinute) plot.weeds += 1;
+      if (plot.bugs < 2 && random() < 0.03 * bugOdds * perMinute) plot.bugs += 1;
     }
 
     for (const spot of spots) {
       if (spot.status !== "tree" || !spot.tree) continue;
       const def = TREE_MAP[spot.tree];
+      spot.moisture = Math.max(0, spot.moisture - (step / def.waterSeconds) * dry);
+      spot.thirsty = spot.moisture <= 0;
       const grow = step * (spot.thirsty ? THIRSTY_GROWTH : 1);
       if (spot.growth < def.growSeconds) spot.growth = Math.min(def.growSeconds, spot.growth + grow);
-      else if (spot.fruit < def.fruitSeconds) spot.fruit = Math.min(def.fruitSeconds, spot.fruit + grow);
-      else continue;
-      if (!spot.thirsty && random() < 0.04 * perMinute) spot.thirsty = true;
+      else if (spot.fruit < def.fruitSeconds) spot.fruit = Math.min(def.fruitSeconds, spot.fruit + grow * (inSeason(def.seasons, season) ? 1 : OFF_SEASON_FRUIT));
     }
 
     if (fish.length > 0) {
@@ -790,23 +976,27 @@ export function advance(game: GameState, now: number, seed: number): GameState {
     }
     for (const animal of animals) {
       const def = ANIMAL_MAP[animal.species];
+      // Grown animals sleep at night; the young eat and grow around the clock.
+      if (time.asleep && animal.age >= def.growSeconds) continue;
       let left = step;
       while (left > 0) {
+        const grown = animal.age >= def.growSeconds;
         if (!animal.fed) {
-          if (feed < 1 || drops.length >= MAX_DROPS) break;
+          if (feed < 1 || (grown && drops.length >= MAX_DROPS)) break;
           feed -= 1;
           animal.fed = true;
         }
-        const need = def.cycleSeconds - animal.progress;
-        if (left < need) {
-          animal.progress += left;
-          left = 0;
-        } else {
-          left -= need;
+        const used = Math.min(left, def.cycleSeconds - animal.progress);
+        left -= used;
+        animal.progress += used;
+        if (!grown) animal.age = Math.min(def.growSeconds, animal.age + used);
+        if (animal.progress >= def.cycleSeconds) {
           animal.progress = 0;
           animal.fed = false;
-          drops.push({ id: `d${nextId}`, product: def.product, x: random() * 1.7 - 0.85, z: random() * 1.5 - 0.75 });
-          nextId += 1;
+          if (grown) {
+            drops.push({ id: `d${nextId}`, product: def.product, x: random() * 1.7 - 0.85, z: random() * 1.5 - 0.75 });
+            nextId += 1;
+          }
         }
       }
     }
@@ -869,21 +1059,27 @@ export function plant(game: GameState, index: number, crop: CropId): ActionResul
   if (levelFromXp(game.xp) < def.level) return fail(game, `${def.name} cần cấp ${def.level}.`);
   const owned = game.seeds[crop] ?? 0;
   if (owned < 1) return fail(game, `Hết hạt ${def.name}. Mua thêm ở cửa hàng nhé.`);
+  // Sowing waters the seed in.
   const seeded = withPlot(
     { ...game, seeds: { ...game.seeds, [crop]: owned - 1 } },
     index,
-    { ...emptyPlot("growing"), crop },
+    { ...emptyPlot("growing"), crop, moisture: 1 },
   );
   const next = gainXp(seeded, 1);
-  return { game: next.game, ok: true, message: `🌱 Đã gieo ${def.emoji} ${def.name} · chín sau ${formatDuration(def.growSeconds)}.${next.suffix}`, tone: "good" };
+  const season = gameClock(game, game.lastTick).season;
+  const fits = inSeason(def.seasons, season);
+  const when = fits ? `chín sau ${formatSpan(def.growSeconds)}` : `trái mùa ${SEASON_MAP[season].name.toLowerCase()}, lớn chậm và mau khô (hợp: ${seasonNames(def.seasons)})`;
+  return { game: next.game, ok: true, message: `🌱 Đã gieo ${def.emoji} ${def.name} · ${when}.${next.suffix}`, tone: fits ? "good" : "info" };
 }
 
 export function water(game: GameState, index: number): ActionResult {
   const plot = getPlot(game, index);
   if (!plot || plot.status !== "growing") return fail(game, "Chỉ tưới ô đang có cây.", "info");
-  if (!plot.thirsty) return fail(game, "Đất còn ẩm, chưa cần tưới.", "info");
-  const next = gainXp(withPlot(game, index, { ...plot, thirsty: false }), 2);
-  return { game: next.game, ok: true, message: `💧 Đã tưới · cây lớn lại bình thường · +2 XP.${next.suffix}`, tone: "good" };
+  if (plot.moisture >= MOIST_ENOUGH) return fail(game, `Đất còn ẩm (${Math.round(plot.moisture * 100)}%), chưa cần tưới.`, "info");
+  const xp = plot.thirsty ? 2 : 1;
+  const next = gainXp(withPlot(game, index, { ...plot, moisture: 1, thirsty: false }), xp);
+  const text = plot.thirsty ? "cây lớn lại bình thường" : "đất ẩm trở lại";
+  return { game: next.game, ok: true, message: `💧 Đã tưới · ${text} · +${xp} XP.${next.suffix}`, tone: "good" };
 }
 
 export function pullWeed(game: GameState, index: number): ActionResult {
@@ -913,14 +1109,16 @@ export function fertilize(game: GameState, index: number): ActionResult {
     index,
     { ...plot, growth, fertilized: true },
   );
-  return { game: next, ok: true, message: `✨ Đã bón phân · còn khoảng ${formatDuration(plotSecondsLeft({ ...plot, growth }))}.`, tone: "good" };
+  const season = gameClock(game, game.lastTick).season;
+  return { game: next, ok: true, message: `✨ Đã bón phân · còn khoảng ${formatSpan(plotSecondsLeft({ ...plot, growth }, season))}.`, tone: "good" };
 }
 
 export function harvest(game: GameState, index: number): ActionResult {
   const plot = getPlot(game, index);
   if (!plot || !isRipe(plot) || !plot.crop) {
     if (plot?.status === "growing" && plot.crop) {
-      return fail(game, `${CROP_MAP[plot.crop].name} chưa chín · còn ${formatDuration(plotSecondsLeft(plot))}.`, "info");
+      const season = gameClock(game, game.lastTick).season;
+      return fail(game, `${CROP_MAP[plot.crop].name} chưa chín · còn ${formatSpan(plotSecondsLeft(plot, season))}.`, "info");
     }
     return fail(game, "Không có gì để thu hoạch.", "info");
   }
@@ -931,9 +1129,14 @@ export function harvest(game: GameState, index: number): ActionResult {
     barn: { ...game.barn, crops: { ...game.barn.crops, [def.id]: (game.barn.crops[def.id] ?? 0) + amount } },
     stats: { ...game.stats, harvested: game.stats.harvested + amount },
   };
-  const next = gainXp(withPlot(stored, index, emptyPlot("withered")), def.xp);
+  // Fruiting plants stay and set fruit again until they are spent; the rest are pulled up.
+  const regrows = plot.harvests + 1 < def.harvests;
+  const after: Plot = regrows ? { ...plot, growth: def.growSeconds - def.regrowSeconds, harvests: plot.harvests + 1, fertilized: false } : emptyPlot("withered");
+  const next = gainXp(withPlot(stored, index, after), def.xp);
   const lostText = lost > 0 ? ` (mất ${lost} vì cỏ/sâu)` : "";
-  return { game: next.game, ok: true, message: `🧺 +${amount} ${def.emoji} ${def.name}${lostText} · +${def.xp} XP.${next.suffix}`, tone: "good" };
+  const left = def.harvests - plot.harvests - 1;
+  const again = regrows ? ` Cây ra lứa mới sau ${formatSpan(def.regrowSeconds)} (còn ${left} lứa).` : def.harvests > 1 ? " Cây đã cho hết lứa." : "";
+  return { game: next.game, ok: true, message: `🧺 +${amount} ${def.emoji} ${def.name}${lostText} · +${def.xp} XP.${again}${next.suffix}`, tone: "good" };
 }
 
 export function unlockPlot(game: GameState, index: number): ActionResult {
@@ -969,12 +1172,12 @@ export function plantTree(game: GameState, index: number, fruit: FruitId): Actio
   if (levelFromXp(game.xp) < def.level) return fail(game, `${def.name} cần cấp ${def.level}.`);
   const owned = game.saplings[fruit] ?? 0;
   if (owned < 1) return fail(game, `Hết cây giống ${def.fruit.toLowerCase()}. Mua ở chợ nhé.`);
-  const planted = withSpot({ ...game, saplings: { ...game.saplings, [fruit]: owned - 1 } }, index, { ...emptySpot("tree"), tree: fruit });
+  const planted = withSpot({ ...game, saplings: { ...game.saplings, [fruit]: owned - 1 } }, index, { ...emptySpot("tree"), tree: fruit, moisture: 1 });
   const next = gainXp(planted, 3);
   return {
     game: next.game,
     ok: true,
-    message: `🌱 Đã trồng ${def.emoji} ${def.name} · lớn sau ${formatDuration(def.growSeconds)}, rồi ra quả mỗi ${formatDuration(def.fruitSeconds)}.${next.suffix}`,
+    message: `🌱 Đã trồng ${def.emoji} ${def.name} · lớn sau ${formatSpan(def.growSeconds)}, rồi ra quả mỗi ${formatGameSpan(def.fruitSeconds)} (mùa quả: ${seasonNames(def.seasons)}).${next.suffix}`,
     tone: "good",
   };
 }
@@ -982,17 +1185,19 @@ export function plantTree(game: GameState, index: number, fruit: FruitId): Actio
 export function waterTree(game: GameState, index: number): ActionResult {
   const spot = getSpot(game, index);
   if (!spot || spot.status !== "tree") return fail(game, "Chỉ tưới chỗ đã có cây.", "info");
-  if (!spot.thirsty) return fail(game, "Đất quanh gốc còn ẩm, chưa cần tưới.", "info");
-  const next = gainXp(withSpot(game, index, { ...spot, thirsty: false }), 2);
-  return { game: next.game, ok: true, message: `💧 Đã tưới cây · +2 XP.${next.suffix}`, tone: "good" };
+  if (spot.moisture >= MOIST_ENOUGH) return fail(game, `Đất quanh gốc còn ẩm (${Math.round(spot.moisture * 100)}%), chưa cần tưới.`, "info");
+  const xp = spot.thirsty ? 2 : 1;
+  const next = gainXp(withSpot(game, index, { ...spot, moisture: 1, thirsty: false }), xp);
+  return { game: next.game, ok: true, message: `💧 Đã tưới cây · +${xp} XP.${next.suffix}`, tone: "good" };
 }
 
 export function shakeTree(game: GameState, index: number): ActionResult {
   const spot = getSpot(game, index);
   if (!spot || spot.status !== "tree" || !spot.tree) return fail(game, "Chỗ này chưa có cây.", "info");
   const def = TREE_MAP[spot.tree];
-  if (!isTreeGrown(spot)) return fail(game, `${def.name} còn non · ra quả đầu sau ${formatDuration(treeSecondsLeft(spot))}.`, "info");
-  if (!isTreeRipe(spot)) return fail(game, `${def.fruit} chưa chín · còn ${formatDuration(treeSecondsLeft(spot))}.`, "info");
+  const season = gameClock(game, game.lastTick).season;
+  if (!isTreeGrown(spot)) return fail(game, `${def.name} còn non · ra quả đầu sau ${formatSpan(treeSecondsLeft(spot, season))}.`, "info");
+  if (!isTreeRipe(spot)) return fail(game, `${def.fruit} chưa chín · còn ${formatSpan(treeSecondsLeft(spot, season))}.`, "info");
   const stored = changeBarn(
     { ...withSpot(game, index, { ...spot, fruit: 0 }), stats: { ...game.stats, harvested: game.stats.harvested + def.yield } },
     "fruit",
@@ -1233,13 +1438,19 @@ export function buyAnimal(game: GameState, species: AnimalId): ActionResult {
   if (levelFromXp(game.xp) < def.level) return fail(game, `${def.name} mở ở cấp ${def.level}.`);
   if (game.ranch.animals.length >= ranchCapacity(game)) return fail(game, "Chuồng đã đầy. Mở rộng trang trại ở chợ.");
   if (game.coins < def.price) return fail(game, `Cần ${def.price} xu để mua ${def.name.toLowerCase()}.`);
-  const animal: RanchAnimal = { id: `a${game.nextId}`, species, progress: 0, fed: false };
+  // Animals arrive young and grow up eating from the trough.
+  const animal: RanchAnimal = { id: `a${game.nextId}`, species, progress: 0, fed: false, age: 0 };
   const next = gainXp(
     { ...game, coins: game.coins - def.price, nextId: game.nextId + 1, ranch: { ...game.ranch, animals: [...game.ranch.animals, animal] } },
     2,
   );
   const hint = game.items.feed < 1 ? " Máng đang trống — xay hoặc mua thức ăn nhé." : "";
-  return { game: next.game, ok: true, message: `${def.emoji} Đã thả ${def.name.toLowerCase()} vào trang trại.${hint}${next.suffix}`, tone: "good" };
+  return {
+    game: next.game,
+    ok: true,
+    message: `${def.emoji} Đã thả ${def.young.toLowerCase()} vào trang trại · ăn đủ thì lớn sau ${formatSpan(def.growSeconds)}.${hint}${next.suffix}`,
+    tone: "good",
+  };
 }
 
 export function collectDrop(game: GameState, id: string): ActionResult {
@@ -1446,12 +1657,18 @@ function parseOrchard(value: unknown): GameState["orchard"] {
       if (status !== "tree") return emptySpot(status);
       if (!tree) return emptySpot("hole");
       const def = TREE_MAP[tree];
+      const moisture = num(item.moisture, item.thirsty === true ? 0 : 1, 0, 1);
+      const legacy = !("moisture" in item);
+      const [oldGrow, oldFruit] = LEGACY_TREE_SECONDS[tree];
+      const growth = typeof item.growth === "number" && legacy ? (item.growth / oldGrow) * def.growSeconds : item.growth;
+      const fruit = typeof item.fruit === "number" && legacy ? (item.fruit / oldFruit) * def.fruitSeconds : item.fruit;
       return {
         status,
         tree,
-        growth: num(item.growth, 0, 0, def.growSeconds),
-        fruit: num(item.fruit, 0, 0, def.fruitSeconds),
-        thirsty: item.thirsty === true,
+        growth: num(growth, 0, 0, def.growSeconds),
+        fruit: num(fruit, 0, 0, def.fruitSeconds),
+        moisture,
+        thirsty: moisture <= 0,
       };
     }),
   };
@@ -1465,12 +1682,18 @@ function parseRanch(value: unknown, now: number): GameState["ranch"] {
     .filter((item): item is Record<string, unknown> => !!item && typeof item === "object")
     .filter((item) => typeof item.id === "string" && ANIMAL_IDS.includes(item.species as AnimalId))
     .slice(0, RANCH_CAPACITIES[capacityLevel])
-    .map((item) => ({
-      id: item.id as string,
-      species: item.species as AnimalId,
-      progress: num(item.progress, 0, 0, ANIMAL_MAP[item.species as AnimalId].cycleSeconds),
-      fed: item.fed === true,
-    }));
+    .map((item) => {
+      const def = ANIMAL_MAP[item.species as AnimalId];
+      const progress = typeof item.progress === "number" && !("age" in item) ? (item.progress / LEGACY_CYCLE_SECONDS[def.id]) * def.cycleSeconds : item.progress;
+      return {
+        id: item.id as string,
+        species: def.id,
+        progress: num(progress, 0, 0, def.cycleSeconds),
+        fed: item.fed === true,
+        // Animals from before they grew up are already grown.
+        age: num(item.age, def.growSeconds, 0, def.growSeconds),
+      };
+    });
   const drops = (Array.isArray(source.drops) ? source.drops : [])
     .filter((item): item is Record<string, unknown> => !!item && typeof item === "object")
     .filter((item) => typeof item.id === "string" && PRODUCT_IDS.includes(item.product as ProductId))
@@ -1514,6 +1737,14 @@ function counts<K extends string>(value: unknown, keys: readonly K[]): Partial<R
   return result;
 }
 
+/**
+ * Growing times before the clock and seasons (GAME-013), so an old save keeps how far along each
+ * crop, tree and animal was: a crop that was ripe stays ripe, one halfway stays halfway.
+ */
+const LEGACY_CROP_SECONDS: Record<CropId, number> = { cabbage: 60, carrot: 180, tomato: 360, corn: 600, rice: 900, strawberry: 1500, pumpkin: 2400, sunflower: 3600, watermelon: 7200 };
+const LEGACY_TREE_SECONDS: Record<FruitId, [number, number]> = { lemon: [300, 240], orange: [600, 360], banana: [900, 600], mango: [1800, 1200], coconut: [3600, 2400] };
+const LEGACY_CYCLE_SECONDS: Record<AnimalId, number> = { chicken: 90, duck: 150, sheep: 360, cow: 480 };
+
 /** Validates a saved game; anything malformed is repaired or dropped rather than trusted. */
 export function parseSave(raw: string | null, now: number): GameState | null {
   if (!raw) return null;
@@ -1536,14 +1767,22 @@ export function parseSave(raw: string | null, now: number): GameState | null {
     const status = PLOT_STATUSES.includes(source.status as PlotStatus) ? (source.status as PlotStatus) : fallback.status;
     const crop = cropIds.includes(source.crop as CropId) ? (source.crop as CropId) : null;
     if (status === "growing" && !crop) return emptyPlot("tilled");
+    const growing = status === "growing" && crop;
+    // Saves from before soil moisture: a dry plot stays dry, the rest start moist, and growth
+    // keeps its share of the (now longer) growing time.
+    const legacy = !("moisture" in source);
+    const moisture = growing ? num(source.moisture, source.thirsty === true ? 0 : 1, 0, 1) : 0;
+    const rawGrowth = typeof source.growth === "number" && legacy && crop ? (source.growth / LEGACY_CROP_SECONDS[crop]) * CROP_MAP[crop].growSeconds : source.growth;
     return {
       status,
       crop: status === "growing" ? crop : null,
-      growth: status === "growing" && crop ? num(source.growth, 0, 0, CROP_MAP[crop].growSeconds) : 0,
-      thirsty: source.thirsty === true,
+      growth: growing ? num(rawGrowth, 0, 0, CROP_MAP[crop].growSeconds) : 0,
+      moisture,
+      thirsty: growing ? moisture <= 0 : false,
       weeds: Math.floor(num(source.weeds, 0, 0, 2)),
       bugs: Math.floor(num(source.bugs, 0, 0, 2)),
       fertilized: source.fertilized === true,
+      harvests: growing ? Math.floor(num(source.harvests, 0, 0, CROP_MAP[crop].harvests - 1)) : 0,
     } satisfies Plot;
   });
 
@@ -1572,6 +1811,8 @@ export function parseSave(raw: string | null, now: number): GameState | null {
   return {
     version: 1,
     createdAt: num(value.createdAt, now, 0, now),
+    // Saves from before the clock start it now, at 6:00 on day 1 of spring.
+    clockStart: num(value.clockStart, clockFor(now), 0, now),
     lastTick,
     coins: Math.floor(num(value.coins, fresh.coins)),
     xp: Math.floor(num(value.xp, 0)),
@@ -1632,5 +1873,10 @@ export function describeAway(before: GameState, after: GameState): string | null
   if (readyGoods > readyBefore) parts.push(`xưởng có ${readyGoods} thành phẩm`);
   if (before.ranch.truck && !after.ranch.truck) parts.push(`xe tải đã về với ${before.ranch.truck.value} xu`);
   if (after.ranch.animals.length > 0 && after.items.feed < 1 && after.ranch.animals.every((item) => !item.fed)) parts.push("máng ăn đã hết");
+  const grewUp = after.ranch.animals.filter((item) => isGrown(item) && !before.ranch.animals.some((old) => old.id === item.id && isGrown(old))).length;
+  if (grewUp > 0) parts.push(`${grewUp} con non đã lớn`);
+  const seasonBefore = gameClock(before, before.lastTick).season;
+  const seasonAfter = gameClock(after, after.lastTick).season;
+  if (seasonAfter !== seasonBefore) parts.push(`đã sang mùa ${SEASON_MAP[seasonAfter].name.toLowerCase()}`);
   return parts.length ? `Chào mừng trở lại! ${parts.join(" · ")}.` : null;
 }

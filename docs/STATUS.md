@@ -1,6 +1,20 @@
 # Status
 
-Last verified: 2026-11-06 (farm cozy graphics; harness browser checks).
+Last verified: 2026-11-06 (farm clock, seasons and growth; harness browser checks).
+
+## 2026-11-06 — Farm: a day clock, seasons, watering, regrowth and young animals
+
+- One game day is 24 real minutes, with dawn, day, dusk and night in the scene (moving sun, sky
+  and light colours, lanterns, lit windows and stars at night). Four seasons of seven days; each
+  crop and fruit tree has its seasons and grows slowly out of season; grass and leaves change
+  colour.
+- Soil dries over game hours (faster in summer and by day); dry soil nearly stops growth. Crops
+  grow over game days; tomatoes, strawberries and watermelons harvest several times.
+- Animals are bought young and grow up eating; grown animals produce by day and sleep at night.
+  Orchard trees take days to grow and fruit in their seasons. Prices rebalanced; old saves keep
+  their progress.
+- Checks: `farm.test.ts` (15), ESLint, `tsc`; harness 30/30 and 15 new checks. See
+  `docs/changes/GAME-013-farm-biology.md`.
 
 ## 2026-11-06 — Farm: cozy graphics
 

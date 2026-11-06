@@ -4,12 +4,13 @@
 
 ## What the player can do
 
-- **Fields (12 plots, 6 open at the start).** Hoe → sow → care → harvest → hoe again. Crops grow in real time, including while the page is closed (offline growth is simulated up to 14 days in one-minute steps). While growing, a plot can become dry (half speed), weedy or infested; each weed/pest still present at harvest costs one unit of yield (never below half). Fertilizer skips 30% of the remaining time, once per crop.
+- **Clock and seasons.** Each farm has its own clock: one game hour is one real minute, so a game day (dawn, day, dusk, night) lasts 24 real minutes; a new farm starts at 6:00 on day 1 of spring. Spring, summer, autumn and winter last seven game days each. The HUD shows the season, day and hour. See "Time, seasons and growth" below.
+- **Fields (12 plots, 6 open at the start).** Hoe → sow → water → care → harvest → hoe again. Crops grow in real time, including while the page is closed (offline growth is simulated up to 14 days in one-minute, one-game-hour steps), over game days. Soil moisture drains over game hours; dry soil slows growth to a quarter until watered. Out of season a crop grows at half speed and dries faster. Tomatoes, strawberries and watermelons stay after a harvest and fruit again until spent; the rest harvest once. A plot can become weedy or infested; each weed/pest still present at harvest costs one unit of yield (never below half). Fertilizer skips 30% of the remaining time, once per harvest.
 - **Hands-on work.** In the fields and the orchard, press on a plot or tree and drag: every plot or tree the tool passes is worked, and the tool follows the finger (hoe chops, seed bag scatters, can pours, glove pulls) with dirt, seeds, water, leaves, sparkles, harvested crops or falling fruit. A tap works one plot. Plots passed after the first stay quiet when there is nothing to do; a drag never opens a sheet half-way. The effects come from comparing each new state with the last, so card buttons look the same.
-- **Orchard (6 tree spots, 2 open at the start).** Dig a hole, plant a sapling (lemon, orange, banana, mango, coconut by level; bought at the market), water it when the soil is dry (half speed otherwise). A tree grows from sapling to young to grown, then fruits again and again; shake a ripe tree (⭐) to drop its fruit into the barn. A tree can be cut down (asks twice) to plant another. More spots for coins and level.
+- **Orchard (6 tree spots, 2 open at the start).** Dig a hole, plant a sapling (lemon, orange, banana, mango, coconut by level; bought at the market), water it when the soil gets dry (deep roots: a watering lasts a day or two; dry soil slows it to a quarter). A tree takes three to ten game days to grow from sapling to young to grown, then fruits again and again, fastest in its fruiting seasons (slowly outside them); shake a ripe tree (⭐) to drop its fruit into the barn. A tree can be cut down (asks twice) to plant another. More spots for coins and level.
 - **River.** A river runs down the east side (spring, bridge for the road, waterfall off the cliff) with an angler on a jetty. Tap the water to cast there (or press **Thả câu**). Nibbles shake the float but are not a bite; when the fish bites (float plunges, “!”), strike within about a second. Then hold to reel: tension rises, more while the fish pulls; let go in the red or the line snaps, but a slack line for 2.5 s lets the fish go. Six wild fish by level (goby, perch, river prawn, catfish, snakehead, featherback; the last two need care with the tension) and sometimes an old boot. Each bite uses one 🪱 bait (market, 2 xu; five in the daily gift); striking too early keeps the bait. Space or Enter on the fishing button does the same as a press.
 - **Pond.** Buy fry, feed the pond (one portion keeps every fish fed for 20 minutes; hungry fish grow at 35%), skim litter (each piece lowers water quality and growth), and net fish once they show a star.
-- **Ranch.** Chickens, ducks, sheep and cows eat from the trough automatically — one bag of feed per production cycle — and drop eggs, duck eggs, wool and milk on the pasture to collect. Animals wait (bowl icon) when the trough is empty or 24 products are already lying around. Feed comes from milling harvested crops (grains give the most) or from the market.
+- **Ranch.** Animals are bought young (chick, duckling, lamb, calf: smaller, chicks and ducklings yellow) and grow up over one to two and a half game days while they eat from the trough. Grown chickens, ducks, sheep and cows eat one bag of feed per production cycle and drop eggs, duck eggs, wool and milk on the pasture to collect — by day only: they sleep (💤) from 20:00 to 5:00. The young eat and grow day and night. Animals wait (bowl icon) when the trough is empty or 24 products are already lying around. Feed comes from milling harvested crops (grains give the most) or from the market.
 - **Workshops.** Built with coins at higher levels: duck eggs → salted-egg jars, eggs + rice → sponge cake, wool → scarf, milk → cheese. Each runs one batch at a time; finished goods are collected into the barn.
 - **Barn, market and truck.** Everything collected goes to the barn. Sell on the spot, or load up to 20 items on the truck: it drives to town, comes back after 90 seconds and pays 20% more. One crop and one fish sell for +25% each Vietnam calendar day. The market sells seeds, animals, fry, fertilizer, fish food and feed, and expands the fields, pasture and pond.
 - **Levels.** Every action earns XP; levels unlock crops (9), fish (6), animals (4), workshops (4), extra plots and capacity.
@@ -18,6 +19,26 @@
 Every scene action also has a button (plot card, pond card, ranch card, sheets), and the 2D board offers the same game without WebGL.
 
 Background music (`src/lib/cozyMusic.ts`, made in the browser with Web Audio, no files) plays while the game is on screen; the **Nhạc** side button turns it off and the slider under the game sets the volume. The setting is shared with Làng Rêu (`cozy-music-v1` in localStorage).
+
+## Time, seasons and growth (GAME-013)
+
+All in `engine.ts`: `gameClock(game, now)` gives day, hour, season, daylight and whether animals are asleep from `game.clockStart`. Old saves get a clock reading 6:00 in spring when first loaded, keep animals grown, keep dry plots dry, and keep each crop's, tree's and animal's progress as the same share of the new, longer times (`LEGACY_*` tables).
+
+| Crop | Level | First harvest | Then | Harvests | Water lasts | Seasons |
+|---|---|---|---|---|---|---|
+| Rau cải | 1 | 20 h | – | 1 | 10 h | spring, autumn, winter |
+| Cà rốt | 1 | 36 h | – | 1 | 14 h | spring, autumn, winter |
+| Cà chua | 2 | 48 h | every 18 h | 4 | 9 h | spring, summer |
+| Ngô | 3 | 60 h | – | 1 | 11 h | spring, summer |
+| Lúa | 4 | 72 h | – | 1 | 6 h | summer, autumn |
+| Dâu tây | 5 | 48 h | every 24 h | 5 | 9 h | spring, winter |
+| Bí ngô | 6 | 96 h | – | 1 | 12 h | summer, autumn |
+| Hướng dương | 7 | 72 h | – | 1 | 16 h | summer |
+| Dưa hấu | 8 | 96 h | every 48 h | 2 | 8 h | summer |
+
+Hours are game hours (= real minutes). "Water lasts" is for a mild spring day; soil dries ×1.35 in summer, ×0.9 in autumn, ×0.65 in winter, about ×1.25 under the sun and ×0.6 at night, and ×1.25 out of season. Watering is refused while the soil is at least 60% moist. Trees grow in 72–240 h and fruit every 30–72 h (lemon, banana and coconut all year; orange autumn and winter; mango spring and summer; ×0.4 outside). Animals grow up in 20–60 h and produce every 8–30 daytime hours. Weeds come more in spring, bugs more in summer, both rarely in winter. Product and goods prices were raised for the slower pace. Pond fish, workshops, the truck and fishing keep their real-time pace.
+
+The scene follows the hour: the sun moves from east to west (a cool moon at night), sky, fog, light and water colours blend through dawn, day, dusk and night (`lightAt` in `look.ts`), and lanterns, fairy lights, lit windows and stars come up after dusk. Grass, leaves and the grassy ground take the season's colour (fresh in spring, orange in autumn, frosted in winter; `addSeason`), easing in over the last day of the season before.
 
 ## Graphics and performance
 

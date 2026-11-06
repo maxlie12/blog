@@ -2544,6 +2544,13 @@ body { line-height: 1.65; }
 .fg-level em { display: block; height: 100%; background: linear-gradient(90deg, #3c9a5a, #8fd16a); border-radius: inherit; transition: width .4s ease; }
 .fg-level small { color: var(--fg-muted); font-size: .62rem; font-variant-numeric: tabular-nums; }
 .fg-coins { display: flex; align-items: center; gap: .35rem; padding: .5rem .9rem; border-radius: 999px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.fg-topright { display: grid; justify-items: end; gap: .35rem; }
+.fg-clock { pointer-events: auto; display: flex; align-items: center; gap: .3rem; padding: .25rem .65rem; color: var(--fg-ink); background: #fffdf2ee; border: 2px solid var(--fg-line); border-radius: 999px; box-shadow: 0 3px 0 #24583e33; font-size: .7rem; font-weight: 750; white-space: nowrap; }
+.fg-clock b { font-variant-numeric: tabular-nums; }
+.fg-clock[data-night] { color: #eef3ff; background: #1d2b4aee; border-color: #3a4f7a; }
+.fg-moisture { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: .5rem; margin-top: .35rem; font-size: .72rem; }
+.fg-moisture[data-dry] { color: #8a3b1e; font-weight: 700; }
+.fg-meter--water em { background: linear-gradient(90deg, #5fb8d8, #2f86c4); }
 .fg-views { display: flex; gap: .2rem; padding: .2rem; border-radius: 999px; }
 .fg-views button { padding: .45rem .85rem; color: inherit; background: transparent; border: 0; border-radius: 999px; font-size: .78rem; font-weight: 750; cursor: pointer; }
 .fg-views button[aria-pressed="true"] { color: var(--fg-cream); background: var(--fg-line); }
@@ -2693,6 +2700,8 @@ body { line-height: 1.65; }
 .fg2-animal { animation-name: fg2-walk; animation-duration: var(--walk, 6s); animation-timing-function: steps(18); }
 .fg2-animal span { display: block; font-size: 1.8rem; transform: scaleX(-1); filter: drop-shadow(0 3px 0 #0000002a); }
 .fg2-animal[data-waiting] span { opacity: .7; }
+.fg2-animal[data-young] span { font-size: 1.25rem; }
+.fg2-animal[data-asleep] { animation-play-state: paused; }
 .fg2-drop { position: absolute; transform: translate(-50%, -50%); padding: .15rem; font-size: 1.15rem; background: #fffdf2cc; border: 2px solid #f6c629; border-radius: 50%; cursor: pointer; animation: fg2-bounce 1.6s ease-in-out infinite; }
 .fg2-drop[data-product="duckEgg"] { background: #d6efe7; border-color: #5aa58f; }
 .fg2-trough { position: absolute; left: 5%; top: 8%; display: grid; justify-items: center; padding: .15rem .45rem; color: #fffdf2; background: #9c6a3c; border: 0; border-radius: 10px; box-shadow: inset 0 -3px 0 #0003; cursor: pointer; }
@@ -2721,6 +2730,10 @@ body { line-height: 1.65; }
   .fg-top { flex-wrap: wrap; }
   .fg-views { order: 3; width: 100%; justify-content: center; }
   .fg-views button { flex: 1; min-width: 0; padding: .45rem .2rem; font-size: .72rem; white-space: nowrap; }
+  /* The clock sits beside the coins on the first row, showing only the hour. */
+  .fg-topright { grid-auto-flow: column; align-items: center; }
+  .fg-clock { order: -1; padding: .2rem .5rem; }
+  .fg-clock__day { display: none; }
   .fg-toast { top: 7.3rem; }
   .fg-side { top: 7.6rem; right: .55rem; transform: none; gap: .35rem; }
   .fg-side button { width: 3.25rem; padding: .35rem .1rem .3rem; font-size: .56rem; white-space: nowrap; }

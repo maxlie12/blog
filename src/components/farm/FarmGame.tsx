@@ -283,6 +283,7 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
   const now = game.lastTick;
   const today = Farm.dateKeyVN(now);
   const level = Farm.levelProgress(game.xp);
+  const clock = Farm.gameClock(game, game.lastTick);
   const practiceToday = practiceDays.find((day) => day.date === today)?.intensity ?? 0;
   const practice = { draft: practiceToday > 0, revision: practiceToday === 2 };
   const dailyReady = game.lastDailyBonus !== today;
@@ -343,7 +344,7 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
     if (Farm.isRipe(plot)) return act((current) => Farm.harvest(current, index), drag);
     if (plot.bugs > 0) return act((current) => Farm.catchBug(current, index), drag);
     if (plot.weeds > 0) return act((current) => Farm.pullWeed(current, index), drag);
-    if (plot.thirsty) return act((current) => Farm.water(current, index), drag);
+    if (plot.moisture < Farm.MOIST_ENOUGH) return act((current) => Farm.water(current, index), drag);
   }
 
   /** `drag`: the tool was dragged onto this plot after the first one, so failures stay quiet. */
@@ -388,7 +389,7 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
     if (spot.status === "grass") return act((current) => Farm.digSpot(current, index), drag);
     if (spot.status === "hole") return needSaplingFor(index, drag);
     if (Farm.isTreeRipe(spot)) return act((current) => Farm.shakeTree(current, index), drag);
-    if (spot.thirsty) return act((current) => Farm.waterTree(current, index), drag);
+    if (spot.moisture < Farm.MOIST_ENOUGH) return act((current) => Farm.waterTree(current, index), drag);
     // Nothing to do yet: say how long until the fruit.
     if (!drag) act((current) => Farm.shakeTree(current, index));
   }
@@ -423,14 +424,18 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
     if (!animal) return;
     const def = Farm.ANIMAL_MAP[animal.species];
     const product = Farm.PRODUCT_MAP[def.product];
+    const name = Farm.animalName(animal);
+    const grown = Farm.isGrown(animal);
     const left = Farm.animalSecondsLeft(game, animal);
     if (left === null) {
-      const full = game.ranch.drops.length >= Farm.MAX_DROPS;
-      say(full ? `${def.emoji} ${def.name}: bãi cỏ đầy sản phẩm — nhặt bớt để vật nuôi tiếp tục.` : `${def.emoji} ${def.name} đang chờ thức ăn. Xay nông sản hoặc mua ở chợ.`, "warn");
+      const full = grown && game.ranch.drops.length >= Farm.MAX_DROPS;
+      say(full ? `${def.emoji} ${name}: bãi cỏ đầy sản phẩm — nhặt bớt để vật nuôi tiếp tục.` : `${def.emoji} ${name} đang chờ thức ăn. Xay nông sản hoặc mua ở chợ.`, "warn");
       if (!full) setSheet("mill");
       return;
     }
-    say(`${def.emoji} ${def.name} · ${product.emoji} tiếp theo sau ${Farm.formatDuration(left)}.`);
+    if (!grown) return say(`${def.emoji} ${name} · ăn đủ thì lớn sau ${Farm.formatSpan(Farm.animalGrowLeft(animal))}.`);
+    if (Farm.gameClock(game, game.lastTick).asleep) return say(`${def.emoji} ${name} đang ngủ 💤 · sáng mai (5:00) lại ra ${product.emoji}.`);
+    say(`${def.emoji} ${name} · ${product.emoji} tiếp theo sau ${Farm.formatSpan(left)} ban ngày.`);
   }
 
   function actOnWorkshop(id: Farm.WorkshopId) {
@@ -593,7 +598,15 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
                 <button key={item.id} type="button" aria-pressed={view === item.id} onClick={() => changeView(item.id)}>{item.label}</button>
               ))}
             </div>
-            <div className="fg-coins" aria-label={`${game.coins} xu`}><span aria-hidden="true">🪙</span>{coinFormat.format(game.coins)}</div>
+            <div className="fg-topright">
+              <div className="fg-coins" aria-label={`${game.coins} xu`}><span aria-hidden="true">🪙</span>{coinFormat.format(game.coins)}</div>
+              <div className="fg-clock" data-night={clock.daylight < 0.3 || undefined} aria-label={`Mùa ${Farm.SEASON_MAP[clock.season].name}, ngày ${clock.seasonDay}, ${Farm.formatClock(clock.hour)}`}>
+                <span aria-hidden="true">{Farm.SEASON_MAP[clock.season].emoji}</span>
+                <span className="fg-clock__day">{Farm.SEASON_MAP[clock.season].name} · ngày {clock.seasonDay}</span>
+                <b>{Farm.formatClock(clock.hour)}</b>
+                <span aria-hidden="true">{clock.daylight < 0.3 ? "🌙" : "☀️"}</span>
+              </div>
+            </div>
           </div>
 
           {toast ? <div key={toast.id} className="fg-toast" data-tone={toast.tone} role="status">{toast.text}</div> : null}

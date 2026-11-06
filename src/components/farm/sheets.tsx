@@ -28,6 +28,7 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
 
 export function ShopSheet({ game, tab, onTab, onAct }: { game: Farm.GameState; tab: ShopTab; onTab: (tab: ShopTab) => void; onAct: ActFn }) {
   const level = Farm.levelFromXp(game.xp);
+  const season = Farm.gameClock(game, game.lastTick).season;
   const pondFull = game.pond.fish.length >= Farm.pondCapacity(game);
   const ranchFull = game.ranch.animals.length >= Farm.ranchCapacity(game);
   const unlock = Farm.nextPlotUnlock(game);
@@ -54,7 +55,11 @@ export function ShopSheet({ game, tab, onTab, onAct }: { game: Farm.GameState; t
                 <span className="fg-list__icon" aria-hidden="true">{crop.emoji}</span>
                 <div>
                   <strong>{crop.name}</strong>
-                  <small>{locked ? `Mở ở cấp ${crop.level}` : `${Farm.formatDuration(crop.growSeconds)} · thu ${crop.yield} × ${crop.sellPrice} xu · +${crop.xp} XP · đang có ${game.seeds[crop.id] ?? 0}`}</small>
+                  <small>
+                    {locked
+                      ? `Mở ở cấp ${crop.level}`
+                      : `${Farm.formatSpan(crop.growSeconds)}${crop.harvests > 1 ? `, rồi ${crop.harvests - 1} lứa nữa, mỗi lứa ${Farm.formatGameSpan(crop.regrowSeconds)}` : ""} · thu ${crop.yield} × ${crop.sellPrice} xu · mùa: ${Farm.seasonNames(crop.seasons)}${Farm.inSeason(crop.seasons, season) ? "" : " (đang trái mùa)"} · đang có ${game.seeds[crop.id] ?? 0}`}
+                  </small>
                 </div>
                 <div className="fg-list__buy">
                   <button type="button" disabled={locked || game.coins < crop.seedPrice} onClick={() => onAct((current) => Farm.buySeeds(current, crop.id, 1))}>{crop.seedPrice} xu</button>
@@ -74,7 +79,7 @@ export function ShopSheet({ game, tab, onTab, onAct }: { game: Farm.GameState; t
                 <span className="fg-list__icon" aria-hidden="true">{tree.emoji}</span>
                 <div>
                   <strong>{tree.name} <em>· đang có {game.saplings[tree.id] ?? 0}</em></strong>
-                  <small>{locked ? `Mở ở cấp ${tree.level}` : `Lớn sau ${Farm.formatDuration(tree.growSeconds)}, rồi cứ ${Farm.formatDuration(tree.fruitSeconds)} ra ${tree.yield} × ${tree.sellPrice} xu · +${tree.xp} XP`}</small>
+                  <small>{locked ? `Mở ở cấp ${tree.level}` : `Lớn sau ${Farm.formatSpan(tree.growSeconds)}, rồi cứ ${Farm.formatGameSpan(tree.fruitSeconds)} ra ${tree.yield} × ${tree.sellPrice} xu · mùa quả: ${Farm.seasonNames(tree.seasons)}`}</small>
                 </div>
                 <div className="fg-list__buy">
                   <button type="button" disabled={locked || game.coins < tree.saplingPrice} onClick={() => onAct((current) => Farm.buySapling(current, tree.id, 1))}>{tree.saplingPrice} xu</button>
@@ -93,8 +98,8 @@ export function ShopSheet({ game, tab, onTab, onAct }: { game: Farm.GameState; t
               <li key={animal.id} data-locked={locked || undefined}>
                 <span className="fg-list__icon" aria-hidden="true">{animal.emoji}</span>
                 <div>
-                  <strong>{animal.name}</strong>
-                  <small>{locked ? `Mở ở cấp ${animal.level}` : `Mỗi ${Farm.formatDuration(animal.cycleSeconds)} ăn 1 phần, ra 1 ${product.emoji} ${product.name.toLowerCase()} (${product.sellPrice} xu)`}</small>
+                  <strong>{animal.young}</strong>
+                  <small>{locked ? `Mở ở cấp ${animal.level}` : `Ăn đủ thì lớn sau ${Farm.formatSpan(animal.growSeconds)}; lớn rồi cứ ${Farm.formatGameSpan(animal.cycleSeconds)} ban ngày ăn 1 phần, ra 1 ${product.emoji} ${product.name.toLowerCase()} (${product.sellPrice} xu). Đêm ngủ.`}</small>
                 </div>
                 <div className="fg-list__buy">
                   <button type="button" disabled={locked || ranchFull || game.coins < animal.price} onClick={() => onAct((current) => Farm.buyAnimal(current, animal.id))}>
@@ -259,6 +264,7 @@ export function SeedSheet({
   onShop: () => void;
 }) {
   const owned = Farm.CROPS.filter((crop) => (game.seeds[crop.id] ?? 0) > 0);
+  const season = Farm.gameClock(game, game.lastTick).season;
   return (
     <>
       {pending ? <p className="fg-muted">Chọn hạt để gieo ngay vào ô vừa chạm.</p> : null}
@@ -268,7 +274,7 @@ export function SeedSheet({
           <button key={crop.id} type="button" aria-pressed={crop.id === current} onClick={() => onChoose(crop.id)}>
             <span aria-hidden="true">{crop.emoji}</span>
             <strong>{crop.name}</strong>
-            <small>còn {game.seeds[crop.id]} · {Farm.formatDuration(crop.growSeconds)}</small>
+            <small>còn {game.seeds[crop.id]} · {Farm.formatGameSpan(crop.growSeconds)}{Farm.inSeason(crop.seasons, season) ? "" : " · trái mùa"}</small>
           </button>
         ))}
       </div>
@@ -300,7 +306,7 @@ export function SaplingSheet({
           <button key={tree.id} type="button" aria-pressed={tree.id === current} onClick={() => onChoose(tree.id)}>
             <span aria-hidden="true">{tree.emoji}</span>
             <strong>{tree.name}</strong>
-            <small>còn {game.saplings[tree.id]} · quả mỗi {Farm.formatDuration(tree.fruitSeconds)}</small>
+            <small>còn {game.saplings[tree.id]} · quả mỗi {Farm.formatGameSpan(tree.fruitSeconds)}</small>
           </button>
         ))}
       </div>
@@ -529,11 +535,13 @@ export function HelpSheet() {
   return (
     <ol className="fg-help">
       <li><strong>Ruộng:</strong> chạm ô đất bằng 👋 Tay để tự làm việc phù hợp — cuốc, gieo, chăm hoặc thu hoạch. Các công cụ bên dưới làm từng việc riêng. Giữ và kéo công cụ qua nhiều ô để làm một lượt.</li>
-      <li><strong>Chăm cây:</strong> 💧 đất khô làm cây lớn chậm một nửa; 🌿 cỏ và 🐛 sâu làm mất sản lượng lúc thu hoạch. ⭐ là cây đã chín.</li>
-      <li><strong>Vườn cây:</strong> đào hố, trồng cây giống (mua ở chợ), tưới khi đất khô. Cây lớn rồi ra quả mãi; khi có ⭐ thì chạm hoặc kéo qua để rung cây, quả rơi vào kho.</li>
+      <li><strong>Ngày và mùa:</strong> một ngày trong nông trại dài 24 phút thật (một giờ game là một phút thật), có sáng, chiều, tối, đêm. Mỗi mùa xuân, hạ, thu, đông kéo dài 7 ngày. Mỗi loại cây hợp mùa riêng (xem ở chợ); trái mùa cây vẫn lớn nhưng chậm một nửa và mau khô.</li>
+      <li><strong>Chăm cây:</strong> 💧 đất khô dần theo giờ, nhanh hơn vào mùa hạ và ban ngày; đất khô hẳn thì cây gần như ngừng lớn, tưới là đất ẩm lại. 🌿 cỏ và 🐛 sâu làm mất sản lượng lúc thu hoạch. ⭐ là cây đã chín.</li>
+      <li><strong>Thu nhiều lứa:</strong> cà chua, dâu tây và dưa hấu thu xong vẫn đứng đó và ra quả lứa sau, đến khi hết lứa thì mới phải trồng lại. Rau, củ, ngô, lúa, bí, hướng dương thu một lần.</li>
+      <li><strong>Vườn cây:</strong> đào hố, trồng cây giống (mua ở chợ), tưới khi đất khô. Cây ăn quả lớn mất vài ngày, rồi ra quả mãi, nhanh nhất vào mùa quả của nó; khi có ⭐ thì chạm hoặc kéo qua để rung cây, quả rơi vào kho.</li>
       <li><strong>Câu cá ở sông:</strong> chạm mặt sông để thả câu. Phao rung nhẹ là cá rỉa, chưa giật; phao chìm hẳn và hiện dấu ! thì chạm ngay để giật. Rồi giữ để kéo, thả tay khi dây căng đỏ kẻo đứt. Mỗi lần cá cắn tốn một 🪱 mồi.</li>
       <li><strong>Ao cá:</strong> mua cá giống ở chợ, cho ăn để cá lớn đủ tốc độ, vớt rác để nước sạch. Cá có ⭐ là đã lớn — chạm để vớt.</li>
-      <li><strong>Trang trại:</strong> gà, vịt, cừu, bò tự ăn từ máng và đẻ trứng, cho len, sữa. Chạm sản phẩm trên cỏ (hoặc nút 🧺) để nhặt. Con có biểu tượng bát là đang chờ thức ăn.</li>
+      <li><strong>Trang trại:</strong> mua về là gà con, vịt con, cừu non, bê con; chúng ăn từ máng để lớn. Lớn rồi thì ban ngày đẻ trứng, cho len, sữa; đêm (20:00–5:00) chúng ngủ. Chạm sản phẩm trên cỏ (hoặc nút 🧺) để nhặt. Con có biểu tượng bát là đang chờ thức ăn.</li>
       <li><strong>Xưởng:</strong> trứng vịt thành trứng muối, trứng gà + lúa thành bánh, len thành khăn, sữa thành phô mai — đắt hơn bán thô.</li>
       <li><strong>Bán hàng:</strong> bán ngay tại kho, hoặc chất lên 🚚 xe tải chở lên phố để được giá cao hơn. Mỗi ngày có một món rau và một loại cá được giá +25%.</li>
       <li><strong>Lên cấp:</strong> mọi việc đều cho XP. Cấp cao mở cây, cá, vật nuôi, xưởng và đất mới.</li>

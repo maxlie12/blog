@@ -22,7 +22,7 @@ import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { pondGeometry, waterMaterial as villageWater, waterUniforms } from "../village/graphics";
-import { addWind, flowerGeometry, makePost, skyTexture, tuftGeometry, wind, type FarmPost } from "./look";
+import { SEASON_LOOK, addSeason, addWind, flowerGeometry, lightAt, makePost, paintSky, season as seasonTint, skyTexture, starField, tuftGeometry, wind, type FarmPost } from "./look";
 import {
   ANIMAL_MAP,
   FISH_MAP,
@@ -32,8 +32,11 @@ import {
   WILD_FISH_MAP,
   WORKSHOPS,
   WORKSHOP_MAP,
+  SEASON_DAYS,
   cropStage,
+  gameClock,
   hashString,
+  isGrown,
   isFishMature,
   isRipe,
   isTreeRipe,
@@ -203,7 +206,7 @@ function fishSize(ratio: number): number {
   return 0.58 + 0.6 * Math.min(1, Math.max(0, ratio));
 }
 
-type IconName = "star" | "drop" | "bug" | "lock" | "bowl" | "build" | "alert";
+type IconName = "star" | "drop" | "bug" | "lock" | "bowl" | "build" | "alert" | "sleep";
 
 export function createFarmScene(container: HTMLElement, options: SceneOptions): FarmSceneController {
   const preset = QUALITY_PRESETS[options.quality];
@@ -244,7 +247,8 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   let aspect = 1;
 
   // Cool sky light in the shade, warm afternoon sun: the contrast reads as cosy.
-  scene.add(new THREE.HemisphereLight("#d9ecff", "#6f8f4f", preset.pbr ? 1.55 : 1.45));
+  const hemi = new THREE.HemisphereLight("#d9ecff", "#6f8f4f", preset.pbr ? 1.55 : 1.45);
+  scene.add(hemi);
   const sun = new THREE.DirectionalLight("#ffe4b0", preset.pbr ? 3.6 : 2.75);
   sun.position.set(-10, 18, 9);
   sun.castShadow = shadowsOn;
@@ -267,16 +271,20 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   // Static leaves, vines and bushes: the same look, swaying in the wind.
   const foliageMaterial = makeSurface();
   addWind(foliageMaterial, "baked", 0.05);
+  addSeason(foliageMaterial, 1);
   // Lantern and string-light bulbs: unlit and brighter than white, so the High preset's bloom
   // picks them up; elsewhere they simply look lit.
   const glowMaterial = new THREE.MeshBasicMaterial({ vertexColors: true });
-  glowMaterial.color.setScalar(preset.post ? 2.6 : 1.25);
+  const glowBase = preset.post ? 2.6 : 1.25;
+  glowMaterial.color.setScalar(glowBase);
+  // Lit windows: invisible by day, fading in at dusk.
+  const nightMaterial = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0, depthWrite: false });
   const hiddenMaterial = new THREE.MeshBasicMaterial({ visible: false });
   const carrier = new THREE.MeshBasicMaterial();
   const primitives = new Map<string, THREE.BufferGeometry>();
   const owned = new Set<THREE.BufferGeometry>();
   const textures: THREE.Texture[] = [sky];
-  const extraMaterials: THREE.Material[] = [hiddenMaterial, carrier, foliageMaterial, glowMaterial];
+  const extraMaterials: THREE.Material[] = [hiddenMaterial, carrier, foliageMaterial, glowMaterial, nightMaterial];
   const tmpColor = new THREE.Color();
 
   function primitive<T extends THREE.BufferGeometry>(key: string, make: () => T): T {
@@ -485,6 +493,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   const propsRoot = new THREE.Group();
   const foliageRoot = new THREE.Group();
   const glowRoot = new THREE.Group();
+  const nightRoot = new THREE.Group();
   const farRoot = new THREE.Group();
   /** Soft darkening painted into the ground under things: x, z, radius, strength. */
   const groundShade: [number, number, number, number][] = [];
@@ -722,6 +731,13 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   house.position.set(-7.1, 0, -4.9);
   house.rotation.y = 0.12;
   propsRoot.add(house);
+  {
+    const lit = new THREE.Group();
+    lit.position.copy(house.position);
+    lit.rotation.copy(house.rotation);
+    lit.add(part(box(0.42, 0.36, 0.02), "#ffcf7a", -0.42, 0.84, 0.835), part(box(0.26, 0.22, 0.02), "#ffcf7a", 0, 1.62, 0.685));
+    nightRoot.add(lit);
+  }
   groundShade.push([-7.1, -4.9, 1.8, 0.3]);
   keepClear.push([-7.1, -4.9, 1.6]);
   // Porch light by the house door (on the house's front wall, in world space).
@@ -733,6 +749,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   tower.add(part(rbox(0.26, 0.48, 0.05, 0.02), "#7a4e32", 0.02, 0.28, 0.5), part(rbox(0.16, 0.2, 0.04, 0.02), "#b9dfe6", 0.0, 1.55, 0.4));
   tower.position.set(-9.9, 0, -2.4);
   propsRoot.add(tower);
+  nightRoot.add(part(box(0.15, 0.19, 0.02), "#ffcf7a", -9.9, 1.55, -2.4 + 0.425));
   groundShade.push([-9.9, -2.4, 1.0, 0.25]);
   keepClear.push([-9.9, -2.4, 0.8]);
 
@@ -1273,15 +1290,35 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   foliageMesh.castShadow = shadowsOn;
   foliageMesh.receiveShadow = true;
   const glowMesh = new THREE.Mesh(bakeGeometry(glowRoot, false) ?? new THREE.BufferGeometry(), glowMaterial);
+  const nightMesh = new THREE.Mesh(bakeGeometry(nightRoot, false) ?? new THREE.BufferGeometry(), nightMaterial);
+  nightMesh.renderOrder = 3;
+  // The ground takes the season's colour on its grass (and only there).
+  const groundMaterial = makeSurface();
+  addSeason(groundMaterial, 0.6);
+  extraMaterials.push(groundMaterial);
+  groundMesh.material = groundMaterial;
   const farMesh = new THREE.Mesh(bakeGeometry(farRoot, false) ?? new THREE.BufferGeometry(), surface);
   // Purely decorative: skip them when picking so taps go straight to interactive objects.
-  for (const item of [groundMesh, propsMesh, foliageMesh, glowMesh, farMesh]) {
+  for (const item of [groundMesh, propsMesh, foliageMesh, glowMesh, nightMesh, farMesh]) {
     item.raycast = () => {};
     item.userData.ownsGeometry = true;
     world.add(item);
   }
   // The thousands of build-time parts are baked now; let them go.
-  for (const root of [groundRoot, propsRoot, foliageRoot, glowRoot, farRoot]) root.clear();
+  for (const root of [groundRoot, propsRoot, foliageRoot, glowRoot, nightRoot, farRoot]) root.clear();
+
+  // Stars far behind the island, seen in the sky around it at night.
+  const stars = (() => {
+    const back = CAMERA_OFFSET.clone().normalize();
+    const up = new THREE.Vector3(0, 1, 0).addScaledVector(back, -back.y).normalize();
+    const right = new THREE.Vector3().crossVectors(up, back);
+    return starField(220, (random) => right.clone().multiplyScalar((random() - 0.5) * 70).addScaledVector(up, (random() - 0.5) * 44).addScaledVector(back, -70));
+  })();
+  stars.raycast = () => {};
+  stars.frustumCulled = false;
+  world.add(stars);
+  extraMaterials.push(stars.material as THREE.Material);
+  owned.add(stars.geometry);
 
   /* Grass tufts and wild flowers, in clumps wherever nothing else stands. */
   const riverClear = RIVER_HALF + 0.5;
@@ -1327,6 +1364,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   }
   const grassMaterial = makeSurface();
   addWind(grassMaterial, "instanced", 0.09);
+  addSeason(grassMaterial, 0.85);
   extraMaterials.push(grassMaterial);
   const tuft = tuftGeometry();
   const flower = flowerGeometry();
@@ -2019,9 +2057,13 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   /* ───────────── ranch: animals, products, workshops, truck ───────────── */
   interface AnimalView {
     group: THREE.Group;
+    /** Scales the body: the young are smaller. */
+    holder: THREE.Group;
     body: THREE.Object3D;
     bowl: THREE.Sprite;
+    sleep: THREE.Sprite;
     species: AnimalId;
+    young: boolean;
     modelsVersion: number;
     target: THREE.Vector2;
     wait: number;
@@ -2033,10 +2075,14 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   const animalTemplates = new Map<AnimalId, THREE.BufferGeometry>();
   const dropTemplates = new Map<ProductId, THREE.BufferGeometry>();
 
-  function animalTemplate(species: AnimalId): THREE.BufferGeometry {
-    let template = animalTemplates.get(species);
+  function animalTemplate(species: AnimalId, young = false): THREE.BufferGeometry {
+    // Chicks and ducklings are downy yellow; lambs and calves are just smaller.
+    const downy = young && (species === "chicken" || species === "duck");
+    const key = downy ? `${species}:young` : species;
+    let template = animalTemplates.get(key as AnimalId);
     if (template) return template;
-    const def = ANIMAL_MAP[species];
+    const base = ANIMAL_MAP[species];
+    const def = downy ? { ...base, color: "#f6d55c", accent: species === "chicken" ? "#f2a541" : "#f0a030" } : base;
     const root = new THREE.Group();
     if (species === "chicken") {
       const body = part(sphere(0.22, 10, 8), def.color, 0, 0.3, 0);
@@ -2083,14 +2129,14 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       }
     }
     template = bakeGeometry(root) ?? new THREE.BufferGeometry();
-    animalTemplates.set(species, template);
+    animalTemplates.set(key as AnimalId, template);
     return template;
   }
 
-  function animalBody(species: AnimalId): THREE.Object3D {
+  function animalBody(species: AnimalId, young: boolean): THREE.Object3D {
     const model = models[species];
     if (model) return model.clone(true);
-    const mesh = new THREE.Mesh(animalTemplate(species), surface);
+    const mesh = new THREE.Mesh(animalTemplate(species, young), surface);
     mesh.castShadow = shadowsOn;
     return mesh;
   }
@@ -2106,21 +2152,30 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   function buildAnimal(animal: RanchAnimal, index: number): AnimalView {
     const group = new THREE.Group();
     group.userData.hit = { kind: "animal", id: animal.id } satisfies SceneHit;
-    const body = animalBody(animal.species);
+    const young = !isGrown(animal);
+    const body = animalBody(animal.species, young);
+    const holder = new THREE.Group();
+    holder.add(body);
     const size = ANIMAL_HEIGHT[animal.species];
-    group.add(body, new THREE.Mesh(sphere(Math.max(0.45, size * 0.6), 8, 6), hiddenMaterial));
+    group.add(holder, new THREE.Mesh(sphere(Math.max(0.45, size * 0.6), 8, 6), hiddenMaterial));
     const start = randomPasturePoint(hashString(animal.id) + index);
     group.position.set(start.x, 0, start.y);
     const bowl = icon("bowl", 0.55);
     bowl.position.set(0, size + 0.45, 0);
     bowl.visible = false;
-    group.add(bowl);
+    const sleep = icon("sleep", 0.5);
+    sleep.position.set(0.15, size + 0.35, 0);
+    sleep.visible = false;
+    group.add(bowl, sleep);
     world.add(group);
     return {
       group,
+      holder,
       body,
       bowl,
+      sleep,
       species: animal.species,
+      young,
       modelsVersion,
       target: randomPasturePoint(hashString(animal.id) * 7 + 1),
       wait: 0,
@@ -2757,6 +2812,58 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   world.add(selector);
 
   /* ───────────── state sync ───────────── */
+  /* ───────────── time of day and season ───────────── */
+  const sunAt = new THREE.Vector3();
+  let skyKey = -1;
+  const nextSeason: Record<string, string> = { spring: "summer", summer: "autumn", autumn: "winter", winter: "spring" };
+  const tintA = new THREE.Color();
+  const tintB = new THREE.Color();
+  /**
+   * Moves the sun across the sky (the moon at night), blends sky, fog and light colours for the
+   * hour, lights windows and stars after dusk, and eases the season's colour in over the last
+   * game day of the season before.
+   */
+  function applyTime(time: ReturnType<typeof gameClock>) {
+    const light = lightAt(time.hour);
+    const night = 1 - time.daylight;
+    if (time.hour >= 5 && time.hour < 19.5) {
+      const t = Math.min(1, Math.max(0, (time.hour - 5.5) / 13));
+      const azimuth = 2.4 + (0.5 - t) * 1.7;
+      const elevation = Math.sin(t * Math.PI);
+      sunAt.set(Math.cos(azimuth) * 16, 5 + 15 * elevation, Math.sin(azimuth) * 16);
+    } else {
+      sunAt.set(-7, 19, 11);
+    }
+    sun.position.copy(sunAt);
+    sun.color.copy(light.sun);
+    sun.intensity = light.sunPower * (preset.pbr ? 1 : 0.76);
+    hemi.color.copy(light.skyLight);
+    hemi.groundColor.copy(light.groundLight);
+    hemi.intensity = light.skyPower * (preset.pbr ? 1 : 0.94);
+    (scene.fog as THREE.Fog).color.copy(light.fog);
+    // Repaint the sky every ten game minutes (ten real seconds).
+    const key = Math.floor(time.hour * 6);
+    if (key !== skyKey) {
+      skyKey = key;
+      paintSky(sky, light.sky);
+    }
+    glowMaterial.color.setScalar(glowBase * (1 + night * 0.9));
+    nightMaterial.opacity = Math.min(1, night * 1.3);
+    (stars.material as THREE.PointsMaterial).opacity = night * 0.85;
+    for (const uniforms of [pondWater, riverWaterUniforms]) {
+      uniforms.uLight.value = 0.3 + 0.7 * time.daylight;
+      uniforms.uSky.value.copy(light.sky[2]);
+      uniforms.uSunColor.value.copy(light.sun);
+      uniforms.uSunDir.value.copy(sunAt).normalize();
+    }
+    const now = SEASON_LOOK[time.season];
+    const next = SEASON_LOOK[nextSeason[time.season]];
+    const blend = Math.max(0, time.seasonDay - SEASON_DAYS + time.hour / 24);
+    seasonTint.uSeasonTint.value.copy(tintA.set(now.mix ? now.tint : next.tint)).lerp(tintB.set(next.mix ? next.tint : now.tint), blend);
+    seasonTint.uSeasonMix.value = now.mix + (next.mix - now.mix) * blend;
+    seasonTint.uSeasonGain.value = now.gain + (next.gain - now.gain) * blend;
+  }
+
   let latest: GameState | null = null;
 
   let previous: GameState | null = null;
@@ -2860,7 +2967,8 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     game.ranch.animals.forEach((animal, index) => {
       animalIds.add(animal.id);
       let view = animalViews.get(animal.id);
-      if (view && view.modelsVersion !== modelsVersion && models[animal.species]) {
+      // A new model arrived, or a chick grew its feathers: rebuild in place.
+      if (view && ((view.modelsVersion !== modelsVersion && models[animal.species]) || view.young !== !isGrown(animal))) {
         const position = view.group.position.clone();
         view.group.removeFromParent();
         view = undefined;
@@ -2874,6 +2982,8 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
         animalViews.set(animal.id, view);
       }
       view.bowl.visible = !animal.fed && (game.items.feed < 1 || pastureFull);
+      const def = ANIMAL_MAP[animal.species];
+      view.holder.scale.setScalar(isGrown(animal) ? 1 : 0.5 + 0.4 * (animal.age / def.growSeconds));
     });
     for (const [id, view] of animalViews) {
       if (animalIds.has(id)) continue;
@@ -3215,6 +3325,8 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     applyCamera();
 
     const motion = reducedMotion ? 0 : 1;
+    const clockNow = gameClock(latest ?? { clockStart: Date.now() - 12 * 3600 * 1000 / 60 }, Date.now());
+    applyTime(clockNow);
     wind.uTime.value = elapsed;
     wind.uWind.value = motion;
     blades.rotation.z += dt * 1.2 * motion;
@@ -3321,13 +3433,18 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       group.position.y = WATER_Y + 0.02 + Math.sin(elapsed * 1.8 + group.position.x) * 0.02 * motion;
     }
 
-    // Animals wander between random spots in the pasture, pausing to graze.
+    // Animals wander between random spots in the pasture, pausing to graze; grown ones sleep at night.
     for (const [id, view] of animalViews) {
       const position = view.group.position;
       const dx = view.target.x - position.x;
       const dz = view.target.y - position.z;
       const distance = Math.hypot(dx, dz);
-      if (view.wait > 0) {
+      const sleeping = clockNow.asleep && !view.young;
+      view.sleep.visible = sleeping && !view.bowl.visible;
+      if (sleeping) {
+        view.body.position.y = 0;
+        view.sleep.position.y = ANIMAL_HEIGHT[view.species] + 0.35 + Math.sin(elapsed * 1.5) * 0.05 * motion;
+      } else if (view.wait > 0) {
         view.wait -= dt;
         view.body.position.y = 0;
       } else if (distance < 0.08) {
@@ -3445,7 +3562,14 @@ function drawIcon(ctx: CanvasRenderingContext2D, name: IconName) {
   ctx.arc(64, 60, 46, 0, Math.PI * 2);
   ctx.stroke();
 
-  if (name === "star") {
+  if (name === "sleep") {
+    ctx.fillStyle = "#3a4f7a";
+    ctx.font = "bold 40px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("z", 48, 80);
+    ctx.font = "bold 54px sans-serif";
+    ctx.fillText("Z", 76, 62);
+  } else if (name === "star") {
     ctx.fillStyle = "#f6c629";
     ctx.strokeStyle = "#b8860b";
     ctx.lineWidth = 4;
