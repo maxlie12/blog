@@ -5,7 +5,7 @@
 - **Issue:** `GAME-015` (owner request, 2026-11-06: better-looking fish and chickens; animals
   should walk on their own legs, two for a chicken and four for a cow; chickens, sheep and cows
   stop for a while when they reach grass; can Meshy make better fish)
-- **Status:** in progress
+- **Status:** done (live page check by owner)
 - **Owner:** Claude
 - **Date:** 2026-11-06
 - **Builds on:** `GAME-014-farm-incubator.md`, `docs/LEARNING-FARM.md`
@@ -68,7 +68,7 @@ points, not at grass. Pond fish are an oval with a tail that turns as one piece.
 - [x] Screenshots reviewed: the Meshy chicken and duck stepping on alternate legs, sheep and cow
       in diagonal pairs at four step phases, built-in animals the same; animals eating at a clump;
       all six fish close up.
-- [ ] Vercel build + production deploy.
+- [x] Vercel build + production deploy (`4ab8e3d`).
 
 ## Result
 
