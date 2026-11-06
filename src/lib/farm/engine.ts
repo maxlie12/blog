@@ -372,6 +372,30 @@ export interface RanchDrop {
   z: number;
 }
 
+/** Eggs from the barn hatch here into chicks and ducklings (21 and 28 game hours, like days). */
+export type EggKind = "egg" | "duckEgg";
+export const INCUBATOR = {
+  level: 2,
+  buildCost: 150,
+  slots: 4,
+  /** An egg must be turned at least this often or it stops developing. */
+  turnSeconds: 12 * H,
+  /** The last days before hatching (from this share on) need no turning. */
+  lockdown: 0.85,
+};
+export const HATCH: Record<EggKind, { seconds: number; species: AnimalId }> = {
+  egg: { seconds: 21 * H, species: "chicken" },
+  duckEgg: { seconds: 28 * H, species: "duck" },
+};
+export interface IncubatingEgg {
+  id: string;
+  kind: EggKind;
+  /** Seconds of development; hatched at HATCH[kind].seconds. */
+  progress: number;
+  /** Seconds since the egg was last turned. */
+  sinceTurn: number;
+}
+
 export interface WorkshopState {
   /** Seconds into the running batch, or null when idle. */
   progress: number | null;
@@ -409,6 +433,8 @@ export interface GameState {
     drops: RanchDrop[];
     workshops: Partial<Record<WorkshopId, WorkshopState>>;
     truck: TruckTrip | null;
+    /** null until built. */
+    incubator: { eggs: IncubatingEgg[] } | null;
   };
   seeds: Partial<Record<CropId, number>>;
   saplings: Partial<Record<FruitId, number>>;
@@ -731,6 +757,19 @@ export function animalSecondsLeft(game: GameState, animal: RanchAnimal): number 
   return Math.max(0, ANIMAL_MAP[animal.species].cycleSeconds - animal.progress);
 }
 
+export function isHatched(egg: IncubatingEgg): boolean {
+  return egg.progress >= HATCH[egg.kind].seconds;
+}
+
+/** Before the last days an egg left unturned for too long stops developing until turned. */
+export function eggNeedsTurn(egg: IncubatingEgg): boolean {
+  return !isHatched(egg) && egg.progress / HATCH[egg.kind].seconds < INCUBATOR.lockdown && egg.sinceTurn >= INCUBATOR.turnSeconds;
+}
+
+export function eggSecondsLeft(egg: IncubatingEgg): number {
+  return Math.max(0, HATCH[egg.kind].seconds - egg.progress);
+}
+
 export function unitPrice(kind: GoodsKind, id: string, dateKey: string): number {
   if (kind === "crop") return cropSellPrice(id as CropId, dateKey);
   if (kind === "fish") return fishSellPrice(id as FishId, dateKey);
@@ -891,6 +930,7 @@ function createRanch(): GameState["ranch"] {
     drops: [],
     workshops: {},
     truck: null,
+    incubator: null,
   };
 }
 
@@ -914,6 +954,7 @@ export function advance(game: GameState, now: number, seed: number): GameState {
     const state = game.ranch.workshops[id];
     if (state) workshops[id] = { ...state };
   }
+  const eggs = (game.ranch.incubator?.eggs ?? []).map((egg) => ({ ...egg }));
   let feed = game.items.feed;
   let nextId = game.nextId;
   let clock = now - elapsed;
@@ -1001,6 +1042,13 @@ export function advance(game: GameState, now: number, seed: number): GameState {
       }
     }
 
+    for (const egg of eggs) {
+      if (isHatched(egg)) continue;
+      // Kept warm the whole time; it develops while it has been turned recently or is in its last days.
+      if (!eggNeedsTurn(egg)) egg.progress = Math.min(HATCH[egg.kind].seconds, egg.progress + step);
+      egg.sinceTurn += step;
+    }
+
     for (const id of Object.keys(workshops) as WorkshopId[]) {
       const state = workshops[id];
       if (!state || state.progress === null) continue;
@@ -1029,7 +1077,7 @@ export function advance(game: GameState, now: number, seed: number): GameState {
     plots,
     orchard: { ...game.orchard, spots },
     pond: { ...game.pond, fish, trash },
-    ranch: { ...game.ranch, animals, drops, workshops, truck },
+    ranch: { ...game.ranch, animals, drops, workshops, truck, incubator: game.ranch.incubator ? { eggs } : null },
     items: { ...game.items, feed },
     nextId,
     lastTick: now,
@@ -1471,6 +1519,72 @@ export function collectAllDrops(game: GameState): ActionResult {
   return { game: result.game, ok: true, message: `🧺 Nhặt ${drops.length} sản phẩm vào kho · +${drops.length} XP.${result.suffix}`, tone: "good" };
 }
 
+/* ───────────────────────── incubator ───────────────────────── */
+
+function withEggs(game: GameState, eggs: IncubatingEgg[]): GameState {
+  return { ...game, ranch: { ...game.ranch, incubator: { eggs } } };
+}
+
+export function buildIncubator(game: GameState): ActionResult {
+  if (game.ranch.incubator) return fail(game, "Lò ấp đã xây rồi.", "info");
+  if (levelFromXp(game.xp) < INCUBATOR.level) return fail(game, `Lò ấp mở ở cấp ${INCUBATOR.level}.`);
+  if (game.coins < INCUBATOR.buildCost) return fail(game, `Cần ${INCUBATOR.buildCost} xu để xây lò ấp.`);
+  const next = gainXp(withEggs({ ...game, coins: game.coins - INCUBATOR.buildCost }, []), 5);
+  return { game: next.game, ok: true, message: `🥚 Đã xây lò ấp (−${INCUBATOR.buildCost} xu). Đặt trứng gà hoặc trứng vịt từ kho vào để ấp.${next.suffix}`, tone: "good" };
+}
+
+export function setEgg(game: GameState, kind: EggKind): ActionResult {
+  const incubator = game.ranch.incubator;
+  if (!incubator) return fail(game, "Chưa có lò ấp. Xây ở trang trại trước đã.");
+  if (incubator.eggs.length >= INCUBATOR.slots) return fail(game, `Lò ấp đã đủ ${INCUBATOR.slots} quả.`, "info");
+  const product = PRODUCT_MAP[kind];
+  if ((game.barn.products[kind] ?? 0) < 1) return fail(game, `Kho chưa có ${product.name.toLowerCase()}. Nhặt trứng ở trang trại trước nhé.`);
+  const egg: IncubatingEgg = { id: `e${game.nextId}`, kind, progress: 0, sinceTurn: 0 };
+  const placed = changeBarn(withEggs({ ...game, nextId: game.nextId + 1 }, [...incubator.eggs, egg]), "product", kind, -1);
+  const next = gainXp(placed, 1);
+  const young = ANIMAL_MAP[HATCH[kind].species].young.toLowerCase();
+  return {
+    game: next.game,
+    ok: true,
+    message: `🥚 Đã đặt ${product.name.toLowerCase()} vào lò · nở ra ${young} sau ${formatSpan(HATCH[kind].seconds)}. Nhớ đảo trứng mỗi ${formatGameSpan(INCUBATOR.turnSeconds)}.${next.suffix}`,
+    tone: "good",
+  };
+}
+
+export function turnEggs(game: GameState): ActionResult {
+  const incubator = game.ranch.incubator;
+  const turnable = (incubator?.eggs ?? []).filter((egg) => !isHatched(egg) && egg.progress / HATCH[egg.kind].seconds < INCUBATOR.lockdown);
+  if (!incubator || turnable.length === 0) return fail(game, "Không có trứng cần đảo.", "info");
+  if (turnable.every((egg) => egg.sinceTurn < 2 * H)) return fail(game, "Trứng vừa được đảo, để yên một lúc đã.", "info");
+  const stalled = turnable.filter(eggNeedsTurn).length;
+  const eggs = incubator.eggs.map((egg) => (turnable.includes(egg) ? { ...egg, sinceTurn: 0 } : egg));
+  const next = gainXp(withEggs(game, eggs), 1);
+  const note = stalled ? ` ${stalled} quả lại tiếp tục phát triển.` : "";
+  return { game: next.game, ok: true, message: `🔄 Đã đảo ${turnable.length} quả trứng.${note} +1 XP.${next.suffix}`, tone: "good" };
+}
+
+export function collectHatchlings(game: GameState): ActionResult {
+  const incubator = game.ranch.incubator;
+  const hatched = (incubator?.eggs ?? []).filter(isHatched);
+  if (!incubator || hatched.length === 0) return fail(game, "Chưa có trứng nào nở.", "info");
+  const space = ranchCapacity(game) - game.ranch.animals.length;
+  if (space < 1) return fail(game, "Chuồng đã đầy. Mở rộng trang trại ở chợ để đón con non.");
+  const moving = hatched.slice(0, space);
+  let nextId = game.nextId;
+  const animals = [...game.ranch.animals];
+  for (const egg of moving) {
+    animals.push({ id: `a${nextId}`, species: HATCH[egg.kind].species, progress: 0, fed: false, age: 0 });
+    nextId += 1;
+  }
+  const eggs = incubator.eggs.filter((egg) => !moving.includes(egg));
+  const moved = { ...game, nextId, ranch: { ...game.ranch, animals, incubator: { eggs } } };
+  const next = gainXp(moved, 3 * moving.length);
+  const names = moving.map((egg) => ANIMAL_MAP[HATCH[egg.kind].species].young.toLowerCase());
+  const left = hatched.length - moving.length;
+  const wait = left ? ` ${left} con còn chờ chỗ trong chuồng.` : "";
+  return { game: next.game, ok: true, message: `🐣 Đã đưa ${names.join(", ")} ra chuồng · +${3 * moving.length} XP.${wait}${next.suffix}`, tone: "good" };
+}
+
 export function millCrop(game: GameState, crop: CropId, quantity: number): ActionResult {
   const def = CROP_MAP[crop];
   const owned = game.barn.crops[crop] ?? 0;
@@ -1719,7 +1833,21 @@ function parseRanch(value: unknown, now: number): GameState["ranch"] {
           items: Math.floor(num(truckSource.items, 0, 0, TRUCK.capacity)),
         }
       : null;
-  return { capacityLevel, animals, drops, workshops, truck };
+  const incubatorSource = source.incubator as Record<string, unknown> | null | undefined;
+  const incubator =
+    incubatorSource && typeof incubatorSource === "object"
+      ? {
+          eggs: (Array.isArray(incubatorSource.eggs) ? incubatorSource.eggs : [])
+            .filter((item): item is Record<string, unknown> => !!item && typeof item === "object")
+            .filter((item) => typeof item.id === "string" && (item.kind === "egg" || item.kind === "duckEgg"))
+            .slice(0, INCUBATOR.slots)
+            .map((item) => {
+              const kind = item.kind as EggKind;
+              return { id: item.id as string, kind, progress: num(item.progress, 0, 0, HATCH[kind].seconds), sinceTurn: num(item.sinceTurn, 0) };
+            }),
+        }
+      : null;
+  return { capacityLevel, animals, drops, workshops, truck, incubator };
 }
 
 function num(value: unknown, fallback: number, min = 0, max = Number.MAX_SAFE_INTEGER): number {
@@ -1873,6 +2001,10 @@ export function describeAway(before: GameState, after: GameState): string | null
   if (readyGoods > readyBefore) parts.push(`xưởng có ${readyGoods} thành phẩm`);
   if (before.ranch.truck && !after.ranch.truck) parts.push(`xe tải đã về với ${before.ranch.truck.value} xu`);
   if (after.ranch.animals.length > 0 && after.items.feed < 1 && after.ranch.animals.every((item) => !item.fed)) parts.push("máng ăn đã hết");
+  const hatchedBefore = (before.ranch.incubator?.eggs ?? []).filter(isHatched).length;
+  const hatchedAfter = (after.ranch.incubator?.eggs ?? []).filter(isHatched).length;
+  if (hatchedAfter > hatchedBefore) parts.push(`${hatchedAfter - hatchedBefore} trứng đã nở trong lò ấp`);
+  if ((after.ranch.incubator?.eggs ?? []).some(eggNeedsTurn)) parts.push("lò ấp cần đảo trứng");
   const grewUp = after.ranch.animals.filter((item) => isGrown(item) && !before.ranch.animals.some((old) => old.id === item.id && isGrown(old))).length;
   if (grewUp > 0) parts.push(`${grewUp} con non đã lớn`);
   const seasonBefore = gameClock(before, before.lastTick).season;

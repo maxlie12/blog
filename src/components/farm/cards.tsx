@@ -230,6 +230,7 @@ export function RanchCard({
   onWorkshops,
   onTruck,
   onBuy,
+  onIncubator,
 }: {
   game: Farm.GameState;
   onCollect: () => void;
@@ -237,11 +238,15 @@ export function RanchCard({
   onWorkshops: () => void;
   onTruck: () => void;
   onBuy: () => void;
+  onIncubator: () => void;
 }) {
   const drops = game.ranch.drops.length;
   const waiting = game.ranch.animals.filter((animal) => Farm.animalSecondsLeft(game, animal) === null).length;
   const ready = Object.values(game.ranch.workshops).reduce((sum, item) => sum + (item?.ready ?? 0), 0);
   const truck = game.ranch.truck;
+  const eggs = game.ranch.incubator?.eggs ?? [];
+  const hatched = eggs.filter(Farm.isHatched).length;
+  const needTurn = eggs.some(Farm.eggNeedsTurn);
   return (
     <div className="fg-card fg-card--wide">
       <div className="fg-stats">
@@ -249,12 +254,15 @@ export function RanchCard({
         <span>🥣 Máng: {game.items.feed} phần</span>
         {waiting ? <span className="fg-warn">⚠️ {waiting} con chờ ăn</span> : null}
         {ready ? <span>⭐ {ready} thành phẩm</span> : null}
+        {hatched ? <span>🐣 {hatched} con non đã nở</span> : null}
+        {needTurn ? <span className="fg-warn">🔄 Lò ấp cần đảo trứng</span> : null}
         <span>{truck ? `🚚 Về sau ${Farm.formatDuration((truck.returnAt - game.lastTick) / 1000)}` : "🚚 Xe ở trại"}</span>
       </div>
       <div className="fg-card__actions">
         <button type="button" onClick={onCollect} disabled={drops === 0}>🧺 Nhặt ({drops})</button>
         <button type="button" onClick={onMill}>🥣 Thức ăn</button>
         <button type="button" onClick={onWorkshops}>🏭 Xưởng</button>
+        <button type="button" onClick={onIncubator}>🥚 Lò ấp{eggs.length ? ` (${eggs.length})` : ""}</button>
         <button type="button" onClick={onTruck}>🚚 Lên phố</button>
         <button type="button" onClick={onBuy}>🐣 Mua con</button>
       </div>

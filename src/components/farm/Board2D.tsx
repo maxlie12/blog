@@ -27,6 +27,7 @@ export default function Board2D({
   onWorkshop,
   onTrough,
   onTruck,
+  onIncubator,
 }: {
   game: Farm.GameState;
   view: FarmView;
@@ -44,6 +45,7 @@ export default function Board2D({
   onWorkshop: (id: Farm.WorkshopId) => void;
   onTrough: () => void;
   onTruck: () => void;
+  onIncubator: () => void;
 }) {
   if (view === "orchard") {
     return (
@@ -205,6 +207,20 @@ export default function Board2D({
               </button>
             );
           })}
+          {(() => {
+            const eggs = game.ranch.incubator?.eggs ?? [];
+            const hatched = eggs.filter(Farm.isHatched).length;
+            const label = !game.ranch.incubator
+              ? level < Farm.INCUBATOR.level ? `🔒 cấp ${Farm.INCUBATOR.level}` : `🔨 ${Farm.INCUBATOR.buildCost} xu`
+              : hatched ? `🐣 ${hatched}` : eggs.some(Farm.eggNeedsTurn) ? "🔄 cần đảo" : `${eggs.length}/${Farm.INCUBATOR.slots} trứng`;
+            return (
+              <button type="button" className="fg2-shop" aria-label={`Lò ấp trứng: ${label}`} style={{ "--roof": "#c96f4a" } as CSSProperties} data-built={!!game.ranch.incubator || undefined} data-ready={hatched > 0 || undefined} onClick={onIncubator}>
+                <span aria-hidden="true">🥚</span>
+                <strong>Lò ấp</strong>
+                <small>{label}</small>
+              </button>
+            );
+          })()}
           <button type="button" className="fg2-truck" data-away={!!game.ranch.truck || undefined} onClick={onTruck}>
             <span aria-hidden="true">🚚</span>
             <small>{game.ranch.truck ? `về sau ${Farm.formatDuration((game.ranch.truck.returnAt - game.lastTick) / 1000)}` : "lên phố"}</small>

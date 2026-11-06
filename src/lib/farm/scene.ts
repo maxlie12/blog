@@ -33,6 +33,9 @@ import {
   WORKSHOPS,
   WORKSHOP_MAP,
   SEASON_DAYS,
+  INCUBATOR,
+  eggNeedsTurn,
+  isHatched,
   cropStage,
   gameClock,
   hashString,
@@ -82,7 +85,8 @@ export type SceneHit =
   | { kind: "drop"; id: string }
   | { kind: "workshop"; id: WorkshopId }
   | { kind: "trough" }
-  | { kind: "truck" };
+  | { kind: "truck" }
+  | { kind: "incubator" };
 
 export interface SceneOptions {
   quality: Quality;
@@ -120,6 +124,8 @@ const WORKSHOP_SPOTS: Record<WorkshopId, [number, number]> = {
   loom: [6.9, 9.95],
   dairy: [9.25, 10.75],
 };
+/** The incubator hut, just south of the pasture. */
+const INCUBATOR_SPOT: [number, number] = [1.0, 12.55];
 const PLOT_PITCH = 2.05;
 const PLOT_SIZE = 1.74;
 const CAMERA_OFFSET = new THREE.Vector3(1, 1.08, 1.3).normalize().multiplyScalar(40);
@@ -206,7 +212,7 @@ function fishSize(ratio: number): number {
   return 0.58 + 0.6 * Math.min(1, Math.max(0, ratio));
 }
 
-type IconName = "star" | "drop" | "bug" | "lock" | "bowl" | "build" | "alert" | "sleep";
+type IconName = "star" | "drop" | "bug" | "lock" | "bowl" | "build" | "alert" | "sleep" | "turn";
 
 export function createFarmScene(container: HTMLElement, options: SceneOptions): FarmSceneController {
   const preset = QUALITY_PRESETS[options.quality];
@@ -1210,7 +1216,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       const [px, pz] = plotPosition(i);
       groundShade.push([px, pz, 1.25, 0.1]);
     }
-    groundShade.push([-2.1, -4.75, 2.1, 0.3], [1.6, -3.3, 1.3, 0.22], [TROUGH[0], TROUGH[1], 1.0, 0.15]);
+    groundShade.push([-2.1, -4.75, 2.1, 0.3], [1.6, -3.3, 1.3, 0.22], [TROUGH[0], TROUGH[1], 1.0, 0.15], [INCUBATOR_SPOT[0], INCUBATOR_SPOT[1], 1.2, 0.2]);
     for (const [wx, wz] of Object.values(WORKSHOP_SPOTS)) groundShade.push([wx, wz, 1.3, 0.2]);
     // A square grid clipped to the circle: vertices outside are pulled onto the rim.
     const side = n + 1;
@@ -1335,6 +1341,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     }
     for (const [wx, wz] of Object.values(WORKSHOP_SPOTS)) if (Math.hypot(wx - x, wz - z) < 1.15) return false;
     if (Math.hypot(TROUGH[0] - x, TROUGH[1] - z) < 1.0) return false;
+    if (Math.hypot(INCUBATOR_SPOT[0] - x, INCUBATOR_SPOT[1] - z) < 1.05) return false;
     if (Math.hypot(-2.1 - x, -4.75 - z) < 1.75 || Math.hypot(1.6 - x, -3.3 - z) < 1.15) return false;
     for (const [cx, cz, radius] of keepClear) if (Math.hypot(cx - x, cz - z) < radius) return false;
     for (const [ax, az, bx, bz, width] of footpaths) if (segmentDistance(x, z, ax, az, bx, bz) < width * 0.8) return false;
@@ -1950,7 +1957,9 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   /* ───────────── fish & litter ───────────── */
   interface FishView {
     group: THREE.Group;
+    body: THREE.Object3D;
     tail: THREE.Object3D;
+    yaw: number;
     star: THREE.Sprite;
     phase: number;
     params: { ax: number; az: number; w1: number; w2: number; p1: number; p2: number; depth: number };
@@ -2008,10 +2017,13 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     scene.add(star);
     const size = fishSize(fish.growth / def.growSeconds);
     group.scale.setScalar(size);
+    group.rotation.order = "YXZ";
     world.add(group);
     return {
       group,
+      body,
       tail,
+      yaw: 0,
       star,
       phase: random() * 100,
       params: { ax: 0.5 + random() * 0.28, az: 0.45 + random() * 0.25, w1: 0.16 + random() * 0.12, w2: 0.21 + random() * 0.16, p1: random() * 6.28, p2: random() * 6.28, depth: -0.02 + random() * 0.04 },
@@ -2059,7 +2071,13 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     group: THREE.Group;
     /** Scales the body: the young are smaller. */
     holder: THREE.Group;
+    /** Tilts, rolls and squashes the body for pecking, grazing, waddling and lying down. */
+    pose: THREE.Group;
     body: THREE.Object3D;
+    /** What it does while standing still: peck, preen or graze; its timer; how lying down it is. */
+    idle: number;
+    lie: number;
+    heading: number;
     bowl: THREE.Sprite;
     sleep: THREE.Sprite;
     species: AnimalId;
@@ -2155,7 +2173,9 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     const young = !isGrown(animal);
     const body = animalBody(animal.species, young);
     const holder = new THREE.Group();
-    holder.add(body);
+    const pose = new THREE.Group();
+    pose.add(body);
+    holder.add(pose);
     const size = ANIMAL_HEIGHT[animal.species];
     group.add(holder, new THREE.Mesh(sphere(Math.max(0.45, size * 0.6), 8, 6), hiddenMaterial));
     const start = randomPasturePoint(hashString(animal.id) + index);
@@ -2171,7 +2191,11 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     return {
       group,
       holder,
+      pose,
       body,
+      idle: 0,
+      lie: 0,
+      heading: 0,
       bowl,
       sleep,
       species: animal.species,
@@ -2265,6 +2289,84 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     group.add(mesh, hitBox(box(1.8, 2.2, 1.6), { kind: "workshop", id }, 0.9));
     world.add(group);
     return { group, key, smoke, star, running };
+  }
+
+  interface IncubatorView { group: THREE.Group; key: string; icon: THREE.Sprite | null }
+  let incubatorView: IncubatorView | null = null;
+
+  /**
+   * A small hatchery hut: a warm lamp, a tray of eggs behind the open front, and the hatched chicks
+   * and ducklings waiting beside it. Before it is built, a plot with a sign.
+   */
+  function buildIncubatorView(game: GameState): IncubatorView {
+    const incubator = game.ranch.incubator;
+    const eggs = incubator?.eggs ?? [];
+    const hatched = eggs.filter(isHatched);
+    const needTurn = eggs.some(eggNeedsTurn);
+    const locked = levelFromXp(game.xp) < INCUBATOR.level;
+    const key = `${incubator ? "built" : locked ? "locked" : "open"}|${eggs.map((egg) => `${egg.kind}${isHatched(egg) ? "!" : ""}`).join(",")}|${needTurn}`;
+    const [x, z] = INCUBATOR_SPOT;
+    const group = new THREE.Group();
+    group.position.set(x, 0, z);
+    group.rotation.y = 0.3;
+    const root = new THREE.Group();
+    const lamp = new THREE.Group();
+    let marker: THREE.Sprite | null = null;
+    if (!incubator) {
+      root.add(part(rbox(1.4, 0.08, 1.1, 0.03), "#b99a6b", 0, 0, 0), part(rbox(0.08, 0.7, 0.08, 0.02), "#7a5638", -0.45, 0.35, 0.42), part(rbox(0.5, 0.32, 0.06, 0.02), "#e8d3a6", -0.45, 0.66, 0.45));
+      root.add(part(sphere(0.07, 10, 8), "#fff6e4", -0.45, 0.68, 0.49));
+      marker = icon(locked ? "lock" : "build", 0.6);
+      marker.position.set(0, 1.2, 0);
+    } else {
+      root.add(part(rbox(1.3, 0.85, 1.0, 0.04), "#f6ead2", 0, 0.43, 0), part(rbox(1.36, 0.1, 1.06, 0.03), "#b8a789", 0, 0.05, 0), part(gable(1.3, 1.0, 0.5), "#f6ead2", 0, 0.85, 0));
+      const roof = shingleRoof(1.5, 1.15, 0.56, "#c96f4a", mulberry32(41));
+      roof.position.y = 0.83;
+      root.add(roof);
+      // Open front with a straw-lined tray of eggs under the lamp.
+      root.add(part(box(0.9, 0.42, 0.03), "#5a3b26", 0, 0.46, 0.5), part(rbox(0.84, 0.06, 0.3, 0.02), "#d9b27a", 0, 0.3, 0.42));
+      for (let i = 0; i < 8; i += 1) root.add(part(sphere(0.035, 6, 5), "#e7c96a", -0.36 + i * 0.1, 0.335, 0.42 + ((i % 2) - 0.5) * 0.12));
+      eggs.forEach((egg, i) => {
+        if (isHatched(egg)) return;
+        const shell = part(sphere(0.07, 10, 8), egg.kind === "egg" ? "#fff6e4" : "#cfe9df", -0.3 + i * 0.2, 0.39, 0.42);
+        shell.scale.y = 1.25;
+        root.add(shell);
+      });
+      lamp.add(part(sphere(0.06, 10, 8), "#ffb35c", 0, 0.62, 0.42));
+      root.add(part(cylinder(0.08, 0.05, 0.08, 10), "#3b3530", 0, 0.68, 0.42));
+      // A little egg sign by the door.
+      root.add(part(rbox(0.26, 0.26, 0.04, 0.01), "#fbf5e8", 0.48, 0.62, 0.52), part(sphere(0.06, 10, 8), "#f2c94c", 0.48, 0.62, 0.55));
+      // Hatchlings waiting beside the hut: yellow chicks and ducklings.
+      hatched.forEach((egg, i) => {
+        const cx = -0.95 + (i % 2) * 0.3, cz = 0.25 + Math.floor(i / 2) * 0.32;
+        const color = "#f6d55c";
+        const body = part(sphere(0.11, 10, 8), color, cx, 0.11, cz);
+        body.scale.set(1, 0.9, egg.kind === "duckEgg" ? 1.25 : 1.05);
+        root.add(body, part(sphere(0.07, 8, 6), color, cx, 0.22, cz + 0.07));
+        const beak = part(cone(0.025, 0.06, 4), egg.kind === "duckEgg" ? "#f0a030" : "#f2a541", cx, 0.21, cz + 0.15);
+        beak.rotation.x = Math.PI / 2;
+        root.add(beak);
+      });
+      if (hatched.length) {
+        marker = icon("star", 0.65);
+        marker.position.set(0, 1.75, 0);
+      } else if (needTurn) {
+        marker = icon("turn", 0.65);
+        marker.position.set(0, 1.75, 0);
+      }
+    }
+    const mesh = bake(root);
+    mesh.userData.ownsGeometry = true;
+    mesh.raycast = () => {};
+    group.add(mesh, hitBox(box(1.7, 1.8, 1.5), { kind: "incubator" }, 0.7));
+    if (lamp.children.length) {
+      const glow = new THREE.Mesh(bakeGeometry(lamp, false) ?? new THREE.BufferGeometry(), glowMaterial);
+      glow.userData.ownsGeometry = true;
+      glow.raycast = () => {};
+      group.add(glow);
+    }
+    if (marker) group.add(marker);
+    world.add(group);
+    return { group, key, icon: marker };
   }
 
   let truckGroup: THREE.Group | null = null;
@@ -3009,6 +3111,15 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       workshopViews.set(def.id, buildWorkshop(def.id, game));
     }
 
+    {
+      const eggs = game.ranch.incubator?.eggs ?? [];
+      const key = `${game.ranch.incubator ? "built" : levelFromXp(game.xp) < INCUBATOR.level ? "locked" : "open"}|${eggs.map((egg) => `${egg.kind}${isHatched(egg) ? "!" : ""}`).join(",")}|${eggs.some(eggNeedsTurn)}`;
+      if (!incubatorView || incubatorView.key !== key) {
+        if (incubatorView) releaseGeometry(incubatorView.group);
+        incubatorView = buildIncubatorView(game);
+      }
+    }
+
     feedFill.scale.y = 0.35 + 0.65 * Math.min(1, game.items.feed / 20);
     feedFill.visible = game.items.feed > 0;
     if (truckModelsVersion !== modelsVersion && models.truck) buildTruck();
@@ -3413,17 +3524,32 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     fallMaterial.opacity = 0.74 + Math.sin(elapsed * 5) * 0.05 * motion;
 
     for (const view of fishViews.values()) {
-      const speed = hungry ? 0.45 : 1;
-      view.phase += dt * speed * motion;
       const { ax, az, w1, w2, p1, p2, depth } = view.params;
+      // Cruising with now and then a quick dart; hungry fish are sluggish.
+      const dart = Math.pow(Math.max(0, Math.sin(elapsed * 0.55 + p1 * 3)), 6);
+      const speed = (hungry ? 0.45 : 1) * (1 + 1.6 * dart);
+      view.phase += dt * speed * motion;
       const nx = Math.sin(view.phase * w1 * 2.2 + p1) * ax;
       const nz = Math.sin(view.phase * w2 * 2.2 + p2) * az;
       const tx = Math.cos(view.phase * w1 * 2.2 + p1) * ax * w1;
       const tz = Math.cos(view.phase * w2 * 2.2 + p2) * az * w2;
       const [x, z] = pondPoint(nx, nz);
-      view.group.position.set(x, depth + Math.sin(elapsed * 2 + view.phase) * 0.015, z);
-      if (tx !== 0 || tz !== 0) view.group.rotation.y = Math.atan2(-tz * POND_RZ, tx * POND_RX);
-      view.tail.rotation.y = Math.sin(elapsed * (hungry ? 5 : 9) + view.phase) * 0.45 * motion;
+      // Now and then a fish rises towards the surface.
+      const rise = Math.pow(Math.max(0, Math.sin(view.phase * 0.31 + p2 * 5)), 14) * 0.12;
+      view.group.position.set(x, depth + rise + Math.sin(elapsed * 2 + view.phase) * 0.015 * motion, z);
+      if (tx !== 0 || tz !== 0) {
+        const yaw = Math.atan2(-tz * POND_RZ, tx * POND_RX);
+        let turn = yaw - view.yaw;
+        turn = Math.atan2(Math.sin(turn), Math.cos(turn));
+        view.yaw = yaw;
+        // Lean into turns.
+        view.group.rotation.x += (Math.max(-0.5, Math.min(0.5, (turn / Math.max(dt, 1e-3)) * 0.25)) * motion - view.group.rotation.x) * Math.min(1, dt * 4);
+        view.group.rotation.y = yaw;
+      }
+      // The tail beats faster when darting and the body bends against it, so the fish swims in an S.
+      const beat = Math.sin(elapsed * (hungry ? 5 : 9) * (1 + dart) + view.phase) * motion;
+      view.tail.rotation.y = beat * (0.45 + 0.2 * dart);
+      view.body.rotation.y = -beat * 0.12;
       view.scale += (view.targetScale - view.scale) * Math.min(1, dt * 2);
       view.group.scale.setScalar(view.scale);
       view.star.visible = view.mature;
@@ -3433,7 +3559,9 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       group.position.y = WATER_Y + 0.02 + Math.sin(elapsed * 1.8 + group.position.x) * 0.02 * motion;
     }
 
-    // Animals wander between random spots in the pasture, pausing to graze; grown ones sleep at night.
+    // Animals wander the pasture and stop to peck, preen or graze; now and then they go to the
+    // trough to eat; chicks and ducklings keep close to a grown one of their kind; grown animals
+    // lie down to sleep at night, breathing slowly.
     for (const [id, view] of animalViews) {
       const position = view.group.position;
       const dx = view.target.x - position.x;
@@ -3441,28 +3569,72 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       const distance = Math.hypot(dx, dz);
       const sleeping = clockNow.asleep && !view.young;
       view.sleep.visible = sleeping && !view.bowl.visible;
+      view.lie += ((sleeping ? 1 : 0) - view.lie) * Math.min(1, dt * 2);
+      const bird = view.species === "chicken" || view.species === "duck";
+      let pitch = 0;
+      let roll = 0;
       if (sleeping) {
         view.body.position.y = 0;
-        view.sleep.position.y = ANIMAL_HEIGHT[view.species] + 0.35 + Math.sin(elapsed * 1.5) * 0.05 * motion;
+        view.sleep.position.y = ANIMAL_HEIGHT[view.species] * (1 - 0.25 * view.lie) + 0.35 + Math.sin(elapsed * 1.5) * 0.05 * motion;
       } else if (view.wait > 0) {
         view.wait -= dt;
+        view.idle += dt;
         view.body.position.y = 0;
+        const t = view.idle;
+        if (view.species === "chicken") {
+          // Quick pecks in bursts.
+          pitch = 0.6 * Math.pow(Math.max(0, Math.sin(t * 9)), 3) * (Math.sin(t * 1.3 + view.hop) > -0.2 ? 1 : 0);
+        } else if (view.species === "duck") {
+          // Dabbling and a preen to the side.
+          pitch = 0.35 * Math.pow(Math.max(0, Math.sin(t * 5)), 2);
+          roll = 0.18 * Math.sin(t * 2.1) * (Math.sin(t * 0.7 + view.hop) > 0.4 ? 1 : 0);
+        } else {
+          // Head down to graze, chewing.
+          pitch = 0.16 + 0.03 * Math.sin(t * 6);
+        }
       } else if (distance < 0.08) {
-        view.wait = 1.5 + (hashString(id + Math.floor(elapsed)) % 40) / 10;
-        view.target = randomPasturePoint(hashString(id) + Math.floor(elapsed * 10));
+        view.idle = 0;
+        const seed = hashString(id + Math.floor(elapsed));
+        view.wait = view.young ? 0.6 + (seed % 15) / 10 : 1.5 + (seed % 40) / 10;
+        let next = randomPasturePoint(hashString(id) + Math.floor(elapsed * 10));
+        if (view.young && bird) {
+          // Follow a grown hen or duck of the same kind, a little behind and to one side.
+          const mother = [...animalViews.values()].find((other) => other.species === view.species && !other.young);
+          if (mother) next = new THREE.Vector2(mother.group.position.x + ((seed % 7) - 3) * 0.12, mother.group.position.z + (((seed >>> 3) % 7) - 3) * 0.12);
+        } else if (seed % 4 === 0) {
+          // Off to the trough for a bite.
+          next = new THREE.Vector2(TROUGH[0] + ((seed % 9) - 4) * 0.15, TROUGH[1] + 0.55 + ((seed >>> 4) % 3) * 0.12);
+        }
+        view.target = next;
       } else if (motion) {
-        const step = Math.min(distance, view.speed * dt);
+        const speed = view.speed * (view.young ? 1.25 : 1);
+        const step = Math.min(distance, speed * dt);
         position.x += (dx / distance) * step;
         position.z += (dz / distance) * step;
-        view.group.rotation.y = Math.atan2(dx, dz);
-        view.hop += dt * (view.species === "chicken" ? 14 : 9);
+        // Turn smoothly towards where it is going.
+        const want = Math.atan2(dx, dz);
+        let turn = want - view.heading;
+        turn = Math.atan2(Math.sin(turn), Math.cos(turn));
+        view.heading += turn * Math.min(1, dt * 8);
+        view.hop += dt * (view.species === "chicken" ? 14 : view.species === "duck" ? 11 : 8);
         view.body.position.y = Math.abs(Math.sin(view.hop)) * (view.species === "cow" ? 0.03 : 0.07);
+        // Ducks waddle, chickens bob their heads, big animals sway a little.
+        roll = Math.sin(view.hop) * (view.species === "duck" ? 0.2 : view.species === "chicken" ? 0.07 : 0.04);
+        if (view.species === "chicken") pitch = 0.12 * Math.max(0, Math.sin(view.hop * 2));
       }
+      view.group.rotation.y = view.heading;
+      // Lying down: lower and wider, with slow breaths.
+      const breath = 1 + Math.sin(elapsed * 1.6 + view.hop) * 0.025 * view.lie * motion;
+      view.pose.position.y = -0.12 * ANIMAL_HEIGHT[view.species] * view.lie;
+      view.pose.scale.set(1 + 0.08 * view.lie, (1 - 0.18 * view.lie) * breath, 1 + 0.05 * view.lie);
+      view.pose.rotation.x += (pitch * motion - view.pose.rotation.x) * Math.min(1, dt * 14);
+      view.pose.rotation.z += (roll * motion + 0.12 * view.lie * (bird ? 0 : 1) - view.pose.rotation.z) * Math.min(1, dt * 10);
       if (view.bowl.visible) view.bowl.position.y = ANIMAL_HEIGHT[view.species] + 0.45 + Math.sin(elapsed * 3) * 0.05 * motion;
     }
     for (const group of dropViews.values()) {
       group.position.y = Math.abs(Math.sin(elapsed * 2.4 + group.position.x * 3)) * 0.06 * motion;
     }
+    if (incubatorView?.icon) incubatorView.icon.position.y = 1.75 + Math.sin(elapsed * 3) * 0.07 * motion;
     for (const view of workshopViews.values()) {
       view.smoke.forEach((puff, index) => {
         const t = (elapsed * 0.6 + index * 0.5) % 1;
@@ -3562,7 +3734,25 @@ function drawIcon(ctx: CanvasRenderingContext2D, name: IconName) {
   ctx.arc(64, 60, 46, 0, Math.PI * 2);
   ctx.stroke();
 
-  if (name === "sleep") {
+  if (name === "turn") {
+    // Two curved arrows: "turn the eggs".
+    ctx.strokeStyle = "#c96f4a";
+    ctx.fillStyle = "#c96f4a";
+    ctx.lineWidth = 9;
+    for (const start of [0.15, Math.PI + 0.15]) {
+      ctx.beginPath();
+      ctx.arc(64, 60, 24, start, start + 2.4);
+      ctx.stroke();
+      const end = start + 2.4;
+      const x = 64 + Math.cos(end) * 24, y = 60 + Math.sin(end) * 24;
+      ctx.beginPath();
+      ctx.moveTo(x + Math.cos(end) * 11, y + Math.sin(end) * 11);
+      ctx.lineTo(x - Math.cos(end) * 11, y - Math.sin(end) * 11);
+      ctx.lineTo(x + Math.cos(end + Math.PI / 2) * 13, y + Math.sin(end + Math.PI / 2) * 13);
+      ctx.closePath();
+      ctx.fill();
+    }
+  } else if (name === "sleep") {
     ctx.fillStyle = "#3a4f7a";
     ctx.font = "bold 40px sans-serif";
     ctx.textAlign = "center";

@@ -1,6 +1,15 @@
 # Status
 
-Last verified: 2026-11-06 (farm clock, seasons and growth; harness browser checks).
+Last verified: 2026-11-06 (farm incubator and animal motion; harness browser checks).
+
+## 2026-11-06 — Farm: an incubator, livelier animals and fish
+
+- A lò ấp at the ranch: eggs and duck eggs from the barn hatch into chicks and ducklings (21 and
+  28 game hours) if they are turned every 12 game hours; hatchlings wait beside the hut.
+- Chickens peck, ducks waddle and dabble, sheep and cows graze, chicks follow their mother,
+  animals visit the trough and lie down to sleep; pond fish swim in an S, dart and lean into turns.
+- Checks: `farm.test.ts` (16), ESLint, `tsc`; 11 new browser checks plus 30/30 and 15/15. See
+  `docs/changes/GAME-014-farm-incubator-animal-motion.md`.
 
 ## 2026-11-06 — Farm: a day clock, seasons, watering, regrowth and young animals
 

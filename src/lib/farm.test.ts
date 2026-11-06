@@ -259,3 +259,34 @@ test("old saves get a clock at 6:00 in spring, keep their animals grown and thei
   ripe.plots[0].growth = 180;
   assert.ok(Farm.isRipe(Farm.parseSave(JSON.stringify(ripe), NOW)!.plots[0]), "a crop that was ripe stays ripe");
 });
+
+test("incubator: eggs from the barn hatch into chicks and ducklings, need turning, and wait for space", () => {
+  let game = farmAt(1, 6);
+  game = { ...game, xp: 9999, coins: 1000, barn: { ...game.barn, products: { egg: 3, duckEgg: 1 } } };
+  assert.equal(Farm.setEgg(game, "egg").ok, false, "build it first");
+  game = Farm.buildIncubator(game).game;
+  for (const kind of ["egg", "egg", "egg", "duckEgg"] as const) game = Farm.setEgg(game, kind).game;
+  assert.equal(game.ranch.incubator?.eggs.length, Farm.INCUBATOR.slots);
+  assert.equal(game.barn.products.egg, 0);
+  assert.equal(Farm.setEgg(game, "egg").ok, false, "full");
+  // Left alone, development stops once an egg has gone 12 game hours unturned.
+  const neglected = tend(game, 20, false);
+  const egg = neglected.ranch.incubator!.eggs[0];
+  assert.ok(Farm.eggNeedsTurn(egg));
+  assert.ok(Math.abs(egg.progress - Farm.INCUBATOR.turnSeconds) <= Farm.GAME_HOUR_SECONDS);
+  // Turned twice a day, chicken eggs hatch in 21 game hours, the duck egg later.
+  let tended = game;
+  for (let h = 0; h < 22; h += 1) {
+    tended = tend(tended, 1, false);
+    if (h % 10 === 9) tended = Farm.turnEggs(tended).game;
+  }
+  const eggs = tended.ranch.incubator!.eggs;
+  assert.equal(eggs.filter(Farm.isHatched).length, 3, "the chicken eggs");
+  assert.equal(Farm.isHatched(eggs[3]), false, "the duck egg takes 28 hours");
+  // One space left in the pasture (capacity 4, a hen already there): one chick comes out.
+  tended = { ...tended, ranch: { ...tended.ranch, animals: [...tended.ranch.animals, ...["x", "y"].map((id) => ({ id, species: "cow" as const, progress: 0, fed: false, age: 0 }))] } };
+  const collected = Farm.collectHatchlings(tended);
+  assert.ok(collected.ok);
+  assert.equal(collected.game.ranch.animals.filter((animal) => animal.species === "chicken" && !Farm.isGrown(animal)).length, 1);
+  assert.equal(collected.game.ranch.incubator!.eggs.filter(Farm.isHatched).length, 2, "two wait for space");
+});

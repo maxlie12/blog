@@ -19,7 +19,7 @@ import { PlotCard, PondCard, RanchCard, TreeCard } from "./cards";
 import FarmScene3D from "./FarmScene3D";
 import FishingPanel, { type FishingOutcome } from "./FishingPanel";
 import { SHEET_TITLES, coinFormat, type ShopTab, type SheetName } from "./shared";
-import { BarnSheet, GiftSheet, HelpSheet, MillSheet, SaplingSheet, SeedSheet, Sheet, ShopSheet, TruckSheet, WorkshopSheet } from "./sheets";
+import { BarnSheet, GiftSheet, HelpSheet, IncubatorSheet, MillSheet, SaplingSheet, SeedSheet, Sheet, ShopSheet, TruckSheet, WorkshopSheet } from "./sheets";
 
 type Tool = SceneTool;
 type Toast = { id: number; text: string; tone: Farm.Tone };
@@ -137,6 +137,7 @@ const HIT_VIEW: Record<SceneHit["kind"], FarmView | null> = {
   workshop: "ranch",
   trough: "ranch",
   truck: "ranch",
+  incubator: "ranch",
 };
 
 const GRAPHICS_OPTIONS: GraphicsChoice[] = ["auto", "high", "medium", "low", "2d"];
@@ -481,6 +482,8 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
         return setSheet("mill");
       case "truck":
         return setSheet("truck");
+      case "incubator":
+        return setSheet("incubator");
     }
   }
 
@@ -580,6 +583,7 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
             onWorkshop={actOnWorkshop}
             onTrough={() => setSheet("mill")}
             onTruck={() => setSheet("truck")}
+            onIncubator={() => setSheet("incubator")}
           />
         )}
 
@@ -661,6 +665,7 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
                 onWorkshops={() => setSheet("workshops")}
                 onTruck={() => setSheet("truck")}
                 onBuy={() => openShop("animals")}
+                onIncubator={() => setSheet("incubator")}
               />
             ) : null}
             {view === "farm" || view === "orchard" ? (
@@ -690,6 +695,7 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
             {sheet === "gifts" ? <GiftSheet game={game} today={today} practice={practice} dailyReady={dailyReady} onAct={act} /> : null}
             {sheet === "mill" ? <MillSheet game={game} onAct={act} onShop={() => openShop("items")} /> : null}
             {sheet === "workshops" ? <WorkshopSheet game={game} onAct={act} /> : null}
+            {sheet === "incubator" ? <IncubatorSheet game={game} onAct={act} /> : null}
             {sheet === "truck" ? <TruckSheet game={game} today={today} onAct={act} /> : null}
             {sheet === "help" ? <HelpSheet /> : null}
           </Sheet>

@@ -401,6 +401,78 @@ export function WorkshopSheet({ game, onAct }: { game: Farm.GameState; onAct: Ac
   );
 }
 
+/** The incubator: build it, set eggs from the barn, turn them, and bring the hatchlings out. */
+export function IncubatorSheet({ game, onAct }: { game: Farm.GameState; onAct: ActFn }) {
+  const level = Farm.levelFromXp(game.xp);
+  const incubator = game.ranch.incubator;
+  if (!incubator) {
+    const locked = level < Farm.INCUBATOR.level;
+    return (
+      <>
+        <p className="fg-muted">
+          Lò giữ ấm trứng gà và trứng vịt lấy từ kho. Trứng gà nở sau {Farm.formatSpan(Farm.HATCH.egg.seconds)}, trứng vịt sau {Farm.formatSpan(Farm.HATCH.duckEgg.seconds)}, thành con non cho trang trại — không phải mua.
+          Như lò ấp thật, trứng cần được đảo ít nhất mỗi {Farm.formatGameSpan(Farm.INCUBATOR.turnSeconds)}; vài ngày cuối thì để yên. Lò chứa {Farm.INCUBATOR.slots} quả.
+        </p>
+        <button type="button" className="fg-wide" disabled={locked || game.coins < Farm.INCUBATOR.buildCost} onClick={() => onAct((current) => Farm.buildIncubator(current))}>
+          {locked ? `🔒 Mở ở cấp ${Farm.INCUBATOR.level}` : `🔨 Xây lò ấp · ${Farm.INCUBATOR.buildCost} xu`}
+        </button>
+      </>
+    );
+  }
+  const hatched = incubator.eggs.filter(Farm.isHatched).length;
+  const needTurn = incubator.eggs.some(Farm.eggNeedsTurn);
+  const free = Farm.INCUBATOR.slots - incubator.eggs.length;
+  const space = Farm.ranchCapacity(game) - game.ranch.animals.length;
+  return (
+    <>
+      <ul className="fg-list">
+        {incubator.eggs.map((egg) => {
+          const def = Farm.HATCH[egg.kind];
+          const young = Farm.ANIMAL_MAP[def.species].young;
+          const done = Farm.isHatched(egg);
+          const stalled = Farm.eggNeedsTurn(egg);
+          const ratio = Math.min(1, egg.progress / def.seconds);
+          const lockdown = ratio >= Farm.INCUBATOR.lockdown;
+          return (
+            <li key={egg.id}>
+              <span className="fg-list__icon" aria-hidden="true">{done ? (egg.kind === "egg" ? "🐤" : "🦆") : "🥚"}</span>
+              <div>
+                <strong>{Farm.PRODUCT_MAP[egg.kind].name} → {young}</strong>
+                <small className="fg-status">
+                  <span className="fg-progress" aria-hidden="true"><em style={{ width: `${Math.round(ratio * 100)}%` }} /></span>
+                  {done
+                    ? `Đã nở! ${young} chờ ra chuồng.`
+                    : stalled
+                      ? "⚠️ Lâu chưa đảo, trứng ngừng phát triển. Đảo trứng ngay."
+                      : `Nở sau ${Farm.formatSpan(Farm.eggSecondsLeft(egg))}${lockdown ? " · sắp nở, để yên" : ""}.`}
+                </small>
+              </div>
+            </li>
+          );
+        })}
+        {Array.from({ length: free }, (_, index) => (
+          <li key={`free${index}`} data-locked>
+            <span className="fg-list__icon" aria-hidden="true">◌</span>
+            <div><strong>Ô trống</strong><small>Đặt một quả trứng từ kho.</small></div>
+          </li>
+        ))}
+      </ul>
+      <div className="fg-card__actions">
+        {(["egg", "duckEgg"] as const).map((kind) => (
+          <button key={kind} type="button" disabled={free < 1 || (game.barn.products[kind] ?? 0) < 1} onClick={() => onAct((current) => Farm.setEgg(current, kind))}>
+            🥚 Đặt {Farm.PRODUCT_MAP[kind].name.toLowerCase()} (có {game.barn.products[kind] ?? 0})
+          </button>
+        ))}
+        <button type="button" data-alert={needTurn || undefined} onClick={() => onAct((current) => Farm.turnEggs(current))}>🔄 Đảo trứng</button>
+        <button type="button" disabled={hatched < 1 || space < 1} onClick={() => onAct((current) => Farm.collectHatchlings(current))}>
+          🐣 Đưa ra chuồng ({hatched})
+        </button>
+      </div>
+      {hatched > 0 && space < 1 ? <p className="fg-warn">Chuồng đã đầy — mở rộng trang trại ở chợ để đón con non.</p> : null}
+    </>
+  );
+}
+
 export function TruckSheet({ game, today, onAct }: { game: Farm.GameState; today: string; onAct: ActFn }) {
   const [cart, setCart] = useState<Record<string, number>>({});
   const entries = Farm.barnEntries(game, today);
@@ -542,6 +614,7 @@ export function HelpSheet() {
       <li><strong>Câu cá ở sông:</strong> chạm mặt sông để thả câu. Phao rung nhẹ là cá rỉa, chưa giật; phao chìm hẳn và hiện dấu ! thì chạm ngay để giật. Rồi giữ để kéo, thả tay khi dây căng đỏ kẻo đứt. Mỗi lần cá cắn tốn một 🪱 mồi.</li>
       <li><strong>Ao cá:</strong> mua cá giống ở chợ, cho ăn để cá lớn đủ tốc độ, vớt rác để nước sạch. Cá có ⭐ là đã lớn — chạm để vớt.</li>
       <li><strong>Trang trại:</strong> mua về là gà con, vịt con, cừu non, bê con; chúng ăn từ máng để lớn. Lớn rồi thì ban ngày đẻ trứng, cho len, sữa; đêm (20:00–5:00) chúng ngủ. Chạm sản phẩm trên cỏ (hoặc nút 🧺) để nhặt. Con có biểu tượng bát là đang chờ thức ăn.</li>
+      <li><strong>Lò ấp trứng:</strong> xây ở trang trại (cấp 2), đặt trứng gà hoặc trứng vịt từ kho vào. Đảo trứng ít nhất mỗi 12 giờ game, không thì trứng ngừng phát triển; vài ngày cuối thì để yên. Trứng gà nở sau 21 giờ, trứng vịt sau 28 giờ game, rồi đưa con non ra chuồng.</li>
       <li><strong>Xưởng:</strong> trứng vịt thành trứng muối, trứng gà + lúa thành bánh, len thành khăn, sữa thành phô mai — đắt hơn bán thô.</li>
       <li><strong>Bán hàng:</strong> bán ngay tại kho, hoặc chất lên 🚚 xe tải chở lên phố để được giá cao hơn. Mỗi ngày có một món rau và một loại cá được giá +25%.</li>
       <li><strong>Lên cấp:</strong> mọi việc đều cho XP. Cấp cao mở cây, cá, vật nuôi, xưởng và đất mới.</li>
