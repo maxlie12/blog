@@ -254,3 +254,9 @@ storage service) — it's more code in the same app, not more infrastructure.
 ## Scaling
 
 Unchanged — not a design goal for a personal site with one writer.
+
+## World management and private Habblaud entry (OPS-001)
+
+World contains a collapsed operations panel. `GET /api/learning/control-health` only returns a fresh website-response timestamp and service label, with no DB queries, environment values or external requests. It does not certify the health of every page or the home computer. Farm-open state refers only to the current browser.
+
+The optional private Habblaud origin is credential-free (HTTPS, or same-device loopback HTTP), saved with the existing profile storage helper under `learning-habblaud-origin-v1`. It stays on that browser and can be removed. The blog never fetches that origin, embeds its UI, or receives sessions/transcripts/credentials. Opening it uses a separate tab and its own authentication. Atlas online management remains on the existing Sites origin, with separate ChatGPT sign-in and private heartbeat/evidence records; the Clerk blog identity is not silently linked. No schema, farm-save or lesson/proficiency meaning changes.

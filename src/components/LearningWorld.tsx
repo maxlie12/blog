@@ -6,6 +6,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { SkillId } from "@/lib/lessonTypes";
 import { getActiveLearnerProfileId, profileStoragePrefix } from "@/lib/learnerProfiles";
 
+import { LearningControlPanel } from "@/components/LearningControlPanel";
+
 type WorldZone = SkillId | "zh";
 
 // The game (and three.js, which it imports on demand) only downloads after "Vào nông trại".
@@ -132,6 +134,8 @@ export function LearningWorld({
           <small>B1+ tự báo · mục tiêu B2 vững</small>
         </div>
       </header>
+
+      <LearningControlPanel farmOpen={entered} />
 
       {!entered ? (
         <section className="world-gate">
