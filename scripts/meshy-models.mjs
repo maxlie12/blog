@@ -7,6 +7,7 @@
  * Run on your own machine (the key must never be committed or sent to the browser):
  *   MESHY_API_KEY=msy_xxx npm run models:meshy
  *   npm run models:meshy -- --only=chicken,cow     # just some models
+ *   npm run models:meshy -- --only=tilapia,carp,puffer,goldfish,koi,sturgeon   # the pond fish
  *   npm run models:meshy -- --force                # regenerate even if a GLB exists
  *   npm run models:meshy -- --dry-run              # print what would happen, spend nothing
  *   npm run models:meshy -- --polycount=2500       # triangle budget per model (default 3000)
@@ -34,7 +35,11 @@ const STATE = join(ROOT, "scripts", ".meshy-tasks.json");
 const API = process.env.MESHY_API_BASE ?? "https://api.meshy.ai/openapi/v2/text-to-3d";
 
 const STYLE = "cute stylized low poly game asset, full body, simple flat colors, clean shapes, no base, no ground";
-/** height = metres in the scene; rotationY turns the model so it faces the game's forward axis. */
+const FISH = "straight body seen from the side, mouth closed, fins spread, cute stylized low poly game asset, simple flat colors, clean shapes, no base, no water, no ground";
+/**
+ * height = metres in the scene (animals, truck); length = nose to tail in scene units (fish, which
+ * swim along +X); rotationY turns the model so it faces the game's forward axis.
+ */
 const ASSETS = {
   chicken: { height: 0.85, rotationY: 0, prompt: `white hen with red comb and orange beak, standing, ${STYLE}` },
   duck: { height: 0.8, rotationY: 0, prompt: `white farm duck with orange bill and orange feet, standing, ${STYLE}` },
@@ -43,6 +48,14 @@ const ASSETS = {
   // The game drives the truck along +X. Meshy does not guarantee a facing direction, so check every
   // new model and fix rotationY in the manifest (the committed truck needed Math.PI, the cow Math.PI / 2).
   truck: { height: 1.1, rotationY: Math.PI / 2, prompt: `small red farm pickup truck with a wooden cargo bed, ${STYLE}` },
+  // Pond fish swim along +X. Meshy usually puts a fish's head towards +Z, hence Math.PI / 2; check
+  // each one in the game (a fish swimming backwards needs -Math.PI / 2, one on its side needs a new try).
+  tilapia: { length: 1.2, rotationY: Math.PI / 2, prompt: `tilapia fish, silver grey green with faint dark vertical stripes, ${FISH}` },
+  carp: { length: 1.2, rotationY: Math.PI / 2, prompt: `golden bronze common carp with big scales and small barbels, ${FISH}` },
+  puffer: { length: 1.0, rotationY: Math.PI / 2, prompt: `round yellow pufferfish with olive spots and small spines, not inflated too much, ${FISH}` },
+  goldfish: { length: 1.25, rotationY: Math.PI / 2, prompt: `orange fancy goldfish with a long flowing double tail, ${FISH}` },
+  koi: { length: 1.25, rotationY: Math.PI / 2, prompt: `white koi carp with large red patches, ${FISH}` },
+  sturgeon: { length: 1.4, rotationY: Math.PI / 2, prompt: `slate grey sturgeon with pointed snout, rows of bony plates on its back and a shark-like tail, ${FISH}` },
 };
 
 const args = Object.fromEntries(
@@ -189,7 +202,8 @@ for (const name of only) {
   }
   console.log(`  saved public/models/${name}.glb (${await kb(output)})`);
 
-  manifest.models[name] = { url: `/models/${name}.glb`, height: asset.height, rotationY: asset.rotationY, source: "Meshy", task: entry.refine };
+  const size = asset.length ? { length: asset.length } : { height: asset.height };
+  manifest.models[name] = { url: `/models/${name}.glb`, ...size, rotationY: asset.rotationY, source: "Meshy", task: entry.refine };
   await writeFile(MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
 }
 

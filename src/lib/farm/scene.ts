@@ -22,6 +22,7 @@ import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { pondGeometry, waterMaterial as villageWater, waterUniforms } from "../village/graphics";
+import { legAttributes, legMaterial, legUniforms, swimMaterial, type Gait, type LegUniforms, type SwimUniforms } from "./legs";
 import { SEASON_LOOK, addSeason, addWind, flowerGeometry, lightAt, makePost, paintSky, season as seasonTint, skyTexture, starField, tuftGeometry, wind, type FarmPost } from "./look";
 import {
   ANIMAL_MAP,
@@ -105,8 +106,23 @@ export interface FarmSceneController {
   dispose(): void;
 }
 
-type ModelKey = AnimalId | "truck";
-interface ModelEntry { url: string; height?: number; rotationY?: number }
+type ModelKey = AnimalId | "truck" | FishId;
+/** height: metres for animals and the truck; length: for fish (the scene's fish are one unit long). */
+interface ModelEntry { url: string; height?: number; length?: number; rotationY?: number }
+const FISH_IDS: FishId[] = ["tilapia", "carp", "puffer", "goldfish", "koi", "sturgeon"];
+
+/**
+ * How each animal walks: two legs or four, the hip as a share of its height, and how far each leg
+ * swings (foot travel per unit of leg length). The step rate follows from these, so feet do not slide.
+ * `reach` is how far ahead of the body its mouth meets the grass; `room` how close another animal
+ * may come (grown size).
+ */
+const LEGS: Record<AnimalId, { gait: Gait; hip: number; swing: number; reach: number; room: number }> = {
+  chicken: { gait: "biped", hip: 0.28, swing: 0.45, reach: 0.2, room: 0.2 },
+  duck: { gait: "biped", hip: 0.24, swing: 0.4, reach: 0.22, room: 0.2 },
+  sheep: { gait: "quadruped", hip: 0.29, swing: 0.42, reach: 0.42, room: 0.36 },
+  cow: { gait: "quadruped", hip: 0.31, swing: 0.4, reach: 0.6, room: 0.46 },
+};
 
 const FARM_CENTER = new THREE.Vector3(-4.6, 0, 0.7);
 const POND_CENTER = new THREE.Vector3(6.1, 0, 0.9);
@@ -1378,6 +1394,42 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   owned.add(tuft);
   owned.add(flower);
   const tufts = scatter(preset.grass, 5, 91);
+  /* Clumps of fresh grass in the pasture: animals walk over to graze one short and it grows back. */
+  interface GrazePatch {
+    x: number;
+    z: number;
+    /** Its tufts in the grass instances, and how much is left to eat (0.2 grazed short, 1 full). */
+    first: number;
+    count: number;
+    food: number;
+    shown: number;
+    /** The animal walking to it or eating it, and when it was last bitten. */
+    claim: string | null;
+    bitten: number;
+  }
+  const grazePatches: GrazePatch[] = [];
+  {
+    const random = mulberry32(213);
+    const dummy = new THREE.Object3D();
+    for (let tries = 0; tries < 120 && grazePatches.length < 10; tries += 1) {
+      const [x, z] = pasturePoint(random() * 1.8 - 0.9, random() * 1.8 - 0.9);
+      if (!grassFree(x, z) || grazePatches.some((other) => Math.hypot(other.x - x, other.z - z) < 1.3)) continue;
+      const patch: GrazePatch = { x, z, first: tufts.length, count: 5, food: 1, shown: 1, claim: null, bitten: -10 };
+      for (let k = 0; k < patch.count; k += 1) {
+        const angle = (k / patch.count) * Math.PI * 2 + random();
+        const r = k === 0 ? 0 : 0.12 + random() * 0.13;
+        dummy.position.set(x + Math.cos(angle) * r, -0.05, z + Math.sin(angle) * r);
+        dummy.rotation.set(0, random() * Math.PI * 2, 0);
+        const size = 0.95 + random() * 0.35;
+        dummy.scale.set(size, size * (1.05 + random() * 0.35), size);
+        dummy.updateMatrix();
+        tufts.push(dummy.matrix.clone());
+      }
+      grazePatches.push(patch);
+    }
+  }
+  const grazeShrink = new THREE.Matrix4();
+  const grazeMatrix = new THREE.Matrix4();
   const grass = new THREE.InstancedMesh(tuft, grassMaterial, Math.max(1, tufts.length));
   tufts.forEach((matrix, i) => {
     grass.setMatrixAt(i, matrix);
@@ -1910,7 +1962,12 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
           try {
             const gltf = await loader.loadAsync(entry.url);
             if (disposed) return;
-            models[key] = normalizeModel(gltf.scene, entry.height ?? (key === "truck" ? 1.1 : ANIMAL_HEIGHT[key as AnimalId]), entry.rotationY ?? 0);
+            if (FISH_IDS.includes(key as FishId)) {
+              models[key] = bakeModelFrame(normalizeFish(gltf.scene, entry.length ?? 1, entry.rotationY ?? 0));
+              return;
+            }
+            const model = normalizeModel(gltf.scene, entry.height ?? (key === "truck" ? 1.1 : ANIMAL_HEIGHT[key as AnimalId]), entry.rotationY ?? 0);
+            models[key] = key === "truck" ? model : prepareLegs(bakeModelFrame(model), key as AnimalId);
           } catch {
             // A broken model simply keeps the built-in look for that object.
           }
@@ -1920,6 +1977,85 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     } catch {
       // No manifest, offline, or invalid JSON: built-in models are used.
     }
+  }
+
+  /** A GLB fish turned to face +x, `length` long, centred on its middle. */
+  function normalizeFish(source: THREE.Object3D, length: number, rotationY: number): THREE.Object3D {
+    const wrapper = normalizeModel(source, 1, rotationY);
+    const bounds = new THREE.Box3().setFromObject(wrapper);
+    const size = bounds.getSize(new THREE.Vector3());
+    wrapper.scale.setScalar(length / Math.max(0.0001, size.x));
+    bounds.setFromObject(wrapper);
+    const center = bounds.getCenter(new THREE.Vector3());
+    wrapper.position.sub(center);
+    const outer = new THREE.Group();
+    outer.add(wrapper);
+    return outer;
+  }
+
+  /** A float copy of a (possibly quantised or interleaved) attribute. */
+  function floatAttribute(attribute: THREE.BufferAttribute | THREE.InterleavedBufferAttribute): THREE.BufferAttribute {
+    const size = attribute.itemSize;
+    const array = new Float32Array(attribute.count * size);
+    for (let i = 0; i < attribute.count; i += 1) for (let c = 0; c < size; c += 1) array[i * size + c] = attribute.getComponent(i, c);
+    return new THREE.BufferAttribute(array, size);
+  }
+
+  /**
+   * Bakes every mesh's transform into its own copy of the geometry so the vertices sit in the
+   * model's frame (y up from the feet, facing +z, or a fish along +x) — what the leg and swim
+   * shaders measure from.
+   */
+  function bakeModelFrame(wrapper: THREE.Object3D): THREE.Object3D {
+    wrapper.updateMatrixWorld(true);
+    const inverse = wrapper.matrixWorld.clone().invert();
+    const meshes: THREE.Mesh[] = [];
+    wrapper.traverse((child) => {
+      if (child instanceof THREE.Mesh) meshes.push(child);
+    });
+    const frame = new THREE.Group();
+    for (const mesh of meshes) {
+      const source = mesh.geometry as THREE.BufferGeometry;
+      const geometry = new THREE.BufferGeometry();
+      for (const [name, attribute] of Object.entries(source.attributes)) {
+        geometry.setAttribute(name, name === "position" || name === "normal" ? floatAttribute(attribute) : attribute);
+      }
+      if (source.index) geometry.setIndex(source.index);
+      geometry.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inverse, mesh.matrixWorld));
+      owned.add(geometry);
+      const baked = new THREE.Mesh(geometry, mesh.material);
+      baked.castShadow = mesh.castShadow;
+      baked.receiveShadow = mesh.receiveShadow;
+      frame.add(baked);
+    }
+    return frame;
+  }
+
+  /** Marks each vertex of a grown animal's model with its leg and how much it swings. */
+  function prepareLegs(model: THREE.Object3D, species: AnimalId): THREE.Object3D {
+    const meshes: THREE.Mesh[] = [];
+    model.traverse((child) => {
+      if (child instanceof THREE.Mesh) meshes.push(child);
+    });
+    const height = new THREE.Box3().setFromObject(model).max.y;
+    // Legs are found across the whole model at once (a GLB may split one animal into parts).
+    const all = new Float32Array(meshes.reduce((sum, mesh) => sum + mesh.geometry.attributes.position.array.length, 0));
+    let filled = 0;
+    for (const mesh of meshes) {
+      const array = mesh.geometry.attributes.position.array as Float32Array;
+      all.set(array, filled);
+      filled += array.length;
+    }
+    const hip = LEGS[species].hip * height;
+    const legs = legAttributes(all, LEGS[species].gait, hip);
+    model.userData.hip = hip;
+    let offset = 0;
+    for (const mesh of meshes) {
+      const count = mesh.geometry.attributes.position.count;
+      mesh.geometry.setAttribute("aLeg", new THREE.BufferAttribute(legs.slice(offset * 2, (offset + count) * 2), 2));
+      offset += count;
+    }
+    return model;
   }
 
   function normalizeModel(source: THREE.Object3D, height: number, rotationY: number): THREE.Object3D {
@@ -1958,7 +2094,10 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   interface FishView {
     group: THREE.Group;
     body: THREE.Object3D;
-    tail: THREE.Object3D;
+    /** Its own swim wave (phase and how far the tail swings) and the material copies carrying it. */
+    swim: SwimUniforms;
+    materials: THREE.Material[];
+    modelsVersion: number;
     yaw: number;
     star: THREE.Sprite;
     phase: number;
@@ -1969,49 +2108,172 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   }
   const fishViews = new Map<string, FishView>();
   const trashViews = new Map<string, THREE.Group>();
-  const fishTemplates = new Map<FishId, { body: THREE.BufferGeometry; tail: THREE.BufferGeometry }>();
+  const fishTemplates = new Map<FishId, THREE.BufferGeometry>();
   let hungry = false;
 
-  function fishTemplate(species: FishId) {
+  /**
+   * How each pond fish is built, facing +x from the nose (x 0.5) to the root of the tail (x -0.42):
+   * `height` and `width` of the body, its tail fin outline, the fins it has, and how it is marked.
+   */
+  const FISH_SHAPES: Record<FishId, { height: number; width: number; tail: [number, number][]; dorsal: number; barbels: boolean; spikes: boolean; scutes: boolean }> = {
+    tilapia: { height: 0.25, width: 0.42, tail: [[0, 0.05], [-0.26, 0.2], [-0.29, 0], [-0.26, -0.2], [0, -0.05]], dorsal: 0.12, barbels: false, spikes: false, scutes: false },
+    carp: { height: 0.21, width: 0.5, tail: [[0, 0.05], [-0.3, 0.24], [-0.19, 0], [-0.3, -0.24], [0, -0.05]], dorsal: 0.1, barbels: true, spikes: false, scutes: false },
+    puffer: { height: 0.3, width: 0.86, tail: [[0, 0.05], [-0.15, 0.13], [-0.12, 0], [-0.15, -0.13], [0, -0.05]], dorsal: 0.07, barbels: false, spikes: true, scutes: false },
+    goldfish: { height: 0.27, width: 0.6, tail: [[0, 0.06], [-0.3, 0.32], [-0.46, 0.22], [-0.3, 0], [-0.46, -0.22], [-0.3, -0.32], [0, -0.06]], dorsal: 0.15, barbels: false, spikes: false, scutes: false },
+    koi: { height: 0.2, width: 0.52, tail: [[0, 0.05], [-0.3, 0.23], [-0.2, 0], [-0.3, -0.23], [0, -0.05]], dorsal: 0.09, barbels: true, spikes: false, scutes: false },
+    sturgeon: { height: 0.13, width: 0.75, tail: [[0, 0.04], [-0.36, 0.2], [-0.16, 0], [-0.2, -0.09], [0, -0.04]], dorsal: 0.06, barbels: true, spikes: false, scutes: true },
+  };
+
+  /**
+   * A pond fish in one geometry: a smooth tapered body shaded dark on the back and pale on the
+   * belly with its own markings, a tail fin, dorsal, anal and side fins, eyes and a mouth.
+   */
+  function fishTemplate(species: FishId): THREE.BufferGeometry {
     let template = fishTemplates.get(species);
     if (template) return template;
     const def = FISH_MAP[species];
-    const round = species === "puffer";
-    const bodyRoot = new THREE.Group();
-    const body = part(sphere(0.5, 12, 8), def.color);
-    body.scale.set(1, round ? 0.7 : 0.44, round ? 0.66 : 0.36);
-    const dorsal = part(cone(0.12, 0.26, 4), def.accent, -0.05, round ? 0.33 : 0.22, 0);
-    dorsal.scale.z = 0.3;
-    dorsal.rotation.z = 0.5;
-    bodyRoot.add(body, dorsal);
-    if (species === "koi" || species === "goldfish") {
-      for (const [x, s] of [[0.15, 0.17], [-0.18, 0.13]]) {
-        const patch = part(sphere(s, 7, 5), species === "koi" ? def.accent : "#ffd29a", x, 0.15, 0);
-        patch.scale.set(1.2, 0.4, 0.9);
-        bodyRoot.add(patch);
+    const shape = FISH_SHAPES[species];
+    const temporary: THREE.BufferGeometry[] = [];
+    const own = <T extends THREE.BufferGeometry>(geometry: T) => {
+      temporary.push(geometry);
+      return geometry;
+    };
+    const base = new THREE.Color(def.color);
+    const back = new THREE.Color(def.accent);
+    if (species === "goldfish") back.set("#d4601e");
+    if (species === "koi") back.set(def.color);
+    if (species === "puffer") back.set(def.color).multiplyScalar(0.8);
+    const belly = base.clone().lerp(new THREE.Color("#fffaf0"), 0.6);
+    const fin = species === "goldfish" ? base.clone().lerp(new THREE.Color(def.accent), 0.4) : base.clone().lerp(new THREE.Color(def.accent), 0.55);
+    const sturgeonSnout = species === "sturgeon";
+    // Half the body's height at a point along it (0 at the nose, 1 at the tail root).
+    const radius = (t: number) => Math.max(0.035 * t, shape.height * Math.pow(Math.sin(Math.PI * Math.pow(t, sturgeonSnout ? 0.55 : 0.75)), 0.85));
+    const along = (x: number) => Math.min(1, Math.max(0, (0.5 - x) / 0.92));
+    const root = new THREE.Group();
+
+    // The body: a lathe along +x, flattened to the fish's width, coloured per vertex.
+    const profile: THREE.Vector2[] = [];
+    for (let i = 0; i <= 18; i += 1) {
+      const t = i / 18;
+      profile.push(new THREE.Vector2(radius(t), 0.5 - t * 0.92));
+    }
+    const lathe = own(new THREE.LatheGeometry(profile, options.quality === "low" ? 10 : 16));
+    lathe.rotateZ(-Math.PI / 2);
+    lathe.scale(1, 1, shape.width);
+    // Lathe winds its faces inside out once turned this way; flip them so the outside faces out.
+    const index = lathe.index as THREE.BufferAttribute;
+    for (let i = 0; i < index.count; i += 3) {
+      const a = index.getX(i + 1);
+      index.setX(i + 1, index.getX(i + 2));
+      index.setX(i + 2, a);
+    }
+    lathe.computeVertexNormals();
+    const positions = lathe.attributes.position;
+    const colors = new Float32Array(positions.count * 3);
+    const color = new THREE.Color();
+    const koiPatches: [number, number, number][] = [[0.27, 0.1, 0.11], [0.02, 0.14, 0.13], [-0.27, 0.06, 0.08]];
+    for (let i = 0; i < positions.count; i += 1) {
+      const x = positions.getX(i), y = positions.getY(i), z = positions.getZ(i);
+      const v = y / Math.max(0.02, radius(along(x)));
+      // Countershading: pale belly, the body colour on the flanks, darker along the back.
+      color.copy(belly).lerp(base, Math.min(1, Math.max(0, (v + 0.55) / 0.6)));
+      color.lerp(back, Math.min(1, Math.max(0, (v - 0.35) / 0.6)) * (species === "koi" ? 0 : 0.85));
+      if (species === "tilapia" && v > -0.3 && Math.sin(x * 30) > 0.55) color.multiplyScalar(0.84);
+      if (species === "carp" && Math.sin(x * 46 + v * 3) * Math.sin(v * 9) > 0.45) color.multiplyScalar(0.9);
+      if (species === "koi" && v > -0.35 && koiPatches.some(([px, py, r]) => Math.hypot(x - px, (y - py) * 1.3) < r)) color.set(def.accent);
+      if (species === "puffer" && v > 0.05 && Math.sin(x * 34) * Math.sin(z * 34 + 1) > 0.45) color.set(def.accent);
+      if (species === "goldfish" && v > -0.2 && v < 0.4 && x < -0.05 && Math.sin(x * 20 + v * 4) > 0.8) color.lerp(new THREE.Color("#fff0d2"), 0.6);
+      if (species === "sturgeon" && Math.abs(v - 0.15) < 0.1 && x < 0.32) color.lerp(new THREE.Color(def.accent), 0.5);
+      // A faint gill line behind the head.
+      if (Math.abs(x - 0.3) < 0.012 && v < 0.75) color.multiplyScalar(0.82);
+      colors.set([color.r, color.g, color.b], i * 3);
+    }
+    lathe.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    root.add(part(lathe, "vertex"));
+
+    // Flat fins with a little thickness so they show from both sides.
+    const finAt = (outline: [number, number][], tone: THREE.Color, x: number, y: number, z = 0, thickness = 0.016) => {
+      const path = new THREE.Shape(outline.map(([px, py]) => new THREE.Vector2(px, py)));
+      const geometry = own(new THREE.ExtrudeGeometry(path, { depth: thickness, bevelEnabled: false, curveSegments: 4 }));
+      geometry.translate(0, 0, -thickness / 2);
+      const item = part(geometry, `#${tone.getHexString()}`, x, y, z);
+      root.add(item);
+      return item;
+    };
+    // Tail: a goldfish's is double and veil-like, wider.
+    finAt(shape.tail, fin, -0.4, 0, 0, species === "goldfish" ? 0.03 : 0.016);
+    const top = (x: number) => radius(along(x)) * 0.94;
+    const d = shape.dorsal;
+    finAt([[0.14, top(0.14) - 0.03], [0.02, top(0.02) + d], [-0.2, top(-0.2) + d * 0.45], [-0.26, top(-0.26) - 0.03]], fin, 0, 0);
+    finAt([[-0.12, -top(-0.12) + 0.02], [-0.22, -top(-0.22) - d * 0.6], [-0.32, -top(-0.32) + 0.01]], fin, 0, 0);
+    for (const side of [-1, 1]) {
+      const sideZ = radius(along(0.18)) * shape.width;
+      const pectoral = finAt([[0, 0.02], [-0.12, 0.05], [-0.15, -0.02], [-0.04, -0.03]], fin, 0.2, -radius(along(0.2)) * 0.45, side * sideZ * 0.92, 0.012);
+      pectoral.rotation.set(side * 0.9, side * 0.35, -0.35);
+      // Eyes: a pale ring with a dark pupil, sitting on the head's surface.
+      const eyeX = sturgeonSnout ? 0.24 : 0.36;
+      const eyeY = radius(along(eyeX)) * 0.28;
+      const eyeZ = radius(along(eyeX)) * shape.width * 0.86;
+      root.add(part(sphere(0.042, 8, 6), "#f4f1e6", eyeX, eyeY, side * eyeZ));
+      root.add(part(sphere(0.028, 8, 6), "#141a18", eyeX + 0.012, eyeY, side * (eyeZ + 0.022)));
+      if (shape.barbels) {
+        const barbel = part(cylinder(0.006, 0.004, 0.11, 4), fin.getStyle(), 0.46, -0.04, side * 0.03);
+        barbel.rotation.set(side * 0.6, 0, 1.0);
+        root.add(barbel);
       }
     }
-    for (const side of [-1, 1]) bodyRoot.add(part(sphere(0.045, 6, 4), "#1d2420", 0.32, 0.06, side * (round ? 0.3 : 0.15)));
-    const tailRoot = new THREE.Group();
-    const fin = part(cone(0.26, 0.38, 4), def.accent, -0.17, 0, 0);
-    fin.rotation.z = Math.PI / 2;
-    fin.scale.z = 0.35;
-    tailRoot.add(fin);
-    template = { body: bakeGeometry(bodyRoot) ?? new THREE.BufferGeometry(), tail: bakeGeometry(tailRoot) ?? new THREE.BufferGeometry() };
+    // The mouth.
+    root.add(part(sphere(0.022, 6, 4), "#3a2a26", 0.5, sturgeonSnout ? -0.03 : -0.01, 0));
+    if (shape.spikes) {
+      for (let i = 0; i < 14; i += 1) {
+        const angle = (i / 14) * Math.PI * 2;
+        const x = 0.2 - (i % 3) * 0.17;
+        const r = radius(along(x));
+        const spike = part(cone(0.016, 0.06, 4), def.accent, x, Math.cos(angle) * r * 0.98, Math.sin(angle) * r * shape.width * 0.98);
+        spike.rotation.x = -angle;
+        root.add(spike);
+      }
+    }
+    if (shape.scutes) {
+      for (let i = 0; i < 7; i += 1) {
+        const x = 0.24 - i * 0.09;
+        const scute = part(cone(0.02, 0.045, 4), def.accent, x, radius(along(x)) * 0.97, 0);
+        root.add(scute);
+      }
+    }
+    template = bakeGeometry(root, false) ?? new THREE.BufferGeometry();
+    temporary.forEach((geometry) => geometry.dispose());
     fishTemplates.set(species, template);
     return template;
   }
 
+  /** The fish's body: the Meshy model when there is one, or the built-in fish, swimming on its own. */
+  function fishBody(species: FishId, swim: SwimUniforms, materials: THREE.Material[]): THREE.Object3D {
+    const model = models[species];
+    if (model) {
+      const body = model.clone(true);
+      body.traverse((child) => {
+        if (!(child instanceof THREE.Mesh)) return;
+        const material = swimMaterial(child.material as THREE.Material, swim);
+        materials.push(material);
+        child.material = material;
+      });
+      return body;
+    }
+    const material = swimMaterial(surface, swim);
+    materials.push(material);
+    return new THREE.Mesh(fishTemplate(species), material);
+  }
+
   function buildFish(fish: PondFish): FishView {
     const def = FISH_MAP[fish.species];
-    const template = fishTemplate(fish.species);
     const random = mulberry32(hashString(fish.id));
     const group = new THREE.Group();
     group.userData.hit = { kind: "fish", id: fish.id } satisfies SceneHit;
-    const body = new THREE.Mesh(template.body, surface);
-    const tail = new THREE.Mesh(template.tail, surface);
-    tail.position.x = -0.46;
-    group.add(body, tail, new THREE.Mesh(sphere(0.75, 8, 6), hiddenMaterial));
+    const swim: SwimUniforms = { uSwim: { value: random() * 6.28 }, uSwimAmp: { value: 0 } };
+    const materials: THREE.Material[] = [];
+    const body = fishBody(fish.species, swim, materials);
+    group.add(body, new THREE.Mesh(sphere(0.75, 8, 6), hiddenMaterial));
     const star = icon("star", 0.62);
     star.visible = false;
     scene.add(star);
@@ -2022,7 +2284,9 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     return {
       group,
       body,
-      tail,
+      swim,
+      materials,
+      modelsVersion,
       yaw: 0,
       star,
       phase: random() * 100,
@@ -2078,6 +2342,12 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     idle: number;
     lie: number;
     heading: number;
+    /** Its own leg shader values and the material copies that carry them. */
+    legs: LegUniforms;
+    materials: THREE.Material[];
+    /** The grass patch it is walking to, and the one it is eating now (-1 for none). */
+    goal: number;
+    eat: number;
     bowl: THREE.Sprite;
     sleep: THREE.Sprite;
     species: AnimalId;
@@ -2086,6 +2356,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     target: THREE.Vector2;
     wait: number;
     speed: number;
+    /** A per-animal number that varies its idle habits. */
     hop: number;
   }
   const animalViews = new Map<string, AnimalView>();
@@ -2151,10 +2422,31 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     return template;
   }
 
-  function animalBody(species: AnimalId, young: boolean): THREE.Object3D {
+  /** The animal's body with its own copy of the material, so its legs keep their own step. */
+  function animalBody(species: AnimalId, young: boolean, legs: LegUniforms, materials: THREE.Material[]): THREE.Object3D {
     const model = models[species];
-    if (model) return model.clone(true);
-    const mesh = new THREE.Mesh(animalTemplate(species, young), surface);
+    if (model) {
+      legs.uHip.value = model.userData.hip as number;
+      const body = model.clone(true);
+      body.traverse((child) => {
+        if (!(child instanceof THREE.Mesh)) return;
+        const material = legMaterial(child.material as THREE.Material, legs);
+        materials.push(material);
+        child.material = material;
+      });
+      return body;
+    }
+    const geometry = animalTemplate(species, young);
+    if (!geometry.getAttribute("aLeg")) {
+      geometry.computeBoundingBox();
+      const hip = LEGS[species].hip * (geometry.boundingBox?.max.y ?? ANIMAL_HEIGHT[species]);
+      geometry.setAttribute("aLeg", new THREE.BufferAttribute(legAttributes(geometry.attributes.position.array as Float32Array, LEGS[species].gait, hip), 2));
+      geometry.userData.hip = hip;
+    }
+    legs.uHip.value = geometry.userData.hip as number;
+    const material = legMaterial(surface, legs);
+    materials.push(material);
+    const mesh = new THREE.Mesh(geometry, material);
     mesh.castShadow = shadowsOn;
     return mesh;
   }
@@ -2171,12 +2463,14 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     const group = new THREE.Group();
     group.userData.hit = { kind: "animal", id: animal.id } satisfies SceneHit;
     const young = !isGrown(animal);
-    const body = animalBody(animal.species, young);
+    const size = ANIMAL_HEIGHT[animal.species];
+    const legs = legUniforms(0, LEGS[animal.species].swing);
+    const materials: THREE.Material[] = [];
+    const body = animalBody(animal.species, young, legs, materials);
     const holder = new THREE.Group();
     const pose = new THREE.Group();
     pose.add(body);
     holder.add(pose);
-    const size = ANIMAL_HEIGHT[animal.species];
     group.add(holder, new THREE.Mesh(sphere(Math.max(0.45, size * 0.6), 8, 6), hiddenMaterial));
     const start = randomPasturePoint(hashString(animal.id) + index);
     group.position.set(start.x, 0, start.y);
@@ -2196,6 +2490,10 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       idle: 0,
       lie: 0,
       heading: 0,
+      legs,
+      materials,
+      goal: -1,
+      eat: -1,
       bowl,
       sleep,
       species: animal.species,
@@ -3033,6 +3331,20 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     for (const fish of game.pond.fish) {
       seen.add(fish.id);
       let view = fishViews.get(fish.id);
+      if (view && view.modelsVersion !== modelsVersion && models[fish.species]) {
+        // A Meshy model arrived: swap the built-in fish for it, where it was.
+        const { position, rotation } = view.group;
+        const old = view;
+        old.group.removeFromParent();
+        old.star.removeFromParent();
+        old.materials.forEach((material) => material.dispose());
+        view = buildFish(fish);
+        view.group.position.copy(position);
+        view.group.rotation.copy(rotation);
+        view.phase = old.phase;
+        view.yaw = old.yaw;
+        fishViews.set(fish.id, view);
+      }
       if (!view) {
         view = buildFish(fish);
         fishViews.set(fish.id, view);
@@ -3044,6 +3356,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       if (seen.has(id)) continue;
       view.group.removeFromParent();
       view.star.removeFromParent();
+      view.materials.forEach((material) => material.dispose());
       fishViews.delete(id);
     }
 
@@ -3073,6 +3386,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       if (view && ((view.modelsVersion !== modelsVersion && models[animal.species]) || view.young !== !isGrown(animal))) {
         const position = view.group.position.clone();
         view.group.removeFromParent();
+        view.materials.forEach((material) => material.dispose());
         view = undefined;
         const rebuilt = buildAnimal(animal, index);
         rebuilt.group.position.copy(position);
@@ -3090,6 +3404,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     for (const [id, view] of animalViews) {
       if (animalIds.has(id)) continue;
       view.group.removeFromParent();
+      view.materials.forEach((material) => material.dispose());
       animalViews.delete(id);
     }
 
@@ -3546,10 +3861,9 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
         view.group.rotation.x += (Math.max(-0.5, Math.min(0.5, (turn / Math.max(dt, 1e-3)) * 0.25)) * motion - view.group.rotation.x) * Math.min(1, dt * 4);
         view.group.rotation.y = yaw;
       }
-      // The tail beats faster when darting and the body bends against it, so the fish swims in an S.
-      const beat = Math.sin(elapsed * (hungry ? 5 : 9) * (1 + dart) + view.phase) * motion;
-      view.tail.rotation.y = beat * (0.45 + 0.2 * dart);
-      view.body.rotation.y = -beat * 0.12;
+      // A wave runs down the body to the tail, faster and wider when darting; hungry fish are slow.
+      view.swim.uSwim.value = (view.swim.uSwim.value + dt * (hungry ? 5 : 9) * (1 + dart) * motion) % (Math.PI * 2000);
+      view.swim.uSwimAmp.value = motion * (hungry ? 0.05 : 0.08 + 0.05 * dart);
       view.scale += (view.targetScale - view.scale) * Math.min(1, dt * 2);
       view.group.scale.setScalar(view.scale);
       view.star.visible = view.mature;
@@ -3559,9 +3873,39 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       group.position.y = WATER_Y + 0.02 + Math.sin(elapsed * 1.8 + group.position.x) * 0.02 * motion;
     }
 
-    // Animals wander the pasture and stop to peck, preen or graze; now and then they go to the
-    // trough to eat; chicks and ducklings keep close to a grown one of their kind; grown animals
-    // lie down to sleep at night, breathing slowly.
+    // Pasture grass grows back once nothing has bitten it for a moment. A claim lapses when its
+    // animal left, was rebuilt (grew up, got its model) or went elsewhere.
+    for (const [index, patch] of grazePatches.entries()) {
+      const owner = patch.claim ? animalViews.get(patch.claim) : undefined;
+      if (patch.claim && (!owner || (owner.goal !== index && owner.eat !== index))) patch.claim = null;
+      if (elapsed - patch.bitten > 0.5) patch.food = Math.min(1, patch.food + dt * (0.8 / 90));
+      if (Math.abs(patch.food - patch.shown) < 0.01 && !(patch.food === 1 && patch.shown !== 1)) continue;
+      patch.shown = patch.food;
+      grazeShrink.makeScale(1, patch.food, 1);
+      for (let k = 0; k < patch.count; k += 1) grass.setMatrixAt(patch.first + k, grazeMatrix.multiplyMatrices(tufts[patch.first + k], grazeShrink));
+      grass.instanceMatrix.addUpdateRange(patch.first * 16, patch.count * 16);
+      grass.instanceMatrix.needsUpdate = true;
+    }
+
+    // Animals walk the pasture on their own legs (two for birds, four in diagonal pairs for sheep
+    // and cows), stop to graze the grass patches they meet or head for, peck and preen, now and
+    // then go to the trough; chicks and ducklings keep close to a grown one of their kind; grown
+    // animals lie down to sleep at night, breathing slowly.
+    const release = (view: AnimalView, id: string) => {
+      for (const index of [view.goal, view.eat]) if (grazePatches[index]?.claim === id) grazePatches[index].claim = null;
+      view.goal = -1;
+      view.eat = -1;
+    };
+    // Walks to the near side of a patch so its mouth, not its feet, ends over the grass.
+    const headFor = (view: AnimalView, id: string, index: number) => {
+      const patch = grazePatches[index];
+      const position = view.group.position;
+      const away = Math.hypot(patch.x - position.x, patch.z - position.z) || 1;
+      const reach = LEGS[view.species].reach * view.holder.scale.x;
+      view.goal = index;
+      patch.claim = id;
+      view.target = new THREE.Vector2(patch.x - ((patch.x - position.x) / away) * reach, patch.z - ((patch.z - position.z) / away) * reach);
+    };
     for (const [id, view] of animalViews) {
       const position = view.group.position;
       const dx = view.target.x - position.x;
@@ -3571,42 +3915,77 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       view.sleep.visible = sleeping && !view.bowl.visible;
       view.lie += ((sleeping ? 1 : 0) - view.lie) * Math.min(1, dt * 2);
       const bird = view.species === "chicken" || view.species === "duck";
+      const follower = view.young && bird;
+      const size = ANIMAL_HEIGHT[view.species];
       let pitch = 0;
       let roll = 0;
+      let walking = false;
+      view.body.position.y = 0;
       if (sleeping) {
-        view.body.position.y = 0;
-        view.sleep.position.y = ANIMAL_HEIGHT[view.species] * (1 - 0.25 * view.lie) + 0.35 + Math.sin(elapsed * 1.5) * 0.05 * motion;
+        if (view.goal >= 0 || view.eat >= 0) release(view, id);
+        view.sleep.position.y = size * (1 - 0.25 * view.lie) + 0.35 + Math.sin(elapsed * 1.5) * 0.05 * motion;
       } else if (view.wait > 0) {
         view.wait -= dt;
         view.idle += dt;
-        view.body.position.y = 0;
         const t = view.idle;
+        const meal = grazePatches[view.eat];
+        if (meal) {
+          // Face the grass and crop it shorter while eating.
+          let turn = Math.atan2(meal.x - position.x, meal.z - position.z) - view.heading;
+          turn = Math.atan2(Math.sin(turn), Math.cos(turn));
+          view.heading += turn * Math.min(1, dt * 5);
+          meal.food = Math.max(0.2, meal.food - dt * (view.species === "cow" ? 0.16 : bird ? 0.08 : 0.12));
+          meal.bitten = elapsed;
+          if (view.wait <= 0) release(view, id);
+        }
         if (view.species === "chicken") {
-          // Quick pecks in bursts.
-          pitch = 0.6 * Math.pow(Math.max(0, Math.sin(t * 9)), 3) * (Math.sin(t * 1.3 + view.hop) > -0.2 ? 1 : 0);
+          // Quick pecks in bursts; steady pecking at grass.
+          pitch = 0.6 * Math.pow(Math.max(0, Math.sin(t * 9)), 3) * (meal || Math.sin(t * 1.3 + view.hop) > -0.2 ? 1 : 0);
         } else if (view.species === "duck") {
           // Dabbling and a preen to the side.
-          pitch = 0.35 * Math.pow(Math.max(0, Math.sin(t * 5)), 2);
-          roll = 0.18 * Math.sin(t * 2.1) * (Math.sin(t * 0.7 + view.hop) > 0.4 ? 1 : 0);
+          pitch = (meal ? 0.45 : 0.35) * Math.pow(Math.max(0, Math.sin(t * 5)), 2);
+          roll = meal ? 0 : 0.18 * Math.sin(t * 2.1) * (Math.sin(t * 0.7 + view.hop) > 0.4 ? 1 : 0);
         } else {
           // Head down to graze, chewing.
-          pitch = 0.16 + 0.03 * Math.sin(t * 6);
+          pitch = (meal ? 0.24 : 0.16) + 0.03 * Math.sin(t * 6);
         }
       } else if (distance < 0.08) {
         view.idle = 0;
         const seed = hashString(id + Math.floor(elapsed));
         view.wait = view.young ? 0.6 + (seed % 15) / 10 : 1.5 + (seed % 40) / 10;
+        if (view.goal >= 0) {
+          // Arrived at the grass: a proper meal, longer than a pause.
+          view.eat = view.goal;
+          view.goal = -1;
+          view.wait = (bird ? 3.5 : 5.5) + (seed % 35) / 10;
+        }
         let next = randomPasturePoint(hashString(id) + Math.floor(elapsed * 10));
-        if (view.young && bird) {
+        if (follower) {
           // Follow a grown hen or duck of the same kind, a little behind and to one side.
           const mother = [...animalViews.values()].find((other) => other.species === view.species && !other.young);
           if (mother) next = new THREE.Vector2(mother.group.position.x + ((seed % 7) - 3) * 0.12, mother.group.position.z + (((seed >>> 3) % 7) - 3) * 0.12);
+          view.target = next;
+        } else if (view.eat < 0 && seed % 10 < 6) {
+          // Off to the nearest patch of good grass nobody else is at.
+          let best = -1;
+          let bestD = Infinity;
+          grazePatches.forEach((patch, index) => {
+            const d = Math.hypot(patch.x - position.x, patch.z - position.z);
+            if (!patch.claim && patch.food > 0.55 && d < bestD) {
+              best = index;
+              bestD = d;
+            }
+          });
+          if (best >= 0) headFor(view, id, best);
+          else view.target = next;
         } else if (seed % 4 === 0) {
           // Off to the trough for a bite.
-          next = new THREE.Vector2(TROUGH[0] + ((seed % 9) - 4) * 0.15, TROUGH[1] + 0.55 + ((seed >>> 4) % 3) * 0.12);
+          view.target = new THREE.Vector2(TROUGH[0] + ((seed % 9) - 4) * 0.15, TROUGH[1] + 0.55 + ((seed >>> 4) % 3) * 0.12);
+        } else {
+          view.target = next;
         }
-        view.target = next;
       } else if (motion) {
+        walking = true;
         const speed = view.speed * (view.young ? 1.25 : 1);
         const step = Math.min(distance, speed * dt);
         position.x += (dx / distance) * step;
@@ -3616,20 +3995,53 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
         let turn = want - view.heading;
         turn = Math.atan2(Math.sin(turn), Math.cos(turn));
         view.heading += turn * Math.min(1, dt * 8);
-        view.hop += dt * (view.species === "chicken" ? 14 : view.species === "duck" ? 11 : 8);
-        view.body.position.y = Math.abs(Math.sin(view.hop)) * (view.species === "cow" ? 0.03 : 0.07);
-        // Ducks waddle, chickens bob their heads, big animals sway a little.
-        roll = Math.sin(view.hop) * (view.species === "duck" ? 0.2 : view.species === "chicken" ? 0.07 : 0.04);
-        if (view.species === "chicken") pitch = 0.12 * Math.max(0, Math.sin(view.hop * 2));
+        // One gait cycle covers four times a foot's swing, so planted feet keep pace with the ground.
+        const stride = Math.max(0.04, 4 * view.legs.uSwing.value * view.legs.uHip.value * view.holder.scale.x);
+        view.legs.uStep.value = (view.legs.uStep.value + (step / stride) * Math.PI * 2) % (Math.PI * 200);
+        const phase = view.legs.uStep.value;
+        // The body rises over each planted leg; ducks waddle, chickens bob their heads.
+        view.body.position.y = Math.pow(Math.sin(phase), 2) * size * (bird ? 0.035 : 0.014) * view.legs.uStride.value;
+        roll = Math.sin(phase) * (view.species === "duck" ? 0.16 : view.species === "chicken" ? 0.05 : 0.025);
+        if (view.species === "chicken") pitch = 0.1 * Math.max(0, Math.sin(phase * 2));
+        // Grass on the way: stop for a bite if nobody is at it.
+        if (!follower && view.goal < 0 && view.eat < 0) {
+          const reach = LEGS[view.species].reach * view.holder.scale.x + 0.35;
+          const near = grazePatches.findIndex((patch) => !patch.claim && patch.food > 0.7 && Math.hypot(patch.x - position.x, patch.z - position.z) < reach);
+          if (near >= 0) headFor(view, id, near);
+        }
       }
+      view.legs.uStride.value += ((walking ? 1 : 0) - view.legs.uStride.value) * Math.min(1, dt * 6);
       view.group.rotation.y = view.heading;
       // Lying down: lower and wider, with slow breaths.
       const breath = 1 + Math.sin(elapsed * 1.6 + view.hop) * 0.025 * view.lie * motion;
-      view.pose.position.y = -0.12 * ANIMAL_HEIGHT[view.species] * view.lie;
+      view.pose.position.y = -0.12 * size * view.lie;
       view.pose.scale.set(1 + 0.08 * view.lie, (1 - 0.18 * view.lie) * breath, 1 + 0.05 * view.lie);
       view.pose.rotation.x += (pitch * motion - view.pose.rotation.x) * Math.min(1, dt * 14);
       view.pose.rotation.z += (roll * motion + 0.12 * view.lie * (bird ? 0 : 1) - view.pose.rotation.z) * Math.min(1, dt * 10);
-      if (view.bowl.visible) view.bowl.position.y = ANIMAL_HEIGHT[view.species] + 0.45 + Math.sin(elapsed * 3) * 0.05 * motion;
+      if (view.bowl.visible) view.bowl.position.y = size + 0.45 + Math.sin(elapsed * 3) * 0.05 * motion;
+    }
+    // Animals do not walk through one another: bodies that overlap ease apart, inside the fence.
+    if (motion) {
+      const herd = [...animalViews.values()];
+      for (let i = 0; i < herd.length; i += 1) {
+        for (let j = i + 1; j < herd.length; j += 1) {
+          const a = herd[i].group.position, b = herd[j].group.position;
+          const room = LEGS[herd[i].species].room * herd[i].holder.scale.x + LEGS[herd[j].species].room * herd[j].holder.scale.x;
+          const dx = b.x - a.x, dz = b.z - a.z;
+          const apart = Math.hypot(dx, dz);
+          if (apart >= room || apart < 1e-4) continue;
+          const push = ((room - apart) * Math.min(1, dt * 3)) / 2 / apart;
+          a.x -= dx * push;
+          a.z -= dz * push;
+          b.x += dx * push;
+          b.z += dz * push;
+        }
+      }
+      for (const view of herd) {
+        const position = view.group.position;
+        position.x = Math.min(PASTURE.x + PASTURE.hx - 0.4, Math.max(PASTURE.x - PASTURE.hx + 0.4, position.x));
+        position.z = Math.min(PASTURE.z + PASTURE.hz - 0.4, Math.max(PASTURE.z - PASTURE.hz + 0.4, position.z));
+      }
     }
     for (const group of dropViews.values()) {
       group.position.y = Math.abs(Math.sin(elapsed * 2.4 + group.position.x * 3)) * 0.06 * motion;
@@ -3696,10 +4108,9 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       catchGeometries.forEach((item) => item.dispose());
       primitives.forEach((item) => item.dispose());
       owned.forEach((item) => item.dispose());
-      fishTemplates.forEach((item) => {
-        item.body.dispose();
-        item.tail.dispose();
-      });
+      fishTemplates.forEach((item) => item.dispose());
+      for (const view of fishViews.values()) view.materials.forEach((material) => material.dispose());
+      for (const view of animalViews.values()) view.materials.forEach((material) => material.dispose());
       animalTemplates.forEach((item) => item.dispose());
       dropTemplates.forEach((item) => item.dispose());
       trashTemplates.forEach((item) => item.dispose());

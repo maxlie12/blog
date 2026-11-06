@@ -1,6 +1,16 @@
 # Status
 
-Last verified: 2026-11-06 (farm incubator and animal motion; harness browser checks).
+Last verified: 2026-11-06 (farm legs, grazing and fish; harness browser checks).
+
+## 2026-11-06 — Farm: animals walk on their legs and graze, new pond fish
+
+- Chickens and ducks step on two legs, sheep and cows walk on four in diagonal pairs (Meshy
+  models too: legs are found from the mesh and swung in the vertex shader). Grown animals walk to
+  clumps of pasture grass, eat a while and crop them short; the grass grows back.
+- Each pond fish has its own body, markings and fins and swims with a wave down to the tail. The
+  Meshy script can make the six fish (owner's credits; not generated yet).
+- Checks: `farmLegs.test.ts` (2), `farm.test.ts` (16), ESLint, `tsc`; 6 new browser checks plus
+  30/30, 15/15 and 11/11. See `docs/changes/GAME-015-farm-legs-grazing-fish.md`.
 
 ## 2026-11-06 — Farm: an incubator, livelier animals and fish
 
