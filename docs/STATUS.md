@@ -1,6 +1,18 @@
 # Status
 
-Last verified: 2026-11-06 (farm zoom and ranch pens; harness browser checks).
+Last verified: 2026-11-07 (farm people and fishing scene; harness browser checks).
+
+## 2026-11-07 — Farm: a farmer who works with the player, two helpers, a livelier fishing scene
+
+- A farmer in a conical hat is always in the area being viewed and walks over to act out what the
+  player does there (hoe, sow, water, weed, harvest, shake a tree, feed or skim the pond, fill the
+  troughs, collect eggs) with the right tool; two helpers work the fields and orchard by day.
+- At the river the farmer sits at the end of the jetty: the rod swings on a cast and bends while
+  reeling, the fish fights and leaps, and a catch goes into his basket. The six wild fish and the
+  prawn have proper bodies.
+- People keep to tested paths round plots, fences, buildings and water. Rules and saves unchanged.
+- Checks: `farmPeople.test.ts` (6), ESLint, `tsc`; browser harness (people 20/20, earlier checks).
+  See `docs/changes/GAME-018-farm-people-fishing.md`.
 
 ## 2026-11-06 — Farm: zoom and look around, easier on phones; a ranch with separate pens
 

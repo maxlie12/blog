@@ -28,7 +28,6 @@ import {
   ANIMAL_MAP,
   FISH_MAP,
   MAX_DROPS,
-  PLOT_COLUMNS,
   TREE_MAP,
   WILD_FISH_MAP,
   WORKSHOPS,
@@ -65,6 +64,9 @@ import {
 import { isNibbling, type FishingInput, type FishingState } from "./fishing";
 import { QUALITY_PRESETS, type Quality } from "./quality";
 import { NO_COVER, ZOOM_MAX, clampZoom, coverLift, defaultHeight, isNarrow, panLimits, zoomMin, type Cover } from "./view";
+import { FIELD, HOME, IDLE_SPOTS, JETTY_FOOT, ORCHARD, PEN_GATES, POND, RIVER_HALF, RIVER_POINTS, ROAD_Z, dropStand, incubatorStand, plotPosition, plotStand, pondPoint, pondStand, route, routeLength, spotPosition, treeStand, troughStand, type Place, type Point } from "./paths";
+import { choresBetween, type Chore } from "./chores";
+import { BODY_SIZE, CHORE_ACTS, IDLE_SECONDS, REST, SITTING, SPEED, STRIDE, TWO_HANDED, chorePose, fishingPose, idlePose, mixPose, phaseFor, standPose, walkPose, type Idle, type Pose, type Tool } from "./people";
 import { DUCK_POND, FIXTURES, LANE, PEN_OF, PEN_ROOM, RANCH_BOUNDS, TOP_LEVEL, TROUGH_OF, fixtureRect, inDuckPond, inside, penRect, walkable, type PenId } from "./ranchLayout";
 
 export type FarmView = "farm" | "orchard" | "pond" | "river" | "ranch";
@@ -145,12 +147,11 @@ const LEGS: Record<AnimalId, { gait: Gait; hip: number; swing: number; reach: nu
   cow: { gait: "quadruped", hip: 0.31, swing: 0.4, reach: 0.6, room: 0.46, neck: { back: 0.34, up: 0.65, low: 0.45 }, builtInPivot: [0.7, 0.44], graze: 0.9, drop: 0.2 },
 };
 
-const FARM_CENTER = new THREE.Vector3(-4.6, 0, 0.7);
-const POND_CENTER = new THREE.Vector3(6.1, 0, 0.9);
-const POND_RX = 3.7;
-const POND_RZ = 2.8;
+const FARM_CENTER = new THREE.Vector3(FIELD.x, 0, FIELD.z);
+const POND_CENTER = new THREE.Vector3(POND.x, 0, POND.z);
+const POND_RX = POND.rx;
+const POND_RZ = POND.rz;
 const WATER_Y = 0.27;
-const ROAD_Z = 5.4;
 const TRUCK_PARK_X = 3.1;
 const ROAD_END_X = 15.2;
 const WORKSHOP_SPOTS: Record<WorkshopId, [number, number]> = {
@@ -159,8 +160,8 @@ const WORKSHOP_SPOTS: Record<WorkshopId, [number, number]> = {
   loom: [6.9, 9.95],
   dairy: [9.25, 10.75],
 };
-const PLOT_PITCH = 2.05;
-const PLOT_SIZE = 1.74;
+const PLOT_PITCH = FIELD.pitch;
+const PLOT_SIZE = FIELD.size;
 const CAMERA_OFFSET = new THREE.Vector3(1, 1.08, 1.3).normalize().multiplyScalar(40);
 /**
  * Each area's centre and size on screen. `phone` is the share of its width a phone shows at
@@ -175,10 +176,6 @@ const VIEWS: Record<FarmView, { target: THREE.Vector3; width: number; height: nu
   river: { target: new THREE.Vector3(12, 0, -0.9), width: 7.8, height: 7.6, phone: 0.8 },
   ranch: { target: new THREE.Vector3(1.5, 0, 9.9), width: 13.6, height: 10.4, phone: 0.7 },
 };
-const ORCHARD = { x: -7.5, z: 8.55, pitch: 2.3 };
-/** River centre line, from a spring at the foot of the mountain to the cliff edge. */
-const RIVER_POINTS: [number, number][] = [[9.3, -10.6], [10.6, -7.5], [12.2, -4.2], [12.6, -0.8], [12.1, 2.6], [12.5, 5.4], [12.5, 8.4], [11.55, 11.1]];
-const RIVER_HALF = 1.15;
 const RIVER_Y = 0.07;
 const JETTY_Z = -1.2;
 /** Fishing spot coordinates: `along` the river ±1 is this far either side of the jetty. */
@@ -189,17 +186,6 @@ const CROP_COLORS: Record<CropId, string> = {
 };
 const ANIMAL_HEIGHT: Record<AnimalId, number> = { chicken: 0.6, duck: 0.6, sheep: 0.85, cow: 1.15 };
 
-export function plotPosition(index: number): [number, number] {
-  const col = index % PLOT_COLUMNS;
-  const row = Math.floor(index / PLOT_COLUMNS);
-  return [FARM_CENTER.x + (col - (PLOT_COLUMNS - 1) / 2) * PLOT_PITCH, FARM_CENTER.z + (1 - row) * PLOT_PITCH];
-}
-
-export function spotPosition(index: number): [number, number] {
-  const col = index % 3;
-  const row = Math.floor(index / 3);
-  return [ORCHARD.x + (col - 1) * ORCHARD.pitch, ORCHARD.z + (row - 0.5) * ORCHARD.pitch];
-}
 
 const tint = (color: string, lightness: number) => `#${new THREE.Color(color).offsetHSL(0, 0, lightness).getHexString()}`;
 
@@ -238,9 +224,6 @@ function segmentDistance(x: number, z: number, ax: number, az: number, bx: numbe
   return Math.hypot(x - (ax + dx * t), z - (az + dz * t));
 }
 
-function pondPoint(x: number, z: number): [number, number] {
-  return [POND_CENTER.x + x * POND_RX, POND_CENTER.z + z * POND_RZ];
-}
 
 
 /** Fry start clearly visible and grow to about twice their size. */
@@ -1028,24 +1011,11 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     propsRoot.add(part(rbox(bridgeLength, 0.075, 0.075, 0.025), "#8b5a35", bridgeX, 0.5, ROAD_Z + side * 0.6));
     for (let i = 0; i < 4; i += 1) propsRoot.add(part(rbox(0.09, 0.46, 0.09, 0.025), "#7a5638", bridgeX - bridgeLength / 2 + 0.15 + i * ((bridgeLength - 0.3) / 3), 0.3, ROAD_Z + side * 0.6));
   }
-  // Jetty from the west bank, and the angler sitting at its end in a conical hat.
+  // Jetty from the west bank; the farmer comes to fish at its end.
   const jettyRoot = new THREE.Group();
   const jettyLength = RIVER_HALF + 0.3;
   for (let i = 0; i < 6; i += 1) jettyRoot.add(part(box(0.22, 0.06, 0.92), i % 2 ? "#a77a4c" : "#b98a55", -jettyLength + 0.14 + i * (jettyLength / 5.6), 0.2, 0));
   for (const [x, z] of [[-jettyLength + 0.1, -0.42], [-jettyLength + 0.1, 0.42], [-0.12, -0.42], [-0.12, 0.42]]) jettyRoot.add(part(cylinder(0.05, 0.05, 0.5, 5), "#7a5638", x, 0.0, z));
-  const angler = new THREE.Group();
-  angler.position.set(-0.3, 0.2, 0);
-  angler.add(
-    part(cylinder(0.15, 0.19, 0.46, 8), "#3d6fa8", -0.05, 0.25, 0),
-    part(sphere(0.13, 10, 8), "#e8c39e", -0.04, 0.62, 0),
-    part(cone(0.34, 0.17, 14), "#e6d39c", -0.04, 0.78, 0),
-    part(cylinder(0.13, 0.1, 0.2, 8), "#b98a55", -0.18, 0.1, 0.34),
-  );
-  for (const side of [-1, 1]) {
-    angler.add(part(box(0.3, 0.1, 0.1), "#33405a", 0.12, 0.05, side * 0.08), part(box(0.1, 0.32, 0.1), "#33405a", 0.27, -0.1, side * 0.08));
-    angler.add(part(box(0.3, 0.08, 0.08), "#3d6fa8", 0.12, 0.38, side * 0.1));
-  }
-  jettyRoot.add(angler);
   jettyRoot.position.set(jettyPoint.x - jettyAcross.x * 0.15, 0, jettyPoint.z - jettyAcross.z * 0.15);
   jettyRoot.rotation.y = -Math.atan2(jettyAcross.z, jettyAcross.x);
   propsRoot.add(jettyRoot);
@@ -3212,17 +3182,18 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
 
     const lane = (LANE.x0 + LANE.x1) / 2;
     if (level >= 1) {
-      // A stack of hay bales in the lane, a wheelbarrow of hay, straw piles for the hens.
+      // A stack of hay bales in the lane, a wheelbarrow of hay beside it (clear of the sheep gate),
+      // straw piles for the hens.
       addBale(props, lane + 0.25, 0, 10.0, 0.1);
       addBale(props, lane - 0.22, 0, 10.05, -0.15);
       addBale(props, lane + 0.02, 0.42, 10.02, 0.05);
       const barrow = new THREE.Group();
-      barrow.position.set(lane - 0.35, 0, 11.35);
+      barrow.position.set(lane + 0.4, 0, 10.95);
       barrow.rotation.y = 0.6;
       barrow.add(part(rbox(0.36, 0.16, 0.5, 0.03), "#5f8a8a", 0, 0.24, 0), turn(part(cylinder(0.1, 0.1, 0.04, 12), "#3b3530", 0, 0.1, 0.3), 0, 0, Math.PI / 2));
       for (const side of [-1, 1]) barrow.add(turn(part(rbox(0.03, 0.03, 0.42, 0.01), "#7a5638", side * 0.14, 0.24, -0.36), 0.25, 0, 0), part(rbox(0.03, 0.18, 0.03, 0.01), "#7a5638", side * 0.13, 0.09, -0.12));
       props.add(barrow);
-      for (let i = 0; i < 6; i += 1) leafAt(leaves, "#e2c25f", lane - 0.35 + Math.cos(i) * 0.06, 0.33, 11.35 + Math.sin(i) * 0.08, i * 1.1, 0.5, 0.14, 0.04, 0, 0.2);
+      for (let i = 0; i < 6; i += 1) leafAt(leaves, "#e2c25f", lane + 0.4 + Math.cos(i) * 0.06, 0.33, 10.95 + Math.sin(i) * 0.08, i * 1.1, 0.5, 0.14, 0.04, 0, 0.2);
       for (const [hx, hz] of [[poultry.x0 + 0.45, poultry.z1 - 0.45], [poultry.x0 + 0.5, 7.4]]) {
         const heap = part(sphere(0.26, 10, 6), "#e2c25f", hx, 0.03, hz);
         heap.scale.set(1, 0.32, 0.8);
@@ -3251,7 +3222,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     }
     if (level >= 3) {
       // Bunting over the lane, lanterns at its entrance, a round bale in the cow pen.
-      for (const z of [7.55, 11.95]) {
+      for (const z of [7.05, 11.95]) {
         for (const x of [LANE.x0 + 0.06, LANE.x1 - 0.06]) props.add(part(rbox(0.06, 1.45, 0.06, 0.02), "#7a5638", x, 0.72, z));
         bunting(props, LANE.x0 + 0.06, z, LANE.x1 - 0.06, z, 1.4);
       }
@@ -3728,25 +3699,684 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   }
   setTool("hand");
 
-  /* ───────────── fishing: rod, line, float, ripples, the fish on the hook ───────────── */
+  /* ───────────── people: a farmer who works with the player, two helpers ───────────── */
+  // Each person is one skinned mesh: the body parts are baked per joint and bound to a bone
+  // (hips, waist, neck, shoulders, hips), so a pose is a few bone turns and one draw call.
+  interface Look { shirt: string; trousers: string; skin: string; hair: string; hat: "conical" | "brim"; hatColor: string; band?: string }
+  const FARMER_LOOK: Look = { shirt: "#3d6fa8", trousers: "#33405a", skin: "#e8c39e", hair: "#2b2320", hat: "conical", hatColor: "#e6d39c" };
+  const HELPER_LOOKS: Look[] = [
+    { shirt: "#a8553f", trousers: "#2f2f35", skin: "#e3b892", hair: "#1f1a18", hat: "conical", hatColor: "#efe2b8", band: "#c75b6e" },
+    { shirt: "#e6dfca", trousers: "#5b6c48", skin: "#d6a27a", hair: "#3a2a20", hat: "brim", hatColor: "#c9a35f", band: "#6b4a2b" },
+  ];
+  interface Body {
+    mesh: THREE.SkinnedMesh;
+    hips: THREE.Bone;
+    spine: THREE.Bone;
+    head: THREE.Bone;
+    armL: THREE.Bone;
+    armR: THREE.Bone;
+    legL: THREE.Bone;
+    legR: THREE.Bone;
+    handR: THREE.Object3D;
+    tools: Map<Tool, THREE.Object3D>;
+    tool: Tool;
+  }
+
+  /** A tool in the hand's frame (the arm hanging: −y down along it, +z forward). */
+  const toolGeometries = new Map<Tool, THREE.BufferGeometry>();
+  function toolGeometry(tool: Tool): THREE.BufferGeometry {
+    let geometry = toolGeometries.get(tool);
+    if (geometry) return geometry;
+    const root = new THREE.Group();
+    const wood = "#8f6a44";
+    if (tool === "hoe") {
+      root.add(part(cylinder(0.013, 0.015, 0.58, 6), wood, 0, -0.21, 0));
+      root.add(part(rbox(0.12, 0.022, 0.1, 0.008), "#9aa3a8", 0, -0.5, 0.05));
+    } else if (tool === "can") {
+      root.add(part(cylinder(0.065, 0.072, 0.12, 12), "#4f9a8f", 0, -0.1, 0.03));
+      root.add(part(rbox(0.025, 0.05, 0.1, 0.01), "#3f7f75", 0, -0.025, 0.03));
+      root.add(turn(part(cylinder(0.011, 0.017, 0.17, 6), "#4f9a8f", 0, -0.08, 0.15), -1.0, 0, 0));
+      root.add(turn(part(cylinder(0.032, 0.02, 0.025, 8), "#3f7f75", 0, -0.03, 0.22), -1.0, 0, 0));
+    } else if (tool === "pouch") {
+      const bag = part(sphere(0.055, 10, 8), "#d9c39a", 0, -0.06, 0.02);
+      bag.scale.set(1, 0.9, 0.85);
+      root.add(bag, part(cylinder(0.018, 0.022, 0.03, 8), "#b8a27a", 0, -0.01, 0.02));
+    } else if (tool === "basket") {
+      root.add(part(cylinder(0.12, 0.09, 0.11, 12), "#b5874f", 0.13, -0.08, 0.08), part(cylinder(0.126, 0.126, 0.02, 12), "#9c6f3c", 0.13, -0.025, 0.08));
+      for (const [x, z, c] of [[0.1, 0.05, "#e2533d"], [0.16, 0.1, "#7fc35a"], [0.12, 0.12, "#f2c94c"]] as const) root.add(part(sphere(0.038, 8, 6), c, x, -0.02, z));
+    } else if (tool === "net") {
+      root.add(part(cylinder(0.011, 0.012, 0.72, 6), wood, 0, -0.26, 0));
+      const ring = part(cylinder(0.12, 0.12, 0.012, 14), "#3b3b3b", 0, -0.66, 0.08);
+      ring.rotation.x = Math.PI / 2;
+      const mesh = part(sphere(0.11, 10, 6), "#d8d8cf", 0, -0.66, 0.11);
+      mesh.scale.set(1, 1, 0.45);
+      root.add(ring, mesh);
+    } else if (tool === "sack") {
+      root.add(part(rbox(0.2, 0.24, 0.15, 0.06), "#cdb88a", 0.13, -0.12, 0.1), part(cylinder(0.03, 0.045, 0.05, 8), "#a8925f", 0.13, 0.02, 0.1));
+    } else if (tool === "bucket") {
+      root.add(part(cylinder(0.078, 0.062, 0.13, 12), "#8aa3b3", 0.13, -0.1, 0.09), part(cylinder(0.07, 0.07, 0.01, 12), "#7cc6f0", 0.13, -0.045, 0.09));
+      root.add(part(rbox(0.16, 0.012, 0.012, 0.004), "#5a6b75", 0.13, -0.01, 0.09));
+    }
+    geometry = bakeGeometry(root, false) ?? new THREE.BufferGeometry();
+    toolGeometries.set(tool, geometry);
+    return geometry;
+  }
+  /** Tools carried on the shoulder or in front while walking, and the angle they are held at. */
+  const CARRY: Partial<Record<Tool, { tool: number; arm: number }>> = { hoe: { tool: 2.45, arm: 0.55 }, net: { tool: 2.2, arm: 0.6 }, can: { tool: 0, arm: 0.25 } };
+
+  function buildBody(look: Look): Body {
+    const size = BODY_SIZE;
+    const groups = Array.from({ length: 8 }, () => new THREE.Group());
+    const [, hipsGroup, spineGroup, headGroup, armLGroup, armRGroup, legLGroup, legRGroup] = groups;
+    const waist = size.hip + size.waist;
+    const neck = waist + size.neck;
+    const shoulder = waist + size.shoulder;
+    for (const [group, side] of [[legLGroup, 1], [legRGroup, -1]] as const) {
+      const x = side * size.legApart;
+      group.add(part(cylinder(0.05, 0.042, size.leg - 0.04, 7), look.trousers, x, size.hip - (size.leg - 0.04) / 2, 0));
+      group.add(part(sphere(0.031, 7, 5), look.skin, x, 0.055, 0));
+      group.add(part(rbox(0.07, 0.04, 0.12, 0.015), "#4a3a2c", x, 0.02, 0.022));
+    }
+    hipsGroup.add(part(rbox(0.19, 0.1, 0.125, 0.04), look.trousers, 0, size.hip + 0.015, 0));
+    spineGroup.add(part(rbox(0.21, 0.24, 0.14, 0.055), look.shirt, 0, waist + 0.125, 0));
+    spineGroup.add(part(cylinder(0.034, 0.04, 0.05, 8), look.skin, 0, neck - 0.015, 0));
+    if (look.band) spineGroup.add(part(rbox(0.214, 0.032, 0.144, 0.012), look.band, 0, waist + 0.035, 0));
+    const headY = neck + size.head * 0.95;
+    headGroup.add(part(sphere(size.head, 14, 10), look.skin, 0, headY, 0));
+    const hair = part(sphere(size.head * 1.03, 14, 10), look.hair, 0, headY + 0.014, -0.02);
+    hair.scale.set(1, 0.93, 0.93);
+    headGroup.add(hair);
+    for (const side of [-1, 1]) headGroup.add(part(sphere(0.013, 6, 5), "#1d1a18", side * 0.034, headY + 0.004, size.head * 0.92));
+    headGroup.add(part(sphere(0.015, 6, 5), tint(look.skin, -0.06), 0, headY - 0.025, size.head * 0.97));
+    if (look.hat === "conical") {
+      headGroup.add(part(cone(0.19, 0.11, 18), look.hatColor, 0, headY + 0.095, 0));
+      if (look.band) headGroup.add(part(cylinder(0.006, 0.006, 0.17, 4), look.band, size.head * 0.9, headY - 0.02, 0));
+    } else {
+      headGroup.add(part(cylinder(0.165, 0.165, 0.018, 18), look.hatColor, 0, headY + 0.07, 0));
+      headGroup.add(part(cylinder(0.105, 0.115, 0.085, 14), look.hatColor, 0, headY + 0.115, 0));
+      if (look.band) headGroup.add(part(cylinder(0.117, 0.117, 0.022, 14), look.band, 0, headY + 0.088, 0));
+    }
+    for (const [group, side] of [[armLGroup, 1], [armRGroup, -1]] as const) {
+      const x = side * size.shoulderApart;
+      group.add(part(sphere(0.046, 8, 6), look.shirt, x, shoulder, 0));
+      group.add(part(cylinder(0.037, 0.031, size.arm - 0.04, 7), look.shirt, x, shoulder - (size.arm - 0.04) / 2, 0));
+      group.add(part(sphere(0.032, 8, 6), look.skin, x, shoulder - size.arm + 0.012, 0));
+    }
+    // Bake each joint's parts in place and bind them to that joint's bone.
+    const pieces: THREE.BufferGeometry[] = [];
+    groups.forEach((group, index) => {
+      const geometry = bakeGeometry(group, false);
+      if (!geometry) return;
+      owned.delete(geometry);
+      const count = geometry.attributes.position.count;
+      const indices = new Uint16Array(count * 4);
+      const weights = new Float32Array(count * 4);
+      for (let i = 0; i < count; i += 1) {
+        indices[i * 4] = index;
+        weights[i * 4] = 1;
+      }
+      geometry.setAttribute("skinIndex", new THREE.Uint16BufferAttribute(indices, 4));
+      geometry.setAttribute("skinWeight", new THREE.Float32BufferAttribute(weights, 4));
+      pieces.push(geometry);
+    });
+    const geometry = mergeGeometries(pieces, false) ?? new THREE.BufferGeometry();
+    pieces.forEach((piece) => piece.dispose());
+    owned.add(geometry);
+    const root = new THREE.Bone();
+    const hips = new THREE.Bone(), spine = new THREE.Bone(), head = new THREE.Bone();
+    const armL = new THREE.Bone(), armR = new THREE.Bone(), legL = new THREE.Bone(), legR = new THREE.Bone();
+    hips.position.set(0, size.hip, 0);
+    spine.position.set(0, size.waist, 0);
+    head.position.set(0, size.neck, 0);
+    armL.position.set(size.shoulderApart, size.shoulder, 0);
+    armR.position.set(-size.shoulderApart, size.shoulder, 0);
+    legL.position.set(size.legApart, 0, 0);
+    legR.position.set(-size.legApart, 0, 0);
+    root.add(hips);
+    hips.add(spine, legL, legR);
+    spine.add(head, armL, armR);
+    const mesh = new THREE.SkinnedMesh(geometry, surface);
+    mesh.add(root);
+    mesh.updateMatrixWorld(true);
+    mesh.bind(new THREE.Skeleton([root, hips, spine, head, armL, armR, legL, legR]));
+    mesh.castShadow = shadowsOn;
+    mesh.receiveShadow = true;
+    mesh.frustumCulled = false;
+    mesh.raycast = () => {};
+    // Tools hang from the hands; one shows at a time.
+    const handR = new THREE.Object3D();
+    handR.position.set(0, -size.arm + 0.012, 0);
+    armR.add(handR);
+    const handL = new THREE.Object3D();
+    handL.position.set(0, -size.arm + 0.012, 0);
+    armL.add(handL);
+    const tools = new Map<Tool, THREE.Object3D>();
+    for (const tool of ["hoe", "can", "pouch", "basket", "net", "sack", "bucket"] as Tool[]) {
+      const pivot = new THREE.Group();
+      const item = new THREE.Mesh(toolGeometry(tool), surface);
+      item.castShadow = shadowsOn;
+      item.raycast = () => {};
+      pivot.add(item);
+      pivot.visible = false;
+      (tool === "pouch" ? handL : handR).add(pivot);
+      tools.set(tool, pivot);
+    }
+    world.add(mesh);
+    return { mesh, hips, spine, head, armL, armR, legL, legR, handR, tools, tool: "none" };
+  }
+
+  function applyPose(body: Body, pose: Pose) {
+    body.hips.position.y = BODY_SIZE.hip + pose.lift;
+    body.spine.rotation.set(pose.lean, pose.twist, 0);
+    body.head.rotation.set(pose.nod, pose.turn, 0);
+    body.armL.rotation.set(-pose.armL[0], 0, pose.armL[1]);
+    body.armR.rotation.set(-pose.armR[0], 0, -pose.armR[1]);
+    body.legL.rotation.x = -pose.legL;
+    body.legR.rotation.x = -pose.legR;
+    const tool = body.tools.get(body.tool);
+    if (tool) tool.rotation.x = pose.tool;
+  }
+
+  function holdTool(body: Body, tool: Tool) {
+    if (body.tool === tool) return;
+    body.tools.forEach((item, name) => (item.visible = name === tool));
+    body.tool = tool;
+  }
+
+  type Activity =
+    | { kind: "none" }
+    | { kind: "chore"; chore: Chore; target: Point; t: number; seconds: number; fired: number }
+    | { kind: "idle"; idle: Idle | "weed" | "harvest"; t: number; seconds: number }
+    | { kind: "fish" };
+
+  interface Walker {
+    body: Body;
+    x: number;
+    z: number;
+    facing: number;
+    /** The direction to turn to once stopped. */
+    face: number | null;
+    path: Point[];
+    arrive: (() => void) | null;
+    hurry: number;
+    phase: number;
+    activity: Activity;
+    pose: Pose;
+    from: Pose;
+    ease: number;
+    mode: string;
+  }
+
+  function makeWalker(look: Look, x: number, z: number): Walker {
+    const body = buildBody(look);
+    return { body, x, z, facing: 0.6, face: null, path: [], arrive: null, hurry: 0, phase: 0, activity: { kind: "none" }, pose: REST, from: REST, ease: 0, mode: "stand" };
+  }
+
+  /** Walks a person to `to` (in `place`) by the paths, then calls `arrive`. */
+  function walkTo(walker: Walker, to: Point, place: Place, hurry: number, arrive: (() => void) | null = null) {
+    walker.path = route([walker.x, walker.z], "any", to, place, ranchLevel);
+    walker.hurry = hurry;
+    walker.arrive = arrive;
+    walker.face = null;
+    walker.activity = { kind: "none" };
+  }
+
+  // The jetty's top: people step up onto it to fish.
+  const jettyInverse = new THREE.Matrix4();
+  const jettyLocal = new THREE.Vector3();
+  function groundHeight(x: number, z: number): number {
+    jettyLocal.set(x, 0, z).applyMatrix4(jettyInverse);
+    return jettyLocal.x > -RIVER_HALF - 0.32 && Math.abs(jettyLocal.z) < 0.46 ? 0.23 : 0;
+  }
+
+  const turnTo = (from: number, to: number, step: number) => {
+    const delta = Math.atan2(Math.sin(to - from), Math.cos(to - from));
+    return from + Math.max(-step, Math.min(step, delta));
+  };
+
+  /** Moves a person along their path, then plays their activity; eases between the two. */
+  function stepWalker(walker: Walker, dt: number, elapsed: number, motion: number, activityPose: () => Pose | null) {
+    let target: Pose;
+    let mode: string;
+    if (walker.path.length) {
+      const [tx, tz] = walker.path[0];
+      const dx = tx - walker.x, dz = tz - walker.z;
+      const distance = Math.hypot(dx, dz);
+      const speed = SPEED.walk + (SPEED.hurry - SPEED.walk) * walker.hurry;
+      const step = Math.min(distance, speed * dt);
+      if (distance > 1e-4) {
+        walker.x += (dx / distance) * step;
+        walker.z += (dz / distance) * step;
+        walker.facing = turnTo(walker.facing, Math.atan2(dx, dz), dt * 9);
+      }
+      walker.phase += phaseFor(step, STRIDE.walk + (STRIDE.hurry - STRIDE.walk) * walker.hurry);
+      if (distance - step < 1e-3) {
+        walker.path.shift();
+        if (!walker.path.length && walker.arrive) {
+          const arrive = walker.arrive;
+          walker.arrive = null;
+          arrive();
+        }
+      }
+      const carry = CARRY[walker.body.tool];
+      target = walkPose(walker.phase, walker.hurry, TWO_HANDED.includes(walker.body.tool), motion);
+      if (carry) target = { ...target, tool: carry.tool, armR: [carry.arm, 0.12] };
+      mode = "walk";
+    } else {
+      if (walker.face !== null) walker.facing = turnTo(walker.facing, walker.face, dt * 7);
+      target = activityPose() ?? standPose(elapsed, motion);
+      mode = walker.activity.kind === "chore" ? `chore${walker.activity.chore.kind}` : walker.activity.kind;
+    }
+    if (mode !== walker.mode) {
+      walker.from = walker.pose;
+      walker.ease = mode === "fish" ? 0.35 : 0.2;
+      walker.mode = mode;
+    }
+    const length = walker.mode === "fish" ? 0.35 : 0.2;
+    walker.pose = walker.ease > 0 ? mixPose(walker.from, target, 1 - Math.pow(walker.ease / length, 2)) : target;
+    walker.ease = Math.max(0, walker.ease - dt);
+    applyPose(walker.body, walker.pose);
+    walker.body.mesh.position.set(walker.x, groundHeight(walker.x, walker.z), walker.z);
+    walker.body.mesh.rotation.y = walker.facing;
+  }
+
+  /* The farmer: in the area being viewed, doing what the player does there. */
+  const firstSpot = IDLE_SPOTS.farm[0].at;
+  const farmer = makeWalker(FARMER_LOOK, firstSpot[0], firstSpot[1]);
+  const farmerChores: Chore[] = [];
+  const MAX_QUEUED = 5;
+  /** Between areas the farmer jogs (a little past a hurry). */
+  const TRAVEL_HURRY = 1.3;
+  let farmerSeated = false;
+  let travelling = false;
+  /** Why the farmer is walking: to a chore, between areas, or pottering about. */
+  let farmerWalk: "chore" | "travel" | "idle" = "idle";
+  let farmerRest = 4;
+  let farmerSpot = 0;
+  let skipCheck = 0;
+  const seatAt = new THREE.Vector3();
+  const seatFacing = Math.atan2(jettyAcross.x, jettyAcross.z);
+
+  /** Where to stand for a chore. */
+  function standFor(chore: Chore): { at: Point; place: Place; facing: number; target: Point } {
+    if (chore.plot !== undefined) return { ...plotStand(chore.plot), target: plotPosition(chore.plot) };
+    if (chore.spot !== undefined) return { ...treeStand(chore.spot), target: spotPosition(chore.spot) };
+    if (chore.pond) return { ...pondStand(chore.pond[0], chore.pond[1]), target: pondPoint(chore.pond[0] * 0.7, chore.pond[1] * 0.7) };
+    if (chore.drop) {
+      const [x, z] = dropPoint(chore.drop);
+      return { ...dropStand(PEN_OF_PRODUCT[chore.drop.product], x, z, ranchLevel), target: [x, z] };
+    }
+    if (chore.kind === "pour" && chore.species) {
+      const pen = PEN_OF[chore.species];
+      const trough = FIXTURES[TROUGH_OF[pen]];
+      return { ...troughStand(pen), target: [trough.x, trough.z] };
+    }
+    if (chore.kind === "newAnimal" && chore.species) {
+      const [outside, inside, z] = PEN_GATES[PEN_OF[chore.species]];
+      return { at: [outside, z], place: "ranch", facing: Math.atan2(inside - outside, 0), target: [inside, z] };
+    }
+    if (chore.kind === "stackFeed") {
+      const store = FIXTURES.feedStore;
+      return { at: [store.x + store.hx + 0.16, store.z], place: "ranch", facing: -Math.PI / 2, target: [store.x, store.z] };
+    }
+    const stand = incubatorStand();
+    return { ...stand, target: [FIXTURES.incubator.x, FIXTURES.incubator.z] };
+  }
+
+  /** A little of the chore's effect, when the farmer does it (the result itself showed at once). */
+  const CHORE_PUFFS: Partial<Record<Chore["kind"], [Burst, number][]>> = {
+    hoe: [["dirt", 0.36], ["dirt", 0.72]], dig: [["dirt", 0.36], ["dirt", 0.72]], fellTree: [["chips", 0.36], ["chips", 0.72]],
+    sow: [["seed", 0.35], ["seed", 0.7]], fertilize: [["spark", 0.35], ["spark", 0.7]], feedFish: [["seed", 0.35], ["seed", 0.7]],
+    water: [["water", 0.5], ["water", 0.7]], waterTree: [["water", 0.5], ["water", 0.7]],
+    weed: [["leaf", 0.5]], shake: [["leaf", 0.4]], skim: [["splash", 0.55]], netFish: [["splash", 0.55]],
+    stockFish: [["splash", 0.6]], pour: [["seed", 0.6]],
+  };
+
+  function startChore(chore: Chore) {
+    const stand = standFor(chore);
+    holdTool(farmer.body, CHORE_ACTS[chore.kind].tool);
+    farmerWalk = "chore";
+    walkTo(farmer, stand.at, stand.place, farmerChores.length ? 1 : 0.35, () => {
+      farmer.face = stand.facing;
+      farmer.activity = { kind: "chore", chore, target: stand.target, t: 0, seconds: CHORE_ACTS[chore.kind].seconds, fired: 0 };
+    });
+  }
+
+  function seatFarmer() {
+    farmer.x = seatAt.x;
+    farmer.z = seatAt.z;
+    farmer.facing = seatFacing;
+    farmer.face = seatFacing;
+    farmer.path = [];
+    farmer.arrive = null;
+    farmer.activity = { kind: "fish" };
+    holdTool(farmer.body, "none");
+    farmerSeated = true;
+    travelling = false;
+  }
+
+  /** The farmer heads for an area: off the jetty first if he was fishing, then by the paths. */
+  function farmerGo(view: FarmView, instant: boolean) {
+    farmerChores.length = 0;
+    holdTool(farmer.body, "none");
+    if (view === "river") {
+      if (instant) {
+        seatFarmer();
+        return;
+      }
+      if (farmerSeated) return;
+      travelling = true;
+      farmerWalk = "travel";
+      walkTo(farmer, JETTY_FOOT, "river", TRAVEL_HURRY, () => {
+        travelling = false;
+        farmer.path = [[seatAt.x, seatAt.z]];
+        farmer.hurry = 0.2;
+        farmer.arrive = seatFarmer;
+      });
+      return;
+    }
+    farmerSeated = false;
+    const spots = IDLE_SPOTS[view];
+    farmerSpot = 0;
+    const [x, z] = spots[0].at;
+    if (instant) {
+      farmer.x = x;
+      farmer.z = z;
+      farmer.path = [];
+      farmer.activity = { kind: "none" };
+      travelling = false;
+      return;
+    }
+    // Off the jetty (it stands over the water) to its foot first, then on to the area.
+    const onJetty = groundHeight(farmer.x, farmer.z) > 0;
+    travelling = true;
+    farmerWalk = "travel";
+    farmer.activity = { kind: "none" };
+    farmer.face = null;
+    farmer.hurry = TRAVEL_HURRY;
+    farmer.path = [...(onJetty ? [JETTY_FOOT] : []), ...route(onJetty ? JETTY_FOOT : [farmer.x, farmer.z], "any", [x, z], spots[0].place, ranchLevel)];
+    farmer.arrive = () => {
+      travelling = false;
+      farmerRest = 2 + Math.random() * 3;
+    };
+  }
+
+  /** Whether a ground point shows on screen. */
+  const screenPoint = new THREE.Vector3();
+  function onScreen(x: number, z: number, margin = 0.08): boolean {
+    screenPoint.set(x, 0.45, z).project(camera);
+    return Math.abs(screenPoint.x) < 1 + margin && Math.abs(screenPoint.y) < 1 + margin;
+  }
+
+  /** Whether a ground point will show once the camera has settled on the area being opened. */
+  const goalCentre = new THREE.Vector3();
+  function onGoalScreen(x: number, z: number, margin = 0.1): boolean {
+    lookAt(goalCentre);
+    const dx = (x - goalCentre.x) * SCREEN_RIGHT.x + (z - goalCentre.z) * SCREEN_RIGHT.z;
+    const dy = ((x - goalCentre.x) * SCREEN_UP.x + (z - goalCentre.z) * SCREEN_UP.z) * UP_SCALE;
+    const height = desiredHeight();
+    return Math.abs(dx) < ((height * aspect) / 2) * (1 + margin) && Math.abs(dy) < (height / 2) * (1 + margin);
+  }
+
+  /**
+   * A long walk between areas: once the farmer is off screen, he skips ahead to the last point
+   * of his route that is off screen both now and where the camera is heading (at least a few
+   * steps from the end), so he walks back into view from the right side without the player waiting.
+   */
+  function skipAhead() {
+    if (!travelling || !farmer.path.length || onScreen(farmer.x, farmer.z)) return;
+    let last: Point = [farmer.x, farmer.z];
+    let remaining = routeLength(last, farmer.path);
+    let best: { at: Point; index: number } | null = null;
+    for (let i = 0; i < farmer.path.length; i += 1) {
+      const next = farmer.path[i];
+      const length = Math.hypot(next[0] - last[0], next[1] - last[1]);
+      for (let d = 0; d < length; d += 0.3) {
+        const k = d / length;
+        const at: Point = [last[0] + (next[0] - last[0]) * k, last[1] + (next[1] - last[1]) * k];
+        if (remaining - d < 2.4) break;
+        if (!onScreen(at[0], at[1], 0.15) && !onGoalScreen(at[0], at[1])) best = { at, index: i };
+      }
+      remaining -= length;
+      last = next;
+    }
+    if (!best) return;
+    farmer.x = best.at[0];
+    farmer.z = best.at[1];
+    farmer.path.splice(0, best.index);
+  }
+
+  function farmerActivityPose(elapsed: number, motion: number): Pose | null {
+    const activity = farmer.activity;
+    if (activity.kind === "fish") {
+      const link = options.fishing;
+      return link ? fishingPose(link.state.current, elapsed, isNibbling(link.state.current), motion) : SITTING;
+    }
+    if (activity.kind === "chore") return chorePose(activity.chore.kind, activity.t / activity.seconds);
+    if (activity.kind === "idle") return activity.idle === "weed" || activity.idle === "harvest" ? chorePose(activity.idle, activity.t / activity.seconds) : idlePose(activity.idle, activity.t / activity.seconds);
+    return null;
+  }
+
+  function stepFarmer(dt: number, elapsed: number, motion: number) {
+    const fishing = options.fishing?.state.current;
+    if (viewName === "river" && fishing && fishing.phase !== "ready" && !farmerSeated) seatFarmer();
+    const activity = farmer.activity;
+    const onChore = activity.kind === "chore" || (farmerWalk === "chore" && farmer.path.length > 0);
+    if (!travelling && viewName !== "river" && !onChore && farmerChores.length) {
+      // Something to do: drop any pottering about and go.
+      startChore(farmerChores.shift() as Chore);
+    } else if (activity.kind === "chore") {
+      activity.t += dt;
+      const puffs = CHORE_PUFFS[activity.chore.kind] ?? [];
+      while (activity.fired < puffs.length && activity.t / activity.seconds >= puffs[activity.fired][1]) {
+        const [kind] = puffs[activity.fired];
+        const [x, z] = activity.target;
+        burst(kind, x, kind === "water" ? 0.55 : 0.3, z, kind === "water" ? 8 : 5);
+        activity.fired += 1;
+      }
+      if (activity.t >= activity.seconds) {
+        farmer.activity = { kind: "none" };
+        farmerRest = 1.5 + Math.random() * 2;
+        if (!farmerChores.length) holdTool(farmer.body, "none");
+      }
+    } else if (activity.kind === "idle") {
+      activity.t += dt;
+      if (activity.t >= activity.seconds) farmer.activity = { kind: "none" };
+    } else if (activity.kind === "none" && !farmer.path.length && !travelling && viewName !== "river") {
+      if ((farmerRest -= dt) <= 0) {
+        // Nothing to do: potter about the area.
+        const spots = IDLE_SPOTS[viewName as Exclude<FarmView, "river">];
+        if (Math.random() < 0.45 && spots.length > 1) {
+          farmerSpot = (farmerSpot + 1 + Math.floor(Math.random() * (spots.length - 1))) % spots.length;
+          farmerWalk = "idle";
+          walkTo(farmer, spots[farmerSpot].at, spots[farmerSpot].place, 0);
+        } else if (motion) {
+          const choices: Idle[] = viewName === "farm" || viewName === "orchard" ? ["tend", "look", "stretch", "wipe"] : ["look", "stretch", "wipe"];
+          const idle = choices[Math.floor(Math.random() * choices.length)];
+          farmer.activity = { kind: "idle", idle, t: 0, seconds: IDLE_SECONDS[idle] };
+        }
+        farmerRest = (motion ? 4 : 9) + Math.random() * 5;
+      }
+    }
+    if ((skipCheck -= dt) <= 0) {
+      skipCheck = 0.2;
+      skipAhead();
+    }
+    stepWalker(farmer, dt, elapsed, motion, () => farmerActivityPose(elapsed, motion));
+  }
+
+  /* Two helpers: out of the house in the morning to the fields and the orchard, home at dusk. */
+  const HELPER_HOURS: [number, number][] = [[6.2, 18.3], [6.7, 17.8]];
+  const helpers = HELPER_LOOKS.map((look) => ({ walker: makeWalker(look, HOME[0], HOME[1]), state: "home" as "home" | "out" | "leaving", rest: 0 }));
+  helpers.forEach((helper) => (helper.walker.body.mesh.visible = false));
+  let helpersPlaced = false;
+
+  /** Whether the farmer is (or is heading) within `distance` of a person. */
+  function farmerNear(walker: Walker, distance: number): boolean {
+    const goal = farmer.path[farmer.path.length - 1] ?? [farmer.x, farmer.z];
+    return Math.hypot(goal[0] - walker.x, goal[1] - walker.z) < distance || Math.hypot(farmer.x - walker.x, farmer.z - walker.z) < distance * 0.7;
+  }
+
+  /** Somewhere for a helper to work: the first one in the fields, the second mostly in the orchard. */
+  function helperSpot(index: number): { at: Point; place: Place; facing: number } {
+    const game = latest;
+    const plots = game ? game.plots.map((plot, i) => (plot.status === "locked" ? -1 : i)).filter((i) => i >= 0) : [0, 1, 2, 3];
+    const spots = game ? game.orchard.spots.map((spot, i) => (spot.status === "locked" ? -1 : i)).filter((i) => i >= 0) : [0, 1, 2];
+    const goal = farmer.path[farmer.path.length - 1] ?? [farmer.x, farmer.z];
+    const busy = (at: Point) => Math.hypot(at[0] - farmer.x, at[1] - farmer.z) < 1 || Math.hypot(at[0] - goal[0], at[1] - goal[1]) < 1 || helpers.some((other, i) => i !== index && other.state === "out" && Math.hypot(at[0] - other.walker.x, at[1] - other.walker.z) < 1);
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      const inOrchard = index === 1 ? Math.random() < 0.75 && spots.length > 0 : false;
+      const stand = inOrchard ? treeStand(spots[Math.floor(Math.random() * spots.length)]) : plotStand(plots[Math.floor(Math.random() * plots.length)] ?? 0);
+      if (!busy(stand.at)) return stand;
+    }
+    return plotStand(plots[0] ?? 0);
+  }
+
+  function stepHelpers(dt: number, elapsed: number, motion: number, hour: number) {
+    helpers.forEach((helper, index) => {
+      const walker = helper.walker;
+      const [start, end] = HELPER_HOURS[index];
+      const working = hour >= start && hour < end;
+      if (working && helper.state === "home") {
+        helper.state = "out";
+        walker.body.mesh.visible = true;
+        holdTool(walker.body, index === 0 ? "hoe" : "basket");
+        const spot = helperSpot(index);
+        if (!helpersPlaced) {
+          // The farm opened in the middle of the day: they are already at work.
+          walker.x = spot.at[0];
+          walker.z = spot.at[1];
+          walker.face = spot.facing;
+          walker.facing = spot.facing;
+        } else {
+          walker.x = HOME[0];
+          walker.z = HOME[1];
+          walkTo(walker, spot.at, spot.place, 0, () => (walker.face = spot.facing));
+        }
+        helper.rest = 1 + Math.random() * 2;
+      } else if (!working && helper.state === "out") {
+        helper.state = "leaving";
+        walkTo(walker, HOME, "house", 0, () => {
+          helper.state = "home";
+          walker.body.mesh.visible = false;
+        });
+      } else if (helper.state === "out" && !walker.path.length && farmerNear(walker, 0.9) && (helper.rest -= dt) <= 0) {
+        // Make room where the farmer comes to work (or, with nowhere else free, wait a moment).
+        const spot = helperSpot(index);
+        if (Math.hypot(spot.at[0] - walker.x, spot.at[1] - walker.z) > 0.5) walkTo(walker, spot.at, spot.place, 0.3, () => (walker.face = spot.facing));
+        helper.rest = 1.5;
+      } else if (helper.state === "out" && !walker.path.length) {
+        const activity = walker.activity;
+        if (activity.kind === "idle") {
+          activity.t += dt;
+          if (activity.t >= activity.seconds) walker.activity = { kind: "none" };
+        } else if ((helper.rest -= dt) <= 0) {
+          if (Math.random() < 0.35) {
+            const spot = helperSpot(index);
+            walkTo(walker, spot.at, spot.place, 0, () => (walker.face = spot.facing));
+          } else if (motion) {
+            const work = index === 0 ? (["weed", "weed", "wipe", "look"] as const) : (["harvest", "look", "stretch", "harvest"] as const);
+            const idle = work[Math.floor(Math.random() * work.length)];
+            walker.activity = { kind: "idle", idle, t: 0, seconds: idle === "weed" || idle === "harvest" ? 1.6 : IDLE_SECONDS[idle] };
+          }
+          helper.rest = (motion ? 2.5 : 8) + Math.random() * 3;
+        }
+      }
+      if (!walker.body.mesh.visible) return;
+      stepWalker(walker, dt, elapsed, motion, () => {
+        const activity = walker.activity;
+        if (activity.kind !== "idle") return null;
+        return activity.idle === "weed" || activity.idle === "harvest" ? chorePose(activity.idle, activity.t / activity.seconds) : idlePose(activity.idle, activity.t / activity.seconds);
+      });
+    });
+    helpersPlaced = true;
+  }
+
+  function stepPeople(dt: number, elapsed: number, motion: number, hour: number) {
+    stepFarmer(dt, elapsed, motion);
+    // The helpers keep the farm's own hours: wait until its clock is known.
+    if (latest) stepHelpers(dt, elapsed, motion, hour);
+  }
+
+  /** New chores from the player: the farmer queues the ones in his area (the newest few). */
+  function giveChores(chores: Chore[]) {
+    for (const chore of chores) if (chore.view === viewName) farmerChores.push(chore);
+    while (farmerChores.length > MAX_QUEUED) farmerChores.shift();
+  }
+
+  /* ───────────── fishing: the farmer's rod, line, float, the fish on the hook, the basket ───────────── */
   jettyRoot.updateMatrixWorld(true);
-  const hands = jettyRoot.localToWorld(new THREE.Vector3(-0.02, 0.6, 0));
+  jettyInverse.copy(jettyRoot.matrixWorld).invert();
+  jettyRoot.localToWorld(seatAt.set(-0.1, 0, 0));
+  seatAt.y = 0;
   const ROD_LENGTH = 1.7;
   const ROD_ANGLE = 0.85;
   const rodPivot = new THREE.Group();
   const rodTurn = new THREE.Group();
-  rodTurn.position.copy(hands);
-  rodTurn.rotation.y = -Math.atan2(jettyAcross.z, jettyAcross.x);
   rodTurn.add(rodPivot);
-  const rodRoot = new THREE.Group();
-  rodRoot.add(turn(part(cylinder(0.012, 0.024, ROD_LENGTH, 5), "#6b4a2b", ROD_LENGTH / 2, 0, 0), 0, 0, -Math.PI / 2), turn(part(cylinder(0.03, 0.03, 0.08, 8), "#3b3b3b", 0.25, 0, 0.04), Math.PI / 2, 0, 0));
-  const rod = bake(rodRoot);
-  rod.userData.ownsGeometry = true;
+  // The rod bends: its vertices are moved along a curve each frame from their straight positions.
+  const rodGeometry = new THREE.CylinderGeometry(0.011, 0.022, ROD_LENGTH, 5, 12);
+  rodGeometry.rotateZ(-Math.PI / 2);
+  rodGeometry.translate(ROD_LENGTH / 2, 0, 0);
+  {
+    const positions = rodGeometry.attributes.position;
+    const colors = new Float32Array(positions.count * 3);
+    const shaft = new THREE.Color("#6b4a2b"), grip = new THREE.Color("#3b3b3b"), tip = new THREE.Color("#c9452f");
+    for (let i = 0; i < positions.count; i += 1) {
+      const x = positions.getX(i);
+      const color = x < 0.4 ? grip : x > ROD_LENGTH - 0.06 ? tip : shaft;
+      colors.set([color.r, color.g, color.b], i * 3);
+    }
+    rodGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  }
+  owned.add(rodGeometry);
+  const rodRest = Float32Array.from(rodGeometry.attributes.position.array as Float32Array);
+  const rod = new THREE.Mesh(rodGeometry, surface);
+  rod.castShadow = shadowsOn;
   rod.raycast = () => {};
+  rod.frustumCulled = false;
   rodPivot.add(rod);
-  rodPivot.rotation.z = ROD_ANGLE;
+  const reelRoot = new THREE.Group();
+  reelRoot.add(turn(part(cylinder(0.035, 0.035, 0.05, 10), "#3b3b3b", 0.25, -0.04, 0), Math.PI / 2, 0, 0));
+  const reel = bake(reelRoot, false, false);
+  reel.userData.ownsGeometry = true;
+  reel.raycast = () => {};
+  rodPivot.add(reel);
   world.add(rodTurn);
+  const ROD_SAMPLES = 12;
+  const rodCurve = Array.from({ length: ROD_SAMPLES + 1 }, () => ({ x: 0, y: 0, a: 0 }));
+  const rodTipLocal = new THREE.Vector3(ROD_LENGTH, 0, 0);
+  let rodBent = -1;
+  /** Curves the rod down toward its tip: the bend grows with the square of the distance along it. */
+  function bendRod(amount: number) {
+    if (Math.abs(amount - rodBent) < 0.004) return;
+    rodBent = amount;
+    let x = 0, y = 0;
+    const ds = ROD_LENGTH / ROD_SAMPLES;
+    for (let i = 0; i <= ROD_SAMPLES; i += 1) {
+      const s = i / ROD_SAMPLES;
+      rodCurve[i].x = x;
+      rodCurve[i].y = y;
+      rodCurve[i].a = -amount * s * s;
+      const mid = -amount * Math.pow((i + 0.5) / ROD_SAMPLES, 2);
+      x += Math.cos(mid) * ds;
+      y += Math.sin(mid) * ds;
+    }
+    const positions = rodGeometry.attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i < positions.count; i += 1) {
+      const rx = rodRest[i * 3], ry = rodRest[i * 3 + 1], rz = rodRest[i * 3 + 2];
+      const f = Math.min(ROD_SAMPLES - 1e-6, Math.max(0, (rx / ROD_LENGTH) * ROD_SAMPLES));
+      const k = Math.floor(f), u = f - k;
+      const p0 = rodCurve[k], p1 = rodCurve[k + 1];
+      const angle = p0.a + (p1.a - p0.a) * u;
+      positions.setXYZ(i, p0.x + (p1.x - p0.x) * u - Math.sin(angle) * ry, p0.y + (p1.y - p0.y) * u + Math.cos(angle) * ry, rz);
+    }
+    positions.needsUpdate = true;
+    rodTipLocal.set(rodCurve[ROD_SAMPLES].x, rodCurve[ROD_SAMPLES].y, 0);
+  }
+  bendRod(0);
   const rodTip = new THREE.Vector3();
+  const hands = new THREE.Vector3();
   const LINE_POINTS = 18;
   const lineGeometry = new THREE.BufferGeometry();
   lineGeometry.setAttribute("position", new THREE.Float32BufferAttribute(new Float32Array(LINE_POINTS * 3), 3));
@@ -3780,42 +4410,175 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   approach.visible = false;
   approach.raycast = () => {};
   world.add(approach);
-  const catchGeometries = new Map<WildCatch, THREE.BufferGeometry>();
-  function catchGeometry(caught: WildCatch): THREE.BufferGeometry {
-    let geometry = catchGeometries.get(caught);
+
+  /**
+   * The river's catches, facing +x: each fish built like the pond fish (a tapered body shaded dark
+   * above and pale below, with its markings, fins, eyes and barbels), a river prawn with its long
+   * blue claws, and an old rubber boot.
+   */
+  const WILD_SHAPES: Record<Exclude<WildCatch, "boot" | "prawn">, { length: number; height: number; width: number; back: string; pattern: "blotch" | "bars" | "spots" | "chain" | "plain"; peak: number; fill: number; tail: [number, number][]; dorsal: [number, number][]; anal: [number, number][]; barbels: number }> = {
+    goby: { length: 0.3, height: 0.2, width: 0.62, back: "#6e5a40", pattern: "blotch", peak: 0.55, fill: 0.7, tail: [[0, 0.06], [-0.2, 0.15], [-0.26, 0], [-0.2, -0.15], [0, -0.06]], dorsal: [[0.1, 0], [0.04, 0.1], [-0.04, 0.02], [-0.08, 0.08], [-0.3, 0.05], [-0.34, 0]], anal: [[-0.1, 0], [-0.18, 0.06], [-0.32, 0.05], [-0.34, 0]], barbels: 0 },
+    perch: { length: 0.36, height: 0.26, width: 0.42, back: "#3e4a2e", pattern: "bars", peak: 0.75, fill: 0.85, tail: [[0, 0.05], [-0.24, 0.2], [-0.2, 0], [-0.24, -0.2], [0, -0.05]], dorsal: [[0.22, 0], [0.15, 0.13], [0.0, 0.12], [-0.15, 0.1], [-0.3, 0.07], [-0.34, 0]], anal: [[-0.05, 0], [-0.14, 0.08], [-0.3, 0.07], [-0.34, 0]], barbels: 0 },
+    catfish: { length: 0.55, height: 0.14, width: 0.95, back: "#2e2d29", pattern: "spots", peak: 0.5, fill: 0.55, tail: [[0, 0.05], [-0.16, 0.12], [-0.2, 0], [-0.16, -0.12], [0, -0.05]], dorsal: [[0.18, 0], [0.12, 0.05], [-0.36, 0.05], [-0.4, 0]], anal: [[0.0, 0], [-0.05, 0.05], [-0.36, 0.05], [-0.4, 0]], barbels: 4 },
+    snakehead: { length: 0.62, height: 0.15, width: 0.85, back: "#22291f", pattern: "chain", peak: 0.55, fill: 0.5, tail: [[0, 0.06], [-0.16, 0.13], [-0.21, 0], [-0.16, -0.13], [0, -0.06]], dorsal: [[0.2, 0], [0.15, 0.06], [-0.36, 0.07], [-0.4, 0]], anal: [[-0.02, 0], [-0.07, 0.06], [-0.36, 0.06], [-0.4, 0]], barbels: 0 },
+    featherback: { length: 0.66, height: 0.3, width: 0.3, back: "#8a959b", pattern: "spots", peak: 0.45, fill: 1.2, tail: [[0, 0.03], [-0.12, 0.06], [-0.16, 0], [-0.12, -0.06], [0, -0.03]], dorsal: [[-0.02, 0], [-0.06, 0.05], [-0.1, 0]], anal: [[0.2, 0], [0.1, 0.07], [-0.3, 0.05], [-0.42, 0]], barbels: 0 },
+  };
+  const wildGeometries = new Map<WildCatch, THREE.BufferGeometry>();
+  function wildGeometry(caught: WildCatch): THREE.BufferGeometry {
+    let geometry = wildGeometries.get(caught);
     if (geometry) return geometry;
     const root = new THREE.Group();
+    const temporary: THREE.BufferGeometry[] = [];
     if (caught === "boot") {
-      root.add(part(box(0.14, 0.3, 0.14), "#4a3a2c", 0, 0.1, 0), part(box(0.28, 0.1, 0.15), "#4a3a2c", 0.07, -0.05, 0));
+      root.add(part(cylinder(0.075, 0.08, 0.25, 12), "#3d5a3a", 0, 0.135, 0), part(cylinder(0.083, 0.083, 0.025, 12), "#2f4a2e", 0, 0.255, 0));
+      root.add(part(rbox(0.12, 0.09, 0.22, 0.04), "#3d5a3a", 0, 0.045, 0.06), part(rbox(0.125, 0.025, 0.23, 0.01), "#262626", 0, 0.0, 0.06));
+      root.rotation.z = 0.5;
     } else if (caught === "prawn") {
-      for (let i = 0; i < 5; i += 1) root.add(part(sphere(0.06 - i * 0.007, 7, 5), WILD_FISH_MAP.prawn.color, -i * 0.07, Math.sin(i * 0.6) * 0.04, 0));
-      root.add(turn(part(cylinder(0.008, 0.008, 0.3, 4), "#d9534f", 0.14, 0.04, 0), 0, 0, 1.2));
+      const blue = "#5b7fa0", claw = "#2f5f9e", joint = "#e08a3c";
+      const head = part(sphere(0.07, 10, 8), tint(blue, 0.06), 0.1, 0, 0);
+      head.scale.set(1.5, 0.85, 0.8);
+      root.add(head, turn(part(cone(0.012, 0.12, 4), tint(blue, 0.12), 0.24, 0.035, 0), 0, 0, -Math.PI / 2 + 0.25));
+      for (let i = 0; i < 6; i += 1) {
+        const r = 0.058 - i * 0.006;
+        const angle = i * 0.16;
+        root.add(part(sphere(r, 9, 7), i % 2 ? blue : tint(blue, -0.04), -0.02 - Math.cos(angle) * i * 0.055, -Math.sin(angle) * i * 0.055 * 0.9, 0));
+      }
+      for (const [dy, dz] of [[0.03, 0], [-0.03, 0.03], [-0.03, -0.03]]) root.add(turn(part(cone(0.035, 0.07, 3), tint(blue, 0.1), -0.3, -0.16 + dy, dz), 0, 0, Math.PI / 2 + 0.9));
+      for (const side of [-1, 1]) {
+        root.add(part(sphere(0.012, 6, 5), "#141414", 0.19, 0.03, side * 0.035));
+        root.add(turn(part(cylinder(0.003, 0.003, 0.42, 3), tint(blue, -0.1), 0.38, 0.06, side * 0.05), side * 0.25, 0, -1.3));
+        // The long blue claws of a river prawn, jointed in orange.
+        root.add(turn(part(cylinder(0.009, 0.011, 0.28, 5), claw, 0.26, -0.03, side * 0.06), side * 0.3, 0, -1.45));
+        root.add(part(sphere(0.014, 6, 5), joint, 0.13, -0.035, side * 0.045));
+        const pincer = part(sphere(0.03, 8, 6), claw, 0.42, -0.02, side * 0.1);
+        pincer.scale.set(2.2, 0.7, 0.8);
+        root.add(pincer);
+        for (let i = 0; i < 3; i += 1) root.add(turn(part(cylinder(0.004, 0.004, 0.09, 3), tint(blue, -0.08), 0.06 - i * 0.04, -0.07, side * 0.035), side * 0.5, 0, 0));
+      }
     } else {
-      const def = WILD_FISH_MAP[caught];
-      const long = caught === "snakehead" || caught === "featherback" || caught === "catfish";
-      const body = part(sphere(0.2, 10, 8), def.color);
-      body.scale.set(long ? 1.6 : 1.1, 0.42, 0.32);
-      const tail = part(cone(0.1, 0.16, 4), tint(def.color, -0.08), -(long ? 0.36 : 0.26), 0, 0);
-      tail.rotation.z = Math.PI / 2;
-      tail.scale.z = 0.35;
-      root.add(body, tail, part(sphere(0.022, 6, 4), "#1d2420", (long ? 0.26 : 0.17), 0.03, 0.06));
-      if (caught === "catfish") for (const side of [-1, 1]) root.add(turn(part(cylinder(0.006, 0.006, 0.18, 3), "#2b2b2b", 0.36, -0.02, side * 0.05), 0, side * 0.6, Math.PI / 2));
+      const shape = WILD_SHAPES[caught];
+      const base = new THREE.Color(WILD_FISH_MAP[caught].color);
+      const back = new THREE.Color(shape.back);
+      const belly = base.clone().lerp(new THREE.Color("#fffaf0"), caught === "featherback" ? 0.55 : 0.45);
+      const fin = base.clone().lerp(back, 0.5);
+      const radius = (t: number) => Math.max(0.03 * t, shape.height * Math.min(1, shape.fill * Math.pow(Math.sin(Math.PI * Math.pow(t, shape.peak)), 0.8)));
+      const along = (x: number) => Math.min(1, Math.max(0, (0.5 - x) / 0.92));
+      const profile: THREE.Vector2[] = [];
+      for (let i = 0; i <= 18; i += 1) {
+        const t = i / 18;
+        profile.push(new THREE.Vector2(radius(t), 0.5 - t * 0.92));
+      }
+      const lathe = new THREE.LatheGeometry(profile, 12);
+      temporary.push(lathe);
+      lathe.rotateZ(-Math.PI / 2);
+      lathe.scale(1, 1, shape.width);
+      const index = lathe.index as THREE.BufferAttribute;
+      for (let i = 0; i < index.count; i += 3) {
+        const a = index.getX(i + 1);
+        index.setX(i + 1, index.getX(i + 2));
+        index.setX(i + 2, a);
+      }
+      lathe.computeVertexNormals();
+      const positions = lathe.attributes.position;
+      const colors = new Float32Array(positions.count * 3);
+      const color = new THREE.Color();
+      for (let i = 0; i < positions.count; i += 1) {
+        const x = positions.getX(i), y = positions.getY(i);
+        const v = y / Math.max(0.02, radius(along(x)));
+        color.copy(belly).lerp(base, Math.min(1, Math.max(0, (v + 0.55) / 0.6)));
+        color.lerp(back, Math.min(1, Math.max(0, (v - 0.3) / 0.6)) * 0.9);
+        if (shape.pattern === "bars" && v > -0.4 && Math.sin(x * 34) > 0.45) color.multiplyScalar(0.78);
+        if (shape.pattern === "blotch" && v > -0.3 && Math.sin(x * 26 + v * 4) * Math.cos(v * 5) > 0.45) color.multiplyScalar(0.72);
+        if (shape.pattern === "chain" && Math.abs(v - 0.05) < 0.32 && Math.sin(x * 22) > 0.2) color.multiplyScalar(0.62);
+        if (shape.pattern === "spots" && caught === "featherback" && x < -0.05 && v > -0.6 && v < 0.2 && Math.sin(x * 30) * Math.sin(v * 7 + 1) > 0.7) color.set("#3b3f40");
+        if (shape.pattern === "spots" && caught === "catfish" && v > -0.2 && Math.sin(x * 40) * Math.sin(v * 9) > 0.75) color.lerp(belly, 0.5);
+        if (Math.abs(x - 0.3) < 0.012 && v < 0.75) color.multiplyScalar(0.82);
+        colors.set([color.r, color.g, color.b], i * 3);
+      }
+      lathe.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+      root.add(part(lathe, "vertex"));
+      const finAt = (outline: [number, number][], x: number, y: number, z = 0, thickness = 0.014) => {
+        const geometry = new THREE.ExtrudeGeometry(new THREE.Shape(outline.map(([px, py]) => new THREE.Vector2(px, py))), { depth: thickness, bevelEnabled: false, curveSegments: 3 });
+        temporary.push(geometry);
+        geometry.translate(0, 0, -thickness / 2);
+        const item = part(geometry, `#${fin.getHexString()}`, x, y, z);
+        root.add(item);
+        return item;
+      };
+      finAt(shape.tail, -0.4, 0);
+      const top = (x: number) => radius(along(x)) * 0.92;
+      finAt(shape.dorsal.map(([x, h]) => [x, top(x) - 0.02 + h]), 0, 0);
+      finAt(shape.anal.map(([x, h]) => [x, -top(x) + 0.02 - h]), 0, 0);
+      for (const side of [-1, 1]) {
+        const eyeX = caught === "featherback" ? 0.4 : 0.37;
+        const eyeY = radius(along(eyeX)) * 0.3;
+        const eyeZ = radius(along(eyeX)) * shape.width * 0.86;
+        root.add(part(sphere(0.04, 8, 6), "#f4f1e6", eyeX, eyeY, side * eyeZ), part(sphere(0.026, 8, 6), "#141a18", eyeX + 0.01, eyeY, side * (eyeZ + 0.02)));
+        const pectoral = finAt([[0, 0.02], [-0.11, 0.05], [-0.14, -0.02], [-0.04, -0.03]], 0.22, -radius(along(0.22)) * 0.45, side * radius(along(0.18)) * shape.width * 0.9, 0.012);
+        pectoral.rotation.set(side * 0.9, side * 0.35, -0.35);
+        for (let b = 0; b < shape.barbels / 2; b += 1) {
+          const barbel = part(cylinder(0.006, 0.003, 0.2 - b * 0.06, 4), `#${back.getHexString()}`, 0.5, -0.02 - b * 0.03, side * (0.03 + b * 0.03));
+          barbel.rotation.set(side * (0.5 + b * 0.4), 0, 1.15 + b * 0.3);
+          root.add(barbel);
+        }
+      }
+      root.add(part(sphere(0.022, 6, 4), "#3a2a26", 0.5, -0.01, 0));
+      root.scale.setScalar(shape.length);
     }
-    geometry = bakeGeometry(root) ?? new THREE.BufferGeometry();
-    catchGeometries.set(caught, geometry);
+    const wrapper = new THREE.Group();
+    wrapper.add(root);
+    geometry = bakeGeometry(wrapper, false) ?? new THREE.BufferGeometry();
+    temporary.forEach((item) => item.dispose());
+    wildGeometries.set(caught, geometry);
     return geometry;
   }
   const hooked = new THREE.Mesh(new THREE.BufferGeometry(), surface);
   hooked.visible = false;
   hooked.raycast = () => {};
   world.add(hooked);
+
+  // The basket on the jetty beside the farmer, showing the wild fish waiting in the barn.
+  const basketAt = jettyRoot.localToWorld(new THREE.Vector3(-0.2, 0.23, 0.3));
+  const basketRoot = new THREE.Group();
+  basketRoot.add(part(cylinder(0.13, 0.11, 0.17, 12), "#b5874f", 0, 0.085, 0), part(cylinder(0.135, 0.135, 0.022, 12), "#9c6f3c", 0, 0.17, 0), part(cylinder(0.118, 0.118, 0.02, 12), "#9c6f3c", 0, 0.06, 0));
+  const basket = bake(basketRoot, true, true, false);
+  basket.userData.ownsGeometry = true;
+  basket.position.copy(basketAt);
+  basket.raycast = () => {};
+  world.add(basket);
+  const fillGeometries = new Map<number, THREE.BufferGeometry>();
+  function fillGeometry(count: number): THREE.BufferGeometry {
+    let geometry = fillGeometries.get(count);
+    if (geometry) return geometry;
+    const root = new THREE.Group();
+    const colors = ["#a08a68", "#6f7d55", "#b9c2c6", "#4b4a44", "#3d4a3a"];
+    for (let i = 0; i < count; i += 1) {
+      const angle = i * 2.4;
+      const tail = turn(part(cone(0.035, 0.07, 3), colors[i % colors.length], Math.cos(angle) * 0.06, 0.21, Math.sin(angle) * 0.06), Math.sin(angle) * 0.3, angle, Math.cos(angle) * 0.3);
+      tail.scale.z = 0.35;
+      root.add(tail, part(sphere(0.04, 8, 6), colors[i % colors.length], Math.cos(angle) * 0.06, 0.16, Math.sin(angle) * 0.06));
+    }
+    geometry = bakeGeometry(root, false) ?? new THREE.BufferGeometry();
+    fillGeometries.set(count, geometry);
+    return geometry;
+  }
+  const basketFill = new THREE.Mesh(fillGeometry(0), surface);
+  basketFill.position.copy(basketAt);
+  basketFill.raycast = () => {};
+  world.add(basketFill);
+  let basketShown = -1;
+  let basketPopAt = -10;
+
   let hookedKind: WildCatch | null = null;
   let lastPhase: FishingState["phase"] = "ready";
   let wasNibbling = false;
+  let splashAt = 0;
   const catchFrom = new THREE.Vector3();
   const floatPos = new THREE.Vector3();
   const castPoint = new THREE.Vector3();
   const tipWater = new THREE.Vector3();
+  const lifted = new THREE.Vector3();
+  const rodLeaning = jettyRoot.localToWorld(new THREE.Vector3(-0.15, 0.24, -0.38));
 
   /** World point for fishing-spot coordinates (along the river, out from the jetty). */
   function fishingPoint([along, out]: [number, number], target: THREE.Vector3): THREE.Vector3 {
@@ -3832,9 +4595,23 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     const state = link.state.current;
     const phase = state.phase;
     const active = phase === "waiting" || phase === "bite" || phase === "reeling";
-    rodTip.set(ROD_LENGTH, 0, 0);
-    rodPivot.rotation.z = ROD_ANGLE - (phase === "reeling" ? state.tension * 0.32 : 0) + (phase === "reeling" && state.t < 0.25 ? 0.3 * (1 - state.t / 0.25) : 0);
+
+    // The rod: in the farmer's hands while he sits at the end of the jetty, else leaning by the basket.
+    if (farmerSeated) {
+      farmer.body.mesh.updateMatrixWorld(true);
+      farmer.body.handR.getWorldPosition(hands);
+      rodTurn.position.copy(hands);
+      rodTurn.rotation.y = farmer.facing - Math.PI / 2;
+      rodPivot.rotation.z = ROD_ANGLE + farmer.pose.tool;
+    } else {
+      rodTurn.position.copy(rodLeaning);
+      rodTurn.rotation.y = seatFacing - Math.PI / 2 + 0.4;
+      rodPivot.rotation.z = 1.32;
+    }
+    const strain = phase === "reeling" ? 0.22 + state.tension * 0.95 + state.pull * 0.12 * Math.sin(elapsed * 23) * motion : phase === "bite" ? 0.32 + Math.sin(elapsed * 30) * 0.05 * motion : phase === "caught" && state.t < 0.6 ? 0.5 : active ? 0.06 : 0;
+    bendRod(farmerSeated ? strain : 0);
     rodTurn.updateMatrixWorld(true);
+    rodTip.copy(rodTipLocal);
     rodPivot.localToWorld(rodTip);
     tipWater.copy(jettyPoint).addScaledVector(jettyAcross, 0.05).setY(RIVER_Y);
     if (state.at) fishingPoint(state.at, castPoint);
@@ -3852,7 +4629,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       }
       if (phase === "reeling" && state.catch) {
         hookedKind = state.catch;
-        hooked.geometry = catchGeometry(state.catch);
+        hooked.geometry = wildGeometry(state.catch);
       }
       lastPhase = phase;
     }
@@ -3868,7 +4645,8 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     } else if (phase === "reeling") {
       floatPos.lerpVectors(tipWater, castPoint, state.distance);
       floatPos.y = RIVER_Y - 0.03 - state.tension * 0.03;
-      floatPos.x += Math.sin(elapsed * 23) * state.pull * 0.03 * motion;
+      // The fish fights: it darts up and down the river, harder while it pulls.
+      floatPos.addScaledVector(jettyTangent, (Math.sin(elapsed * 2.3) * 0.22 * state.pull + Math.sin(elapsed * 6.1) * 0.05) * motion);
     } else {
       floatPos.copy(castPoint);
       floatPos.y = RIVER_Y + 0.02 + Math.sin(elapsed * 3) * 0.012 * motion - (nibbling ? 0.04 : 0) - (phase === "bite" ? 0.11 + Math.sin(elapsed * 30) * 0.02 * motion : 0);
@@ -3876,13 +4654,14 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     const lingering = (phase === "late" || phase === "slack" || phase === "spooked") && state.t < 0.7;
     bobber.visible = active || lingering;
     bobber.position.copy(floatPos);
-    line.visible = active || (lingering && phase !== "spooked");
+    line.visible = active || (lingering && phase !== "spooked") || (phase === "caught" && state.t < 0.7);
     if (line.visible) {
       const positions = lineGeometry.attributes.position as THREE.BufferAttribute;
-      const sag = phase === "reeling" ? (1 - Math.min(1, state.tension * 1.2)) * 0.35 : 0.3;
+      const end = phase === "caught" ? hooked.position : floatPos;
+      const sag = phase === "reeling" ? (1 - Math.min(1, state.tension * 1.2)) * 0.35 : phase === "caught" ? 0.05 : 0.3;
       for (let i = 0; i < LINE_POINTS; i += 1) {
         const k = i / (LINE_POINTS - 1);
-        positions.setXYZ(i, rodTip.x + (floatPos.x - rodTip.x) * k, rodTip.y + (floatPos.y + 0.12 - rodTip.y) * k - sag * 4 * k * (1 - k), rodTip.z + (floatPos.z - rodTip.z) * k);
+        positions.setXYZ(i, rodTip.x + (end.x - rodTip.x) * k, rodTip.y + (end.y + 0.12 - rodTip.y) * k - sag * 4 * k * (1 - k), rodTip.z + (end.z - rodTip.z) * k);
       }
       positions.needsUpdate = true;
     }
@@ -3905,21 +4684,46 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       approach.rotation.z = Math.atan2(-jettyTangent.z, jettyTangent.x);
     }
 
-    // The catch: under the float while reeling (leaping when it pulls), then up to the angler.
+    // The catch: under the float while reeling (splashing and leaping when it pulls), then lifted
+    // up to the farmer and swung into the basket.
     hooked.visible = false;
+    let inFlight = false;
     if (phase === "reeling" && hookedKind) {
       hooked.visible = true;
-      const leap = state.pull > 0.35 ? Math.abs(Math.sin(elapsed * 9)) * 0.22 * motion : 0;
+      const leap = state.pull > 0.35 ? Math.abs(Math.sin(elapsed * 4.5)) * 0.32 * motion : 0;
       hooked.position.set(floatPos.x, RIVER_Y - 0.06 + leap, floatPos.z);
-      hooked.rotation.set(0, Math.atan2(floatPos.z - tipWater.z, tipWater.x - floatPos.x) + Math.sin(elapsed * 14) * 0.4 * motion, leap * 2);
-    } else if (phase === "caught" && hookedKind && state.t < 2.2) {
+      hooked.rotation.set(0, Math.atan2(floatPos.z - tipWater.z, tipWater.x - floatPos.x) + Math.sin(elapsed * 14) * 0.4 * motion, leap * 2.2);
+      if (state.pull > 0.45 && elapsed - splashAt > 0.32) {
+        splashAt = elapsed;
+        burst("splash", floatPos.x, RIVER_Y, floatPos.z, 6);
+      }
+    } else if (phase === "caught" && hookedKind && state.t < 1.2) {
       hooked.visible = true;
-      const k = Math.min(1, state.t / 0.8);
-      const above = hands.clone().setY(hands.y + 0.75);
-      hooked.position.lerpVectors(catchFrom, above, k);
-      hooked.position.y += Math.sin(k * Math.PI) * 0.7;
-      hooked.rotation.set(0, Math.atan2(-jettyAcross.z, jettyAcross.x), k < 1 ? Math.sin(elapsed * 20) * 0.5 * motion : 0.2);
+      inFlight = true;
+      lifted.copy(hands).setY(hands.y + 0.3);
+      if (state.t < 0.7) {
+        const k = state.t / 0.7;
+        hooked.position.lerpVectors(catchFrom, lifted, k);
+        hooked.position.y += Math.sin(k * Math.PI) * 0.6;
+        hooked.rotation.set(0, Math.atan2(-jettyAcross.z, jettyAcross.x), Math.sin(elapsed * 20) * 0.5 * motion);
+      } else {
+        const k = (state.t - 0.7) / 0.5;
+        hooked.position.lerpVectors(lifted, basketAt, k);
+        hooked.position.y += Math.sin(k * Math.PI) * 0.25 + 0.15 * (1 - k);
+        hooked.rotation.set(0, Math.atan2(-jettyAcross.z, jettyAcross.x) + k * 1.2, -k * 1.1);
+      }
     }
+    if (phase === "caught" && state.t >= 1.2 && basketPopAt < elapsed - 2) basketPopAt = elapsed;
+    // The basket: one fish per wild catch in the barn (up to five), the one in the air not yet.
+    const wild = latest ? Object.values(latest.barn.wild).reduce((sum, count) => sum + (count ?? 0), 0) : 0;
+    const shown = Math.min(5, Math.max(0, wild - (inFlight ? 1 : 0)));
+    if (shown !== basketShown) {
+      basketShown = shown;
+      basketFill.geometry = fillGeometry(shown);
+    }
+    const pop = elapsed - basketPopAt < 0.35 && motion ? 1 + Math.sin(((elapsed - basketPopAt) / 0.35) * Math.PI) * 0.12 : 1;
+    basket.scale.setScalar(pop);
+    basketFill.scale.setScalar(pop);
   }
 
   /* ───────────── selection marker ───────────── */
@@ -4037,6 +4841,8 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     const now = clock.getElapsedTime();
     const before = previous;
     previous = game;
+    // What the player just did: the farmer goes and does it.
+    giveChores(choresBetween(before, game));
     game.plots.forEach((plot, index) => {
       if (before) plotEffects(index, before.plots[index], plot);
       const key = plotKey(plot);
@@ -4195,6 +5001,8 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     panned = false;
     homePan(pan);
     reportZoom();
+    // The farmer follows to the new area (placed there at once before the first frame).
+    farmerGo(view, !started);
   }
 
   /* ───────────── input ───────────── */
@@ -4750,6 +5558,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     }
     stepParticles(dt);
     if (motion) stepRiver(elapsed);
+    stepPeople(dt, elapsed, motion, clockNow.hour);
     stepFishingView(elapsed, motion);
     fallMaterial.opacity = 0.74 + Math.sin(elapsed * 5) * 0.05 * motion;
 
@@ -5089,7 +5898,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       renderer.domElement.removeEventListener("pointermove", onPointerMove);
       renderer.domElement.removeEventListener("touchstart", onTouchStart);
       renderer.domElement.removeEventListener("wheel", onWheel);
-      catchGeometries.forEach((item) => item.dispose());
+      [farmer, ...helpers.map((helper) => helper.walker)].forEach((walker) => walker.body.mesh.skeleton.dispose());
       primitives.forEach((item) => item.dispose());
       owned.forEach((item) => item.dispose());
       fishTemplates.forEach((item) => item.dispose());
