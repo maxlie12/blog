@@ -102,7 +102,7 @@
       the order clicked with the right tools, comes to each area, shakes the tree, skims, collects
       eggs in the poultry yard, sits at the jetty, a catch goes into his basket, and back to the
       fields); reduced motion and phone 4/4; screenshots desktop and phone.
-- [ ] Vercel build + production deploy.
+- [x] Vercel build + production deploy (`5c2a628`).
 
 ## Result
 
