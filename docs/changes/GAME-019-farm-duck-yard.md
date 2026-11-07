@@ -56,7 +56,7 @@ Chickens and ducks share one poultry yard; the owner wants each in its own area.
       9/9, earlier checks 15/15, 11/11, 5/5, eating and reduced motion; the play test 29/30 (its
       "catches reach the barn" counted an old boot, which never goes to the barn: the known
       flake); screenshots of the yards at the first and top level.
-- [ ] Vercel build + production deploy.
+- [x] Vercel build + production deploy (`664a9ec`).
 
 ## Result
 
