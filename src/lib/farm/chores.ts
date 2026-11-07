@@ -23,7 +23,7 @@ export interface Chore {
   /** A point of the pond, in its ellipse (±1 at the edge). */
   pond?: [number, number];
   drop?: RanchDrop;
-  /** The pens whose troughs get feed, or the pen of a new animal. */
+  /** The kind whose trough gets feed, or the kind of a new animal. */
   species?: AnimalId;
 }
 
@@ -77,9 +77,7 @@ export function choresBetween(before: GameState | null, after: GameState): Chore
   if (after.items.feed > before.items.feed) {
     chores.push({ kind: "stackFeed", view: "ranch" });
     const kinds = new Set(ranch.animals.map((animal) => animal.species));
-    for (const species of ["chicken", "sheep", "cow"] as AnimalId[]) {
-      if (kinds.has(species) || (species === "chicken" && kinds.has("duck"))) chores.push({ kind: "pour", view: "ranch", species });
-    }
+    for (const species of ["chicken", "duck", "sheep", "cow"] as AnimalId[]) if (kinds.has(species)) chores.push({ kind: "pour", view: "ranch", species });
   }
   const drops = new Set(ranch.drops.map((item) => item.id));
   for (const drop of oldRanch.drops) if (!drops.has(drop.id)) chores.push({ kind: "collect", view: "ranch", drop });

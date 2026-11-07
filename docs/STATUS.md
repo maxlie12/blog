@@ -1,6 +1,14 @@
 # Status
 
-Last verified: 2026-11-07 (farm people and fishing scene; harness browser checks).
+Last verified: 2026-11-07 (farm chicken and duck yards; harness browser checks).
+
+## 2026-11-07 — Farm: separate chicken and duck yards
+
+- The ranch's poultry yard is now a chicken yard (hen house, straw nests) and a duck yard (pond,
+  a little thatched duck house) side by side, each with its own trough and gate onto the lane.
+  Chickens and ducks keep to their own yard; both yards grow with the capacity upgrade.
+- Checks: `farmLayout.test.ts`, `farmPeople.test.ts`, ESLint, `tsc`; browser harness (ranch 7/7,
+  people 20/20). See `docs/changes/GAME-019-farm-duck-yard.md`.
 
 ## 2026-11-07 — Farm: a farmer who works with the player, two helpers, a livelier fishing scene
 

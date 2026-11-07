@@ -3,7 +3,7 @@ import test from "node:test";
 import { DUCK_POND, FIXTURES, LANE, PEN_OF, RANCH_BOUNDS, TOP_LEVEL, fixtureRect, inside, overlaps, penRect, walkable, type PenId } from "./farm/ranchLayout.ts";
 import { NO_COVER, ZOOM_MAX, clampZoom, coverLift, defaultHeight, isNarrow, panLimits, zoomMin } from "./farm/view.ts";
 
-const PENS: PenId[] = ["poultry", "sheep", "cow"];
+const PENS: PenId[] = ["chicken", "duck", "sheep", "cow"];
 
 test("view: a wide screen fits the area, a phone shows it closer, and panning reaches its edges", () => {
   const area = { width: 12, height: 9 };
@@ -60,15 +60,22 @@ test("ranch: buildings and the duck pond fit in the smallest pens, and each anim
     const home = item.pen === "lane" ? LANE : penRect(item.pen, 0);
     assert.ok(rect.x0 >= home.x0 && rect.x1 <= home.x1 && rect.z0 >= home.z0 && rect.z1 <= home.z1, `${name} fits its pen from the start`);
   }
-  const yard = penRect("poultry", 0);
-  assert.ok(inside(yard, DUCK_POND.x - DUCK_POND.rx, DUCK_POND.z - DUCK_POND.rz) && inside(yard, DUCK_POND.x + DUCK_POND.rx, DUCK_POND.z + DUCK_POND.rz), "the pond fits the first yard");
-  assert.equal(PEN_OF.duck, "poultry");
-  assert.ok(walkable("poultry", 0, DUCK_POND.x, DUCK_POND.z, true) && !walkable("poultry", 0, DUCK_POND.x, DUCK_POND.z), "only swimmers go in the pond");
+  const yard = penRect("duck", 0);
+  assert.ok(inside(yard, DUCK_POND.x - DUCK_POND.rx, DUCK_POND.z - DUCK_POND.rz, 0.15) && inside(yard, DUCK_POND.x + DUCK_POND.rx, DUCK_POND.z + DUCK_POND.rz, 0.15), "the pond fits the first duck yard, with a bank round it");
+  assert.deepEqual([PEN_OF.chicken, PEN_OF.duck], ["chicken", "duck"], "chickens and ducks have their own yards");
+  assert.ok(walkable("duck", 0, DUCK_POND.x, DUCK_POND.z, true) && !walkable("duck", 0, DUCK_POND.x, DUCK_POND.z), "only swimmers go in the pond");
+  const chickens = penRect("chicken", TOP_LEVEL), ducks = penRect("duck", TOP_LEVEL);
+  assert.ok(chickens.z1 === ducks.z0 && chickens.x0 === ducks.x0 && chickens.x1 === ducks.x1, "the two yards share the fence between them, at every size");
   // Enough free ground in each first pen for its animals to move about.
   for (const pen of PENS) {
     const rect = penRect(pen, 0);
     let free = 0;
-    for (let x = rect.x0; x <= rect.x1; x += 0.1) for (let z = rect.z0; z <= rect.z1; z += 0.1) if (walkable(pen, 0, x, z)) free += 0.01;
-    assert.ok(free > 1.2, `${pen}: ${free.toFixed(2)} m² free at the first level`);
+    let land = 0;
+    for (let x = rect.x0; x <= rect.x1; x += 0.1) for (let z = rect.z0; z <= rect.z1; z += 0.1) {
+      if (walkable(pen, 0, x, z, pen === "duck")) free += 0.01;
+      if (walkable(pen, 0, x, z)) land += 0.01;
+    }
+    // Ducks use their pond too; still, they need some land to walk on.
+    assert.ok(free > 1.2 && land > 0.8, `${pen}: ${free.toFixed(2)} m² free (${land.toFixed(2)} m² of land) at the first level`);
   }
 });

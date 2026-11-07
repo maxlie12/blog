@@ -10,7 +10,7 @@
  */
 import { PLOT_COLUMNS } from "./engine.ts";
 import type { ChoreView } from "./chores.ts";
-import { DUCK_POND, FIXTURES, LANE, penRect, type PenId } from "./ranchLayout.ts";
+import { DUCK_POND, FIXTURES, LANE, TROUGH_OF, penRect, type PenId } from "./ranchLayout.ts";
 
 export type Point = [number, number];
 /** Where a point is: an area of the farm, a pen, or the paths between them. */
@@ -73,19 +73,26 @@ const FENCES: Fence[] = [
   [ORCHARD_FENCE.x1, ORCHARD_FENCE.z0, ORCHARD_FENCE.x1, ORCHARD_FENCE.z1],
 ];
 
+/** Where each pen's gate opens onto the lane (along the lane's side), shared with the scene. */
+export const GATE_SPANS: Record<PenId, [number, number]> = { chicken: [7.25, 7.8], duck: [8.15, 8.75], sheep: [11.05, 11.75], cow: [9.45, 10.25] };
+
 /** The pens' fences at a ranch level, with their gates onto the lane left open. */
 function penFences(level: number): Fence[] {
-  const p = penRect("poultry", level), s = penRect("sheep", level), c = penRect("cow", level);
+  const h = penRect("chicken", level), d = penRect("duck", level), s = penRect("sheep", level), c = penRect("cow", level);
+  const [hg0, hg1] = GATE_SPANS.chicken, [dg0, dg1] = GATE_SPANS.duck, [sg0, sg1] = GATE_SPANS.sheep, [cg0, cg1] = GATE_SPANS.cow;
   return [
-    [p.x0, p.z0, p.x1, p.z0], [p.x0, p.z0, p.x0, p.z1], [p.x0, p.z1, p.x1, p.z1], [p.x1, p.z0, p.x1, 7.3], [p.x1, 7.95, p.x1, p.z1],
-    [s.x0, s.z0, s.x1, s.z0], [s.x0, s.z0, s.x0, s.z1], [s.x0, s.z1, s.x1, s.z1], [s.x1, s.z0, s.x1, 11.05], [s.x1, 11.75, s.x1, s.z1],
-    [c.x0, c.z0, c.x1, c.z0], [c.x1, c.z0, c.x1, c.z1], [c.x0, c.z1, c.x1, c.z1], [c.x0, c.z0, c.x0, 9.45], [c.x0, 10.25, c.x0, c.z1],
+    // The chicken yard, the fence it shares with the duck yard, then the duck yard's other sides.
+    [h.x0, h.z0, h.x1, h.z0], [h.x0, h.z0, h.x0, h.z1], [h.x0, h.z1, h.x1, h.z1], [h.x1, h.z0, h.x1, hg0], [h.x1, hg1, h.x1, h.z1],
+    [d.x0, d.z0, d.x0, d.z1], [d.x0, d.z1, d.x1, d.z1], [d.x1, d.z0, d.x1, dg0], [d.x1, dg1, d.x1, d.z1],
+    [s.x0, s.z0, s.x1, s.z0], [s.x0, s.z0, s.x0, s.z1], [s.x0, s.z1, s.x1, s.z1], [s.x1, s.z0, s.x1, sg0], [s.x1, sg1, s.x1, s.z1],
+    [c.x0, c.z0, c.x1, c.z0], [c.x1, c.z0, c.x1, c.z1], [c.x0, c.z1, c.x1, c.z1], [c.x0, c.z0, c.x0, cg0], [c.x0, cg1, c.x0, c.z1],
   ];
 }
 
 /** Gates onto the lane, as [x outside, x inside, z]. */
 export const PEN_GATES: Record<PenId, [number, number, number]> = {
-  poultry: [LANE.x0 + 0.3, LANE.x0 - 0.3, 7.62],
+  chicken: [LANE.x0 + 0.3, LANE.x0 - 0.3, 7.52],
+  duck: [LANE.x0 + 0.3, LANE.x0 - 0.3, 8.45],
   sheep: [LANE.x0 + 0.3, LANE.x0 - 0.3, 11.4],
   cow: [LANE.x1 - 0.15, LANE.x1 + 0.3, 9.62],
 };
@@ -262,7 +269,7 @@ node("laneMouth", lane, 6.0, "ranch");
 node("laneTop", lane, 6.33, "ranch");
 node("laneCorner", 1.64, 6.36, "ranch");
 node("laneStoreLow", 1.66, 7.3, "ranch");
-node("lanePoultry", 1.0, 7.5, "ranch");
+node("laneChicken", 1.0, 7.5, "ranch");
 node("lanePump", 0.98, 8.35, "ranch");
 node("laneCans", 1.18, 8.85, "ranch");
 node("laneBales", 1.25, 9.56, "ranch");
@@ -270,21 +277,27 @@ node("laneBalesLow", 1.82, 10.35, "ranch");
 node("laneSheep", 1.0, 10.55, "ranch");
 node("laneLow", 0.9, 11.3, "ranch");
 node("laneEnd", 1.15, 11.88, "ranch");
-link("roadLane", "laneMouth", "laneTop", "laneCorner", "laneStoreLow", "lanePoultry", "lanePump", "laneCans", "laneBales", "cowOut", "laneBalesLow", "laneSheep", "laneLow", "laneEnd");
-for (const pen of ["poultry", "sheep", "cow"] as PenId[]) {
+link("roadLane", "laneMouth", "laneTop", "laneCorner", "laneStoreLow", "laneChicken", "lanePump", "laneCans", "laneBales", "cowOut", "laneBalesLow", "laneSheep", "laneLow", "laneEnd");
+for (const pen of ["chicken", "duck", "sheep", "cow"] as PenId[]) {
   const [outside, inside, z] = PEN_GATES[pen];
   node(`${pen}Out`, outside, z, "ranch");
   node(`${pen}In`, inside, z, pen);
 }
-link("lanePoultry", "poultryOut", "poultryIn");
+link("laneChicken", "chickenOut", "chickenIn");
+link("lanePump", "duckOut", "duckIn");
 link("laneLow", "sheepOut", "sheepIn");
 link("cowOut", "cowIn");
-// Inside the pens (all within the first, smallest pens): round the duck pond and the buildings.
-node("poultryNorth", -1.0, 7.45, "poultry");
-node("poultryWest", -2.05, 8.1, "poultry");
-node("poultrySouthWest", -2.0, 8.85, "poultry");
-node("poultrySouth", -1.0, 9.05, "poultry");
-link("poultryIn", "poultryNorth", "poultryWest", "poultrySouthWest", "poultrySouth");
+// Inside the pens (all within the first, smallest pens): past the hen house, round the duck pond.
+node("chickenMiddle", -1.0, 7.5, "chicken");
+node("chickenWest", -2.3, 7.55, "chicken");
+link("chickenIn", "chickenMiddle", "chickenWest");
+node("duckEast", -0.55, 8.6, "duck");
+node("duckNorthEast", -0.75, 8.1, "duck");
+node("duckNorth", -1.45, 8.08, "duck");
+node("duckSouthEast", -0.75, 9.15, "duck");
+node("duckSouth", -1.45, 9.18, "duck");
+link("duckIn", "duckEast", "duckNorthEast", "duckNorth");
+link("duckEast", "duckSouthEast", "duckSouth");
 node("sheepMiddle", -1.1, 11.4, "sheep");
 link("sheepIn", "sheepMiddle");
 node("cowMiddle", 3.1, 9.4, "cow");
@@ -424,10 +437,10 @@ export function pondStand(u: number, v: number): Stand {
   return { at, place: "pond", facing: facingTo(at, pondPoint(u * 0.6, v * 0.6)) };
 }
 
-/** In the lane by a pen's trough, facing it over the fence. */
+/** In the lane by a pen's trough, facing it over the fence (just north of the duck trough, clear of the water barrel). */
 export function troughStand(pen: PenId): Stand {
-  const item = FIXTURES[pen === "poultry" ? "poultryTrough" : pen === "sheep" ? "sheepTrough" : "cowTrough"];
-  const at: Point = pen === "cow" ? [LANE.x1 - 0.28, item.z] : [LANE.x0 + 0.3, item.z];
+  const item = FIXTURES[TROUGH_OF[pen]];
+  const at: Point = pen === "cow" ? [LANE.x1 - 0.28, item.z] : pen === "duck" ? [LANE.x0 + 0.27, item.z - 0.18] : [LANE.x0 + 0.3, item.z];
   return { at, place: "ranch", facing: facingTo(at, [item.x, item.z]) };
 }
 

@@ -36,11 +36,11 @@ test("paths: from the house to every place of work, keeping out of plots, fences
     for (let i = 0; i < 12; i += 1) targets.push([`plot ${i}`, plotStand(i).at, "farm"]);
     for (let i = 0; i < 6; i += 1) targets.push([`tree ${i}`, treeStand(i).at, "orchard"]);
     for (const [u, v] of [[0, -0.8], [0.8, 0], [0, 0.8], [-0.8, 0], [-0.6, 0.6], [-0.6, -0.6], [0.6, 0.6]]) targets.push([`pond ${u},${v}`, pondStand(u, v).at, "pond"]);
-    for (const pen of ["poultry", "sheep", "cow"] as const) targets.push([`${pen} trough`, troughStand(pen).at, "ranch"]);
+    for (const pen of ["chicken", "duck", "sheep", "cow"] as const) targets.push([`${pen} trough`, troughStand(pen).at, "ranch"]);
     targets.push(["incubator", incubatorStand().at, "ranch"]);
     targets.push(["jetty", JETTY_FOOT, "river"]);
     // Products lie where animals can stand: a grid of such points in each pen.
-    for (const pen of ["poultry", "sheep", "cow"] as const) {
+    for (const pen of ["chicken", "duck", "sheep", "cow"] as const) {
       const box = penRect(pen, level);
       for (let x = box.x0; x <= box.x1; x += 0.7) for (let z = box.z0; z <= box.z1; z += 0.7) if (walkable(pen, level, x, z)) targets.push([`${pen} drop ${x.toFixed(1)},${z.toFixed(1)}`, dropStand(pen, x, z, level).at, pen]);
     }

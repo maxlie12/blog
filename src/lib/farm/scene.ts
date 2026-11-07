@@ -64,7 +64,7 @@ import {
 import { isNibbling, type FishingInput, type FishingState } from "./fishing";
 import { QUALITY_PRESETS, type Quality } from "./quality";
 import { NO_COVER, ZOOM_MAX, clampZoom, coverLift, defaultHeight, isNarrow, panLimits, zoomMin, type Cover } from "./view";
-import { FIELD, HOME, IDLE_SPOTS, JETTY_FOOT, ORCHARD, PEN_GATES, POND, RIVER_HALF, RIVER_POINTS, ROAD_Z, dropStand, incubatorStand, plotPosition, plotStand, pondPoint, pondStand, route, routeLength, spotPosition, treeStand, troughStand, type Place, type Point } from "./paths";
+import { FIELD, GATE_SPANS, HOME, IDLE_SPOTS, JETTY_FOOT, ORCHARD, PEN_GATES, POND, RIVER_HALF, RIVER_POINTS, ROAD_Z, dropStand, incubatorStand, plotPosition, plotStand, pondPoint, pondStand, route, routeLength, spotPosition, treeStand, troughStand, type Place, type Point } from "./paths";
 import { choresBetween, type Chore } from "./chores";
 import { BODY_SIZE, CHORE_ACTS, IDLE_SECONDS, REST, SITTING, SPEED, STRIDE, TWO_HANDED, chorePose, fishingPose, idlePose, mixPose, phaseFor, standPose, walkPose, type Idle, type Pose, type Tool } from "./people";
 import { DUCK_POND, FIXTURES, LANE, PEN_OF, PEN_ROOM, RANCH_BOUNDS, TOP_LEVEL, TROUGH_OF, fixtureRect, inDuckPond, inside, penRect, walkable, type PenId } from "./ranchLayout";
@@ -1095,9 +1095,9 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
 
   // Flower pots, crates of produce, sunflowers.
   /* ───────────── ranch: buildings that are there from the start ───────────── */
-  /* A poultry yard with the hen house, straw nests and a duck pond, a sheep pen with its
-     shelter, a cow pen with a shed and hay rack, a trough in each, and the middle lane with the
-     feed store and a water pump. They sit where each pen starts; fences and the extras that come
+  /* A chicken yard with the hen house and straw nests, a duck yard with its pond and duck house,
+     a sheep pen with its shelter, a cow pen with a shed and hay rack, a trough in each, and the
+     middle lane with the feed store and a water pump. They sit where each pen starts; fences and the extras that come
      with bigger pens are built in `buildRanchYard`. */
   /** A hay bale on its side (a round one rolled along x). */
   function addBale(root: THREE.Object3D, x: number, y: number, z: number, yaw = 0) {
@@ -1172,6 +1172,24 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     keepClear.push([x, z, Math.max(rx, rz) + 0.15]);
   }
   {
+    // Duck house: a low hut with a thatch-coloured roof (apart from the sheep shelter's teal one) and a round door facing the pond, straw at the door.
+    const { x, z } = FIXTURES.duckHouse;
+    const hut = new THREE.Group();
+    hut.position.set(x, 0, z);
+    const wood = "#c9925c";
+    hut.add(part(rbox(0.38, 0.26, 0.42, 0.03), wood, 0, 0.13, 0));
+    for (let i = -2; i <= 2; i += 1) hut.add(part(box(0.385, 0.012, 0.012), tint(wood, -0.12), 0, 0.06 + (i + 2) * 0.045, 0.211));
+    hut.add(part(gable(0.38, 0.42, 0.13), wood, 0, 0.26, 0));
+    const roof = shingleRoof(0.5, 0.52, 0.16, "#c9a23f", mulberry32(91));
+    roof.position.y = 0.25;
+    hut.add(roof);
+    hut.add(turn(part(cylinder(0.085, 0.085, 0.02, 14), "#3a2a20", 0.19, 0.1, 0), 0, 0, Math.PI / 2), turn(part(cylinder(0.1, 0.1, 0.015, 14), "#f1e4c8", 0.188, 0.1, 0), 0, 0, Math.PI / 2));
+    propsRoot.add(hut);
+    for (let i = 0; i < 6; i += 1) leafAt(foliageRoot, i % 2 ? "#e9cc6a" : "#d8b44e", x + 0.26, 0.02, z - 0.12 + i * 0.05, Math.PI / 2, -0.4, 0.12, 0.03, 0, 0.15);
+    keepClear.push([x, z, 0.42]);
+    groundShade.push([x, z, 0.55, 0.2]);
+  }
+  {
     // Sheep shelter: a lean-to with a plank back wall, straw bedding and a hay rack.
     const { x, z } = FIXTURES.sheepShelter;
     const shed = new THREE.Group();
@@ -1234,7 +1252,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   }
   /** Each pen's trough: one hit box each opening the feed sheet, and the feed showing in it. */
   const troughFills: THREE.Mesh[] = [];
-  for (const pen of ["poultry", "sheep", "cow"] as const) {
+  for (const pen of ["chicken", "duck", "sheep", "cow"] as const) {
     const { x, z, hx, hz } = FIXTURES[TROUGH_OF[pen]];
     const w = hx * 2, d = hz * 2;
     propsRoot.add(part(rbox(w, 0.24, d, 0.03), "#9c6a3c", x, 0.12, z), part(box(w - 0.1, 0.04, d - 0.1), "#5a3d24", x, 0.23, z));
@@ -1243,7 +1261,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     keepClear.push([x, z, Math.max(hx, hz) + 0.15]);
     const fillRoot = new THREE.Group();
     // Origin at the bottom so scaling raises the feed level from the trough floor.
-    fillRoot.add(part(box(w - 0.14, 0.1, d - 0.14), pen === "poultry" ? "#e9c46a" : "#d8b44e", 0, 0.05, 0));
+    fillRoot.add(part(box(w - 0.14, 0.1, d - 0.14), pen === "chicken" || pen === "duck" ? "#e9c46a" : "#d8b44e", 0, 0.05, 0));
     const fill = bake(fillRoot, false, true);
     fill.userData.ownsGeometry = true;
     fill.raycast = () => {};
@@ -1385,7 +1403,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       const n2 = noise2(x * 0.85 + 7, z * 0.85 + 3);
       c.copy(grassA).lerp(grassB, n1).lerp(grassDark, smooth(0.55, 0.9, n2) * 0.45);
       // Lusher grass in the pens (painted at their full size), scratched earth round the hen house.
-      for (const pen of ["poultry", "sheep", "cow"] as const) {
+      for (const pen of ["chicken", "duck", "sheep", "cow"] as const) {
         const r = penRect(pen, TOP_LEVEL);
         c.lerp(pastureColor, rectMask(x, z, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, (r.x1 - r.x0) / 2 - 0.1, (r.z1 - r.z0) / 2 - 0.1, 0.5) * 0.55);
       }
@@ -1598,10 +1616,10 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   {
     const random = mulberry32(213);
     const dummy = new THREE.Object3D();
-    // Grass for the sheep and cows across their pens at full size, a little in the poultry yard.
-    const wanted: Record<PenId, number> = { poultry: 2, sheep: 5, cow: 6 };
+    // Grass for the sheep and cows across their pens at full size, a little for the chickens and ducks.
+    const wanted: Record<PenId, number> = { chicken: 2, duck: 1, sheep: 5, cow: 6 };
     const candidates: [PenId, number, number][] = [];
-    for (const pen of ["poultry", "sheep", "cow"] as const) {
+    for (const pen of ["chicken", "duck", "sheep", "cow"] as const) {
       const r = penRect(pen, TOP_LEVEL);
       let found = 0;
       for (let tries = 0; tries < 200 && found < wanted[pen]; tries += 1) {
@@ -2919,7 +2937,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   /** The ranch's capacity level, which sets how big the pens are. */
   let ranchLevel = 0;
   /** A free spot in each pen, whatever its size (used when a random spot keeps landing on something). */
-  const PEN_REST: Record<PenId, [number, number]> = { poultry: [-2.0, 8.4], sheep: [-1.0, 11.65], cow: [3.25, 9.6] };
+  const PEN_REST: Record<PenId, [number, number]> = { chicken: [-1.0, 7.5], duck: [-0.5, 8.6], sheep: [-1.0, 11.65], cow: [3.25, 9.6] };
   /** A random free spot in a pen; a swimmer may get one on the duck pond. */
   function randomPenPoint(pen: PenId, seed: number, swim = false): THREE.Vector2 {
     const random = mulberry32(seed);
@@ -2938,14 +2956,15 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   function troughPoint(pen: PenId, seed: number): THREE.Vector2 {
     const { x, z, hx, hz } = FIXTURES[TROUGH_OF[pen]];
     const spread = (((seed % 9) - 4) / 4) * 0.8;
-    if (pen === "poultry") return new THREE.Vector2(x + spread * hx, z + hz + 0.2);
+    if (pen === "chicken") return new THREE.Vector2(x + spread * hx, z + hz + 0.2);
+    if (pen === "duck") return new THREE.Vector2(x + spread * hx, z - hz - 0.2);
     if (pen === "sheep") return new THREE.Vector2(x - hx - 0.32, z + spread * hz);
     return new THREE.Vector2(x + hx + 0.45, z + spread * hz);
   }
-  const PEN_OF_PRODUCT: Record<ProductId, PenId> = { egg: "poultry", duckEgg: "poultry", wool: "sheep", milk: "cow" };
+  const PEN_OF_PRODUCT: Record<ProductId, PenId> = { egg: "chicken", duckEgg: "duck", wool: "sheep", milk: "cow" };
   /** A product left lying in its pen: drops keep their place in -1..1 across the pen. */
   function dropPoint(drop: RanchDrop): [number, number] {
-    const pen = PEN_OF_PRODUCT[drop.product] ?? "poultry";
+    const pen = PEN_OF_PRODUCT[drop.product] ?? "chicken";
     const rect = penRect(pen, ranchLevel);
     const room = PEN_ROOM[pen] + 0.1;
     for (let i = 0; i < 8; i += 1) {
@@ -3152,38 +3171,44 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     const props = new THREE.Group();
     const leaves = new THREE.Group();
     const glow = new THREE.Group();
-    const poultry = penRect("poultry", level), sheep = penRect("sheep", level), cow = penRect("cow", level);
-    // Poultry: a white picket fence; its gate onto the lane between the trough and the pond.
+    const chickens = penRect("chicken", level), ducks = penRect("duck", level), sheep = penRect("sheep", level), cow = penRect("cow", level);
+    // Chickens and ducks: white picket fences with one between the two yards, each yard with its gate onto the lane.
     const white = "#f4efe2";
-    picketFence(props, poultry.x0, poultry.z0, poultry.x1, poultry.z0, white);
-    picketFence(props, poultry.x0, poultry.z0, poultry.x0, poultry.z1, white);
-    picketFence(props, poultry.x0, poultry.z1, poultry.x1, poultry.z1, white);
-    picketFence(props, poultry.x1, poultry.z0, poultry.x1, 7.3, white);
-    picketFence(props, poultry.x1, 7.95, poultry.x1, poultry.z1, white);
-    gateAt(props, poultry.x1, 7.3, 7.95, 1, white);
+    const [hg0, hg1] = GATE_SPANS.chicken, [dg0, dg1] = GATE_SPANS.duck, [sg0, sg1] = GATE_SPANS.sheep, [cg0, cg1] = GATE_SPANS.cow;
+    picketFence(props, chickens.x0, chickens.z0, chickens.x1, chickens.z0, white);
+    picketFence(props, chickens.x0, chickens.z0, chickens.x0, chickens.z1, white);
+    picketFence(props, chickens.x0, chickens.z1, chickens.x1, chickens.z1, white);
+    picketFence(props, chickens.x1, chickens.z0, chickens.x1, hg0, white);
+    picketFence(props, chickens.x1, hg1, chickens.x1, chickens.z1, white);
+    gateAt(props, chickens.x1, hg0, hg1, 1, white);
+    picketFence(props, ducks.x0, ducks.z0, ducks.x0, ducks.z1, white);
+    picketFence(props, ducks.x0, ducks.z1, ducks.x1, ducks.z1, white);
+    picketFence(props, ducks.x1, ducks.z0, ducks.x1, dg0, white);
+    picketFence(props, ducks.x1, dg1, ducks.x1, ducks.z1, white);
+    gateAt(props, ducks.x1, dg0, dg1, 1, white);
     // Sheep: cream rails; cows: rustic wood rails; each with a gate onto the lane.
     const cream = "#f1e4c8", wood = "#b98a55";
     addFence(props, 0, 0, [
       [sheep.x0, sheep.z0, sheep.x1, sheep.z0],
       [sheep.x0, sheep.z0, sheep.x0, sheep.z1],
       [sheep.x0, sheep.z1, sheep.x1, sheep.z1],
-      [sheep.x1, sheep.z0, sheep.x1, 11.05],
-      [sheep.x1, 11.75, sheep.x1, sheep.z1],
+      [sheep.x1, sheep.z0, sheep.x1, sg0],
+      [sheep.x1, sg1, sheep.x1, sheep.z1],
     ], cream);
-    gateAt(props, sheep.x1, 11.05, 11.75, 1, cream);
+    gateAt(props, sheep.x1, sg0, sg1, 1, cream);
     addFence(props, 0, 0, [
       [cow.x0, cow.z0, cow.x1, cow.z0],
       [cow.x1, cow.z0, cow.x1, cow.z1],
       [cow.x0, cow.z1, cow.x1, cow.z1],
-      [cow.x0, cow.z0, cow.x0, 9.45],
-      [cow.x0, 10.25, cow.x0, cow.z1],
+      [cow.x0, cow.z0, cow.x0, cg0],
+      [cow.x0, cg1, cow.x0, cow.z1],
     ], wood);
-    gateAt(props, cow.x0, 9.45, 10.25, -1, wood);
+    gateAt(props, cow.x0, cg0, cg1, -1, wood);
 
     const lane = (LANE.x0 + LANE.x1) / 2;
     if (level >= 1) {
       // A stack of hay bales in the lane, a wheelbarrow of hay beside it (clear of the sheep gate),
-      // straw piles for the hens.
+      // a straw pile for the hens and one for the ducks.
       addBale(props, lane + 0.25, 0, 10.0, 0.1);
       addBale(props, lane - 0.22, 0, 10.05, -0.15);
       addBale(props, lane + 0.02, 0.42, 10.02, 0.05);
@@ -3194,7 +3219,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       for (const side of [-1, 1]) barrow.add(turn(part(rbox(0.03, 0.03, 0.42, 0.01), "#7a5638", side * 0.14, 0.24, -0.36), 0.25, 0, 0), part(rbox(0.03, 0.18, 0.03, 0.01), "#7a5638", side * 0.13, 0.09, -0.12));
       props.add(barrow);
       for (let i = 0; i < 6; i += 1) leafAt(leaves, "#e2c25f", lane + 0.4 + Math.cos(i) * 0.06, 0.33, 10.95 + Math.sin(i) * 0.08, i * 1.1, 0.5, 0.14, 0.04, 0, 0.2);
-      for (const [hx, hz] of [[poultry.x0 + 0.45, poultry.z1 - 0.45], [poultry.x0 + 0.5, 7.4]]) {
+      for (const [hx, hz] of [[chickens.x0 + 0.45, chickens.z1 - 0.38], [ducks.x0 + 0.4, ducks.z1 - 0.3]]) {
         const heap = part(sphere(0.26, 10, 6), "#e2c25f", hx, 0.03, hz);
         heap.scale.set(1, 0.32, 0.8);
         props.add(heap);
