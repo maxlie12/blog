@@ -1,0 +1,90 @@
+{
+  "date": "2026-11-07",
+  "title": "Hỏi lại để hiểu đúng — một lượt nghe, một câu xác nhận",
+  "kind": "restart",
+  "note": "Chưa có bài làm mới: giữ bước nghe/đọc hiểu, không tăng mức hay chuyển chu kỳ. Nguồn dùng lại từ 06/11; không tạo bài bù bắt buộc. Chỉ nhiệm vụ đầu là chính.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-07-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — nghe rồi xác nhận",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải đề chính thức. Không xem đáp án trước. Phần tùy chọn có thể để phiên khác.",
+      "material": "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues",
+      "exercises": "Nguồn Cambridge miễn phí B1–B2, có audio và câu hỏi; không mặc định có transcript. Chọn một hội thoại, nghe tối đa hai lượt. Viết một dòng người nói muốn gì và một chi tiết chắc chắn. Tự tạo một câu hỏi xác nhận có thể dùng trong trao đổi đó; ghi số lượt nghe và chỗ chưa rõ.",
+      "completionCriteria": "Lưu đầu ra tự tạo và điều kiện làm bài; Done chỉ ghi thực hành, không xác nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-07-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — phân biệt việc cần làm",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải đề chính thức. Không xem đáp án trước. Phần tùy chọn có thể để phiên khác.",
+      "material": "Sam: Could you check the page before the meeting?\nMai: Do you want me to check the layout or test the form?\nSam: Test the form, please. We can review the layout tomorrow.\nMai: All right. I will send you a short note about any problems.",
+      "exercises": "Đoạn tự soạn, không phải transcript Cambridge. Trả lời bằng lời mình: Mai cần kiểm tra gì? Việc nào để ngày mai? Câu nào giúp tránh hiểu nhầm?",
+      "completionCriteria": "Lưu đầu ra tự tạo và điều kiện làm bài; Done chỉ ghi thực hành, không xác nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-07-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — hỏi rõ trước khi giúp",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải đề chính thức. Không xem đáp án trước. Phần tùy chọn có thể để phiên khác.",
+      "material": null,
+      "exercises": "Tình huống tự soạn: bạn được nhờ kiểm tra một trang nhưng chưa rõ cần xem bố cục hay thử biểu mẫu. Nói câu hỏi làm rõ và xác nhận việc sẽ làm. Đổi điều kiện: chỉ còn mười phút, bạn đề xuất gì? Nói 30–45 giây, lưu hai câu đã nói. Muốn nhận xét phát âm, gửi ChatGPT audio; website không tự chấm.",
+      "completionCriteria": "Lưu đầu ra tự tạo và điều kiện làm bài; Done chỉ ghi thực hành, không xác nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-07-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5 phút — nhắn lại điều đã thống nhất",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải đề chính thức. Không xem đáp án trước. Phần tùy chọn có thể để phiên khác.",
+      "material": null,
+      "exercises": "Viết 30–50 từ: xác nhận bạn kiểm tra phần nào, giới hạn thời gian và cách báo kết quả. Dùng chi tiết tự chọn, không dùng AI sửa bản đầu. Chỉ xem lại một điểm: người nhận có hiểu việc bạn nhận làm không?",
+      "completionCriteria": "Lưu đầu ra tự tạo và điều kiện làm bài; Done chỉ ghi thực hành, không xác nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-07-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — đổi món khi quán hết trà",
+      "level": "Sơ cấp · giao tiếp đời sống",
+      "instructions": "Bài do trợ lý tự soạn, không phải đề chính thức. Không xem đáp án trước. Phần tùy chọn có thể để phiên khác.",
+      "material": "https://mandarinbean.com/im-thirsty/",
+      "exercises": "Nguồn web dùng lại: text, pinyin và audio miễn phí; bài tập/bản dịch đầy đủ cần Premium, không bắt buộc mua. Xem cụm rồi che đi, nói và gõ lựa chọn đồ uống của mình. Người bán báo hết món: tự đổi sang món khác rồi tạo thêm một câu hỏi mới. Viết tay tùy chọn, không lưu hoặc tự chấm. Chỉ Done khi có câu tự tạo, không phải chép mẫu.",
+      "completionCriteria": "Lưu đầu ra tự tạo và điều kiện làm bài; Done chỉ ghi thực hành, không xác nhận trình độ.",
+      "chinesePractice": {
+        "sentence": "我想喝茶。",
+        "translation": "Tôi muốn uống trà.",
+        "tokens": [
+          {
+            "hanzi": "我想",
+            "pinyin": "wǒ xiǎng",
+            "meaning": "tôi muốn"
+          },
+          {
+            "hanzi": "喝茶",
+            "pinyin": "hē chá",
+            "meaning": "uống trà"
+          },
+          {
+            "hanzi": "没有了",
+            "pinyin": "méiyǒu le",
+            "meaning": "hết rồi"
+          },
+          {
+            "hanzi": "喝水",
+            "pinyin": "hē shuǐ",
+            "meaning": "uống nước"
+          }
+        ],
+        "outputPrompt": "Che mẫu, tự đổi đồ uống; gõ hai câu và nói lại không nhìn. Thêm một câu hỏi do bạn tự tạo."
+      }
+    }
+  ]
+}
