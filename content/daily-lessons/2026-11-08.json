@@ -1,0 +1,90 @@
+{
+  "date": "2026-11-08",
+  "title": "Nghe để hỏi đúng — bắt đầu lại nhẹ nhàng",
+  "kind": "restart",
+  "note": "Chưa có đầu ra tiếng Anh mới: giữ bước nghe/đọc hiểu và mức B1+ tự đánh giá. Nguồn được dùng lại, không tăng độ khó hoặc tạo bài bù bắt buộc. Blog Seed tùy chọn của Chủ nhật tuần ISO 45 không áp dụng vì đây là tuần lẻ.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-08-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — nghe rồi xác nhận",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải đề chính thức. Không xem đáp án trước. Phần tùy chọn có thể để phiên khác.",
+      "material": "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues",
+      "exercises": "Dùng lại nguồn Cambridge miễn phí B1–B2, audio và câu hỏi; không mặc định có transcript. Trong 5 phút chọn một hội thoại, nghe tối đa hai lượt. Viết người nói muốn đạt điều gì, ghi một chi tiết chắc chắn rồi tự viết một câu hỏi khi bạn chưa hiểu rõ. Ghi số lượt nghe và hỗ trợ đã dùng. Không cần hoàn thành cả trang.",
+      "completionCriteria": "Lưu đầu ra tự tạo và điều kiện làm bài; Done chỉ ghi thực hành, không xác nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-08-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — đọc để tìm đúng điểm hẹn",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải đề chính thức. Không xem đáp án trước. Phần tùy chọn có thể để phiên khác.",
+      "material": "Lee: Can we meet near the station?\nAn: Do you mean the main entrance or the bus stop?\nLee: The main entrance. The bus stop is closed today.\nAn: Thanks. I may be five minutes late. I will message you when I arrive.",
+      "exercises": "Đoạn tự soạn, không phải transcript Cambridge: hai người hẹn ở đâu, vì sao cần hỏi lại và An sẽ làm gì khi tới? Trả lời bằng lời mình.",
+      "completionCriteria": "Lưu đầu ra tự tạo và điều kiện làm bài; Done chỉ ghi thực hành, không xác nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-08-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — hỏi rõ trước khi giúp",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải đề chính thức. Không xem đáp án trước. Phần tùy chọn có thể để phiên khác.",
+      "material": null,
+      "exercises": "Tình huống tự soạn: bạn hẹn một người ở ga nhưng chưa rõ cửa nào. Nói câu hỏi làm rõ và xác nhận điểm hẹn. Sau đó đổi điều kiện: bạn trễ năm phút, tự nói lời báo và phương án. Nói 30–45 giây, lưu hai câu đã nói; gửi ChatGPT audio nếu muốn nhận xét phát âm.",
+      "completionCriteria": "Lưu đầu ra tự tạo và điều kiện làm bài; Done chỉ ghi thực hành, không xác nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-08-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5 phút — nhắn lại điều đã thống nhất",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải đề chính thức. Không xem đáp án trước. Phần tùy chọn có thể để phiên khác.",
+      "material": null,
+      "exercises": "Viết tin nhắn 30–50 từ: hỏi rõ điểm hẹn, báo bạn có thể trễ và nói cách liên lạc khi tới. Không chép bài đọc hay dùng AI sửa bản đầu. Kiểm tra một điểm: người nhận có biết gặp ở đâu và cần làm gì không?",
+      "completionCriteria": "Lưu đầu ra tự tạo và điều kiện làm bài; Done chỉ ghi thực hành, không xác nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-08-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — nhớ đồ vật rồi tự tạo câu",
+      "level": "Sơ cấp · giao tiếp đời sống",
+      "instructions": "Bài do trợ lý tự soạn, không phải đề chính thức. Không xem đáp án trước. Phần tùy chọn có thể để phiên khác.",
+      "material": "https://mandarinbean.com/im-thirsty/",
+      "exercises": "Bài tự soạn: nhìn các cụm rồi che chữ/pinyin, nhớ lại nghĩa và tự nói bạn dùng máy tính. Tiếp đó tự tạo câu khác với cửa sổ, đũa hoặc thìa; gõ lại hai câu đã nói. Nguồn Mandarin Bean dùng lại chỉ là audio luyện thêm về đồ uống, không phải audio khớp từ vựng này; text/pinyin/audio miễn phí, phần bài tập/bản dịch đầy đủ Premium. Không cần mua. Viết tay tùy chọn, không lưu và không tự chấm.",
+      "completionCriteria": "Lưu đầu ra tự tạo và điều kiện làm bài; Done chỉ ghi thực hành, không xác nhận trình độ.",
+      "chinesePractice": {
+        "sentence": "我用电脑。",
+        "translation": "Tôi dùng máy tính.",
+        "tokens": [
+          {
+            "hanzi": "用电脑",
+            "pinyin": "yòng diànnǎo",
+            "meaning": "dùng máy tính"
+          },
+          {
+            "hanzi": "开窗户",
+            "pinyin": "kāi chuānghu",
+            "meaning": "mở cửa sổ"
+          },
+          {
+            "hanzi": "用筷子",
+            "pinyin": "yòng kuàizi",
+            "meaning": "dùng đũa"
+          },
+          {
+            "hanzi": "用勺子",
+            "pinyin": "yòng sháozi",
+            "meaning": "dùng thìa"
+          }
+        ],
+        "outputPrompt": "Che mẫu rồi nói và gõ hai câu do bạn tự tạo, thay người hoặc đồ vật; không chép mẫu. Chỉ ghi Done khi có đầu ra mới."
+      }
+    }
+  ]
+}
