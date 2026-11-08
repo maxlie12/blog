@@ -1,0 +1,122 @@
+---
+title: "Học Claude như một kỹ sư: dùng AI để đi nhanh mà không đánh mất tay nghề"
+date: "2026-11-08"
+summary: "Một cách làm việc có trách nhiệm với Claude: giao việc rõ, chọn đúng ngữ cảnh, sửa từng phần và kiểm chứng bằng bằng chứng."
+areas: ["dev", "learning"]
+draft: false
+---
+
+AI có thể viết một component trong vài phút. Nhưng ai sẽ nhận ra component đó lưu sai dữ liệu, làm hỏng bàn phím trên mobile hoặc khiến người dùng mất bài học sau khi tải lại trang?
+
+Người chịu trách nhiệm vẫn là kỹ sư. Học Claude vì thế không chỉ là học cách hỏi cho hay. Đó là học cách biến một yêu cầu thành thay đổi có thể kiểm tra, hiểu và bảo trì.
+
+Đây là bài tổng hợp biên tập với góc nhìn kỹ thuật, không phải tuyên bố tác giả có chứng chỉ hay kinh nghiệm đã được kiểm chứng. Ví dụ bên dưới là tình huống minh họa, không phải kết quả đo của một dự án thật. Nguồn được kiểm tra ngày 08/11/2026; các bước thực hành là đề xuất của bài viết, không phải quy trình chính thức của Anthropic.
+
+## 1. Đừng bắt đầu bằng việc cài thật nhiều agent
+
+Trong [Building effective agents][2], Anthropic phân biệt workflow theo đường đi định trước với agent tự quyết định cách dùng công cụ. Họ khuyên bắt đầu bằng giải pháp đơn giản, chỉ tăng độ phức tạp khi thật sự cần. Agent có thể đổi thêm thời gian chờ và chi phí lấy khả năng xử lý công việc khó hơn. Bài này xuất bản năm 2024; nên dùng như nguyên tắc kiến trúc, không như bảng hướng dẫn công cụ mới nhất.
+
+Với một blog cá nhân, câu hỏi đầu tiên nên là: “Người dùng đang không làm được việc gì?” Nếu vấn đề là không tìm thấy bài học, một nút rõ ràng có thể hữu ích hơn một đội agent.
+
+Đề xuất của mình: chỉ thêm agent thứ hai khi có phần việc độc lập và có người chịu trách nhiệm kết hợp kết quả. Hai AI cùng sửa một file không tự nhiên trở thành một đội kỹ sư giỏi.
+
+## 2. Prompt là lời giao việc; ngữ cảnh là hồ sơ công việc
+
+[Tài liệu context engineering của Anthropic][3] nhấn mạnh lựa chọn thông tin có ích trong một nguồn lực hữu hạn. Nạp thêm dữ liệu không đảm bảo mô hình hiểu tốt hơn. Một cách tiếp cận là giữ đường dẫn và tham chiếu nhẹ, rồi lấy nội dung cần thiết đúng lúc.
+
+Áp dụng vào dự án: thay vì yêu cầu “đọc toàn bộ repo rồi nâng cấp”, hãy đưa một nhiệm vụ hẹp cùng các file sở hữu luồng đó. Mở rộng phạm vi khi phát hiện phụ thuộc thật; đừng tiết kiệm token bằng cách bỏ qua nơi dữ liệu được đọc hoặc ghi.
+
+Một bản giao việc mình đề xuất có sáu dòng:
+
+- Vấn đề quan sát được: tải lại trang thì mất phần trả lời.
+- Kết quả mong muốn: tải lại vẫn mở đúng bản nháp.
+- Phạm vi: component nhập bài, helper lưu và kiểm thử trực tiếp.
+- Bất biến: không xóa lịch sử cũ, không đổi ý nghĩa Done.
+- Bằng chứng: thử nhập, tải lại, mở lại và kiểm tra lỗi lưu.
+- Quyền hạn: sửa local; chưa push, deploy hoặc đổi database.
+
+Không cần viết một “siêu prompt”. Cần làm rõ điều không thể đoán từ code.
+
+## 3. Vòng làm việc: bản vá nhỏ, bằng chứng rõ
+
+![Sơ đồ quy trình: xác định yêu cầu, giới hạn ngữ cảnh, tạo bản vá nhỏ, kiểm chứng; lỗi quay lại sửa, đạt mới tới người duyệt.](/images/claude-practice/workflow.png)
+
+*Sơ đồ do trợ lý tự dựng. Nhánh quay lại là điều quan trọng: kiểm thử thất bại không phải tín hiệu để bỏ kiểm thử.*
+
+Đây là checklist thực hành mình đề xuất cho một thay đổi frontend:
+
+1. Tái hiện lỗi trước khi sửa. Ghi rõ bước và kết quả thực tế.
+2. Nhờ AI giải thích đường đi dữ liệu, chưa sửa ngay nếu còn mơ hồ.
+3. Chốt bản vá nhỏ nhất xử lý được nguyên nhân.
+4. Chạy kiểm thử phù hợp, xem diff và thử luồng người dùng.
+5. Ghi phần chưa kiểm tra; xin duyệt trước khi phát hành.
+
+Đừng gộp các bằng chứng khác nhau thành một chữ “Done”. Build thành công chỉ cho biết bản build đã tạo được. Nó không chứng minh micro hoạt động trên iPhone. Test lưu dữ liệu không chứng minh màu nút đủ dễ thấy. Một screenshot đẹp cũng không chứng minh tải lại còn bài làm.
+
+![GIF minh họa lần lượt năm mốc giao việc, ngữ cảnh, bản vá, kiểm chứng và duyệt. Nội dung tương đương sơ đồ tĩnh phía trên.](/images/claude-practice/workflow.gif)
+
+*GIF tự tạo, chạy một lượt rồi dừng; không phải video ghi lại Claude đang thực thi. Sơ đồ tĩnh phía trên chứa nội dung cần thiết nếu bạn không muốn xem chuyển động.*
+
+## 4. CLAUDE.md, skills và hooks: mỗi thứ một nhiệm vụ
+
+[Best practices của Claude Code][1] phân biệt hướng dẫn mô hình đọc với cơ chế thực thi. Prompt, CLAUDE.md và skills không đảm bảo mọi chỉ dẫn luôn được làm đúng; các kiểm tra, hooks và kiểm soát quyền có vai trò khác. Tài liệu cũng khuyến khích viết yêu cầu cụ thể và đưa cho Claude cách kiểm chứng.
+
+Theo cách tổ chức mình đề xuất:
+
+- CLAUDE.md ghi các quy ước ổn định và những quyết định khó tìm trong code. Không chép cả kiến trúc vào đó.
+- Skill đóng gói cách làm lặp lại, chẳng hạn review khả năng truy cập. Nó không biến mô hình thành chuyên gia được chứng nhận.
+- Hook chạy một bước máy móc đã xác định, chẳng hạn gọi kiểm tra trước khi kết thúc. Lệnh kiểm tra vẫn phải đúng và không được âm thầm bỏ qua lỗi.
+- CI và quy tắc nhánh bảo vệ đường phát hành. Viết “đừng deploy” trong prompt không thay thế kiểm soát quyền thật.
+
+Với nhiều AI, mình ưu tiên một bên sở hữu task, một bên review và con người duyệt. Chưa cần cho mọi bên quyền sửa mọi file cùng lúc.
+
+## 5. Tiết kiệm chi phí bằng cách giảm làm lại
+
+Đây là các lựa chọn vận hành của bài viết, không phải lời hứa tiết kiệm một tỷ lệ token cố định:
+
+- Chia theo vấn đề và tiêu chí hoàn thành, không chia máy móc theo số file.
+- Đọc phần liên quan trước; khi sửa hợp đồng dữ liệu phải tìm các bên sử dụng.
+- Trước khi đổi phiên, ghi mục tiêu, file đã sửa, lệnh đã chạy, lỗi còn lại và bước tiếp theo.
+- Dùng script cho thao tác xác định; không gọi mô hình để làm phép so sánh mà code thường đã làm được.
+- Đo cả thời gian review, sửa lỗi và khôi phục, không chỉ thời gian AI tạo code.
+
+Một câu trả lời ngắn nhưng sai có thể đắt hơn một lần phân tích kỹ. Mục tiêu là chi phí cho một thay đổi dùng được, không chỉ số token của một lượt chat.
+
+## 6. Bảo mật không nằm trong câu “hãy cẩn thận”
+
+[Tài liệu bảo mật Claude Code][4] mô tả quyền truy cập và sandbox, đồng thời lưu ý không có hệ thống nào miễn nhiễm hoàn toàn với tấn công. Nội dung từ nguồn không tin cậy và các MCP server cần được đánh giá, không mặc định an toàn vì chúng xuất hiện trong một công cụ AI.
+
+Với dự án công việc, đề xuất của mình là dùng dữ liệu giả trong ví dụ; không dán token, dữ liệu khách hàng hay thông tin nội bộ nếu chưa được phép. Kiểm tra chính sách công ty và cấu hình dịch vụ trước khi gửi code ra ngoài. Cho AI quyền đúng với task, không quyền tối đa cho tiện.
+
+Một README hoặc trang web có thể chứa chỉ dẫn độc hại. Dữ liệu đọc được không phải mệnh lệnh từ chủ dự án. Các thao tác đổi quyền, xóa dữ liệu hoặc phát hành cần cổng kiểm soát tương xứng.
+
+## 7. Học Claude mà vẫn học được nghề
+
+Đề xuất một chu kỳ bốn tuần dưới đây là kế hoạch thực hành, không phải khóa học chính thức hay cam kết thành thạo:
+
+- Tuần 1: dùng một lỗi nhỏ để tập mô tả triệu chứng, dự đoán nguyên nhân rồi đối chiếu với giải thích của AI.
+- Tuần 2: viết tiêu chí và một ca kiểm thử trước khi nhờ AI tạo bản vá. Đọc và giải thích lại diff.
+- Tuần 3: tập bàn giao bằng bản tổng kết ngắn; mở phiên mới và kiểm tra xem task có tiếp tục được mà không phải đọc lại mọi thứ không.
+- Tuần 4: tự xử lý một biến thể tương tự trước, sau đó nhờ AI review. So sánh mức hỗ trợ cần dùng, không chỉ số task hoàn thành.
+
+Sau mỗi task, tự trả lời: Vì sao sửa ở đây? Điều gì sẽ hỏng nếu thay đổi giả định? Nếu không có AI, mình biết cách điều tra tiếp không?
+
+## Kết: kỹ sư giỏi không chỉ tạo ra code
+
+Trong thời đại AI, lợi thế đáng xây không phải thuộc nhiều câu lệnh hơn người khác. Đó là khả năng đặt đúng vấn đề, giới hạn quyền, đọc kết quả và chịu trách nhiệm với bằng chứng.
+
+Bài tập ngay hôm nay: chọn một lỗi thật nhưng nhỏ, viết sáu dòng giao việc ở phần 2, để AI đề xuất cách kiểm tra trước. Chỉ cho sửa khi bạn hiểu đề xuất. Cuối buổi giữ lại một điều mình học được và một điều chưa xác minh — thay vì chỉ lưu “đã xong”.
+
+## Nguồn và cách sử dụng
+
+- [1 — Claude Code: Best practices][1]: căn cứ cho phần giao việc, kiểm chứng và phân biệt hướng dẫn/cơ chế; trang tài liệu thay đổi theo thời gian.
+- [2 — Building effective agents][2], 19/12/2024: căn cứ cho phân biệt workflow/agent và ưu tiên giải pháp đơn giản; không dùng để khẳng định tính năng hiện tại.
+- [3 — Effective context engineering for AI agents][3], 29/09/2025: căn cứ cho phần lựa chọn ngữ cảnh và truy xuất đúng lúc.
+- [4 — Claude Code: Security][4]: căn cứ cho phần quyền, nội dung không tin cậy và giới hạn bảo vệ.
+
+Các checklist, ví dụ frontend, kế hoạch bốn tuần và hình minh họa là tổng hợp/đề xuất của bài viết. Không có số liệu năng suất tự đo hoặc tuyên bố đã áp dụng thành công trong dự án ngân hàng. Bài không sao chép dài nội dung nguồn và không đánh giá độc lập chất lượng sản phẩm của Anthropic.
+
+[1]: https://code.claude.com/docs/en/best-practices
+[2]: https://www.anthropic.com/research/building-effective-agents
+[3]: https://www.anthropic.com/research/effective-context-engineering-for-ai-agents
+[4]: https://code.claude.com/docs/en/security
