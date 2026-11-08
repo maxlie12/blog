@@ -1,0 +1,107 @@
+---
+title: "Learning Claude Like an Engineer"
+date: "2026-11-08"
+summary: "Use AI to solve problems without giving away your judgement."
+areas: ["dev", "learning", "life"]
+draft: false
+study:
+  words:
+    - term: "evidence"
+      ipa: "/ˈevɪdəns/"
+      pos: "noun"
+      meaning: "bằng chứng"
+      example: "The practical question is simple: what evidence would show that the problem is actually solved?"
+    - term: "scope"
+      ipa: "/skoʊp/"
+      pos: "noun"
+      meaning: "phạm vi"
+      example: "My suggested starting point is a short task brief: describe the symptom, the expected behaviour, the permitted scope, and how to check the result"
+    - term: "assumption"
+      ipa: "/əˈsʌmpʃən/"
+      pos: "noun"
+      meaning: "giả định"
+      example: "An assumption might still be wrong"
+    - term: "verify"
+      ipa: "/ˈverɪfaɪ/"
+      pos: "verb"
+      meaning: "xác minh"
+      example: "Ask the assistant to reproduce the issue, explain the proposed change and verify the relevant behaviour"
+    - term: "constraint"
+      ipa: "/kənˈstreɪnt/"
+      pos: "noun"
+      meaning: "điều kiện giới hạn"
+      example: "A constraint such as “do not publish private answers” deserves more than a strongly worded sentence: access controls and review matter too"
+    - term: "ownership"
+      ipa: "/ˈoʊnərʃɪp/"
+      pos: "noun"
+      meaning: "trách nhiệm làm chủ"
+      example: "ownership"
+  structures:
+    - term: "Before I …, I …"
+      meaning: "Trước khi làm gì, tôi…"
+      example: "Before I approve a change, I read the diff."
+    - term: "Just because … does not mean …"
+      meaning: "Chỉ vì… không có nghĩa là…"
+      example: "Just because the build passes does not mean the microphone works."
+---
+
+*Reading practice: B1+–B2 design target, not a proficiency assessment. Examples and first-person reflections are editorial illustrations, not verified personal history.*
+
+## A fast answer is not the same as a working solution
+
+Imagine asking an AI assistant to fix a lesson page. It writes code, reports success and shows a clean screenshot. Then you reload the page and your answer disappears.
+
+The screenshot was real. The solution was incomplete.
+
+This is an illustrative example, not a claim about a measured project result. The practical question is simple: what **evidence** would show that the problem is actually solved?
+
+## Give the task a clear boundary
+
+My suggested starting point is a short task brief: describe the symptom, the expected behaviour, the permitted **scope**, and how to check the result. Include what must not change.
+
+For example: “Save this draft after a refresh. Preserve older attempts. Do not change the database or deploy anything. Test an empty draft, an edited draft and a storage failure.”
+
+This is an authored example, not an official Claude prompt.
+
+An **assumption** might still be wrong. Perhaps the app has several learner profiles. Perhaps storage is blocked. The assistant needs permission to investigate relevant dependencies, not an instruction to read every file without a reason.
+
+## Use instructions and controls differently
+
+[Claude Code's official guidance](https://code.claude.com/docs/en/best-practices) recommends specific requests and ways to check the result. It also distinguishes model-read instructions from mechanisms enforced by the surrounding tools.
+
+A short CLAUDE.md can explain stable project decisions. A skill can describe a repeated procedure. A hook can run a configured check. None of these removes the need to understand what the check covers.
+
+A **constraint** such as “do not publish private answers” deserves more than a strongly worded sentence: access controls and review matter too. [The security documentation](https://code.claude.com/docs/en/security) explains safeguards and their limits.
+
+## Make one small change and verify it
+
+Before I approve a change, I read the diff. Here, “I” describes a proposed working habit, not a claim about your past actions.
+
+Ask the assistant to reproduce the issue, explain the proposed change and **verify** the relevant behaviour. Then inspect the result yourself.
+
+Just because the build passes does not mean the microphone works. A build, a storage test and a real-device check answer different questions. Record the missing checks instead of hiding them behind “Done”.
+
+![A proposed workflow from task brief to human approval, with failed checks returning to the patch.](/images/english-career-series/workflow.png)
+
+## Keep ownership of the learning
+
+After a task, explain why the change belongs in that file. Try a slightly different case without asking AI to write the whole answer.
+
+If you can explain the result and investigate its limits, the tool is supporting your learning. If you can only copy it, you may have borrowed an output without gaining the same understanding.
+
+Keeping **ownership** means knowing what you accept responsibility for. It does not mean writing every line alone.
+
+![The five stages highlighted once in order; the static diagram above contains the same information.](/images/english-career-series/workflow.gif)
+
+The GIF is an authored illustration, not a recording of an AI run. It plays once and stops.
+
+## Try it yourself
+
+Speak for 45 seconds: describe one small development problem and how you would check a fix. Then write 80–100 words explaining the boundary and the evidence you need. Do not use AI to rewrite your first version.
+
+For feedback, send your draft to ChatGPT and ask for one reasoning issue and one language issue. No score or progress claim is implied.
+
+## Sources and limits
+
+Official sources: [Claude Code best practices](https://code.claude.com/docs/en/best-practices) and [security](https://code.claude.com/docs/en/security), checked 8 November 2026. The workflow, examples and exercise are editorial proposals, not official certification material or performance findings. This article does not claim that any tool guarantees correct or secure code.
+
