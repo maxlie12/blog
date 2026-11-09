@@ -1,0 +1,490 @@
+---
+title: "Building AI Features With Claude: An Engineer's Guide to How LLMs Behave in Production"
+date: "2026-11-09"
+summary: "For developers who ship AI features: what an LLM call really is, why results vary, how tokens drive cost and latency, how tool use and structured outputs work in the Claude API, how to test with evals, and how the 2026 OWASP lists change the way you secure an AI product."
+areas: ["dev", "learning"]
+draft: false
+study:
+  words:
+    - term: "inference"
+      ipa: "/ˈɪnfərəns/"
+      pos: "noun"
+      meaning: "lượt chạy mô hình để sinh ra kết quả (khác với huấn luyện)"
+      example: "Every inference call is billed by tokens."
+    - term: "stateless"
+      ipa: "/ˈsteɪtləs/"
+      pos: "adjective"
+      meaning: "không lưu trạng thái giữa các lần gọi"
+      example: "The Messages API is stateless."
+    - term: "non-deterministic"
+      ipa: "/ˌnɑːn dɪˌtɝːmɪˈnɪstɪk/"
+      pos: "adjective"
+      meaning: "không xác định: cùng đầu vào có thể cho kết quả khác nhau"
+      example: "Treat the model as a non-deterministic dependency."
+    - term: "prefix"
+      ipa: "/ˈpriːfɪks/"
+      pos: "noun"
+      meaning: "phần đầu của một chuỗi (ở đây: phần đầu của prompt)"
+      example: "Caching reuses an identical prefix."
+    - term: "cache hit"
+      ipa: "/ˈkæʃ hɪt/"
+      pos: "noun phrase"
+      forms: ["cache hits"]
+      meaning: "lần dùng lại được dữ liệu đã lưu trong bộ nhớ đệm"
+      example: "A cache hit costs a fraction of normal input."
+    - term: "schema"
+      ipa: "/ˈskiːmə/"
+      pos: "noun"
+      forms: ["schemas"]
+      meaning: "lược đồ mô tả cấu trúc dữ liệu (ví dụ JSON Schema)"
+      example: "The schema guarantees shape, not truth."
+    - term: "constrained decoding"
+      ipa: "/kənˈstreɪnd diːˈkoʊdɪŋ/"
+      pos: "noun phrase"
+      meaning: "giới hạn token mô hình được phép sinh để khớp một cấu trúc"
+      example: "Structured outputs use constrained decoding."
+    - term: "idempotent"
+      ipa: "/ˌaɪdəmˈpoʊtənt/"
+      pos: "adjective"
+      meaning: "chạy lại nhiều lần vẫn cho cùng một kết quả, không gây tác dụng phụ"
+      example: "Make write tools idempotent, because calls get retried."
+    - term: "least privilege"
+      ipa: "/ˌliːst ˈprɪvəlɪdʒ/"
+      pos: "noun phrase"
+      meaning: "nguyên tắc chỉ cấp quyền tối thiểu cần thiết"
+      example: "Each tool should run with least privilege."
+    - term: "grader"
+      ipa: "/ˈɡreɪdər/"
+      pos: "noun"
+      forms: ["graders"]
+      meaning: "phần chấm điểm trong eval (code, mô hình hoặc con người)"
+      example: "A grader scores one part of the result."
+    - term: "regression"
+      ipa: "/rɪˈɡreʃən/"
+      pos: "noun"
+      forms: ["regressions"]
+      meaning: "lỗi thụt lùi: thứ trước đây chạy đúng nay hỏng"
+      example: "Regression evals catch backsliding."
+    - term: "oracle"
+      ipa: "/ˈɔːrəkəl/"
+      pos: "noun"
+      meaning: "nguồn đáp án đáng tin để so sánh khi kiểm thử"
+      example: "GCC served as a known-good oracle."
+    - term: "blast radius"
+      ipa: "/ˈblæst ˌreɪdiəs/"
+      pos: "noun phrase"
+      meaning: "phạm vi thiệt hại khi một thành phần bị lừa hoặc hỏng"
+      example: "Design to limit the blast radius."
+    - term: "observability"
+      ipa: "/əbˌzɝːvəˈbɪləti/"
+      pos: "noun"
+      meaning: "khả năng quan sát hệ thống qua log, số liệu và trace"
+      example: "Without observability, you cannot see cost or failures."
+    - term: "fallback"
+      ipa: "/ˈfɔːlbæk/"
+      pos: "noun"
+      forms: ["fallbacks"]
+      meaning: "phương án dự phòng khi cách chính thất bại"
+      example: "Show a safe fallback when the model fails."
+    - term: "latency"
+      ipa: "/ˈleɪtənsi/"
+      pos: "noun"
+      meaning: "độ trễ, thời gian chờ phản hồi"
+      example: "Output length drives latency."
+  verbs:
+    - term: "stream"
+      ipa: "/striːm/"
+      pos: "verb"
+      forms: ["streams", "streamed", "streaming"]
+      meaning: "truyền dần từng phần kết quả"
+      example: "Stream the answer so users see progress."
+    - term: "validate"
+      ipa: "/ˈvælɪdeɪt/"
+      pos: "verb"
+      forms: ["validates", "validated", "validating"]
+      meaning: "kiểm tra tính hợp lệ"
+      example: "Validate every tool input before you run it."
+    - term: "sanitize"
+      ipa: "/ˈsænɪtaɪz/"
+      pos: "verb"
+      forms: ["sanitized", "sanitizing"]
+      meaning: "làm sạch, loại bỏ phần nguy hiểm trước khi dùng"
+      example: "Sanitize model output before rendering it as HTML."
+    - term: "invalidate"
+      ipa: "/ɪnˈvælɪdeɪt/"
+      pos: "verb"
+      forms: ["invalidates", "invalidated"]
+      meaning: "làm mất hiệu lực (ví dụ: làm hỏng bộ nhớ đệm)"
+      example: "Changing a tool definition invalidates the cache."
+    - term: "pin"
+      ipa: "/pɪn/"
+      pos: "verb"
+      forms: ["pinned", "pinning"]
+      meaning: "cố định (một phiên bản)"
+      example: "Pin the model ID in production."
+    - term: "roll out"
+      pos: "phrasal verb"
+      forms: ["rolled out", "rolling out"]
+      meaning: "triển khai dần"
+      example: "Roll out a new model behind a flag."
+    - term: "back off"
+      pos: "phrasal verb"
+      forms: ["backing off"]
+      meaning: "giãn thời gian chờ trước khi thử lại"
+      example: "Back off and retry when you hit a rate limit."
+  structures:
+    - term: "Treat … as …"
+      meaning: "Hãy coi… như là…"
+      example: "Treat model output as untrusted input."
+    - term: "Assume … unless …"
+      meaning: "Hãy mặc định… trừ khi…"
+      example: "Assume the model will be fooled unless you have evidence it cannot be."
+    - term: "No matter how …, …"
+      meaning: "Dù… đến đâu, …"
+      example: "No matter how good the prompt is, check the output."
+    - term: "Not only … but also …"
+      meaning: "Không chỉ… mà còn…"
+      example: "Evals catch not only bugs but also regressions after a model update."
+    - term: "Once …, …"
+      meaning: "Một khi…, thì…"
+      example: "Once a capability eval passes reliably, move it into the regression suite."
+    - term: "It is worth …"
+      meaning: "Đáng để…"
+      example: "It is worth reading the transcripts, not just the scores."
+---
+
+> Bài đọc tiếng Anh chuyên ngành cho lập trình viên, mục tiêu B2+. Di chuột hoặc chạm vào từ in đậm
+> để xem nghĩa, phiên âm và loại từ; động từ và cấu trúc câu nằm ở cột bên phải. Chi tiết API, giá và
+> danh sách OWASP được kiểm tra ngày 09/11/2026 và có thể thay đổi; luôn đối chiếu tài liệu chính thức
+> trước khi đưa vào sản phẩm. Ví dụ tính chi phí và checklist là của bài viết.
+
+A demo of an AI feature takes an afternoon. You send a prompt, you get a good answer, and everyone is
+impressed. A product is different. In a product, the same component has to handle thousands of
+requests, odd inputs, attackers, budgets and model upgrades, and it has to fail safely when it is
+wrong.
+
+The gap between the two comes from how large language models actually behave. They are probabilistic,
+they are priced and timed by the token, they can be fooled by the text they read, and they change
+when you switch versions. None of that shows up in a demo.
+
+This article is the engineering view. It explains what happens in an LLM call, using the Claude API as
+the concrete example, and what each mechanism means for the way you design, test, secure and operate
+an AI feature. API details, prices and lists below were checked on 9 November 2026; they change, so
+treat the official pages as the source of truth.
+
+## 1. A working mental model of an LLM call
+
+Start with the basic contract. You send tokens in; the model sends tokens out. A single request to the
+Messages API contains everything the model will see: the tool definitions, the system prompt and the
+messages so far. Running the model on that input is called **inference**.
+
+The API is **stateless**. The model does not remember your previous request. When a conversation
+continues, your code sends the whole history again, including earlier answers and tool results. The
+documentation's tool-use loop shows this clearly: each new request repeats the original messages, the
+assistant's previous response and the new tool results. Memory, sessions and user history are your
+responsibility, not the model's.
+
+Output is produced one token at a time, so a long answer takes longer than a short one. Output length
+drives **latency** much more than input length does. That is why chat products **stream** the answer:
+users see the first words quickly while the rest is still being generated.
+
+Modern Claude models also think before they answer. On Claude Opus 5.5, thinking runs on every
+request, and the migration guide spells out three consequences for your code:
+
+- *Responses can start with thinking blocks.* Code that reads the reply by position, such as taking
+  the text of the first content block, breaks. Select blocks by their `type` field instead.
+- *Thinking counts as output.* Thinking tokens are billed as output tokens, so the same request can
+  produce more output than on an older model.
+- *Your output limit covers both.* `max_tokens` is a hard limit on thinking plus visible text. Set it
+  too low and the answer is cut off.
+
+Finally, the model is **non-deterministic**: the same input can produce different outputs. On Claude
+Opus 5.5 you cannot even try to fix that with sampling settings. The migration guide says to omit
+`temperature`, `top_p` and `top_k`, and to guide behaviour through prompting instead. The practical
+rule is simple. Treat the model as a non-deterministic dependency, and design your tests and your
+user experience for variation.
+
+## 2. Cost and latency are design constraints
+
+Prices are per million tokens, and output costs much more than input. On the official pricing page,
+Claude Opus 5.5 costs $4 per million input tokens and $20 per million output tokens; Sonnet 5.5 costs
+$2 and $10; Haiku 5.5 costs $0.10 and $0.50 for prompts up to 100,000 tokens; and Fable 5.1 costs $10
+and $50. Output is five times the input price on all of them.
+
+Some costs hide in places you might not look:
+
+- *Tool definitions are input.* The names, descriptions and **schemas** of your tools are sent and
+  billed on every request, along with every tool call and tool result. The pricing page also lists a
+  fixed tool-use system prompt of a few hundred tokens.
+- *Thinking is output.* As above, more thinking means more output tokens.
+- *Long conversations grow.* Because the API is stateless, every turn resends the history.
+
+Three levers reduce the bill.
+
+The first is the Batch API. For work that does not need an immediate answer, such as nightly
+classification or bulk summaries, it gives a 50% discount on both input and output.
+
+The second is prompt caching. The API can reuse a previously processed **prefix** of your prompt. The
+prefix is read in a fixed order: tools, then system, then messages. A **cache hit** needs that prefix
+to be exactly identical, so any change early in the prompt **invalidates** everything after it. On
+current models, the minimum cacheable length is 512 tokens. A five-minute cache write costs 1.25 times
+the normal input price, and a one-hour write costs twice the price. A read normally costs a tenth of
+it, and on Opus 5.5 and Sonnet 5.5 only one twentieth. The design rule follows directly: put stable
+content first (tools, long instructions, reference documents) and variable content last (the user's
+question, timestamps). Then check the `cache_read_input_tokens` field in the response's usage data to
+confirm that caching actually works.
+
+Here is a worked example. Imagine a support feature on Opus 5.5 with a 20,000-token system prompt, a
+500-token question and an 800-token answer, ignoring thinking. Without caching, one call costs about
+$0.098. With a cache hit on the 20,000-token prefix, it costs about $0.022, roughly four and a half
+times less. Across 10,000 calls a day, that is about $980 against $220. The first call, which writes
+the cache, costs a little more, about $0.118. These are my calculations from the published prices,
+not a measurement of a real system.
+
+The third lever is effort. The `effort` setting inside `output_config` tells the model how many tokens
+to spend, from `low` through `medium`, `high` and `xhigh` to `max`. It affects all output, including
+thinking and tool calls; lower effort also means fewer, shorter tool calls. Opus 5.5 and Haiku 5.5
+default to `medium`, most other models to `high`. The documentation's advice is to choose the level
+with your evals, not by intuition, and to run a fresh comparison when you change models.
+
+Model choice is the last lever. A short classification task rarely needs the largest model. A common
+pattern is to route simple, high-volume work to a smaller model and keep the expensive one for the
+hard cases.
+
+## 3. Tool use: the model proposes, your code executes
+
+Tool use is where an AI feature starts to act, so it is worth understanding exactly how it works.
+
+![The request lifecycle of an AI feature: untrusted user input, your server building context, a stateless model API, a tool loop where your code checks and runs calls, output checks and a response or fallback, with logging and evals always on.](/images/claude-practice/ai-feature-anatomy.png)
+
+You describe each tool with a name, a description and an input schema. When the model wants to use
+one, it does not run anything. It stops with `stop_reason` set to `tool_use` and returns a block that
+contains an ID, the tool name and the input it wants to pass. Your code runs the tool and sends back a
+`tool_result` block with the same ID. If the tool failed, you set `is_error` to true and include the
+error message, so the model can recover. The loop continues until the stop reason is something else,
+and the documentation tells you to handle each of those explicitly: a normal end, a hit on the token
+limit, a stop sequence or a refusal.
+
+There is one exception. Server tools, such as web search, web fetch and code execution, run on
+Anthropic's servers, and you only read their results. Everything else, including the standard tools
+for files and shells, runs in your application.
+
+This design puts the most important control in your hands. Between "the model wants to call
+`refund_order`" and an actual refund, there is your code. That is where engineering happens:
+
+- **Validate** every input against your own rules, not only against the schema.
+- Check authorisation for the real user, not for "the AI".
+- Make write tools **idempotent**, because agents and networks retry. A repeated "create invoice" call
+  should not create two invoices.
+- Run each tool with **least privilege**: a read-only database user for a search tool, a scoped token
+  for a calendar tool.
+- Require a human confirmation for actions that cannot be undone.
+
+Tool design also affects quality. Anthropic's guide to writing tools for agents recommends a few
+well-designed tools for real workflows instead of a thin wrapper around every API endpoint. It
+suggests clear namespaces, such as `asana_search` and `jira_search`, and responses that return
+meaningful fields like names instead of raw IDs. It recommends pagination and truncation with sensible
+defaults; Claude Code, for example, caps tool responses at 25,000 tokens. It also advises error
+messages that explain how to fix the call, and unambiguous parameter names, such as `user_id` instead
+of `user`. Its central advice is to write tool descriptions the way you would explain them to a new
+colleague.
+
+## 4. Structured outputs: valid shape, not true content
+
+Many features need machine-readable output: extracted fields, a classification, a plan. The Claude API
+offers structured outputs for this. You put a JSON Schema in `output_config.format`, or you set
+`strict` to true on a tool. The documentation says this works through **constrained decoding**: while
+generating, the model is limited to tokens that keep the output valid against your schema. You no
+longer need to parse broken JSON or retry for missing fields.
+
+That guarantee has edges you must handle:
+
+- *Refusals win.* If the model refuses, the stop reason is `refusal`, you are still billed, and the
+  output may not match the schema.
+- *Token limits win too.* If the output hits `max_tokens`, it can be incomplete.
+- *Some details are loose.* For example, the model may change the capitalisation of enum values, so
+  compare them case-insensitively.
+- *The first request is slower* while the grammar compiles. Compiled grammars are then cached for 24
+  hours.
+- *Prefill is gone.* On Opus 5.5, ending a request with a prefilled assistant turn is rejected; the
+  migration guide points to structured outputs instead.
+
+Most importantly, a **schema** guarantees structure, not truth. A perfectly valid JSON object can
+still contain a wrong date, an invented customer name or a category that does not fit. No matter how
+strict the schema is, the values need the same checks as any other untrusted input.
+
+## 5. Context engineering inside a product
+
+In a product, the prompt is not one clever sentence. It is an assembly: system instructions, retrieved
+documents, user data, tool definitions and conversation history, built by your server on every
+request.
+
+Two mechanisms shape how you assemble it. First, more context is not free: it costs money, and the
+documentation warns that accuracy and recall can fall as the context grows. Anthropic's guidance is to
+aim for the smallest set of high-signal information, and to fetch details when needed instead of
+loading everything in advance. Second, every piece of text you add is something the model may treat
+as an instruction. A retrieved web page or customer email can contain text written to manipulate the
+model.
+
+So separate trusted instructions from untrusted data clearly, label where retrieved content came
+from, and keep secrets out of the prompt entirely. My earlier articles go deeper into
+[context and briefs](/blog/hoc-claude-lam-viec-voi-ai) and into [what happens inside the
+model](/blog/inside-claude-how-it-works).
+
+## 6. Evals are your test suite
+
+Unit tests do not cover a component whose output varies. Evals do. Anthropic's January 2026 guide,
+"Demystifying evals for AI agents", is the most practical reference I found, and its vocabulary is
+worth adopting:
+
+- A *task* is one test case with inputs and success criteria.
+- A *trial* is one attempt. You run several, because outputs vary.
+- A **grader** scores one aspect of the result. It can be code (fast and objective, but brittle), a
+  model following a rubric (flexible, but itself variable and in need of calibration), or a human
+  (the best quality, but slow and expensive).
+- The *transcript* is the full record of a trial, and the *outcome* is the real final state: the
+  booking that exists in the database, not the agent's claim that it booked something.
+
+The guide separates two kinds of eval. Capability evals start with a low pass rate and show you what
+to improve. **Regression** evals should pass almost 100% of the time and catch backsliding. Once a
+capability eval passes reliably, it can move into the regression suite.
+
+It also explains two metrics that sound alike but answer different product questions. pass@k is the
+chance that at least one of k attempts succeeds, useful when one good result is enough. pass^k is the
+chance that all k attempts succeed, which matters for customer-facing features that must be
+consistent. At a 75% success rate per trial, the chance that three trials all pass is only about 42%.
+
+You do not need hundreds of tasks to start. The guide suggests 20 to 50 simple tasks taken from real
+failures: bug reports, support tickets and the checks you already do by hand before a release. It
+also recommends grading the outcome rather than the exact steps, and reading transcripts. In one of
+its examples, fixing broken graders and a badly configured setup moved a model's score on a public
+benchmark from 42% to 95%. The model had been fine; the eval had not.
+
+A February 2026 experiment shows how far good tests can carry an AI. Nicholas Carlini had 16 Claude
+agents work in parallel for about two weeks, at an API cost just under $20,000, to write a C compiler
+in Rust. The result could build a bootable Linux kernel and passed about 99% of most compiler test
+suites. But the lessons were about the environment, not the model. The tests had to be nearly
+perfect, or the agents optimised for the wrong target. Test output was designed for the model: short,
+with errors marked clearly and details written to files. A CI pipeline stopped new changes from
+breaking old features. When the agents got stuck, GCC was used as a known-good **oracle** to split the
+problem. The author is also frank about the limits: the compiler's output is slow, its code is below
+expert quality, and fixes often broke existing features.
+
+Evals catch not only bugs in your prompt but also **regressions** when the model changes. A new model
+version can change tone, length, tool use and edge cases at the same time. So **pin** the exact model
+ID in production, run your eval suite against the new model, and **roll out** the change gradually,
+for example behind a feature flag.
+
+## 7. Security: assume the model will be fooled
+
+The security standard most teams reach for is the OWASP Top 10 for LLM Applications. Its 2026 edition,
+released in August, keeps prompt injection at number one and sensitive information disclosure at
+number two. Excessive agency rises to third, and system prompt leakage is renamed and widened as
+hidden context exposure. According to a research note from the Cloud Security Alliance, the full list
+is:
+
+1. Prompt Injection
+2. Sensitive Information Disclosure
+3. Excessive Agency
+4. Supply Chain
+5. Data and Model Poisoning
+6. Unbounded Consumption
+7. Misinformation
+8. Hidden Context Exposure
+9. Vector and Embedding Weaknesses
+10. Improper Output Handling
+
+Two things about this edition matter for developers. It is the first one shaped partly by real
+incident data: a quarter of the weight came from 6,639 recorded incidents, the rest from expert
+consensus. And its central message changed. As Help Net Security reports it, the project leads tell
+teams to stop trying to build a model that cannot be fooled, and instead to build systems in which a
+fooled model breaks nothing important. In other words, limit the **blast radius**.
+
+For agents, OWASP published a separate list in December 2025, the Top 10 for Agentic Applications
+2026. It covers risks such as agent goal hijacking, tool misuse, identity and privilege abuse,
+unexpected code execution, memory and context poisoning, cascading failures and rogue agents. Its key
+principle is least agency: give an agent only the autonomy, tools and permissions its task needs.
+
+Assume the model will be fooled unless you have strong evidence otherwise, and design the rest of the
+system around that. In practice:
+
+- *Treat model output as untrusted input.* **Sanitize** it before rendering it as HTML, use
+  parameterised queries, and never pass it to `eval` or a shell. This is the "improper output
+  handling" item.
+- *Keep secrets out of prompts.* Assume anything in the context can leak.
+- *Limit agency.* Scoped credentials per tool, read-only by default, confirmation for irreversible
+  actions.
+- *Contain at the environment level.* Anthropic's own May 2026 post on containing Claude says the
+  same: model-level defences only make bad behaviour less likely, so hard limits belong in the
+  sandbox, the network rules and the credentials.
+- *Cap consumption.* Set per-user rate limits, token budgets and a maximum number of tool-loop turns,
+  so a single user or a runaway agent cannot run up an unlimited bill.
+
+## 8. Observability and operations
+
+An AI feature you cannot observe is an AI feature you cannot afford. Good **observability** starts
+with logging, for every request: the model ID, the effort level, the input, output and cache token
+counts from the usage data, the latency, the stop reason, the tool calls and any errors. Add a trace
+ID so you can follow one user action through several model calls. Remove or mask personal data before
+it reaches your logs.
+
+From those logs, build a few views: cost per feature and per user, cache-hit rate, latency
+percentiles, error and refusal rates, and the share of answers that hit the token limit. Set budget
+alerts.
+
+Plan for failure, too. When you hit a rate limit or the service is overloaded, **back off** and retry
+with increasing delays. If the model refuses, runs out of tokens or returns something your checks
+reject, show a clear **fallback**: a simpler answer, a smaller model, or an honest "I could not do
+that, here is what you can do instead". A good fallback is part of the feature, not an afterthought.
+
+## 9. A checklist before you ship
+
+Before an AI feature goes to real users, I would want to answer yes to each of these:
+
+1. The model ID is pinned, and there is a plan for testing and rolling out new versions.
+2. Code reads response blocks by type and handles every stop reason.
+3. `max_tokens`, effort and the model were chosen with evals, not guesses.
+4. Stable content comes first in the prompt, and the logs show cache hits.
+5. Every tool validates its input, checks authorisation, is idempotent where it writes, and runs with
+   the narrowest permissions.
+6. Irreversible actions need a human confirmation.
+7. Structured output is still checked for meaning, not only for shape.
+8. Model output is escaped or sanitised before it reaches HTML, SQL or a shell.
+9. There is an eval suite built from real failures, with regression tests that run on every change.
+10. Logs, cost dashboards, budgets and alerts are in place, and personal data is masked.
+11. Each failure mode has a fallback the user can understand.
+
+None of this is specific to Claude. The details of the API are, but the principles apply to any LLM:
+it is a powerful, variable, fallible component, and the product around it decides whether its
+mistakes matter.
+
+## Try it yourself
+
+Pick one AI feature you use or want to build. In 150–200 words, explain to a teammate how you would
+test it and how you would limit the damage if the model were fooled. Use at least five words from this
+article. Then read your explanation aloud and time it: can you explain it clearly in under two
+minutes?
+
+For feedback, ask an AI assistant for one technical gap and one language problem, not a rewrite.
+
+## Sources
+
+- Claude Platform docs, "How tool use works" — [link](https://platform.claude.com/docs/agents-and-tools/tool-use/how-tool-use-works).
+- Claude Platform docs, "Structured outputs" — [link](https://platform.claude.com/docs/en/build-with-claude/structured-outputs).
+- Claude Platform docs, "Prompt caching" — [link](https://platform.claude.com/en/docs/build-with-claude/prompt-caching).
+- Claude Platform docs, "Effort" — [link](https://platform.claude.com/docs/en/build-with-claude/effort).
+- Claude Platform docs, "Pricing" — [link](https://platform.claude.com/docs/en/about-claude/pricing).
+- Claude Platform docs, "Claude Opus 5.5 migration guide" — [link](https://platform.claude.com/docs/en/models/opus-5-5/migration-guide). Source for sampling parameters, prefill, thinking blocks and output limits.
+- Mikaela Grace, Jeremy Hadfield, Rodrigo Olivares and Jiri De Jonghe, Anthropic, "Demystifying evals for AI agents", 9 January 2026 — [link](https://www.anthropic.com/research/demystifying-evals-for-ai-agents).
+- Nicholas Carlini, Anthropic, "Building a C compiler with a team of parallel Claudes", 5 February 2026 — [link](https://www.anthropic.com/research/building-c-compiler).
+- Anthropic, "How we contain Claude across products", 25 May 2026 — [link](https://www.anthropic.com/research/how-we-contain-claude).
+- Ken Aizawa, Anthropic, "Writing effective tools for agents — with agents", 11 September 2025 — [link](https://www.anthropic.com/research/writing-tools-for-agents).
+- Anthropic, "Effective context engineering for AI agents", 29 September 2025 — [link](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents).
+- Zeljka Zorz, Help Net Security, "OWASP 2026 LLM Top 10: 'The model will be fooled'", 6 August 2026 — [link](https://www.helpnetsecurity.com/2026/08/06/owasp-2026-llm-top-10-released/).
+- Cloud Security Alliance, research note on OWASP's 2026 LLM Top 10 and the Agent Control Standard, 4 September 2026 — [link](https://labs.cloudsecurityalliance.org/research/csa-research-note-owasp-genai-top10-2026-agent-control-stand/). Source for the full 2026 list.
+- OWASP GenAI Security Project, "OWASP Top 10 for Agentic Applications for 2026", 9 December 2025 — [link](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/).
+
+All sources were checked on 9 November 2026. The OWASP 2026 LLM list is taken from the two reports
+above because the official page could not be read directly here. Prices, parameters and model
+behaviour change between versions, so verify them in the official documentation before you build on
+them. The cost example, the checklist and the exercise are this article's own.
