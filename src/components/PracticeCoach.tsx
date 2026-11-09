@@ -7,12 +7,13 @@ import type { ChinesePractice, LessonTakeaway } from "@/lib/dailyLessons";
 import { announceResponseStarted } from "@/components/LessonFlowGuide";
 import { ChineseWritingPractice } from "@/components/ChineseWritingPractice";
 import { SpeakingRecorder } from "@/components/SpeakingRecorder";
-import { getDefaultLearningMethod, getLearningMethod, type LearningMethodId } from "@/lib/learningMethods";
+import { getDefaultLearningMethod, getLearningMethod } from "@/lib/learningMethods";
 import { getLocalCompletionSummary, recordLocalCompletion, syncLocalProgress, type LocalCompletionSummary } from "@/lib/localLearningProgress";
+import { parseLessonDraft, type LessonDraft } from "@/lib/localLessonState";
 import { readProfileStorage, writeProfileStorage } from "@/lib/learnerProfiles";
 
-type Gap = "meaning" | "reasoning" | "language" | "delivery";
-type Saved = { version: 1; lessonId: string; response: string; minutes: number; support: string; focus: string; gap: Gap; revision: string; sourceResult?: string; method?: LearningMethodId; savedAt: string };
+type Gap = LessonDraft["gap"];
+type Saved = LessonDraft;
 const drills: Record<Gap, string> = {
   meaning: "2 phút: đóng nguồn, viết ý chính bằng một câu và một chi tiết làm bằng chứng. Mở lại đúng đoạn chưa hiểu để kiểm tra, rồi đóng nguồn và nói lại.",
   reasoning: "3 phút: đổi từ công việc sang một tình huống đời sống. Nói ba câu: lựa chọn → vì sao → cách kiểm tra. Thêm một bất tiện nếu có thời gian.",
@@ -66,12 +67,12 @@ export function PracticeCoach({ lessonId, skill, language, takeaway, chinesePrac
     let cancelled = false;
     queueMicrotask(() => {
       if (cancelled) return;
-      setCompletion(getLocalCompletionSummary(completionId, language));
+      const savedCompletion = getLocalCompletionSummary(completionId, language);
+      setCompletion(savedCompletion);
       try {
         const raw = readProfileStorage(storageKey);
         if (!raw) return;
-        const value = JSON.parse(raw) as Saved;
-        if (value.version !== 1 || value.lessonId !== lessonId || typeof value.response !== "string" || !value.response.trim() || !Number.isFinite(value.minutes) || !(value.gap in drills)) return;
+        const value = parseLessonDraft(raw, lessonId);
         setResponse(value.response);
         setMinutes(value.minutes);
         setSupport(value.support);
@@ -80,7 +81,11 @@ export function PracticeCoach({ lessonId, skill, language, takeaway, chinesePrac
         setRevision(value.revision || "");
         setSourceResult(value.sourceResult || "");
         setAttempt(value);
-        setMessage("Đã khôi phục bài đang dở trên thiết bị này. Bản nháp chưa phải Done; hoàn thành đầu ra rồi bấm nút ghi Done bên dưới.");
+        setMessage(savedCompletion.completed
+          ? "Đã mở bài đã Done và câu trả lời trên thiết bị. Xem kết quả tự kiểm tra/lịch ôn ở phần trên; chỉnh sửa không cộng thêm Done."
+          : "Đã khôi phục bài đang dở trên thiết bị này. Bản nháp chưa phải Done; học tiếp rồi bấm Hoàn thành khi đã xong.");
+      } catch {
+        setMessage("Chưa đọc được bản nháp. Dữ liệu cũ chưa bị thay đổi; hãy giữ bản sao trước khi nhập và lưu bài mới.");
       } finally {
         restored.current = true;
       }
@@ -89,7 +94,7 @@ export function PracticeCoach({ lessonId, skill, language, takeaway, chinesePrac
   }, [completionId, language, lessonId, storageKey]);
 
   useEffect(() => {
-    if (!restored.current || !response.trim()) return;
+    if (!restored.current || !response.trim() || !Number.isInteger(minutes) || minutes < 1 || minutes > 60) return;
     const timer = window.setTimeout(() => {
       const value: Saved = { version: 1, lessonId, response: response.trim(), minutes, support, focus, gap, revision, sourceResult, method: method.id, savedAt: new Date().toISOString() };
       try {
@@ -101,6 +106,24 @@ export function PracticeCoach({ lessonId, skill, language, takeaway, chinesePrac
     }, 500);
     return () => window.clearTimeout(timer);
   }, [focus, gap, lessonId, method.id, minutes, response, revision, sourceResult, storageKey, support]);
+
+  function saveDraft() {
+    if (!response.trim()) return;
+    if (!Number.isInteger(minutes) || minutes < 1 || minutes > 60) {
+      setMessage("Chọn thời gian từ 1 đến 60 phút trước khi lưu nháp.");
+      return;
+    }
+    const value: Saved = { version: 1, lessonId, response: response.trim(), minutes, support, focus, gap, revision, sourceResult, method: method.id, savedAt: new Date().toISOString() };
+    try {
+      writeProfileStorage(storageKey, JSON.stringify(value));
+      setAttempt(value);
+      setMessage(completion?.completed
+        ? "Đã lưu chỉnh sửa trên thiết bị; Done và lịch ôn được giữ. Bạn có thể rời trang."
+        : "Đã lưu nháp trên thiết bị, chưa ghi Done. Bạn có thể rời trang; Learning sẽ đề xuất tiếp tục bài này.");
+    } catch {
+      setMessage("Chưa lưu được. Sao chép câu trả lời trước khi rời trang rồi thử lại.");
+    }
+  }
 
   function appendTranscript(text: string) {
     if (!text) return;
@@ -158,7 +181,10 @@ ${text}` : text);
         <p><label>Kết quả bài tập ở nguồn <input value={sourceResult} onChange={e => setSourceResult(e.target.value)} placeholder="Ví dụ 4/6; sai main idea" /></label></p>
         <p>Trang không tự đọc điểm British Council/Cambridge; đây là kết quả bạn tự báo.</p>
       </details>
+      <div className="lesson-completion__actions">
+      <button className="button button--ghost" type="button" disabled={!response.trim()} onClick={saveDraft}>{completion?.completed ? "Lưu chỉnh sửa" : "Lưu nháp · học sau"}</button>
       <button className="button lesson-completion__button" type="submit" disabled={Boolean(completion?.completed)}>{completion?.completed ? "Đã hoàn thành · Done đã ghi" : "Hoàn thành bài · lưu Done"}</button>
+      </div>
     </form>
     <p role="status">{message}</p>
     {attempt && <div>
