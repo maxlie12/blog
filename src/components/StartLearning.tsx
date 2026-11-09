@@ -27,6 +27,7 @@ const reasonLabel = {
 export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
   const learner = useLearnerProfile();
   const [target, setTarget] = useState<NextLesson | null>(null);
+  const [chineseTarget, setChineseTarget] = useState<NextLesson | null>(null);
   const [dueReview, setDueReview] = useState<{ review: ScheduledReview; title: string } | null>(null);
 
   useEffect(() => {
@@ -36,6 +37,8 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
       const drafts = new Set(lessons.filter((lesson) => hasLessonDraft(lesson.id)).map((lesson) => lesson.id));
       const next = selectNextLesson(lessons, learner.id, completed, drafts, dueReviews);
       setTarget(next);
+      // Show an independent Chinese entry point so the English-first path cannot bury Chinese practice.
+      setChineseTarget(selectNextLesson(lessons.filter((lesson) => lesson.language === "zh"), learner.id, completed, drafts, dueReviews));
       // An unfinished draft remains first; its due review stays one tap away.
       const review = next?.reason === "due-review" ? undefined : dueReviews.find((item) => lessons.some((l) => l.id === item.lessonId));
       const title = review && lessons.find((l) => l.id === review.lessonId)?.title;
@@ -72,6 +75,11 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
           </Link>
         ) : (
           <button className="button button--primary" type="button" disabled>Đang chọn bài…</button>
+        )}
+        {chineseTarget && (
+          <Link className="button button--ghost" href={`/learning/${chineseTarget.lesson.id}`} aria-label={`${actionLabel[chineseTarget.reason]} tiếng Trung: ${chineseTarget.lesson.title}`}>
+            Tiếng Trung · {actionLabel[chineseTarget.reason]} →
+          </Link>
         )}
         {dueReview && (
           <small>Đến hạn ôn: <Link href={`/learning/${dueReview.review.lessonId}`}>{dueReview.title}</Link> (+{dueReview.review.interval} ngày)</small>
