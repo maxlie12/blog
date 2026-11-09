@@ -80,7 +80,7 @@ export function PracticeCoach({ lessonId, skill, language, takeaway, chinesePrac
         setRevision(value.revision || "");
         setSourceResult(value.sourceResult || "");
         setAttempt(value);
-        setMessage("Đã tự mở bản nháp trên thiết bị này.");
+        setMessage("Đã khôi phục bài đang dở trên thiết bị này. Bản nháp chưa phải Done; hoàn thành đầu ra rồi bấm nút ghi Done bên dưới.");
       } finally {
         restored.current = true;
       }
@@ -140,7 +140,7 @@ ${text}` : text);
 
   return <section className="lesson-detail__section" id="lesson-step-output">
     <p className="lesson-step-kicker">BƯỚC 3 · TẠO ĐẦU RA</p>
-    <h2>Làm một đầu ra ngắn rồi ghi Done</h2>
+    <h2>Ghi câu trả lời, hoàn thành rồi tự kiểm tra</h2>
     <p>Câu trả lời chỉ lưu trên trình duyệt này, không gửi lên máy chủ. Đừng nhập thông tin công việc nhạy cảm.</p>
     <div className="learning-transfer"><h3>Trước khi làm: bài này dùng để làm gì?</h3><p>{purpose[skill]}</p><p><strong>Khung đầu ra:</strong> {frames[skill]}. Khung là bản đồ để bạn tự tạo câu, không phải đoạn mẫu để chép.</p></div>
     <div className="learning-method-action"><strong>Cách làm được đề xuất:</strong> {method.action}</div>
@@ -149,7 +149,7 @@ ${text}` : text);
       {skill === "speaking" && <SpeakingRecorder language={language} onTranscript={appendTranscript} />}
       <p><label htmlFor={lessonId + "-response"}>{chinesePractice?.outputPrompt ?? method.outputLabel}</label></p>
       <textarea id={lessonId + "-response"} rows={6} maxLength={10000} required value={response} onFocus={() => announceResponseStarted(lessonId)} onChange={e => setResponse(e.target.value)} style={{ width: "100%" }} />
-      <p className="lesson-detail__note">Bản nháp tự lưu khi bạn gõ. Khi đã có đầu ra thật, bấm nút dưới để ghi Done.</p>
+      <p className="lesson-detail__note">Bản nháp được tự lưu trên thiết bị khi bạn gõ để quay lại học tiếp. Chỉ khi đã làm xong bài mới bấm Hoàn thành; thao tác này ghi Done nhưng không tự chấm câu trả lời.</p>
       <p><label>Thời gian thực tế (phút) <input type="number" min={1} max={60} required value={minutes} onChange={e => setMinutes(Number(e.target.value))} /></label></p>
       <details className="practice-options">
         <summary>Thông tin thêm · tùy chọn</summary>
@@ -158,21 +158,21 @@ ${text}` : text);
         <p><label>Kết quả bài tập ở nguồn <input value={sourceResult} onChange={e => setSourceResult(e.target.value)} placeholder="Ví dụ 4/6; sai main idea" /></label></p>
         <p>Trang không tự đọc điểm British Council/Cambridge; đây là kết quả bạn tự báo.</p>
       </details>
-      <button className="button lesson-completion__button" type="submit" disabled={Boolean(completion?.completed)}>{completion?.completed ? "Đã hoàn thành · Done đã ghi" : "Lưu câu trả lời & ghi Done"}</button>
+      <button className="button lesson-completion__button" type="submit" disabled={Boolean(completion?.completed)}>{completion?.completed ? "Đã hoàn thành · Done đã ghi" : "Hoàn thành bài · lưu Done"}</button>
     </form>
     <p role="status">{message}</p>
     {attempt && <div>
       <div className="lesson-completion" data-complete={completion?.completed ? "true" : "false"}>
-        <p className="lesson-completion__label">{completion?.completed ? "ĐÃ GHI NHẬN" : "BẢN NHÁP ĐÃ LƯU"}</p>
+        <p className="lesson-completion__label">{completion?.completed ? "ĐÃ GHI DONE · CHƯA TỰ CHẤM NĂNG LỰC" : "BẢN NHÁP ĐÃ LƯU · CHƯA DONE"}</p>
         {completion?.completed && <div className="lesson-completion__closure" aria-live="polite">
-          <h3>Hoàn thành phiên học</h3>
-          <p><strong>{completion.totalCompleted} bài đã Done.</strong> Bạn có thể dừng ở đây — không cần làm thêm để giữ chuỗi.</p>
+          <h3>Đã lưu Done · bước tiếp theo là tự kiểm tra</h3>
+          <p><strong>{completion.totalCompleted} bài đã Done.</strong> Done xác nhận đã làm bài, không phải điểm số. Hãy thử nhớ lại trước khi xem mẫu để hệ thống chọn lịch ôn tiếp.</p>
           {takeaway && <div className="lesson-completion__takeaway">
             <p><span>Cụm nên giữ</span><strong>{takeaway.phrase}</strong></p>
             <p><span>Khung tái sử dụng</span><strong>{takeaway.pattern}</strong></p>
           </div>}
           <div className="lesson-completion__actions">
-            <a className="button lesson-completion__button" href="#lesson-recall">Tự kiểm tra & xem lịch ôn</a>
+            <a className="button lesson-completion__button" href="#lesson-recall">Bước tiếp: tự nhớ lại & hẹn lịch ôn</a>
             <Link className="button button--ghost" href="/learning">Về Learning</Link>
             <button className="button button--ghost" type="button" onClick={reviewLesson}>Xem lại bài</button>
           </div>
