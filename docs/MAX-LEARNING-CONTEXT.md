@@ -41,6 +41,11 @@ Existing Japanese support remains compatible; no new Japanese work is requested.
 - This landing change has not been independently browser/mobile QA'd; verify the latest PR preview deploy before claiming it works on a real phone. Keep PR draft and production untouched.
 - For first use: open `/learning`, start the suggested Daily, save/done, self-check, return later to confirm persistence; do not expect conversation to use the Daily adaptive scheduler.
 
+## Flow clarity update (2026-11-09)
+- `PracticeCoach` now explicitly distinguishes autosaved browser draft (not Done), Done (not a proficiency score), and the recall/self-rating CTA. Text and navigation only; no scoring added.
+- Conversation now labels its save action as a local draft and names stage 5 as the completion/self-reflection step; it still does **not** use Daily adaptive review.
+- Preview/mobile QA for these later label edits is still pending. No claim of accurate automatic assessment: Cambridge results may be entered manually; free-form language and pronunciation are not graded.
+
 ## Verification / next smallest work
 Read docs/changes/LEARN-014-recall-loop.md for exact evidence and limits.
 121 tests, lint and production build pass. Preview Daily save/leave/resume/Done/rate/reload
