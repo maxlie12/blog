@@ -35,3 +35,21 @@ test("completion needs self-produced outputs and all skill activities", () => {
   session.listened = false;
   assert.equal(canFinishConversation(session), false);
 });
+
+test("speaking turn survives save/reload and legacy sessions default to turn zero", () => {
+  const session = freshConversation("en-clarify");
+  saveConversationSession({ ...session, stage: 2, turn: 2, retry: ["a", "b", "last answer"] });
+  assert.equal(readConversationSessions("en-clarify")[0].turn, 2);
+  assert.equal(readConversationSessions("en-clarify")[0].retry[2], "last answer");
+  const legacy = { ...session } as Partial<typeof session>;
+  delete legacy.turn;
+  values.set(profileStorageKey("conversation-practice-v1:en-clarify"), JSON.stringify([legacy]));
+  assert.equal(readConversationSessions("en-clarify")[0].turn, 0);
+});
+
+test("invalid speaking turn cannot overwrite saved history", () => {
+  const session = freshConversation("zh-drinks");
+  saveConversationSession(session);
+  assert.throws(() => saveConversationSession({ ...session, turn: 3 }));
+  assert.equal(readConversationSessions("zh-drinks")[0].turn, 0);
+});

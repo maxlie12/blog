@@ -23,7 +23,7 @@ export default async function LearningPage() {
       </header>
 
       <ConversationLaunch />
-      <details><summary>Bài Daily, bản nháp cũ và nguồn học</summary>
+      <details><summary>Daily · bài đang dở, bài đã học và lịch ôn</summary>
       <StartLearning lessons={lessons} />
       <LearningPath {...path} />
       </details>

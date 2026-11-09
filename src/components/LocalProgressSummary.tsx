@@ -130,9 +130,10 @@ export function LocalProgressSummary({ testPackets = [] }: { testPackets?: TestP
 
   return <section className={styles.summary} aria-labelledby="local-progress-title">
     <div>
-      <p className="eyebrow">NHỊP HỌC LINH HOẠT</p>
+      <p className="eyebrow">NHỊP HỌC DAILY & PHIÊN HƯỚNG DẪN</p>
       <h2 id="local-progress-title">{activeDays}/7 ngày gần nhất có hoạt động</h2>
       <p>{rhythmMessage(activeDays)}</p>
+      <p className={styles.note}>Lịch này ghi Done và lần ôn của Daily, cùng phiên học có hướng dẫn; không tính phiên hội thoại. Chữ đã viết trong hội thoại nằm ở từng tình huống phía trên.</p>
     </div>
 
     {progress ? <>
@@ -173,7 +174,7 @@ export function LocalProgressSummary({ testPackets = [] }: { testPackets?: TestP
         </p>
         {message && <p className={styles.message}>{message}</p>}
       </div>
-      <p className={styles.note}>Máy chủ chỉ lưu mã bài, kỹ năng, ngày và số phút; không lưu câu trả lời hay audio. File sao lưu có khóa đồng bộ nên hãy giữ riêng.</p>
+      <p className={styles.note}>Máy chủ chỉ đồng bộ tiến độ Done/ôn. File sao lưu thêm các dấu từ vựng/lộ trình; không sao lưu câu trả lời Daily, phiên hội thoại hoặc audio. Đổi máy không mang theo các phần chữ đó. File sao lưu có khóa đồng bộ nên hãy giữ riêng.</p>
     </details>
   </section>;
 }

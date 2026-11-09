@@ -49,6 +49,7 @@ export const conversationScenario = (id: string) => CONVERSATION_SCENARIOS.find(
 const sessionSchema = z.object({
   version: z.literal(1), id: z.string().min(1).max(100), scenarioId: z.enum(["en-clarify", "zh-drinks"]),
   startedAt: z.iso.datetime(), savedAt: z.iso.datetime(), stage: z.number().int().min(0).max(4),
+  turn: z.number().int().min(0).max(2).default(0),
   first: z.array(z.string().max(5000)).length(3), retry: z.array(z.string().max(5000)).length(3),
   spokeFirst: z.array(z.boolean()).length(3), spokeRetry: z.array(z.boolean()).length(3),
   listened: z.boolean(), read: z.boolean(), writing: z.string().max(5000),
@@ -58,7 +59,7 @@ const sessionSchema = z.object({
 export type ConversationSession = z.infer<typeof sessionSchema>;
 
 export function freshConversation(scenarioId: ConversationSession["scenarioId"], now = new Date().toISOString()): ConversationSession {
-  return { version: 1, id: crypto.randomUUID(), scenarioId, startedAt: now, savedAt: now, stage: 0,
+  return { version: 1, id: crypto.randomUUID(), scenarioId, startedAt: now, savedAt: now, stage: 0, turn: 0,
     first: ["", "", ""], retry: ["", "", ""], spokeFirst: [false, false, false], spokeRetry: [false, false, false],
     listened: false, read: false, writing: "", gap: "", phrase: "", repaired: "", completedAt: null };
 }
