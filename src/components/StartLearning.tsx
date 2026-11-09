@@ -19,7 +19,7 @@ const actionLabel = {
 
 const reasonLabel = {
   resume: "Bạn có bản nháp chưa Done. Hệ thống giữ đúng bài đó để không mất mạch học.",
-  "due-review": "Bạn đã Done hết bài mới. Bài cũ này đến hạn ôn theo nhịp 1–3–7–14 ngày.",
+  "due-review": "Bài này đến hạn ôn. Nhớ lại ngắn trước khi học bài mới; lịch tiếp theo dựa trên kết quả bạn tự kiểm tra.",
   next: "Đây là bài chưa Done phù hợp tiếp theo trong lộ trình hiện tại.",
   review: "Bạn đã Done toàn bộ bài hiện có. Hệ thống chọn lại bài đầu lộ trình để ôn.",
 } as const;
@@ -27,6 +27,8 @@ const reasonLabel = {
 export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
   const learner = useLearnerProfile();
   const [target, setTarget] = useState<NextLesson | null>(null);
+  const [englishTarget, setEnglishTarget] = useState<NextLesson | null>(null);
+  const [chineseTarget, setChineseTarget] = useState<NextLesson | null>(null);
   const [dueReview, setDueReview] = useState<{ review: ScheduledReview; title: string } | null>(null);
 
   useEffect(() => {
@@ -36,7 +38,10 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
       const drafts = new Set(lessons.filter((lesson) => hasLessonDraft(lesson.id)).map((lesson) => lesson.id));
       const next = selectNextLesson(lessons, learner.id, completed, drafts, dueReviews);
       setTarget(next);
-      // Due reviews stay one tap away without taking the main action from a new lesson.
+      setEnglishTarget(selectNextLesson(lessons.filter(lesson => lesson.language === "en"), learner.id, completed, drafts, dueReviews));
+      // Show an independent Chinese entry point so the English-first path cannot bury Chinese practice.
+      setChineseTarget(selectNextLesson(lessons.filter((lesson) => lesson.language === "zh"), learner.id, completed, drafts, dueReviews));
+      // An unfinished draft remains first; its due review stays one tap away.
       const review = next?.reason === "due-review" ? undefined : dueReviews.find((item) => lessons.some((l) => l.id === item.lessonId));
       const title = review && lessons.find((l) => l.id === review.lessonId)?.title;
       setDueReview(review && title ? { review, title } : null);
@@ -72,6 +77,16 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
           </Link>
         ) : (
           <button className="button button--primary" type="button" disabled>Đang chọn bài…</button>
+        )}
+        {englishTarget && target?.lesson.language !== "en" && (
+          <Link className="button button--ghost" href={`/learning/${englishTarget.lesson.id}`} aria-label={`${actionLabel[englishTarget.reason]} tiếng Anh: ${englishTarget.lesson.title}`}>
+            Tiếng Anh · {actionLabel[englishTarget.reason]} →
+          </Link>
+        )}
+        {chineseTarget && target?.lesson.language !== "zh" && (
+          <Link className="button button--ghost" href={`/learning/${chineseTarget.lesson.id}`} aria-label={`${actionLabel[chineseTarget.reason]} tiếng Trung: ${chineseTarget.lesson.title}`}>
+            Tiếng Trung · {actionLabel[chineseTarget.reason]} →
+          </Link>
         )}
         {dueReview && (
           <small>Đến hạn ôn: <Link href={`/learning/${dueReview.review.lessonId}`}>{dueReview.title}</Link> (+{dueReview.review.interval} ngày)</small>

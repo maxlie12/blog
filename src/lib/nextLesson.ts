@@ -64,14 +64,13 @@ export function selectNextLesson(
   const resume = ordered.find((lesson) => draftLessonIds.has(lesson.id) && !completedLessonIds.has(lesson.id));
   if (resume) return { lesson: resume, reason: "resume" };
 
-  // A new lesson comes before a due review so a Done lesson never blocks the learner's next step.
+  for (const review of [...dueReviewItems].filter(item => item.isDue).sort((a, b) => a.dueDate.localeCompare(b.dueDate) || a.lessonId.localeCompare(b.lessonId))) {
+    const lesson = ordered.find((item) => item.id === review.lessonId);
+    if (lesson && completedLessonIds.has(lesson.id)) return { lesson, reason: "due-review", review };
+  }
+
   const next = ordered.find((lesson) => !completedLessonIds.has(lesson.id));
   if (next) return { lesson: next, reason: "next" };
-
-  for (const review of dueReviewItems) {
-    const lesson = ordered.find((item) => item.id === review.lessonId);
-    if (lesson) return { lesson, reason: "due-review", review };
-  }
 
   return ordered[0] ? { lesson: ordered[0], reason: "review" } : null;
 }

@@ -1,7 +1,7 @@
 import { computeStreaks } from "./streak.ts";
 import { readKnownWords, readPathMarks, writeKnownWords, writePathMarks } from "./studyPath.ts";
 import { getActiveLearnerProfileId, getLearnerProfile, isLearnerProfileId, readProfileStorage, writeProfileStorage, type LearnerProfileId } from "./learnerProfiles.ts";
-import { dueReviews, nextScheduledReview, reviewCompletionId, type ScheduledReview } from "./reviewSchedule.ts";
+import { dueReviews, nextScheduledReview, recallCompletionId, recallInterval, RECALL_RATINGS, reviewCompletionId, type RecallRating, type ScheduledReview } from "./reviewSchedule.ts";
 
 export type LocalCompletionInput = {
   id: string;
@@ -221,6 +221,23 @@ export function recordLocalReview(
     newlyRecorded: result.newlyCompleted,
     nextReview: getLocalScheduledReview(input.lessonId, now),
   };
+}
+
+export function recordLocalRecall(
+  input: Omit<LocalCompletionInput, "id">,
+  rating: RecallRating,
+  now = new Date(),
+): { newlyRecorded: boolean; nextReview: ScheduledReview | null } {
+  if (!RECALL_RATINGS.includes(rating)) throw new Error("Kết quả tự kiểm tra không hợp lệ.");
+  const scheduled = getLocalScheduledReview(input.lessonId, now);
+  const today = dateInLearningTimezone(now);
+  // First self-check may follow Done; subsequent checks require a due date and a new day.
+  if (!scheduled || scheduled.lastRecall?.date === today || (scheduled.lastRecall && !scheduled.isDue)) {
+    return { newlyRecorded: false, nextReview: scheduled };
+  }
+  const interval = recallInterval(scheduled.interval, rating, scheduled.isDue);
+  const result = recordLocalCompletion({ ...input, id: recallCompletionId(rating, interval) }, now);
+  return { newlyRecorded: result.newlyCompleted, nextReview: getLocalScheduledReview(input.lessonId, now) };
 }
 
 function isStudyList(value: unknown): boolean {

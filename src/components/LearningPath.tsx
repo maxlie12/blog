@@ -95,9 +95,9 @@ export function LearningPath({ topics, today, lessons }: {
     return lesson ? [{ review, lesson }] : [];
   });
   const finished = lessons.filter((lesson) => completed.has(lesson.id));
-  const nextLesson = progress ? todayLessons.find((lesson) => !lesson.done && !lesson.optional) : undefined;
-  const mainDone = todayLessons.some((lesson) => !lesson.optional) && !nextLesson;
-  const nextReview = progress && !nextLesson ? reviews[0] : undefined;
+  const nextLesson = progress && !reviews.length ? todayLessons.find((lesson) => !lesson.done && !lesson.optional) : undefined;
+  const mainDone = todayLessons.some((lesson) => !lesson.optional) && todayLessons.filter(lesson => !lesson.optional).every(lesson => lesson.done);
+  const nextReview = progress ? reviews[0] : undefined;
   const nextUnit = progress && !nextLesson && !nextReview ? units.find((unit) => unit.steps.some((step) => !step.done)) : undefined;
   const nextStep = nextUnit?.steps.find((step) => !step.done);
 

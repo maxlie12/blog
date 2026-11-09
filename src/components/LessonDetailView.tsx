@@ -135,6 +135,8 @@ export function LessonDetailView({
         )}
       </div>}
 
+      <ReviewCompletion lessonId={lesson.id} skill={lesson.skill} language={lesson.language} takeaway={lesson.takeaway} />
+
       {!canSubmit && <PracticeCoach key={lesson.id} lessonId={lesson.id} skill={lesson.skill} language={lesson.language} takeaway={lesson.takeaway} chinesePractice={lesson.chinesePractice} />}
 
       {canSubmit ? (
@@ -146,7 +148,6 @@ export function LessonDetailView({
 
       {canSubmit && lesson.takeaway && <LessonTakeaway lessonId={lesson.id} language={lesson.language} takeaway={lesson.takeaway} />}
 
-      <ReviewCompletion lessonId={lesson.id} skill={lesson.skill} language={lesson.language} />
 
       {attempts.length > 0 && (
         <section className="lesson-detail__section">

@@ -7,12 +7,13 @@ import type { ChinesePractice, LessonTakeaway } from "@/lib/dailyLessons";
 import { announceResponseStarted } from "@/components/LessonFlowGuide";
 import { ChineseWritingPractice } from "@/components/ChineseWritingPractice";
 import { SpeakingRecorder } from "@/components/SpeakingRecorder";
-import { getDefaultLearningMethod, getLearningMethod, type LearningMethodId } from "@/lib/learningMethods";
+import { getDefaultLearningMethod, getLearningMethod } from "@/lib/learningMethods";
 import { getLocalCompletionSummary, recordLocalCompletion, syncLocalProgress, type LocalCompletionSummary } from "@/lib/localLearningProgress";
+import { parseLessonDraft, type LessonDraft } from "@/lib/localLessonState";
 import { readProfileStorage, writeProfileStorage } from "@/lib/learnerProfiles";
 
-type Gap = "meaning" | "reasoning" | "language" | "delivery";
-type Saved = { version: 1; lessonId: string; response: string; minutes: number; support: string; focus: string; gap: Gap; revision: string; sourceResult?: string; method?: LearningMethodId; savedAt: string };
+type Gap = LessonDraft["gap"];
+type Saved = LessonDraft;
 const drills: Record<Gap, string> = {
   meaning: "2 phút: đóng nguồn, viết ý chính bằng một câu và một chi tiết làm bằng chứng. Mở lại đúng đoạn chưa hiểu để kiểm tra, rồi đóng nguồn và nói lại.",
   reasoning: "3 phút: đổi từ công việc sang một tình huống đời sống. Nói ba câu: lựa chọn → vì sao → cách kiểm tra. Thêm một bất tiện nếu có thời gian.",
@@ -66,12 +67,12 @@ export function PracticeCoach({ lessonId, skill, language, takeaway, chinesePrac
     let cancelled = false;
     queueMicrotask(() => {
       if (cancelled) return;
-      setCompletion(getLocalCompletionSummary(completionId, language));
+      const savedCompletion = getLocalCompletionSummary(completionId, language);
+      setCompletion(savedCompletion);
       try {
         const raw = readProfileStorage(storageKey);
         if (!raw) return;
-        const value = JSON.parse(raw) as Saved;
-        if (value.version !== 1 || value.lessonId !== lessonId || typeof value.response !== "string" || !value.response.trim() || !Number.isFinite(value.minutes) || !(value.gap in drills)) return;
+        const value = parseLessonDraft(raw, lessonId);
         setResponse(value.response);
         setMinutes(value.minutes);
         setSupport(value.support);
@@ -80,7 +81,11 @@ export function PracticeCoach({ lessonId, skill, language, takeaway, chinesePrac
         setRevision(value.revision || "");
         setSourceResult(value.sourceResult || "");
         setAttempt(value);
-        setMessage("Đã tự mở bản nháp trên thiết bị này.");
+        setMessage(savedCompletion.completed
+          ? "Đã mở bài đã Done và câu trả lời trên thiết bị. Xem kết quả tự kiểm tra/lịch ôn ở phần trên; chỉnh sửa không cộng thêm Done."
+          : "Đã khôi phục bài đang dở trên thiết bị này. Bản nháp chưa phải Done; học tiếp rồi bấm Hoàn thành khi đã xong.");
+      } catch {
+        setMessage("Chưa đọc được bản nháp. Dữ liệu cũ chưa bị thay đổi; hãy giữ bản sao trước khi nhập và lưu bài mới.");
       } finally {
         restored.current = true;
       }
@@ -89,7 +94,7 @@ export function PracticeCoach({ lessonId, skill, language, takeaway, chinesePrac
   }, [completionId, language, lessonId, storageKey]);
 
   useEffect(() => {
-    if (!restored.current || !response.trim()) return;
+    if (!restored.current || !response.trim() || !Number.isInteger(minutes) || minutes < 1 || minutes > 60) return;
     const timer = window.setTimeout(() => {
       const value: Saved = { version: 1, lessonId, response: response.trim(), minutes, support, focus, gap, revision, sourceResult, method: method.id, savedAt: new Date().toISOString() };
       try {
@@ -101,6 +106,24 @@ export function PracticeCoach({ lessonId, skill, language, takeaway, chinesePrac
     }, 500);
     return () => window.clearTimeout(timer);
   }, [focus, gap, lessonId, method.id, minutes, response, revision, sourceResult, storageKey, support]);
+
+  function saveDraft() {
+    if (!response.trim()) return;
+    if (!Number.isInteger(minutes) || minutes < 1 || minutes > 60) {
+      setMessage("Chọn thời gian từ 1 đến 60 phút trước khi lưu nháp.");
+      return;
+    }
+    const value: Saved = { version: 1, lessonId, response: response.trim(), minutes, support, focus, gap, revision, sourceResult, method: method.id, savedAt: new Date().toISOString() };
+    try {
+      writeProfileStorage(storageKey, JSON.stringify(value));
+      setAttempt(value);
+      setMessage(completion?.completed
+        ? "Đã lưu chỉnh sửa trên thiết bị; Done và lịch ôn được giữ. Bạn có thể rời trang."
+        : "Đã lưu nháp trên thiết bị, chưa ghi Done. Bạn có thể rời trang; Learning sẽ đề xuất tiếp tục bài này.");
+    } catch {
+      setMessage("Chưa lưu được. Sao chép câu trả lời trước khi rời trang rồi thử lại.");
+    }
+  }
 
   function appendTranscript(text: string) {
     if (!text) return;
@@ -140,7 +163,7 @@ ${text}` : text);
 
   return <section className="lesson-detail__section" id="lesson-step-output">
     <p className="lesson-step-kicker">BƯỚC 3 · TẠO ĐẦU RA</p>
-    <h2>Làm một đầu ra ngắn rồi ghi Done</h2>
+    <h2>Ghi câu trả lời, hoàn thành rồi tự kiểm tra</h2>
     <p>Câu trả lời chỉ lưu trên trình duyệt này, không gửi lên máy chủ. Đừng nhập thông tin công việc nhạy cảm.</p>
     <div className="learning-transfer"><h3>Trước khi làm: bài này dùng để làm gì?</h3><p>{purpose[skill]}</p><p><strong>Khung đầu ra:</strong> {frames[skill]}. Khung là bản đồ để bạn tự tạo câu, không phải đoạn mẫu để chép.</p></div>
     <div className="learning-method-action"><strong>Cách làm được đề xuất:</strong> {method.action}</div>
@@ -149,7 +172,7 @@ ${text}` : text);
       {skill === "speaking" && <SpeakingRecorder language={language} onTranscript={appendTranscript} />}
       <p><label htmlFor={lessonId + "-response"}>{chinesePractice?.outputPrompt ?? method.outputLabel}</label></p>
       <textarea id={lessonId + "-response"} rows={6} maxLength={10000} required value={response} onFocus={() => announceResponseStarted(lessonId)} onChange={e => setResponse(e.target.value)} style={{ width: "100%" }} />
-      <p className="lesson-detail__note">Bản nháp tự lưu khi bạn gõ. Khi đã có đầu ra thật, bấm nút dưới để ghi Done.</p>
+      <p className="lesson-detail__note">Bản nháp được tự lưu trên thiết bị khi bạn gõ để quay lại học tiếp. Chỉ khi đã làm xong bài mới bấm Hoàn thành; thao tác này ghi Done nhưng không tự chấm câu trả lời.</p>
       <p><label>Thời gian thực tế (phút) <input type="number" min={1} max={60} required value={minutes} onChange={e => setMinutes(Number(e.target.value))} /></label></p>
       <details className="practice-options">
         <summary>Thông tin thêm · tùy chọn</summary>
@@ -158,21 +181,25 @@ ${text}` : text);
         <p><label>Kết quả bài tập ở nguồn <input value={sourceResult} onChange={e => setSourceResult(e.target.value)} placeholder="Ví dụ 4/6; sai main idea" /></label></p>
         <p>Trang không tự đọc điểm British Council/Cambridge; đây là kết quả bạn tự báo.</p>
       </details>
-      <button className="button lesson-completion__button" type="submit" disabled={Boolean(completion?.completed)}>{completion?.completed ? "Đã hoàn thành · Done đã ghi" : "Lưu câu trả lời & ghi Done"}</button>
+      <div className="lesson-completion__actions">
+      <button className="button button--ghost" type="button" disabled={!response.trim()} onClick={saveDraft}>{completion?.completed ? "Lưu chỉnh sửa" : "Lưu nháp · học sau"}</button>
+      <button className="button lesson-completion__button" type="submit" disabled={Boolean(completion?.completed)}>{completion?.completed ? "Đã hoàn thành · Done đã ghi" : "Hoàn thành bài · lưu Done"}</button>
+      </div>
     </form>
     <p role="status">{message}</p>
     {attempt && <div>
       <div className="lesson-completion" data-complete={completion?.completed ? "true" : "false"}>
-        <p className="lesson-completion__label">{completion?.completed ? "ĐÃ GHI NHẬN" : "BẢN NHÁP ĐÃ LƯU"}</p>
+        <p className="lesson-completion__label">{completion?.completed ? "ĐÃ GHI DONE · CHƯA TỰ CHẤM NĂNG LỰC" : "BẢN NHÁP ĐÃ LƯU · CHƯA DONE"}</p>
         {completion?.completed && <div className="lesson-completion__closure" aria-live="polite">
-          <h3>Hoàn thành phiên học</h3>
-          <p><strong>{completion.totalCompleted} bài đã Done.</strong> Bạn có thể dừng ở đây — không cần làm thêm để giữ chuỗi.</p>
+          <h3>Đã lưu Done · bước tiếp theo là tự kiểm tra</h3>
+          <p><strong>{completion.totalCompleted} bài đã Done.</strong> Done xác nhận đã làm bài, không phải điểm số. Hãy thử nhớ lại trước khi xem mẫu để hệ thống chọn lịch ôn tiếp.</p>
           {takeaway && <div className="lesson-completion__takeaway">
             <p><span>Cụm nên giữ</span><strong>{takeaway.phrase}</strong></p>
             <p><span>Khung tái sử dụng</span><strong>{takeaway.pattern}</strong></p>
           </div>}
           <div className="lesson-completion__actions">
-            <Link className="button lesson-completion__button" href="/learning">Về Learning</Link>
+            <a className="button lesson-completion__button" href="#lesson-recall">Bước tiếp: tự nhớ lại & hẹn lịch ôn</a>
+            <Link className="button button--ghost" href="/learning">Về Learning</Link>
             <button className="button button--ghost" type="button" onClick={reviewLesson}>Xem lại bài</button>
           </div>
         </div>}
