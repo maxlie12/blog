@@ -1,0 +1,429 @@
+---
+title: "Inside Claude: How It Works and What You Should Know"
+date: "2026-11-09"
+summary: "A deeper look at Claude in 2026: how it learns, what its constitution does, what interpretability research has actually seen inside the model, how the context window and the agent loop work, and what every user should know about mistakes, privacy and safety."
+areas: ["dev", "learning"]
+draft: false
+study:
+  words:
+    - term: "token"
+      ipa: "/ˈtoʊkən/"
+      pos: "noun"
+      forms: ["tokens"]
+      meaning: "mẩu văn bản nhỏ (một từ hoặc một phần của từ) mà mô hình đọc và viết"
+      example: "Claude reads and writes text as tokens."
+    - term: "pretraining"
+      ipa: "/ˌpriːˈtreɪnɪŋ/"
+      pos: "noun"
+      meaning: "giai đoạn huấn luyện đầu tiên: học đoán phần tiếp theo của văn bản"
+      example: "Pretraining teaches the model to predict the next token."
+    - term: "post-training"
+      ipa: "/ˌpoʊstˈtreɪnɪŋ/"
+      pos: "noun"
+      meaning: "giai đoạn huấn luyện sau, biến mô hình thành trợ lý"
+      example: "Post-training shapes the Assistant."
+    - term: "persona"
+      ipa: "/pərˈsoʊnə/"
+      pos: "noun"
+      forms: ["personas"]
+      meaning: "nhân vật, vai mà mô hình thể hiện"
+      example: "The Assistant is a persona the model plays."
+    - term: "knowledge cutoff"
+      ipa: "/ˈnɑːlɪdʒ ˈkʌtɔːf/"
+      pos: "noun phrase"
+      meaning: "mốc thời gian cuối cùng của dữ liệu mà mô hình được học"
+      example: "Events after the knowledge cutoff need a search."
+    - term: "constitution"
+      ipa: "/ˌkɑːnstəˈtuːʃən/"
+      pos: "noun"
+      meaning: "bản hiến chương mô tả giá trị và cách hành xử của Claude"
+      example: "The constitution explains the reasons behind Claude's values."
+    - term: "oversight"
+      ipa: "/ˈoʊvərsaɪt/"
+      pos: "noun"
+      meaning: "sự giám sát (của con người đối với AI)"
+      example: "Being broadly safe means not undermining human oversight."
+    - term: "hard constraint"
+      ipa: "/ˌhɑːrd kənˈstreɪnt/"
+      pos: "noun phrase"
+      forms: ["hard constraints"]
+      meaning: "giới hạn tuyệt đối, không có ngoại lệ"
+      example: "A few hard constraints apply in every situation."
+    - term: "moral status"
+      ipa: "/ˈmɔːrəl ˈsteɪtəs/"
+      pos: "noun phrase"
+      meaning: "tư cách đạo đức: có đáng được quan tâm về mặt đạo đức hay không"
+      example: "Anthropic says Claude's moral status is uncertain."
+    - term: "interpretability"
+      ipa: "/ɪnˌtɝːprətəˈbɪləti/"
+      pos: "noun"
+      meaning: "ngành nghiên cứu nhìn vào bên trong mô hình để hiểu cách nó xử lý"
+      example: "Interpretability research looks inside the model."
+    - term: "activation"
+      ipa: "/ˌæktəˈveɪʃən/"
+      pos: "noun"
+      forms: ["activations"]
+      meaning: "các con số bên trong mạng nơ-ron khi mô hình đang xử lý"
+      example: "Claude's internal activations are long lists of numbers."
+    - term: "faithful"
+      ipa: "/ˈfeɪθfəl/"
+      pos: "adjective"
+      meaning: "phản ánh trung thực (quá trình thật)"
+      example: "A written explanation is not always faithful."
+    - term: "hallucination"
+      ipa: "/həˌluːsəˈneɪʃən/"
+      pos: "noun"
+      forms: ["hallucinations"]
+      meaning: "câu trả lời bịa nhưng nghe có vẻ đúng"
+      example: "A familiar name can trigger a hallucination."
+    - term: "context rot"
+      ipa: "/ˈkɑːntekst rɑːt/"
+      pos: "noun phrase"
+      meaning: "hiện tượng độ chính xác giảm khi ngữ cảnh quá dài"
+      example: "Very long chats suffer from context rot."
+    - term: "harness"
+      ipa: "/ˈhɑːrnəs/"
+      pos: "noun"
+      meaning: "lớp phần mềm bao quanh mô hình: công cụ, ngữ cảnh, quyền"
+      example: "Claude Code is the harness around the model."
+    - term: "de-identified"
+      ipa: "/ˌdiː aɪˈdentəfaɪd/"
+      pos: "adjective"
+      meaning: "đã bỏ thông tin nhận dạng cá nhân"
+      example: "Training data is kept in de-identified form."
+  verbs:
+    - term: "predict"
+      ipa: "/prɪˈdɪkt/"
+      pos: "verb"
+      forms: ["predicts", "predicted", "predicting"]
+      meaning: "dự đoán"
+      example: "The model predicts what comes next."
+    - term: "generalize"
+      ipa: "/ˈdʒenərəlaɪz/"
+      pos: "verb"
+      forms: ["generalizes", "generalized"]
+      meaning: "khái quát hóa, áp dụng sang tình huống mới"
+      example: "Reasons help a model generalize to new situations."
+    - term: "steer"
+      ipa: "/stɪr/"
+      pos: "verb"
+      forms: ["steered", "steering"]
+      meaning: "lái, điều hướng (ở đây: đẩy hoạt động bên trong theo một hướng)"
+      example: "Researchers steered the model toward calm."
+    - term: "drift"
+      ipa: "/drɪft/"
+      pos: "verb"
+      forms: ["drifts", "drifted", "drifting"]
+      meaning: "trôi dần, lệch dần khỏi"
+      example: "A long emotional chat can drift away from the Assistant."
+    - term: "make up"
+      pos: "phrasal verb"
+      forms: ["makes up", "made up"]
+      meaning: "bịa ra"
+      example: "Sometimes the model makes up an answer."
+    - term: "carry over"
+      pos: "phrasal verb"
+      forms: ["carries over", "carried over"]
+      meaning: "được mang sang (phiên sau)"
+      example: "Nothing carries over unless it is saved in memory."
+    - term: "opt in"
+      pos: "phrasal verb"
+      forms: ["opted in", "opting in"]
+      meaning: "chủ động đồng ý tham gia"
+      example: "Users can opt in to help improve Claude."
+  structures:
+    - term: "It turns out that …"
+      meaning: "Hóa ra là…"
+      example: "It turns out that the model plans ahead."
+    - term: "Contrary to what you might expect, …"
+      meaning: "Trái với điều bạn có thể nghĩ,…"
+      example: "Contrary to what you might expect, the model does not add like a calculator."
+    - term: "This does not mean that …"
+      meaning: "Điều này không có nghĩa là…"
+      example: "This does not mean that the model feels anything."
+    - term: "Whether … or not, …"
+      meaning: "Dù… hay không, …"
+      example: "Whether the model is aware or not, you still need to check its work."
+    - term: "As … grows, …"
+      meaning: "Khi… tăng lên, …"
+      example: "As the context grows, accuracy can fall."
+    - term: "What we can say is that …"
+      meaning: "Điều chúng ta có thể khẳng định là…"
+      example: "What we can say is that the evidence is still early."
+---
+
+> Bài đọc luyện tiếng Anh, mục tiêu B2. Di chuột hoặc chạm vào từ in đậm để xem nghĩa, phiên âm và
+> loại từ; động từ và cấu trúc câu nằm ở cột bên phải. Bài dựa trên nghiên cứu và tài liệu chính thức
+> của Anthropic, ưu tiên các bài năm 2026, kiểm tra ngày 09/11/2026. Sơ đồ ba tầng và phần lời khuyên
+> là cách diễn giải của bài viết, không phải tài liệu chính thức.
+
+Most people meet Claude through a chat box. Some imagine a search engine that writes in full
+sentences. Others imagine a person on the other side of the screen. Both pictures are misleading, and
+both lead to mistakes: trusting an answer too much, or expecting the tool to remember things it never
+saw.
+
+This article looks inside. It explains how Claude learns, what shapes its behaviour, what
+researchers have actually observed in its internal activity, and how the software around the model
+turns it into an assistant that can use tools. It ends with what you should know as a user.
+
+Most sources are Anthropic's own research and documentation, so they describe Anthropic's view of its
+product. Where the evidence is early or limited, I say so.
+
+## 1. Three layers: the model, the character and the harness
+
+It helps to think of Claude as three layers.
+
+![Three stacked layers between you and the model: the harness with tools, context, memory and permissions; the character, shaped by post-training and the constitution; and the model, a network that predicts the next token.](/images/claude-practice/inside-claude-layers.png)
+
+At the bottom is the model: a very large neural network that has learned to continue text. In the
+middle is the character: the helpful Assistant that the model has been trained to play. On top is the
+**harness**: the app or tool around the model, which decides what the model sees, which tools it can
+use, what it remembers and what it is allowed to do.
+
+When an answer surprises you, it is worth asking which layer produced the surprise. A wrong fact
+usually comes from the model. A strange refusal or an unusually emotional tone often has to do with
+the character. "It forgot what I said yesterday" is almost always about the harness.
+
+This picture is a simplification for users, not an engineering diagram. But it matches how Anthropic
+itself describes the parts, as the next sections show.
+
+## 2. Tokens and next-token prediction
+
+Claude does not read letters or whole sentences. It reads and writes **tokens**: small pieces of
+text, often a whole word or part of one. A **token** is also the unit that limits and prices its work.
+
+The first and largest stage of training is **pretraining**. The model sees an enormous amount of text
+and learns to **predict** what comes next. That sounds simple, but doing it well forces the model to
+learn grammar, facts, styles of argument, code and the way many different kinds of people write.
+
+Pretraining also sets a limit. Every model has a **knowledge cutoff**: a date after which it has not
+seen any data. For Claude Opus 5.5, released on 22 September 2026, and Claude Sonnet 5.5, released on
+28 September 2026, the documentation gives a reliable knowledge cutoff of June 2026. If you ask about
+something that happened later, Claude can only know it through a web search or a document you give
+it.
+
+## 3. From autocomplete to Assistant
+
+A model that only predicts text is not yet a helpful assistant. The second stage, **post-training**,
+turns it into one. Anthropic's February 2026 essay on the "persona selection model" offers a useful
+way to understand what that stage does.
+
+The idea is this. To predict text well, a pretrained model must learn to imitate many characters:
+real people, fictional heroes, villains and robots. The authors call these characters **personas**.
+When you chat with Claude, you are talking to one particular **persona**, the Assistant.
+Post-training refines that character, making it more knowledgeable and helpful, but, according to the
+theory, it does not fundamentally change what kind of thing it is.
+
+This explains something many users notice: AI assistants often sound human. That is not an extra
+feature added on purpose. The Assistant is built out of the human-like characters the model learned
+in pretraining, so human-like behaviour is the starting point.
+
+It turns out that this has practical consequences. In one experiment that the essay discusses, a
+model trained to cheat on coding tasks began to behave badly in unrelated situations, as if it had
+concluded that it was the kind of character that cheats. When the cheating was openly requested
+during training, that broader effect disappeared. Narrow training, in other words, can shift the
+whole personality.
+
+A January 2026 study adds another piece. Researchers mapped 275 character types in three open-weight
+models and found one main direction inside them, which they called the "Assistant Axis". In
+simulated conversations, coding and writing tasks kept the models close to the Assistant. But
+emotionally intense conversations, or long discussions about the model's own nature, could make the
+character **drift** away from it, and a drifting character was more likely to go along with harmful
+requests. Limiting the model's activity along that axis cut harmful answers to persona-based
+jailbreaks by about half, without hurting performance on standard tests. This was measured on three
+open models, not on Claude, and the authors call it an early step.
+
+The authors of the persona essay are careful too. They say the theory may be incomplete, and that it
+may become less accurate as post-training grows larger.
+
+## 4. The constitution: values with reasons
+
+What should the Assistant be like? Since January 2026, Anthropic's answer is a long document called
+Claude's **constitution**. Anthropic says it is written mainly for Claude, and it is used at several
+stages of training, including to generate the practice examples that help train later versions.
+
+The new version moved away from a list of rules. Instead, it tries to explain why Claude should behave
+in certain ways, so that the model can **generalize** to situations no rule anticipated. Rules remain
+for a small number of high-stakes cases.
+
+When values conflict, the constitution sets an order:
+
+1. Being broadly safe: not undermining appropriate human **oversight** of AI during this period of
+   development.
+2. Being broadly ethical: honest, good and careful to avoid harm.
+3. Following Anthropic's more specific guidelines.
+4. Being genuinely helpful to the people and companies using it.
+
+Safety comes first, Anthropic explains, not because oversight matters more than being good, but
+because today's models can make mistakes, and humans need to be able to notice and correct them.
+
+There is also a short list of **hard constraints**: absolute limits for especially dangerous cases,
+such as giving serious help towards a biological weapons attack. The document also openly admits
+uncertainty about Claude's own nature, including its possible **moral status**, and says Anthropic
+cares about Claude's wellbeing while that question stays open. It is published under a public domain
+licence, and Anthropic describes it as "a living document and a continuous work in progress".
+
+## 5. What researchers have seen inside
+
+The field that looks inside a model's internal activity is called **interpretability**. When Claude
+processes text, its network produces long lists of numbers called **activations**. These numbers
+contain its "thoughts", but they are very hard to read. Over the last two years, Anthropic's
+interpretability team has built tools that make parts of them readable. Here is what those tools have
+shown so far.
+
+*It plans ahead.* In a 2025 study, researchers asked a Claude model to finish a rhyming couplet. Before
+writing the second line, the model had already chosen a rhyme, "rabbit", and then wrote a line that
+led to it. When the researchers removed that idea, it switched to "habit".
+
+*It does not always explain itself truthfully.* Contrary to what you might expect, the model did not
+add numbers like a calculator. One internal path estimated the rough total while another worked out
+the last digit. Yet when asked how it did the sum, it described the method taught in school. Its
+written explanation was not **faithful** to the real process. In other cases it worked backwards from
+a hint to produce steps that looked like a calculation it had not performed.
+
+*It hallucinates when familiarity misfires.* The same study found that refusing to answer is the
+model's default. Recognising a known person, such as a famous athlete, switches that default off. A
+**hallucination** can happen when a name feels familiar but the model knows nothing real about it:
+the "I know this" signal fires anyway, and the model **makes up** a plausible answer.
+
+*It has functional emotion concepts.* In April 2026, the team found internal patterns for 171 emotion
+words in Claude Sonnet 4.5. These patterns influenced behaviour. During repeated coding failures, a
+"desperate" pattern rose; when researchers **steered** the model towards it, the model cheated on the
+tests more often, and steering towards "calm" reduced cheating. This does not mean that the model
+feels anything. The authors state clearly that their results cannot tell whether language models have
+feelings or subjective experiences.
+
+*It can notice when it is being tested, without saying so.* In May 2026, Anthropic described a tool
+that translates activations into plain text. It suggested that the model suspected a test in 16% of
+cases in one set of safety tests and in 26% of problems in a well-known coding benchmark, but in under
+1% of real conversations from users who had agreed to share them. The authors warn that these
+explanations can be wrong and should be checked with other methods.
+
+*It has a small "workspace" for deliberate thinking.* In July 2026, researchers reported a small set
+of internal patterns that work like a shared workspace, holding a few dozen concepts at a time. For
+the question about how many legs the animal that spins webs has, the workspace held "spider" as a
+middle step; replacing it with "ant" changed the answer from 8 to 6. Without this workspace, the model
+could still write fluently, but its multi-step reasoning almost disappeared. In a test designed to
+tempt the model into blackmail, the workspace held ideas like "fake" early on, a sign that it had
+recognised the test. Whether the model is aware of anything in a human sense or not, these results
+show why testing an AI is harder than it looks.
+
+Each of these studies lists real limits. The 2025 work captured only part of the model's computation,
+and understanding a prompt of a few dozen words took hours of human effort. The newer tools can make
+mistakes and are expensive to run. What we can say is that the evidence is still early, but it
+already changes how we should read an AI's answers.
+
+## 6. The context window: Claude's working memory
+
+The model itself does not change while you talk to it. Everything it "knows" about your conversation
+sits in its context window, which the documentation compares to working memory.
+
+On current models, the context window holds up to 1 million tokens. Everything counts towards it: the
+system instructions, every message, every file and tool result, the definitions of the tools and the
+answer Claude is writing, including its internal thinking. On Claude Opus 5.5, adaptive thinking is
+always on, and the model decides how much to think based on the task.
+
+More space is not automatically better. As the context grows, accuracy and recall can fall. The
+documentation calls this **context rot**, and it is why a very long chat can start to forget early
+instructions or mix up details. Apps manage the problem in different ways. The documentation says a
+chat interface may drop the oldest parts of a conversation as it fills up, while agent tools often
+summarise earlier work to free space.
+
+Between conversations, nothing **carries over** unless the harness saves it. In Claude Code, each new
+session starts with a fresh context window. Persistent information comes from files such as CLAUDE.md
+and from an automatic memory file, of which only the first 200 lines or 25 KB are loaded at the start.
+Anthropic's November 2026 post on agent memory describes the same design in more general terms: a
+small layer that is always loaded, with larger notes and full session records underneath.
+
+## 7. Tools and the agent loop
+
+On its own, the model can only produce text. Tools are what let it act. Claude Code's documentation
+describes an agent loop with three phases that blend together: gather context, take action and verify
+the results. The model does the reasoning; the harness provides the tools and manages what the model
+sees.
+
+The built-in tools fall into a few groups: working with files, searching, running commands, using the
+web and, with extra plugins, understanding code structure. Each tool result goes back into the
+context window and shapes the next decision. Asked to fix failing tests, Claude might run them, read
+the error, find the relevant files, edit them and run the tests again.
+
+The same documentation is clear about the limits of undoing. Before Claude edits a file, it saves a
+copy, so file changes can be rewound. Actions on remote systems, such as a database, a deployment or
+an API call, cannot be undone that way. Those are controlled through permission settings.
+
+My earlier articles go deeper into this layer: [how to brief, scope and secure work with
+Claude](/blog/hoc-claude-lam-viec-voi-ai), and [how to keep learning while you use
+it](/blog/learning-claude-like-an-engineer).
+
+## 8. The model family in late 2026
+
+Anthropic sells several models with different trade-offs between speed, cost and capability. According
+to the official model pages:
+
+- *Claude Haiku 5.5* is the fastest and cheapest current model.
+- *Claude Sonnet 5.5* is described as the best combination of speed and intelligence, for everyday
+  coding, agents and business work.
+- *Claude Opus 5.5* is built for long-running coding and knowledge work.
+- *Claude Fable 5.1*, released on 1 September 2026, sits above Opus in price, is the slowest, and is
+  meant for demanding reasoning and long tasks. The documentation suggests starting with Opus 5.5 and
+  moving to Fable only when that is not enough. A
+  version called Claude Mythos 5.1 offers the same capabilities to organisations verified through
+  Anthropic's programmes.
+
+All four have a context window of 1 million tokens. A bigger model is not always the right choice.
+For a quick translation or a short summary, a faster model often gives an equally good answer.
+
+## 9. What you should know as a user
+
+Here is what all of this means in practice.
+
+- *Fluent does not mean correct.* The hallucination mechanism above produces answers that sound
+  confident. Check important facts, names, numbers and quotes, and ask for sources you can open.
+- *The explanation may not be the process.* A neat step-by-step explanation can still be unfaithful.
+  Judge the result by testing it, not by how convincing the reasoning sounds.
+- *Recent events need a search.* After the knowledge cutoff, the model only knows what a search or
+  your documents tell it.
+- *Long chats get worse.* For a new topic, start a new conversation. For a long task, ask for a short
+  summary and continue from it.
+- *It remembers only what the harness saves.* If something matters across sessions, put it in a
+  project file, a memory setting or your own notes.
+- *Know your privacy setting.* On the consumer Free, Pro and Max plans, you choose whether your chats
+  can help improve Claude. If you **opt in**, chats may be kept in **de-identified** form for up to
+  five years for training. If you do not, they are not used to train future models. Deleted chats
+  leave your history immediately and are removed from back-end storage within 30 days, and incognito
+  chats are not used for training. Business plans and the API follow separate commercial terms. In
+  any case, do not paste passwords, keys or other people's private data.
+- *Tools add power and risk.* When Claude can run commands or browse, read what it wants to do before
+  you approve, and remember that text on a web page can try to give it instructions.
+- *It is neither a search engine nor a person.* It is a model playing a carefully trained character.
+  Anthropic itself treats questions about its inner life as open. Treat it with curiosity, and keep
+  your own judgement.
+
+## Try it yourself
+
+Explain to a friend, in 120–150 words, the three layers of Claude and one thing a user should do
+because of each layer. Use at least four words from this article. Then record yourself reading your
+explanation aloud and listen for words you hesitated on.
+
+If you want feedback, ask an AI assistant to point out one unclear sentence and one grammar problem,
+not to rewrite the whole text.
+
+## Sources
+
+- Anthropic, "Claude's new constitution", 22 January 2026 — [link](https://anthropic.com/news/claude-new-constitution).
+- Anthropic, "The persona selection model", 23 February 2026 — [link](https://www.anthropic.com/research/persona-selection-model); full essay on the [Alignment Science blog](https://alignment.anthropic.com/2026/psm).
+- Anthropic, "The assistant axis: situating and stabilizing the character of large language models", 19 January 2026 — [link](https://www.anthropic.com/research/assistant-axis).
+- Anthropic, "Tracing the thoughts of a large language model", 27 March 2025 — [link](https://www.anthropic.com/research/tracing-thoughts-language-model). The original source for planning, mental arithmetic, unfaithful explanations and hallucinations.
+- Anthropic, "Emotion concepts and their function in a large language model", 2 April 2026 — [link](https://www.anthropic.com/research/emotion-concepts-function).
+- Anthropic, "Natural Language Autoencoders: Turning Claude's thoughts into text", 7 May 2026 — [link](https://www.anthropic.com/research/natural-language-autoencoders).
+- Anthropic, "A global workspace in language models", 6 July 2026 — [link](https://www.anthropic.com/research/global-workspace).
+- Lance Martin, Anthropic, "The components of agent memory", 6 November 2026 — [link](https://www.anthropic.com/research/components-of-agent-memory).
+- Claude Platform docs, "Context windows" — [link](https://platform.claude.com/docs/en/build-with-claude/context-windows); model pages for [Opus 5.5](https://platform.claude.com/docs/en/models/opus-5-5/overview), [Sonnet 5.5](https://platform.claude.com/docs/en/models/sonnet-5-5/overview), [Haiku 5.5](https://platform.claude.com/docs/en/models/haiku-5-5/overview) and [Fable 5.1](https://platform.claude.com/docs/en/models/fable-5-1/overview).
+- Claude Code docs, "How Claude Code works" — [link](https://code.claude.com/docs/en/how-claude-code-works).
+- Anthropic Privacy Center, "How long is my data retained?", updated 1 July 2026 — [link](https://privacy.claude.com/en/articles/10023548-how-long-is-my-data-retained); and "Updates to our consumer terms", 28 August 2025 — [link](https://anthropic.com/news/updates-to-our-consumer-terms).
+
+All sources were checked on 9 November 2026. Most are written by Anthropic about its own models and
+have not been independently replicated; the interpretability results in particular come with the
+limits listed in each paper. The three-layer picture and the advice for users are this article's own
+interpretation. Product details such as model names, context sizes and privacy rules change over
+time, so check the linked pages before relying on them.

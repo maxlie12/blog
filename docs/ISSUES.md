@@ -16,6 +16,7 @@ evidence and never proves a CEFR, HSK or JLPT level.
 | LEARN-012 | P2 | Active | The games can only be reached by address from Learning. | Add one quiet row of links. See `docs/changes/LEARN-012-game-entry.md`. |
 | BLOG-005 | P2 | Active | The learner wants deeper English reading on building a small game, connected to Learning. | Publish three study articles with lessons. See `docs/changes/BLOG-005-game-study-articles.md`. |
 | BLOG-006 | P2 | Active | Three 8 November articles were thin, and one was Vietnamese-only with no study words. | Rewrite all three as sourced English study articles. See `docs/changes/BLOG-006-career-ai-articles-update.md`. |
+| BLOG-007 | P2 | Active | The learner wants to understand how Claude works inside and what a user should know. | Publish one sourced English study article. See `docs/changes/BLOG-007-inside-claude-article.md`. |
 | LEARN-011 | P1 | Active | The learner could not find the path, and it hid reviews and finished lessons. | Show it on `/learning`. See `docs/changes/LEARN-011-path-on-learning.md`. |
 | LEARN-010 | P2 | Active | Backup gaps, a dead link, page language and stale docs. | Verified locally; deploy. See `docs/changes/LEARN-010-docs-backup-cleanup.md`. |
 | FEEDBACK-001 | P2 | Blocked | Personal correction is manual; automatic AI feedback is not implemented or cost-controlled. | First collect real attempts and define a one-error feedback contract. |
