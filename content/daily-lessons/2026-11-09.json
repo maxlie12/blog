@@ -1,0 +1,95 @@
+{
+  "date": "2026-11-09",
+  "title": "Nghe yêu cầu — hỏi rõ trước khi nhận việc",
+  "kind": "restart",
+  "note": "Chưa có bài làm tiếng Anh mới: giữ B1+ tự đánh giá và bước nghe/đọc hiểu, dùng lại nguồn Cambridge. Chỉ nhiệm vụ đầu là chính; không yêu cầu học bù. Không có Blog Seed hôm nay.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-09-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — phân biệt yêu cầu và chi tiết",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải đề chính thức. Không xem đáp án trước. Phần tùy chọn có thể để phiên khác.",
+      "material": "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues",
+      "exercises": "Dùng lại Cambridge Listening to dialogues: miễn phí, audio và câu hỏi B1–B2; không mặc định có transcript. Chọn một hội thoại, nghe tối đa hai lượt. Đầu ra ba dòng: người nói cần gì; một chi tiết nghe chắc; một điều chưa rõ và câu hỏi bạn tự tạo để làm rõ. Ghi thời gian và hỗ trợ đã dùng. Không cần làm hết nguồn, không mở đáp án trước.",
+      "completionCriteria": "Lưu đầu ra tự tạo và điều kiện làm bài; Done chỉ ghi thực hành, không xác nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-09-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — đọc để hiểu phạm vi công việc",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải đề chính thức. Không xem đáp án trước. Phần tùy chọn có thể để phiên khác.",
+      "material": "Nora: Could you check the booking page this morning?\nBao: Should I test it on a phone or on a laptop?\nNora: On a phone, please. Some users cannot find the next button.\nBao: I can check that first. Do you also need a short recording?\nNora: Yes, but please use a test account.",
+      "exercises": "Hội thoại do trợ lý tự soạn, không phải transcript Cambridge. Trả lời: Nora muốn kiểm tra trên thiết bị nào? Người dùng đang gặp vấn đề gì? Có giới hạn nào khi ghi lại lỗi? Trích tối đa một cụm ngắn rồi giải thích bằng lời của bạn.",
+      "completionCriteria": "Lưu đầu ra tự tạo và điều kiện làm bài; Done chỉ ghi thực hành, không xác nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-09-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — hỏi rõ trước khi kiểm tra",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải đề chính thức. Không xem đáp án trước. Phần tùy chọn có thể để phiên khác.",
+      "material": null,
+      "exercises": "Tình huống tự soạn: bạn được nhờ kiểm tra trang đặt chỗ nhưng chưa biết thiết bị và lỗi cụ thể. Hỏi hai câu làm rõ, rồi xác nhận việc bạn sẽ kiểm tra trước. Biến thể: chỉ còn mười phút, đề xuất giới hạn hợp lý. Nói 30–45 giây; lưu hai câu đã nói và một chỗ bị bí. Nếu cần nhận xét phát âm, gửi ChatGPT audio, không đưa dữ liệu công việc thật.",
+      "completionCriteria": "Lưu đầu ra tự tạo và điều kiện làm bài; Done chỉ ghi thực hành, không xác nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-09-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5 phút — xác nhận một nhiệm vụ nhỏ",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải đề chính thức. Không xem đáp án trước. Phần tùy chọn có thể để phiên khác.",
+      "material": null,
+      "exercises": "Viết 30–50 từ cho đồng nghiệp: xác nhận thiết bị, phần bạn sẽ kiểm tra và cách gửi kết quả bằng dữ liệu thử. Dùng chi tiết tự chọn, không chép hội thoại hoặc dùng AI sửa bản đầu. Chỉ kiểm tra một điểm: người đọc có hiểu bạn nhận làm gì và chưa nhận làm gì không?",
+      "completionCriteria": "Lưu đầu ra tự tạo và điều kiện làm bài; Done chỉ ghi thực hành, không xác nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-09-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — hỏi vị trí đồ vật",
+      "level": "Sơ cấp · giao tiếp đời sống",
+      "instructions": "Bài do trợ lý tự soạn, không phải đề chính thức. Không xem đáp án trước. Phần tùy chọn có thể để phiên khác.",
+      "material": "https://mandarinbean.com/im-thirsty/",
+      "exercises": "Bài tự soạn: xem cụm rồi che chữ/pinyin. Tự nói và gõ câu hỏi một đồ vật đang ở đâu, rồi tự trả lời bằng vị trí khác mẫu. Thêm một câu mới về đồ vật thứ hai; chưa cần ngữ pháp dài. Nguồn Mandarin Bean dùng lại là audio luyện thêm về đồ uống, không phải audio khớp bài đồ vật: text/pinyin/audio miễn phí; bài tập và bản dịch đầy đủ Premium, không cần mua. Viết tay tùy chọn, không lưu hoặc tự chấm.",
+      "completionCriteria": "Chỉ ghi Done khi đã nói và lưu cặp hỏi–đáp cùng câu mới do mình tạo, không chép mẫu; không tự suy ra trình độ.",
+      "chinesePractice": {
+        "sentence": "勺子在桌子上。",
+        "translation": "Thìa ở trên bàn.",
+        "tokens": [
+          {
+            "hanzi": "勺子",
+            "pinyin": "sháozi",
+            "meaning": "thìa"
+          },
+          {
+            "hanzi": "筷子",
+            "pinyin": "kuàizi",
+            "meaning": "đũa"
+          },
+          {
+            "hanzi": "在哪里",
+            "pinyin": "zài nǎlǐ",
+            "meaning": "ở đâu"
+          },
+          {
+            "hanzi": "在桌子上",
+            "pinyin": "zài zhuōzi shàng",
+            "meaning": "ở trên bàn"
+          },
+          {
+            "hanzi": "在桌子下面",
+            "pinyin": "zài zhuōzi xiàmiàn",
+            "meaning": "ở dưới bàn"
+          }
+        ],
+        "outputPrompt": "Che mẫu, tự gõ một cặp hỏi–đáp về vị trí đồ vật; đổi vị trí rồi thêm một câu mới và đọc thành tiếng."
+      }
+    }
+  ]
+}
