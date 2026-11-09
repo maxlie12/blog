@@ -113,3 +113,13 @@ test("Chinese one-tap recommendation uses the same draft/due/new priorities inde
   assert.equal(selectNextLesson(chinese, "luan", completed, new Set(["daily-2026-11-09-zh-listening"]), due)?.reason, "resume");
   assert.equal(selectNextLesson(chinese, "luan", completed, new Set(), [])?.lesson.id, "daily-2026-11-09-zh-listening");
 });
+
+test("English subset stays available when the main recommendation is a due Chinese lesson", () => {
+  const zh = lessons.find(l => l.language === "zh")!;
+  const due = [{ lessonId: zh.id, interval: 1 as const, dueDate: "2026-11-01", isDue: true }];
+  const completed = new Set([zh.id]);
+  assert.equal(selectNextLesson(lessons, "luan", completed, new Set(), due)?.lesson.language, "zh");
+  const english = selectNextLesson(lessons.filter(l => l.language === "en"), "luan", completed, new Set(), due);
+  assert.equal(english?.lesson.language, "en");
+  assert.equal(english?.reason, "next");
+});

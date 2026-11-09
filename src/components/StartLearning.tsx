@@ -27,6 +27,7 @@ const reasonLabel = {
 export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
   const learner = useLearnerProfile();
   const [target, setTarget] = useState<NextLesson | null>(null);
+  const [englishTarget, setEnglishTarget] = useState<NextLesson | null>(null);
   const [chineseTarget, setChineseTarget] = useState<NextLesson | null>(null);
   const [dueReview, setDueReview] = useState<{ review: ScheduledReview; title: string } | null>(null);
 
@@ -37,6 +38,7 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
       const drafts = new Set(lessons.filter((lesson) => hasLessonDraft(lesson.id)).map((lesson) => lesson.id));
       const next = selectNextLesson(lessons, learner.id, completed, drafts, dueReviews);
       setTarget(next);
+      setEnglishTarget(selectNextLesson(lessons.filter(lesson => lesson.language === "en"), learner.id, completed, drafts, dueReviews));
       // Show an independent Chinese entry point so the English-first path cannot bury Chinese practice.
       setChineseTarget(selectNextLesson(lessons.filter((lesson) => lesson.language === "zh"), learner.id, completed, drafts, dueReviews));
       // An unfinished draft remains first; its due review stays one tap away.
@@ -76,7 +78,12 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
         ) : (
           <button className="button button--primary" type="button" disabled>Đang chọn bài…</button>
         )}
-        {chineseTarget && (
+        {englishTarget && target?.lesson.language !== "en" && (
+          <Link className="button button--ghost" href={`/learning/${englishTarget.lesson.id}`} aria-label={`${actionLabel[englishTarget.reason]} tiếng Anh: ${englishTarget.lesson.title}`}>
+            Tiếng Anh · {actionLabel[englishTarget.reason]} →
+          </Link>
+        )}
+        {chineseTarget && target?.lesson.language !== "zh" && (
           <Link className="button button--ghost" href={`/learning/${chineseTarget.lesson.id}`} aria-label={`${actionLabel[chineseTarget.reason]} tiếng Trung: ${chineseTarget.lesson.title}`}>
             Tiếng Trung · {actionLabel[chineseTarget.reason]} →
           </Link>
