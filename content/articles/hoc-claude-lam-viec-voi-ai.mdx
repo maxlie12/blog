@@ -1,122 +1,445 @@
 ---
-title: "Học Claude như một kỹ sư: dùng AI để đi nhanh mà không đánh mất tay nghề"
+title: "Working With Claude: Clear Briefs, Small Context and Real Controls"
 date: "2026-11-08"
-summary: "Một cách làm việc có trách nhiệm với Claude: giao việc rõ, chọn đúng ngữ cảnh, sửa từng phần và kiểm chứng bằng bằng chứng."
+updated: "2026-11-09"
+summary: "How to work with Claude without losing your craft: when more agents are worth it, how to brief a task, where CLAUDE.md, skills and hooks belong, how to cut rework, and what security needs beyond 'be careful'. Updated with Anthropic's 2026 engineering posts."
 areas: ["dev", "learning"]
 draft: false
+study:
+  words:
+    - term: "workflow"
+      ipa: "/ˈwɝːkfloʊ/"
+      pos: "noun"
+      forms: ["workflows"]
+      meaning: "quy trình làm việc theo các bước định sẵn"
+      example: "In a workflow, the steps are decided in advance."
+    - term: "agent"
+      ipa: "/ˈeɪdʒənt/"
+      pos: "noun"
+      forms: ["agents"]
+      meaning: "tác tử AI: tự quyết định bước tiếp theo và tự dùng công cụ"
+      example: "An agent chooses its own steps."
+    - term: "latency"
+      ipa: "/ˈleɪtənsi/"
+      pos: "noun"
+      meaning: "độ trễ, thời gian phải chờ kết quả"
+      example: "More agents usually mean more latency."
+    - term: "evaluator"
+      ipa: "/ɪˈvæljueɪtər/"
+      pos: "noun"
+      meaning: "bên chấm, kiểm tra kết quả (người hoặc tác tử AI)"
+      example: "A separate evaluator checks the work."
+    - term: "context window"
+      ipa: "/ˈkɑːntekst ˌwɪndoʊ/"
+      pos: "noun phrase"
+      meaning: "cửa sổ ngữ cảnh: lượng thông tin mô hình xử lý được trong một phiên"
+      example: "Recall gets worse as the context window fills up."
+    - term: "brief"
+      ipa: "/briːf/"
+      pos: "noun"
+      meaning: "bản giao việc ngắn gọn"
+      example: "A good brief states what the code cannot tell."
+    - term: "invariant"
+      ipa: "/ɪnˈveriənt/"
+      pos: "noun"
+      forms: ["invariants"]
+      meaning: "điều bất biến, điều phải luôn đúng sau khi sửa"
+      example: "Do not delete older attempts: that is an invariant."
+    - term: "overhead"
+      ipa: "/ˈoʊvərhed/"
+      pos: "noun"
+      meaning: "công sức hoặc chi phí phụ thêm"
+      example: "Planning has overhead."
+    - term: "advisory"
+      ipa: "/ədˈvaɪzəri/"
+      pos: "adjective"
+      meaning: "mang tính khuyến nghị, không bắt buộc thực thi"
+      example: "CLAUDE.md instructions are advisory."
+    - term: "deterministic"
+      ipa: "/dɪˌtɝːmɪˈnɪstɪk/"
+      pos: "adjective"
+      meaning: "mang tính xác định, lần nào cũng chạy như nhau"
+      example: "Hooks are deterministic."
+    - term: "rework"
+      ipa: "/ˈriːwɝːk/"
+      pos: "noun"
+      meaning: "việc phải làm lại"
+      example: "Most wasted money comes from rework."
+    - term: "handoff"
+      ipa: "/ˈhændɔːf/"
+      pos: "noun"
+      forms: ["handoffs"]
+      meaning: "bản bàn giao công việc"
+      example: "Write a short handoff before you end a session."
+    - term: "compaction"
+      ipa: "/kəmˈpækʃən/"
+      pos: "noun"
+      meaning: "việc tự tóm gọn hội thoại dài để giải phóng ngữ cảnh"
+      example: "Compaction keeps the key decisions and frees space."
+    - term: "permission"
+      ipa: "/pərˈmɪʃən/"
+      pos: "noun"
+      forms: ["permissions"]
+      meaning: "quyền hạn được cấp"
+      example: "Give the AI only the permissions the task needs."
+    - term: "approval fatigue"
+      ipa: "/əˈpruːvəl fəˌtiːɡ/"
+      pos: "noun phrase"
+      meaning: "sự mệt mỏi vì phải bấm duyệt quá nhiều nên duyệt cho qua"
+      example: "Too many prompts lead to approval fatigue."
+    - term: "prompt injection"
+      ipa: "/ˈprɑːmpt ɪnˌdʒekʃən/"
+      pos: "noun phrase"
+      meaning: "tấn công chèn lệnh: văn bản lạ cố ra lệnh cho AI"
+      example: "A README can carry a prompt injection."
+    - term: "sandbox"
+      ipa: "/ˈsændbɑːks/"
+      pos: "noun"
+      meaning: "môi trường cô lập, giới hạn những gì chương trình chạm tới được"
+      example: "A sandbox limits what a command can reach."
+  verbs:
+    - term: "delegate"
+      ipa: "/ˈdeləɡeɪt/"
+      pos: "verb"
+      forms: ["delegated", "delegating"]
+      meaning: "giao việc cho người khác (hoặc cho AI)"
+      example: "You can delegate a task, but not the responsibility."
+    - term: "narrow down"
+      pos: "phrasal verb"
+      forms: ["narrowed down", "narrowing down"]
+      meaning: "thu hẹp lại"
+      example: "Narrow down the task first."
+    - term: "reproduce"
+      ipa: "/ˌriːprəˈduːs/"
+      pos: "verb"
+      forms: ["reproduces", "reproduced"]
+      meaning: "tái hiện (lỗi)"
+      example: "Reproduce the bug before you fix it."
+    - term: "roll back"
+      pos: "phrasal verb"
+      forms: ["rolled back"]
+      meaning: "quay về phiên bản tốt trước đó"
+      example: "If the fix makes things worse, roll back."
+    - term: "enforce"
+      ipa: "/ɪnˈfɔːrs/"
+      pos: "verb"
+      forms: ["enforces", "enforced"]
+      meaning: "thực thi bắt buộc"
+      example: "Tools can enforce a rule; a prompt cannot."
+    - term: "prune"
+      ipa: "/pruːn/"
+      pos: "verb"
+      forms: ["pruned", "pruning"]
+      meaning: "cắt tỉa, lược bớt phần thừa"
+      example: "Prune your CLAUDE.md regularly."
+    - term: "hand over"
+      pos: "phrasal verb"
+      forms: ["handed over", "handing over"]
+      meaning: "bàn giao"
+      example: "Hand over the task to a fresh session."
+    - term: "rule out"
+      pos: "phrasal verb"
+      forms: ["ruled out"]
+      meaning: "loại trừ (một khả năng, một rủi ro)"
+      example: "Run it in isolation to rule out the risk."
+  structures:
+    - term: "Only when … should you …"
+      meaning: "Chỉ khi… thì bạn mới nên…"
+      example: "Only when the work splits cleanly should you add a second agent."
+    - term: "Rather than …, …"
+      meaning: "Thay vì…, (hãy)…"
+      example: "Rather than reading the whole repo, give it a narrow task."
+    - term: "… does not replace …"
+      meaning: "… không thay thế được …"
+      example: "A prompt does not replace a real permission control."
+    - term: "The point is not …, it is …"
+      meaning: "Điều quan trọng không phải là…, mà là…"
+      example: "The point is not the number of tokens, it is a change you can use."
+    - term: "Before you …, make sure …"
+      meaning: "Trước khi…, hãy chắc chắn rằng…"
+      example: "Before you approve a command, make sure you know what it changes."
+    - term: "If in doubt, …"
+      meaning: "Nếu còn phân vân, (hãy)…"
+      example: "If in doubt, ask for an explanation first."
 ---
 
-AI có thể viết một component trong vài phút. Nhưng ai sẽ nhận ra component đó lưu sai dữ liệu, làm hỏng bàn phím trên mobile hoặc khiến người dùng mất bài học sau khi tải lại trang?
+> Bài đọc luyện tiếng Anh, mục tiêu B1+–B2. Bài này ban đầu viết bằng tiếng Việt; đây là bản tiếng
+> Anh, được mở rộng và cập nhật bằng các bài kỹ thuật năm 2026 của Anthropic. Di chuột hoặc chạm vào
+> từ in đậm để xem nghĩa, phiên âm và loại từ; động từ và cấu trúc câu nằm ở cột bên phải. Checklist,
+> mẫu giao việc và kế hoạch bốn tuần là đề xuất của bài viết, không phải quy trình chính thức của
+> Anthropic.
 
-Người chịu trách nhiệm vẫn là kỹ sư. Học Claude vì thế không chỉ là học cách hỏi cho hay. Đó là học cách biến một yêu cầu thành thay đổi có thể kiểm tra, hiểu và bảo trì.
+AI can write a component in a few minutes. But who will notice that the component saves the wrong
+data, breaks the keyboard on mobile, or makes a learner lose their answer after a refresh?
 
-Đây là bài tổng hợp biên tập với góc nhìn kỹ thuật, không phải tuyên bố tác giả có chứng chỉ hay kinh nghiệm đã được kiểm chứng. Ví dụ bên dưới là tình huống minh họa, không phải kết quả đo của một dự án thật. Nguồn được kiểm tra ngày 08/11/2026; các bước thực hành là đề xuất của bài viết, không phải quy trình chính thức của Anthropic.
+The engineer is still responsible. So learning Claude is not only learning to ask good questions. It
+is learning to turn a request into a change that can be checked, understood and maintained.
 
-## 1. Đừng bắt đầu bằng việc cài thật nhiều agent
+This is an editorial guide, not official Anthropic material. Where I describe this site's own setup,
+it is an accurate description of its repository. The other examples are illustrations, not measured
+results from a real project.
 
-Trong [Building effective agents][2], Anthropic phân biệt workflow theo đường đi định trước với agent tự quyết định cách dùng công cụ. Họ khuyên bắt đầu bằng giải pháp đơn giản, chỉ tăng độ phức tạp khi thật sự cần. Agent có thể đổi thêm thời gian chờ và chi phí lấy khả năng xử lý công việc khó hơn. Bài này xuất bản năm 2024; nên dùng như nguyên tắc kiến trúc, không như bảng hướng dẫn công cụ mới nhất.
+## 1. Don't start by adding more agents
 
-Với một blog cá nhân, câu hỏi đầu tiên nên là: “Người dùng đang không làm được việc gì?” Nếu vấn đề là không tìm thấy bài học, một nút rõ ràng có thể hữu ích hơn một đội agent.
+In "Building effective agents" (December 2024), Anthropic separates two kinds of systems. In a
+**workflow**, a language model and its tools follow steps that a developer has defined in advance.
+An **agent** decides its own steps and chooses which tools to use as it goes.
 
-Đề xuất của mình: chỉ thêm agent thứ hai khi có phần việc độc lập và có người chịu trách nhiệm kết hợp kết quả. Hai AI cùng sửa một file không tự nhiên trở thành một đội kỹ sư giỏi.
+The advice is to find the simplest solution that works, and add complexity only when it is needed.
+Agentic systems often trade more **latency** and cost for better results on hard tasks, so that trade
+has to be worth it. For many applications, one well-prepared call to a model, with good examples and
+the right information, is enough.
 
-## 2. Prompt là lời giao việc; ngữ cảnh là hồ sơ công việc
+The same article describes common patterns. In *prompt chaining*, each step works on the output of
+the step before. *Routing* sends each input to a specialised handler. *Parallelization* runs parts at
+the same time, or runs the same task several times and compares the answers. In
+*orchestrator-workers*, one model splits a task and hands the parts to others. In
+*evaluator-optimizer*, one model writes and another gives feedback in a loop.
 
-[Tài liệu context engineering của Anthropic][3] nhấn mạnh lựa chọn thông tin có ích trong một nguồn lực hữu hạn. Nạp thêm dữ liệu không đảm bảo mô hình hiểu tốt hơn. Một cách tiếp cận là giữ đường dẫn và tham chiếu nhẹ, rồi lấy nội dung cần thiết đúng lúc.
+A 2026 post shows what that trade looks like in practice. In March, Prithvi Rajasekaran described a
+set-up with three agents for building whole applications: a planner that writes a product spec, a
+generator that builds the app, and an **evaluator** that clicks through the running app and grades
+it. In one test, a single agent built a small game maker in 20 minutes for about $9, but its core
+feature did not work. The three-agent version took six hours and cost about $200, and the result was
+clearly better. More structure paid off there, but it cost more than 20 times as much.
 
-Áp dụng vào dự án: thay vì yêu cầu “đọc toàn bộ repo rồi nâng cấp”, hãy đưa một nhiệm vụ hẹp cùng các file sở hữu luồng đó. Mở rộng phạm vi khi phát hiện phụ thuộc thật; đừng tiết kiệm token bằng cách bỏ qua nơi dữ liệu được đọc hoặc ghi.
+The post adds a lesson that ages well: every extra part of such a set-up encodes an assumption about
+what the model cannot do alone. Those assumptions go out of date as models improve, so the set-up
+should be checked again when a new model arrives.
 
-Một bản giao việc mình đề xuất có sáu dòng:
+For a personal blog, the first question should be simpler: "What can the user not do right now?" If
+learners cannot find a lesson, a clear button may help more than a team of agents.
 
-- Vấn đề quan sát được: tải lại trang thì mất phần trả lời.
-- Kết quả mong muốn: tải lại vẫn mở đúng bản nháp.
-- Phạm vi: component nhập bài, helper lưu và kiểm thử trực tiếp.
-- Bất biến: không xóa lịch sử cũ, không đổi ý nghĩa Done.
-- Bằng chứng: thử nhập, tải lại, mở lại và kiểm tra lỗi lưu.
-- Quyền hạn: sửa local; chưa push, deploy hoặc đổi database.
+My own rule follows from that. Only when the work splits cleanly into independent parts, and someone
+is responsible for combining the results, should you add a second agent. Two AIs editing the same
+file do not automatically become a good engineering team.
 
-Không cần viết một “siêu prompt”. Cần làm rõ điều không thể đoán từ code.
+## 2. A prompt is the assignment; context is the case file
 
-## 3. Vòng làm việc: bản vá nhỏ, bằng chứng rõ
+Anthropic's guide to context engineering (September 2025) describes context as everything the model
+sees while it works, not only the prompt you type. It treats context as a limited resource. Each extra
+piece of text uses some of the model's attention, and recall tends to get worse as the
+**context window** fills up. The aim is to find the smallest set of useful information that makes the
+right result likely.
 
-![Sơ đồ quy trình: xác định yêu cầu, giới hạn ngữ cảnh, tạo bản vá nhỏ, kiểm chứng; lỗi quay lại sửa, đạt mới tới người duyệt.](/images/claude-practice/workflow.png)
+One technique is "just in time" retrieval. Instead of loading every document at the start, the agent
+keeps light references, such as file paths or links, and opens the content when it needs it. The
+guide adds that this is slower and needs good guidance, so a mix of preloaded and on-demand
+information often works best.
 
-*Sơ đồ do trợ lý tự dựng. Nhánh quay lại là điều quan trọng: kiểm thử thất bại không phải tín hiệu để bỏ kiểm thử.*
+Claude Code's best-practices page makes the same point from the practical side: performance gets
+worse as the context fills, so the context window is the most important resource to manage.
 
-Đây là checklist thực hành mình đề xuất cho một thay đổi frontend:
+Anthropic's newest engineering post, on agent memory (6 November 2026), takes the idea one step
+further. It describes memory in layers: full session logs at the bottom, notes and structured pages
+in the middle, and a small layer that is loaded into every session at the top. That top layer has to
+stay small. The post suggests saving only what cannot be read from the environment each time, such as
+plans and rules that have been tested. In one of its experiments, a leaner memory folder did better
+than one that logged everything.
 
-1. Tái hiện lỗi trước khi sửa. Ghi rõ bước và kết quả thực tế.
-2. Nhờ AI giải thích đường đi dữ liệu, chưa sửa ngay nếu còn mơ hồ.
-3. Chốt bản vá nhỏ nhất xử lý được nguyên nhân.
-4. Chạy kiểm thử phù hợp, xem diff và thử luồng người dùng.
-5. Ghi phần chưa kiểm tra; xin duyệt trước khi phát hành.
+In a project, all of this means: rather than asking Claude to "read the whole repo and improve it",
+give it a narrow task and the files that own that behaviour. **Narrow down** first, then widen the
+scope when you find a real dependency. But do not save tokens by skipping the place where the data is
+actually read or written.
 
-Đừng gộp các bằng chứng khác nhau thành một chữ “Done”. Build thành công chỉ cho biết bản build đã tạo được. Nó không chứng minh micro hoạt động trên iPhone. Test lưu dữ liệu không chứng minh màu nút đủ dễ thấy. Một screenshot đẹp cũng không chứng minh tải lại còn bài làm.
+## 3. Write a six-line brief
 
-![GIF minh họa lần lượt năm mốc giao việc, ngữ cảnh, bản vá, kiểm chứng và duyệt. Nội dung tương đương sơ đồ tĩnh phía trên.](/images/claude-practice/workflow.gif)
+A good **brief** does not need to be long. It needs to state what the AI cannot guess from the code.
+Here is the format I suggest, using a bug where a learner's answer disappears after a refresh:
 
-*GIF tự tạo, chạy một lượt rồi dừng; không phải video ghi lại Claude đang thực thi. Sơ đồ tĩnh phía trên chứa nội dung cần thiết nếu bạn không muốn xem chuyển động.*
+- *Observed problem:* after a refresh, the learner's answer disappears.
+- *Expected result:* after a refresh, the same draft opens again.
+- *Scope:* the answer component, the storage helper and their direct tests.
+- *Invariants:* do not delete older attempts; do not change what "Done" means.
+- *Evidence:* type an answer, refresh, reopen the lesson and test a storage failure.
+- *Permissions:* edit locally; do not push, deploy or change the database.
 
-## 4. CLAUDE.md, skills và hooks: mỗi thứ một nhiệm vụ
+An **invariant** is something that must stay true after the change. Listing **invariants** is often
+more useful than describing the solution, because it tells the AI what it must not break.
 
-[Best practices của Claude Code][1] phân biệt hướng dẫn mô hình đọc với cơ chế thực thi. Prompt, CLAUDE.md và skills không đảm bảo mọi chỉ dẫn luôn được làm đúng; các kiểm tra, hooks và kiểm soát quyền có vai trò khác. Tài liệu cũng khuyến khích viết yêu cầu cụ thể và đưa cho Claude cách kiểm chứng.
+The official best-practices page gives similar advice in more detail: point to specific files,
+mention constraints, describe the symptom, and say what "fixed" looks like. One of its examples asks
+Claude to write a failing test that **reproduces** the bug, and only then to fix it.
 
-Theo cách tổ chức mình đề xuất:
+You do not need a "super prompt". You need to make clear what cannot be guessed.
 
-- CLAUDE.md ghi các quy ước ổn định và những quyết định khó tìm trong code. Không chép cả kiến trúc vào đó.
-- Skill đóng gói cách làm lặp lại, chẳng hạn review khả năng truy cập. Nó không biến mô hình thành chuyên gia được chứng nhận.
-- Hook chạy một bước máy móc đã xác định, chẳng hạn gọi kiểm tra trước khi kết thúc. Lệnh kiểm tra vẫn phải đúng và không được âm thầm bỏ qua lỗi.
-- CI và quy tắc nhánh bảo vệ đường phát hành. Viết “đừng deploy” trong prompt không thay thế kiểm soát quyền thật.
+This site uses a version of the same idea. Its repository has a change brief template with sections
+for the problem the user can see, the evidence that it is solved, the files that may be edited and
+the files that must not be edited. Its project instructions also tell an assistant not to scan the
+whole repository unless an audit is requested.
 
-Với nhiều AI, mình ưu tiên một bên sở hữu task, một bên review và con người duyệt. Chưa cần cho mọi bên quyền sửa mọi file cùng lúc.
+## 4. The loop: a small patch, clear evidence
 
-## 5. Tiết kiệm chi phí bằng cách giảm làm lại
+Claude Code's guide recommends separating research and planning from the code itself: explore, plan,
+implement, then commit. Planning has **overhead**, though. The guide's rule of thumb is that if you
+could describe the change in one sentence, you can skip the plan.
 
-Đây là các lựa chọn vận hành của bài viết, không phải lời hứa tiết kiệm một tỷ lệ token cố định:
+For a frontend change, this is the checklist I suggest:
 
-- Chia theo vấn đề và tiêu chí hoàn thành, không chia máy móc theo số file.
-- Đọc phần liên quan trước; khi sửa hợp đồng dữ liệu phải tìm các bên sử dụng.
-- Trước khi đổi phiên, ghi mục tiêu, file đã sửa, lệnh đã chạy, lỗi còn lại và bước tiếp theo.
-- Dùng script cho thao tác xác định; không gọi mô hình để làm phép so sánh mà code thường đã làm được.
-- Đo cả thời gian review, sửa lỗi và khôi phục, không chỉ thời gian AI tạo code.
+1. **Reproduce** the bug before fixing it. Write down the steps and the actual result.
+2. Ask the AI to explain the data path. Do not change anything while it is still unclear.
+3. Agree on the smallest patch that fixes the cause.
+4. Run the relevant checks, read the diff and try the real user flow.
+5. Write down what was not checked, and ask for approval before releasing.
 
-Một câu trả lời ngắn nhưng sai có thể đắt hơn một lần phân tích kỹ. Mục tiêu là chi phí cho một thay đổi dùng được, không chỉ số token của một lượt chat.
+Don't merge different kinds of evidence into one word, "Done". A passing build only shows that the
+build was created. It does not prove that the microphone works on an iPhone. A storage test does not
+prove that a button has enough contrast. A nice screenshot does not prove that an answer survives a
+refresh.
 
-## 6. Bảo mật không nằm trong câu “hãy cẩn thận”
+The guide is direct about this: give Claude a check it can run, such as tests, a build or a
+screenshot to compare, and ask it to show evidence instead of simply claiming success. And when a fix
+makes things worse, **roll back** to the last good state rather than stacking new fixes on top.
 
-[Tài liệu bảo mật Claude Code][4] mô tả quyền truy cập và sandbox, đồng thời lưu ý không có hệ thống nào miễn nhiễm hoàn toàn với tấn công. Nội dung từ nguồn không tin cậy và các MCP server cần được đánh giá, không mặc định an toàn vì chúng xuất hiện trong một công cụ AI.
+![A proposed workflow from task brief to human approval, with failed checks returning to the patch.](/images/english-career-series/workflow.png)
 
-Với dự án công việc, đề xuất của mình là dùng dữ liệu giả trong ví dụ; không dán token, dữ liệu khách hàng hay thông tin nội bộ nếu chưa được phép. Kiểm tra chính sách công ty và cấu hình dịch vụ trước khi gửi code ra ngoài. Cho AI quyền đúng với task, không quyền tối đa cho tiện.
+## 5. CLAUDE.md, skills, hooks and CI: one job each
 
-Một README hoặc trang web có thể chứa chỉ dẫn độc hại. Dữ liệu đọc được không phải mệnh lệnh từ chủ dự án. Các thao tác đổi quyền, xóa dữ liệu hoặc phát hành cần cổng kiểm soát tương xứng.
+The guide separates instructions the model reads from mechanisms that tools **enforce**. CLAUDE.md
+instructions are **advisory**: the model reads them and usually follows them, but nothing forces it
+to. Hooks are **deterministic**: they are scripts that run at fixed points, every time.
 
-## 7. Học Claude mà vẫn học được nghề
+![Two groups of controls. Read by the model: the task brief, CLAUDE.md and skills. Enforced by tools: hooks, permissions with a sandbox, and CI with branch rules.](/images/claude-practice/controls-en.png)
 
-Đề xuất một chu kỳ bốn tuần dưới đây là kế hoạch thực hành, không phải khóa học chính thức hay cam kết thành thạo:
+Here is how I divide the work:
 
-- Tuần 1: dùng một lỗi nhỏ để tập mô tả triệu chứng, dự đoán nguyên nhân rồi đối chiếu với giải thích của AI.
-- Tuần 2: viết tiêu chí và một ca kiểm thử trước khi nhờ AI tạo bản vá. Đọc và giải thích lại diff.
-- Tuần 3: tập bàn giao bằng bản tổng kết ngắn; mở phiên mới và kiểm tra xem task có tiếp tục được mà không phải đọc lại mọi thứ không.
-- Tuần 4: tự xử lý một biến thể tương tự trước, sau đó nhờ AI review. So sánh mức hỗ trợ cần dùng, không chỉ số task hoàn thành.
+- *CLAUDE.md* is loaded at the start of every session. Use it for stable facts that Claude cannot
+  work out from the code: commands, unusual style rules, how to run tests and project decisions. Keep
+  it short. The guide suggests asking of each line whether removing it would cause mistakes, and
+  warns that a long file makes Claude miss the rules that matter. **Prune** it regularly.
+- *Skills* package knowledge or a repeated procedure, such as an accessibility review. Claude loads
+  them when they are relevant, so they do not fill every session. A skill does not turn the model
+  into a certified expert.
+- *Hooks* run a fixed step, such as a linter after each edit or a check before a turn may end. The
+  check itself still has to be correct, and it must not quietly ignore errors.
+- *CI and branch rules* protect the release path. Writing "don't deploy" in a prompt does not replace
+  a real permission control.
 
-Sau mỗi task, tự trả lời: Vì sao sửa ở đây? Điều gì sẽ hỏng nếu thay đổi giả định? Nếu không có AI, mình biết cách điều tra tiếp không?
+This site follows the same split. Its CLAUDE.md is only a few lines long and imports a separate
+instruction file. That file points to a short "work router" document, lists the checks to run after
+code changes, and names two project skills, one for coding and one for interface work.
 
-## Kết: kỹ sư giỏi không chỉ tạo ra code
+With several AIs, I prefer one owner for the task, one reviewer and a human who approves. The March
+2026 post explains why a separate reviewer matters: agents tend to praise their own work, even when it
+is mediocre, and it is easier to tune a separate evaluator to be sceptical than to make the builder
+criticise itself. The best-practices page adds a warning in the other direction. A reviewer that is
+asked to find gaps will usually report some, even when the work is fine, so ask it to flag only
+problems that affect correctness or the stated requirements.
 
-Trong thời đại AI, lợi thế đáng xây không phải thuộc nhiều câu lệnh hơn người khác. Đó là khả năng đặt đúng vấn đề, giới hạn quyền, đọc kết quả và chịu trách nhiệm với bằng chứng.
+## 6. Save money by reducing rework
 
-Bài tập ngay hôm nay: chọn một lỗi thật nhưng nhỏ, viết sáu dòng giao việc ở phần 2, để AI đề xuất cách kiểm tra trước. Chỉ cho sửa khi bạn hiểu đề xuất. Cuối buổi giữ lại một điều mình học được và một điều chưa xác minh — thay vì chỉ lưu “đã xong”.
+Most wasted money comes from **rework**: doing the same job twice because the first attempt went in
+the wrong direction. These are working choices, not a promise of a fixed saving in tokens:
 
-## Nguồn và cách sử dụng
+- Split work by problem and finish criteria, not mechanically by the number of files.
+- Read the relevant part first. When you change a data contract, find every place that uses it.
+- Before ending a session, write a short **handoff**: the goal, the files changed, the commands run,
+  the remaining errors and the next step. Then you can **hand over** the task to a fresh session
+  without rereading everything.
+- Use scripts for fixed operations. Do not ask a model to compare two lists when a few lines of code
+  can do it.
+- Measure the time spent reviewing, fixing and recovering, not only the time the AI took to write
+  code.
 
-- [1 — Claude Code: Best practices][1]: căn cứ cho phần giao việc, kiểm chứng và phân biệt hướng dẫn/cơ chế; trang tài liệu thay đổi theo thời gian.
-- [2 — Building effective agents][2], 19/12/2024: căn cứ cho phân biệt workflow/agent và ưu tiên giải pháp đơn giản; không dùng để khẳng định tính năng hiện tại.
-- [3 — Effective context engineering for AI agents][3], 29/09/2025: căn cứ cho phần lựa chọn ngữ cảnh và truy xuất đúng lúc.
-- [4 — Claude Code: Security][4]: căn cứ cho phần quyền, nội dung không tin cậy và giới hạn bảo vệ.
+The 2026 posts support the handoff habit. The March post passed a structured handoff file between
+sessions so that a fresh agent could continue the work. The November post on memory suggests keeping
+a small file with the current goal and next steps, and rewriting it as the work moves on.
 
-Các checklist, ví dụ frontend, kế hoạch bốn tuần và hình minh họa là tổng hợp/đề xuất của bài viết. Không có số liệu năng suất tự đo hoặc tuyên bố đã áp dụng thành công trong dự án ngân hàng. Bài không sao chép dài nội dung nguồn và không đánh giá độc lập chất lượng sản phẩm của Anthropic.
+The best-practices page also names patterns that waste effort. In the "kitchen sink session",
+unrelated tasks fill one conversation; the fix is to clear the context between tasks. If you have
+corrected the same mistake twice and it is still wrong, start again with a better first prompt: a
+clean session with a better brief usually beats a long one full of failed attempts. Claude Code can
+also summarise a long conversation automatically. This **compaction** keeps the important decisions
+and frees space, but a clear handoff note is still worth writing.
 
-[1]: https://code.claude.com/docs/en/best-practices
-[2]: https://www.anthropic.com/research/building-effective-agents
-[3]: https://www.anthropic.com/research/effective-context-engineering-for-ai-agents
-[4]: https://code.claude.com/docs/en/security
+A short answer that is wrong can cost more than a careful one. The point is not the number of tokens
+in one chat, it is the cost of a change you can actually use.
+
+## 7. Security is not "please be careful"
+
+Claude Code's security documentation describes a design based on **permissions**. In its manual mode,
+the tool starts with read-only access and asks before it edits files or runs commands that could
+change your system. A **sandbox** can isolate commands from the file system and the network. The page
+also warns that no system is completely immune to every attack, and says that you are responsible for
+reviewing the code and commands you approve.
+
+Two 2026 posts explain why clicking "approve" is not enough. In March, Anthropic reported that users
+accepted 93% of permission prompts. When almost everything gets approved, people stop reading what
+they approve. This is **approval fatigue**. Anthropic's answer was auto mode, in which a separate
+model reviews risky actions before they run. The post is honest about its limits: in their tests the
+full system still let through 17% of real overeager actions, and the authors say it is not a
+replacement for careful human review on high-stakes infrastructure.
+
+In May, a post on how Anthropic contains Claude across its products set out the deeper principle:
+put hard limits at the environment level first. Defences inside the model only make bad behaviour
+less likely; a sandbox, limits on network access and keeping credentials out of reach are what stop
+data from leaving. The post reports that Claude Code's sandbox cut permission prompts by 84%. It also
+treats all outside content as untrusted, because tools can change after you approve them and memory
+files can carry instructions into every new session. As the authors put it, "the weakest layer is the
+one you built yourself."
+
+One specific risk is **prompt injection**: text in a web page, an issue or a README that tries to give
+the AI new instructions. Content that the AI reads is data, not an order from the project owner. The
+documentation recommends reviewing suggested commands, not piping untrusted content straight to
+Claude, and using virtual machines for scripts that touch external services. It also notes that
+Anthropic does not security-audit MCP servers, so use servers you wrote yourself or ones from
+providers you trust.
+
+For work projects, my suggestions are simple:
+
+- Use fake data in examples. Do not paste tokens, customer data or internal information unless you
+  are allowed to.
+- Check your company's policy and the service's settings before sending code outside.
+- Give the AI the permissions the task needs, not the maximum because it is convenient.
+- Put a real gate in front of actions that change access, delete data or publish something.
+
+Before you approve a command, make sure you understand what it will change. If in doubt, ask for an
+explanation first, or **rule out** the risk by running it somewhere isolated.
+
+## 8. Learn Claude and still learn the craft
+
+The four-week cycle below is a practice plan, not an official course or a promise of mastery:
+
+- *Week 1:* take a small bug, describe the symptom, predict the cause, then compare your guess with
+  the AI's explanation.
+- *Week 2:* write the success criteria and one test before asking for a patch. Read the diff and
+  explain it back.
+- *Week 3:* practise handoffs. Write a short summary, open a new session and check whether the task
+  can continue without rereading everything.
+- *Week 4:* try a similar problem on your own first, then ask the AI to review it. Compare how much
+  help you needed, not only how many tasks you finished.
+
+After each task, answer three questions. Why did the change belong here? What would break if the
+assumption changed? Without AI, would I know how to investigate further?
+
+When you **delegate** a task to an AI, you still keep the responsibility for it.
+[My other article on learning with Claude](/blog/learning-claude-like-an-engineer) looks at what 2026
+research says about AI help and skill building.
+
+## Conclusion: good engineers do more than produce code
+
+In the age of AI, the advantage worth building is not knowing more prompts than other people. It is
+the ability to define the right problem, limit permissions, read the result and stand behind the
+evidence.
+
+A task for today: choose a real but small bug, write the six-line brief from section 3, and let the
+AI propose how to check the fix before it changes anything. Only allow the change once you understand
+the proposal. At the end, keep one thing you learned and one thing you have not verified, instead of
+only writing "done".
+
+## Sources
+
+- Anthropic, "Building effective agents", 19 December 2024 — [link](https://www.anthropic.com/engineering/building-effective-agents). The original source for workflows, agents and starting simple; it is from 2024, so it is used as a design principle, not as a guide to current features.
+- Anthropic, "Effective context engineering for AI agents", 29 September 2025 — [link](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents).
+- Prithvi Rajasekaran, Anthropic, "Harness design for long-running application development", 24 March 2026 — [link](https://www.anthropic.com/research/harness-design-long-running-apps).
+- John Hughes, Anthropic, "How we built Claude Code auto mode: a safer way to skip permissions", 25 March 2026 — [link](https://www.anthropic.com/research/claude-code-auto-mode).
+- Anthropic, "How we contain Claude across products", 25 May 2026 — [link](https://www.anthropic.com/research/how-we-contain-claude).
+- Lance Martin, Anthropic, "The components of agent memory", 6 November 2026 — [link](https://www.anthropic.com/research/components-of-agent-memory).
+- Claude Code docs, "Best practices for Claude Code" — [link](https://code.claude.com/docs/en/best-practices). Documentation pages change over time.
+- Claude Code docs, "Security" — [link](https://code.claude.com/docs/en/security).
+
+All sources were checked on 9 November 2026; the 2026 posts are preferred where they cover a topic,
+and the older posts are kept as the original sources of their ideas. The six-line brief, the
+checklists, the four-week plan and the diagrams are editorial suggestions. The dollar and percentage
+figures are Anthropic's own test results, not independent measurements, and this article does not
+claim that any tool guarantees correct or secure code.

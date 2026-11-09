@@ -1,7 +1,8 @@
 ---
-title: "Learning Claude Like an Engineer"
+title: "Learning Claude Like an Engineer: Use AI Without Losing Your Skills"
 date: "2026-11-08"
-summary: "Use AI to solve problems without giving away your judgement."
+updated: "2026-11-09"
+summary: "What 2026 research says about AI help and learning, which ways of asking kept people learning, and a simple routine for using Claude while you keep building your own judgement."
 areas: ["dev", "learning", "life"]
 draft: false
 study:
@@ -10,99 +11,365 @@ study:
       ipa: "/ˈevɪdəns/"
       pos: "noun"
       meaning: "bằng chứng"
-      example: "The practical question is simple: what evidence would show that the problem is actually solved?"
+      example: "What evidence shows that the problem is solved?"
+    - term: "comprehension"
+      ipa: "/ˌkɑːmprɪˈhenʃən/"
+      pos: "noun"
+      meaning: "mức độ hiểu (bài đọc, đoạn mã)"
+      example: "The quiz measured comprehension after the task."
+    - term: "randomized controlled trial"
+      ipa: "/ˈrændəmaɪzd kənˈtroʊld ˈtraɪəl/"
+      pos: "noun phrase"
+      meaning: "thử nghiệm ngẫu nhiên có đối chứng"
+      example: "The study was a randomized controlled trial."
+    - term: "sample size"
+      ipa: "/ˈsæmpəl saɪz/"
+      pos: "noun phrase"
+      meaning: "cỡ mẫu, số người tham gia nghiên cứu"
+      example: "The sample size was only 52 people."
+    - term: "caveat"
+      ipa: "/ˈkæviɑːt/"
+      pos: "noun"
+      forms: ["caveats"]
+      meaning: "lưu ý về giới hạn của một kết luận"
+      example: "Read the caveats before the headline."
+    - term: "self-reported"
+      ipa: "/ˌself rɪˈpɔːrtɪd/"
+      pos: "adjective"
+      meaning: "do người tham gia tự khai, chưa được đo kiểm"
+      example: "The survey results are self-reported."
+    - term: "delegation"
+      ipa: "/ˌdeləˈɡeɪʃən/"
+      pos: "noun"
+      meaning: "sự giao phó việc cho người khác hoặc cho AI"
+      example: "Full delegation was the fastest pattern."
+    - term: "cognitive effort"
+      ipa: "/ˈkɑːɡnətɪv ˈefərt/"
+      pos: "noun phrase"
+      meaning: "nỗ lực tư duy"
+      example: "Keep the cognitive effort in your own hands."
+    - term: "productive struggle"
+      ipa: "/prəˈdʌktɪv ˈstrʌɡəl/"
+      pos: "noun phrase"
+      meaning: "sự vật lộn có ích: khó nhưng giúp mình học"
+      example: "Some productive struggle is part of learning."
+    - term: "scaffolding"
+      ipa: "/ˈskæfəldɪŋ/"
+      pos: "noun"
+      meaning: "sự hỗ trợ tạm thời khi học, bỏ dần khi đã vững"
+      example: "Good help works like scaffolding."
     - term: "scope"
       ipa: "/skoʊp/"
       pos: "noun"
-      meaning: "phạm vi"
-      example: "My suggested starting point is a short task brief: describe the symptom, the expected behaviour, the permitted scope, and how to check the result"
+      meaning: "phạm vi được phép làm"
+      example: "State the scope of the task."
+    - term: "edge case"
+      ipa: "/ˈedʒ keɪs/"
+      pos: "noun phrase"
+      forms: ["edge cases"]
+      meaning: "trường hợp biên, tình huống bất thường dễ gây lỗi"
+      example: "An empty draft is an edge case."
     - term: "assumption"
       ipa: "/əˈsʌmpʃən/"
       pos: "noun"
+      forms: ["assumptions"]
       meaning: "giả định"
-      example: "An assumption might still be wrong"
-    - term: "verify"
-      ipa: "/ˈverɪfaɪ/"
-      pos: "verb"
-      meaning: "xác minh"
-      example: "Ask the assistant to reproduce the issue, explain the proposed change and verify the relevant behaviour"
-    - term: "constraint"
-      ipa: "/kənˈstreɪnt/"
+      example: "An assumption might still be wrong."
+    - term: "diff"
+      ipa: "/dɪf/"
       pos: "noun"
-      meaning: "điều kiện giới hạn"
-      example: "A constraint such as “do not publish private answers” deserves more than a strongly worded sentence: access controls and review matter too"
+      meaning: "phần so sánh những dòng mã đã thay đổi"
+      example: "Before I approve a change, I read the diff."
     - term: "ownership"
       ipa: "/ˈoʊnərʃɪp/"
       pos: "noun"
-      meaning: "trách nhiệm làm chủ"
-      example: "ownership"
-  verbs: []
+      meaning: "tinh thần làm chủ, chịu trách nhiệm về kết quả"
+      example: "Ownership means knowing what you are responsible for."
+    - term: "judgement"
+      ipa: "/ˈdʒʌdʒmənt/"
+      pos: "noun"
+      meaning: "khả năng phán đoán, đánh giá"
+      example: "Your judgement decides what ships."
+  verbs:
+    - term: "verify"
+      ipa: "/ˈverɪfaɪ/"
+      pos: "verb"
+      forms: ["verified", "verifying", "verifies"]
+      meaning: "kiểm chứng, xác minh"
+      example: "Do not ship what you cannot verify."
+    - term: "rely on"
+      pos: "phrasal verb"
+      forms: ["relied on", "relying on", "relies on"]
+      meaning: "dựa vào, phụ thuộc vào"
+      example: "Do not rely on AI for the part you are trying to learn."
+    - term: "hold back"
+      pos: "phrasal verb"
+      forms: ["holding back"]
+      meaning: "giữ lại, chưa đưa ra ngay"
+      example: "Ask the AI to hold back the full solution."
+    - term: "walk through"
+      pos: "phrasal verb"
+      forms: ["walks through"]
+      meaning: "giải thích lần lượt từng bước"
+      example: "Ask it to walk through each part of the code."
+    - term: "figure out"
+      pos: "phrasal verb"
+      forms: ["figured out", "figuring out"]
+      meaning: "tự tìm ra, tự hiểu ra"
+      example: "Try to figure out the cause yourself first."
+    - term: "look up"
+      pos: "phrasal verb"
+      forms: ["looked up"]
+      meaning: "tra cứu"
+      example: "Use AI to look up a concept, not to replace your thinking."
+    - term: "step back"
+      pos: "phrasal verb"
+      meaning: "lùi lại để nhìn tổng thể"
+      example: "After a task, step back and explain the change."
   structures:
     - term: "Before I …, I …"
-      meaning: "Trước khi làm gì, tôi…"
+      meaning: "Trước khi tôi…, tôi…"
       example: "Before I approve a change, I read the diff."
     - term: "Just because … does not mean …"
       meaning: "Chỉ vì… không có nghĩa là…"
       example: "Just because the build passes does not mean the microphone works."
+    - term: "It is not that …; it is that …"
+      meaning: "Vấn đề không phải là…; mà là…"
+      example: "It is not that AI users learned less; it is that people who let AI think for them learned less."
+    - term: "What matters is whether …"
+      meaning: "Điều quan trọng là liệu…"
+      example: "What matters is whether you could do it again with less help."
+    - term: "Try to … before you …"
+      meaning: "Hãy thử… trước khi…"
+      example: "Try to explain the bug before you ask for help."
+    - term: "If you can …, you probably …"
+      meaning: "Nếu bạn có thể…, có lẽ bạn đã…"
+      example: "If you can explain the problem clearly, you probably understand half of the fix."
 ---
 
-*Reading practice: B1+–B2 design target, not a proficiency assessment. Examples and first-person reflections are editorial illustrations, not verified personal history.*
+> Bài đọc luyện tiếng Anh, mục tiêu B1+–B2 (không phải bài kiểm tra trình độ). Di chuột hoặc chạm vào
+> từ in đậm để xem nghĩa, phiên âm và loại từ; động từ và cấu trúc câu nằm ở cột bên phải. Nguồn được
+> kiểm tra ngày 09/11/2026, ưu tiên nghiên cứu năm 2026. Các tình huống là ví dụ minh họa; "thang trợ
+> giúp" và lịch luyện tập là đề xuất của bài viết, chưa được nghiên cứu kiểm chứng.
 
 ## A fast answer is not the same as a working solution
 
-Imagine asking an AI assistant to fix a lesson page. It writes code, reports success and shows a clean screenshot. Then you reload the page and your answer disappears.
+Imagine asking an AI assistant to fix a lesson page. It writes code, reports success and shows a
+clean screenshot. Then you reload the page, and your answer disappears.
 
 The screenshot was real. The solution was incomplete.
 
-This is an illustrative example, not a claim about a measured project result. The practical question is simple: what **evidence** would show that the problem is actually solved?
+There is also a second, quieter problem. Even when the fix works, you may not have learned anything
+from it. Next time a similar bug appears, you are back where you started and you depend on the tool
+again.
 
-## Give the task a clear boundary
+This article is about both problems: getting work you can trust, and keeping your own skills growing
+while you use AI. The scenarios are illustrations, not measured results from a real project.
 
-My suggested starting point is a short task brief: describe the symptom, the expected behaviour, the permitted **scope**, and how to check the result. Include what must not change.
+## 1. What a 2026 study found
 
-For example: “Save this draft after a refresh. Preserve older attempts. Do not change the database or deploy anything. Test an empty draft, an edited draft and a storage failure.”
+In January 2026, Judy Hanwen Shen and Alex Tamkin at Anthropic published a study on how AI help
+affects the way people build coding skills. It was a **randomized controlled trial**: 52 software
+engineers, mostly junior, were placed at random into two groups. All of them used Python at least
+once a week, and none had used Trio, a Python library for asynchronous programming.
 
-This is an authored example, not an official Claude prompt.
+Both groups had 35 minutes to build two features with Trio. One group could ask an AI assistant in a
+sidebar; the other wrote the code by hand. Then everyone took a quiz without AI on the concepts they
+had just used. The quiz covered debugging, reading code, writing code and understanding the ideas.
 
-An **assumption** might still be wrong. Perhaps the app has several learner profiles. Perhaps storage is blocked. The assistant needs permission to investigate relevant dependencies, not an instruction to read every file without a reason.
+The AI group scored 50% on average; the hand-coding group scored 67%. The difference was
+statistically significant, and the largest gap was in debugging questions. The AI group finished
+about two minutes faster, but that difference was not statistically significant.
 
-## Use instructions and controls differently
+In other words, in this task the help did not clearly save time, and it went with weaker
+**comprehension** afterwards.
 
-[Claude Code's official guidance](https://code.claude.com/docs/en/best-practices) recommends specific requests and ways to check the result. It also distinguishes model-read instructions from mechanisms enforced by the surrounding tools.
+## 2. Read the caveats before the headline
 
-A short CLAUDE.md can explain stable project decisions. A skill can describe a repeated procedure. A hook can run a configured check. None of these removes the need to understand what the check covers.
+It would be easy to turn this into a slogan: "AI makes you worse at coding". That is not what the
+study shows, and the authors list its limits clearly. Each **caveat** matters:
 
-A **constraint** such as “do not publish private answers” deserves more than a strongly worded sentence: access controls and review matter too. [The security documentation](https://code.claude.com/docs/en/security) explains safeguards and their limits.
+- The **sample size** was small: 52 people.
+- The quiz came straight after the task. It does not show whether the difference lasts, or whether it
+  disappears as people gain experience.
+- The assistant was a chat in a sidebar, not an agent that edits files by itself. The authors think
+  agentic tools could have a larger effect, but they did not test that.
+- It measured one library and one kind of task, and it did not compare AI help with help from a
+  person.
 
-## Make one small change and verify it
+Other 2026 data does not tell a single, simple story either. In June, Anthropic's Economic Index
+surveyed about 9,700 Claude users. Of them, 68% said they were learning more with AI, and heavy
+delegators said they were learning at the same rate as everyone else. But those answers are
+**self-reported**, the people who answered were not a representative sample, and the report itself
+says it cannot rule out a loss of skills.
 
-Before I approve a change, I read the diff. Here, “I” describes a proposed working habit, not a claim about your past actions.
+So the two sources measure different things. One tested understanding in a controlled setting; the
+other asked people how they feel. Just because a study is small does not mean we should ignore it,
+and just because many people feel they are learning does not mean their skills are growing. Both are
+useful, as long as we know what each one measured.
 
-Ask the assistant to reproduce the issue, explain the proposed change and **verify** the relevant behaviour. Then inspect the result yourself.
+## 3. It is not the tool; it is how you ask
 
-Just because the build passes does not mean the microphone works. A build, a storage test and a real-device check answer different questions. Record the missing checks instead of hiding them behind “Done”.
+The most practical part of the January study is its closer look at behaviour. The researchers looked
+at how each person in the AI group used the assistant, and found six patterns.
 
-![A proposed workflow from task brief to human approval, with failed checks returning to the patch.](/images/english-career-series/workflow.png)
+Three patterns went with low quiz scores, below 40% on average:
 
-## Keep ownership of the learning
+- *Full delegation:* the person let the AI write all the code. This was the fastest pattern, with
+  few errors during the task.
+- *Growing reliance:* the person started with a few questions, then handed all the coding to the AI.
+- *Debugging by AI:* the person used the AI to fix and check errors, not to understand them.
 
-After a task, explain why the change belongs in that file. Try a slightly different case without asking AI to write the whole answer.
+Three patterns went with scores of 65% or higher:
 
-If you can explain the result and investigate its limits, the tool is supporting your learning. If you can only copy it, you may have borrowed an output without gaining the same understanding.
+- *Generate, then understand:* the person asked for code, then asked follow-up questions until they
+  understood it.
+- *Code with explanations:* the person asked for code and an explanation together.
+- *Concept questions only:* the person asked only about ideas and fixed the errors themselves. This
+  group was also fast.
 
-Keeping **ownership** means knowing what you accept responsibility for. It does not mean writing every line alone.
+Each pattern had only a few people, between two and seven, and the authors say the analysis does not
+prove that the patterns caused the scores. Still, the shape is hard to ignore. It is not that people
+who used AI learned less; it is that people who let the AI do the thinking learned less. Full
+**delegation** produced code quickly, but it left less behind in the person's head.
 
-![The five stages highlighted once in order; the static diagram above contains the same information.](/images/english-career-series/workflow.gif)
+The authors argue that some **productive struggle** is part of real learning. They suggest using AI
+in ways that keep the **cognitive effort** in your own hands, and point to learning modes that tools
+such as Claude Code and ChatGPT offer.
 
-The GIF is an authored illustration, not a recording of an AI run. It plays once and stops.
+A March 2026 Anthropic report adds a hint from everyday use. Users who had joined at least six months
+earlier were more likely to work with Claude in a back-and-forth way and less likely to simply give
+orders, and their conversations were a few percentage points more likely to succeed. The authors warn
+that early users may simply be more technical, that people who stopped using Claude are not counted,
+and that "success" was judged by Claude itself. It is a pattern worth noticing, not proof.
+
+## 4. A ladder of help
+
+Here is one way to use these ideas. When you are learning something new, climb a ladder of help one
+step at a time, and stop at the lowest step that gets you moving.
+
+![A ladder of five steps, from the least help to the most: a hint, a concept, a review of your attempt, a worked solution, and full delegation only for work you already understand.](/images/claude-practice/help-ladder.png)
+
+1. *A hint.* Ask the AI to **hold back** the solution and give one hint about where to look.
+2. *A concept.* Ask it to explain the idea you are missing, with a small example that is not your
+   code.
+3. *A review.* Write your own attempt, then ask for a review of your **diff**: what is wrong, and why.
+4. *A worked solution.* Only then ask for a full solution, and ask it to **walk through** each part.
+5. *Delegation.* For work you already understand well, letting the AI write the code is fine. The goal
+   of that task is output, not learning.
+
+This ladder is a form of **scaffolding**: temporary support that you remove as your skill grows. It is
+my suggestion, built on the study's patterns. The study did not test it.
+
+Try to explain the bug in your own words before you ask for help. If you can explain the problem
+clearly, you probably understand half of the fix already.
+
+## 5. Give the task a clear boundary
+
+When the goal is a working change rather than learning, the most useful habit is a short task brief:
+describe the symptom, the expected behaviour, the permitted **scope** and how to check the result.
+Include what must not change.
+
+For example: "Save this draft after a refresh. Keep older attempts. Do not change the database or
+deploy anything. Test an empty draft, an edited draft and a storage failure."
+
+Those three tests include **edge cases**: unusual situations where code often fails. A plausible fix
+usually handles the normal case. The edge cases are where you find out whether it really works.
+
+An **assumption** might still be wrong. Perhaps the app has several learner profiles. Perhaps storage
+is blocked in a private window. The assistant needs permission to investigate the relevant code, not
+an instruction to read every file without a reason.
+
+[My guide to working with Claude](/blog/hoc-claude-lam-viec-voi-ai) covers briefs, context, project
+instructions and security in more detail.
+
+## 6. Evidence, not "Done"
+
+Developers already know that AI output needs checking. In Stack Overflow's 2026 Developer Survey,
+published in October with more than 30,000 respondents in 169 countries, 66% said they use coding
+assistants or coding agents. When asked how much they trust the output, 48% chose the answer that
+they trust it when they can easily check it. Only 6.6% said they trust it for many tasks including
+important work decisions.
+
+Claude Code's best-practices page names the same risk. It calls it the trust-then-verify gap: the AI
+produces code that looks right but does not handle edge cases. Its advice is direct: always give a
+way to **verify** the work, through tests, scripts or screenshots, and do not ship what you cannot
+verify. It also suggests asking Claude to show evidence, such as test output or the exact command it
+ran, rather than simply saying it succeeded.
+
+Even AI checking AI needs care. In a March 2026 post about long-running agents, an Anthropic engineer
+reported that Claude, used as a tester without special tuning, found real problems and then talked
+itself into approving the work anyway.
+
+Before I approve a change, I read the diff. Then I ask three questions:
+
+- What **evidence** shows that the problem is solved?
+- What did this check not cover?
+- Could I explain this change to another developer?
+
+Just because the build passes does not mean the microphone works. A build, a storage test and a
+real-device check answer different questions. Record the missing checks instead of hiding them behind
+"Done". On this site, every change brief ends with a section for exactly that: what was not checked,
+and what risk remains.
+
+## 7. Keep ownership of the learning
+
+After a task, **step back** and explain why the change belongs in that file. Then try a slightly
+different case without asking the AI to write the answer.
+
+Debugging deserves extra attention, because that is where the January study found the largest gap.
+When a bug appears, give yourself a fixed time, perhaps fifteen minutes, to **figure out** the cause
+before you ask for help. Read the error, make a guess, test it. Use AI to **look up** a concept or
+check your reasoning, not to replace it.
+
+The newest tools make this harder, not easier. Anthropic's June 2026 report found that people gave
+Claude Code more independence than the chat app on the same kinds of work. For blog posts, for
+example, the typical chat conversation had 13 rounds of back-and-forth, while the typical Claude Code
+session had a single prompt. One prompt can be efficient. But if you are trying to learn, a single
+prompt also means a single chance to think.
+
+So be careful not to **rely on** AI for the part you are trying to learn. What matters is whether you
+could do a similar task with less help next month.
+
+Keeping **ownership** means knowing what you accept responsibility for. It does not mean writing every
+line alone. It means that your **judgement**, not the tool's confidence, decides what ships.
+
+![An animation that highlights five stages in order: task brief, relevant context, small patch, checking the result and human approval, with failed checks going back to the patch.](/images/english-career-series/workflow.gif)
+
+The animation is an authored illustration, not a recording of an AI run. It plays once and stops.
+
+## 8. A weekly routine
+
+Here is a small routine for one week. It is a suggestion, not a tested programme.
+
+- *Monday:* pick one real bug. Write the symptom and your guess before you open the AI.
+- *Tuesday:* use the ladder of help. Note which step finally got you moving.
+- *Wednesday:* write one test for an edge case before you ask for a patch.
+- *Thursday:* read a diff that the AI wrote, and explain it aloud in English in five sentences.
+- *Friday:* redo a similar small task with less help, and compare.
+
+Twenty minutes a day is enough. Volume is not the aim; noticing where your understanding is still thin
+is.
 
 ## Try it yourself
 
-Speak for 45 seconds: describe one small development problem and how you would check a fix. Then write 80–100 words explaining the boundary and the evidence you need. Do not use AI to rewrite your first version.
+Speak for 45 seconds: describe one small development problem and how you would check a fix. Then
+write 80–100 words explaining which step on the ladder of help you would use first, and why. Do not
+use AI to rewrite your first version.
 
-For feedback, send your draft to ChatGPT and ask for one reasoning issue and one language issue. No score or progress claim is implied.
+For feedback, ask an AI assistant for one reasoning issue and one language issue only. No score or
+progress claim is implied.
 
-## Sources and limits
+## Sources
 
-Official sources: [Claude Code best practices](https://code.claude.com/docs/en/best-practices) and [security](https://code.claude.com/docs/en/security), checked 8 November 2026. The workflow, examples and exercise are editorial proposals, not official certification material or performance findings. This article does not claim that any tool guarantees correct or secure code.
+- Judy Hanwen Shen and Alex Tamkin, Anthropic, "How AI assistance impacts the formation of coding skills", 29 January 2026 — [link](https://www.anthropic.com/research/AI-assistance-coding-skills); full paper on [arXiv](https://arxiv.org/abs/2601.20245).
+- Anthropic Economic Index report, "Learning curves", 24 March 2026 — [link](https://www.anthropic.com/research/economic-index-march-2026-report).
+- Anthropic Economic Index report, "Cadences", 26 June 2026 — [link](https://www.anthropic.com/research/economic-index-june-2026-report).
+- Prithvi Rajasekaran, Anthropic, "Harness design for long-running application development", 24 March 2026 — [link](https://www.anthropic.com/research/harness-design-long-running-apps).
+- Stack Overflow, 2026 Developer Survey press release, 6 October 2026 — [link](https://stackoverflow.co/company/press/archive/stack-overflow-annual-developer-survey-ai-trust-conditional); trust question data — [link](https://survey.stackoverflow.co/2026/ai/data/ai-trust).
+- Claude Code docs, "Best practices for Claude Code" — [link](https://code.claude.com/docs/en/best-practices). Documentation pages change over time.
 
+All sources were checked on 9 November 2026. The ladder of help, the weekly routine and the exercise
+are editorial suggestions, not findings from these sources or official certification material. This
+article does not claim that any tool guarantees correct or secure code, or that any way of using AI
+guarantees learning.
