@@ -172,7 +172,8 @@ ${text}` : text);
             <p><span>Khung tái sử dụng</span><strong>{takeaway.pattern}</strong></p>
           </div>}
           <div className="lesson-completion__actions">
-            <Link className="button lesson-completion__button" href="/learning">Về Learning</Link>
+            <a className="button lesson-completion__button" href="#lesson-recall">Tự kiểm tra & xem lịch ôn</a>
+            <Link className="button button--ghost" href="/learning">Về Learning</Link>
             <button className="button button--ghost" type="button" onClick={reviewLesson}>Xem lại bài</button>
           </div>
         </div>}

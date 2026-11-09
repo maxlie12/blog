@@ -195,7 +195,14 @@ pronunciation score. The path's lesson step and today's stage only read existing
   same namespace. A lesson/session ID is idempotent inside one learner profile, and a
   calendar day can extend each language streak only once using the Asia/Ho_Chi_Minh date.
   Lesson Done records also seed a deterministic review queue: the next explicit review is due
-  1, 3, 7 and 14 days after the previous learner-confirmed event. Review records reuse the
+  1, 3, 7 and 14 days after the previous learner-confirmed event. Daily self-checks now
+  carry again/hard/remembered plus the next interval in a
+  `review:recall:<rating>:<nextInterval>:<uuid>` ID, through the same sync/backup contract.
+  Again resets to 1, hard holds, remembered at a due check advances (14 repeats); an
+  immediate post-lesson check stays at 1. Latest self-check wins deterministically by
+  date/timestamp/ID. One self-check per lesson per Vietnam day. Legacy milestones remain
+  readable and the final legacy milestone now continues at 14 days. Conversation history
+  is separate and has no adaptive queue yet. See `MAX-LEARNING-CONTEXT.md`. Review records reuse the
   metadata store with a `review:<interval>:<lessonId>` client ID, extend habit activity, and do
   not increase the unique Done-lesson count or feed proficiency claims. With
   `NEON_DATABASE_URL`, `/api/learning/progress` hashes a browser-generated 256-bit token and

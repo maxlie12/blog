@@ -170,3 +170,52 @@ test("multiple lessons completed on one day are all returned when due", () => {
 
   assert.deepEqual(getLocalDueReviews(new Date("2026-10-11T03:00:00.000Z")).map((item) => item.lessonId), ["lesson-a", "lesson-b"]);
 });
+
+test("learn, save, leave, return, recall; one rating per local day and no extra Done", async () => {
+  const { recordLocalRecall } = await import("./localLearningProgress.ts");
+  const input = { lessonId: "daily-test", language: "en", skill: "reading", minutes: 3 };
+  recordLocalCompletion({ ...input, id: "lesson:daily-test" }, new Date("2026-11-01T02:00:00Z"));
+  assert.equal(recordLocalRecall(input, "remembered", new Date("2026-11-01T03:00:00Z")).nextReview?.interval, 1);
+  assert.equal(recordLocalRecall(input, "again", new Date("2026-11-01T04:00:00Z")).newlyRecorded, false);
+  const saved = exportLocalProgressBackup();
+  storage.clear();
+  importLocalProgressBackup(saved);
+  assert.equal(getLocalDueReviews(new Date("2026-11-02T02:00:00Z"))[0]?.lessonId, "daily-test");
+  assert.equal(recordLocalRecall(input, "remembered", new Date("2026-11-02T02:00:00Z")).nextReview?.interval, 3);
+  assert.equal(recordLocalRecall(input, "again", new Date("2026-11-03T02:00:00Z")).newlyRecorded, false);
+  assert.equal(recordLocalRecall(input, "hard", new Date("2026-11-05T02:00:00Z")).nextReview?.interval, 3);
+  assert.equal(recordLocalRecall(input, "again", new Date("2026-11-08T02:00:00Z")).nextReview?.interval, 1);
+  assert.equal(getLocalLanguageSummary("en").totalCompleted, 1);
+});
+
+test("recall without Done is ignored and a failed storage write remains retryable", async () => {
+  const { recordLocalRecall } = await import("./localLearningProgress.ts");
+  const input = { lessonId: "a", language: "zh", skill: "speaking", minutes: 3 };
+  const now = new Date("2026-11-01T02:00:00Z");
+  assert.equal(recordLocalRecall(input, "again", now).newlyRecorded, false);
+  recordLocalCompletion({ ...input, id: "lesson:a" }, now);
+  const setItem = storage.setItem;
+  storage.setItem = () => { throw new Error("quota"); };
+  try { assert.throws(() => recordLocalRecall(input, "again", now), /quota/); }
+  finally { storage.setItem = setItem; }
+  assert.equal(recordLocalRecall(input, "again", now).newlyRecorded, true);
+});
+
+test("recall metadata survives the unchanged server validation and a sync round trip", async () => {
+  const { recordLocalRecall, syncLocalProgress } = await import("./localLearningProgress.ts");
+  const { syncRequestSchema } = await import("./habitSyncServer.ts");
+  const input = { lessonId: "a", language: "en", skill: "reading", minutes: 3 };
+  const now = new Date("2026-11-01T02:00:00Z");
+  recordLocalCompletion({ ...input, id: "lesson:a" }, now);
+  recordLocalRecall(input, "again", now);
+  const backup = JSON.parse(exportLocalProgressBackup());
+  const parsed = syncRequestSchema.parse({ token: backup.syncToken, completions: backup.completions });
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => Response.json({ completions: parsed.completions });
+  storage.clear();
+  try {
+    await syncLocalProgress();
+    assert.equal(getLocalScheduledReview("a", now)?.lastRecall?.rating, "again");
+    assert.equal(getLocalScheduledReview("a", now)?.dueDate, "2026-11-02");
+  } finally { globalThis.fetch = originalFetch; }
+});

@@ -10,6 +10,7 @@ evidence and never proves a CEFR, HSK or JLPT level.
 
 | ID | Priority | Status | Problem | Next smallest outcome |
 |---|---:|---|---|---|
+| LEARN-014 | P1 | Active | Daily selects new before due and reviews record no recall result. | Small adaptive Daily slice; see `docs/changes/LEARN-014-recall-loop.md` and `docs/MAX-LEARNING-CONTEXT.md`. |
 | LEARN-013 | P2 | Verified locally | Conversation history is hidden and resume loses the speaking turn. | Resume saved turns and reopen completed practice; preview browser QA passed, real-phone QA pending. See `docs/changes/LEARN-013-resume-review.md`. |
 | ASSESS-001 | P1 | Planned | The product has self-reported levels and milestone UI, but insufficient unseen four-skill evidence to claim progress. | Keep level unchanged; attach weekly checks and a 28-day assessment to evidence records. |
 | LANG-001 | P1 | Active | English, Chinese and Japanese share an engine, but their teaching rules are not yet explicit data. | Ship one Chinese word/chunk and writing slice without splitting the shared lesson flow. |

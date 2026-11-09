@@ -3,6 +3,8 @@
 This is the first file an agent reads before changing the project. Its purpose is to find the
 smallest safe reading and editing scope. It is not a request to inspect every file in a row.
 
+For Max Learning continuation, first read [MAX-LEARNING-CONTEXT.md](MAX-LEARNING-CONTEXT.md).
+
 ## Start here
 
 1. Find the active issue in [ISSUES.md](ISSUES.md), or copy [CHANGE-BRIEF.md](CHANGE-BRIEF.md)
