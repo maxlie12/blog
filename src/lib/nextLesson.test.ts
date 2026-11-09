@@ -68,7 +68,7 @@ test("when everything is Done the selector offers a deterministic review", () =>
   assert.equal(result?.reason, "review");
 });
 
-test("a new lesson wins over a due review; the review comes back once new lessons run out", () => {
+test("due review wins over new lessons while an unfinished draft remains first", () => {
   const completed = new Set(["daily-2026-10-10-en-listening"]);
   const due = [{
     lessonId: "daily-2026-10-10-en-listening",
@@ -78,8 +78,8 @@ test("a new lesson wins over a due review; the review comes back once new lesson
   }];
 
   const next = selectNextLesson(lessons, "luan", completed, new Set(), due);
-  assert.equal(next?.reason, "next");
-  assert.equal(next?.lesson.id, "level-en-b1-listening");
+  assert.equal(next?.reason, "due-review");
+  assert.equal(next?.lesson.id, "daily-2026-10-10-en-listening");
 
   const review = selectNextLesson(lessons, "luan", new Set(lessons.map((item) => item.id)), new Set(), due);
   assert.equal(review?.reason, "due-review");
@@ -88,4 +88,16 @@ test("a new lesson wins over a due review; the review comes back once new lesson
   const resume = selectNextLesson(lessons, "luan", completed, new Set(["level-en-b2-listening"]), due);
   assert.equal(resume?.reason, "resume");
   assert.equal(resume?.lesson.id, "level-en-b2-listening");
+});
+
+test("due selection ignores future, missing and uncompleted records and sorts oldest first", () => {
+  const completed = new Set(lessons.slice(0, 2).map(l => l.id));
+  const due = [
+    { lessonId: lessons[0].id, interval: 1 as const, dueDate: "2026-11-02", isDue: true },
+    { lessonId: lessons[1].id, interval: 3 as const, dueDate: "2026-11-01", isDue: true },
+    { lessonId: lessons[2].id, interval: 1 as const, dueDate: "2026-10-01", isDue: true },
+    { lessonId: "missing", interval: 1 as const, dueDate: "2026-10-01", isDue: true },
+  ];
+  assert.equal(selectNextLesson(lessons, "luan", completed, new Set(), due)?.lesson.id, lessons[1].id);
+  assert.equal(selectNextLesson(lessons, "luan", completed, new Set(), due.map(r => ({ ...r, isDue: false })))?.reason, "next");
 });

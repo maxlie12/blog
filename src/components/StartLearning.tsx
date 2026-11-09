@@ -19,7 +19,7 @@ const actionLabel = {
 
 const reasonLabel = {
   resume: "Bạn có bản nháp chưa Done. Hệ thống giữ đúng bài đó để không mất mạch học.",
-  "due-review": "Bạn đã Done hết bài mới. Bài cũ này đến hạn ôn theo nhịp 1–3–7–14 ngày.",
+  "due-review": "Bài này đến hạn ôn. Nhớ lại ngắn trước khi học bài mới; lịch tiếp theo dựa trên kết quả bạn tự kiểm tra.",
   next: "Đây là bài chưa Done phù hợp tiếp theo trong lộ trình hiện tại.",
   review: "Bạn đã Done toàn bộ bài hiện có. Hệ thống chọn lại bài đầu lộ trình để ôn.",
 } as const;
@@ -36,7 +36,7 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
       const drafts = new Set(lessons.filter((lesson) => hasLessonDraft(lesson.id)).map((lesson) => lesson.id));
       const next = selectNextLesson(lessons, learner.id, completed, drafts, dueReviews);
       setTarget(next);
-      // Due reviews stay one tap away without taking the main action from a new lesson.
+      // An unfinished draft remains first; its due review stays one tap away.
       const review = next?.reason === "due-review" ? undefined : dueReviews.find((item) => lessons.some((l) => l.id === item.lessonId));
       const title = review && lessons.find((l) => l.id === review.lessonId)?.title;
       setDueReview(review && title ? { review, title } : null);
