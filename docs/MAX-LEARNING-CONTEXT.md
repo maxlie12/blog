@@ -38,7 +38,8 @@ Existing Japanese support remains compatible; no new Japanese work is requested.
 
 ## Verification / next smallest work
 Read docs/changes/LEARN-014-recall-loop.md for exact evidence and limits.
-121 tests pass at implementation checkpoint; run lint/build after the final code change.
+121 tests, lint and production build pass. Preview Daily save/leave/resume/Done/rate/reload
+passed at 664fac1; phone viewport, virtual keyboard and microphone remain unverified.
 Required UI loop: learn → save → leave → return → recall → reload; check at phone width,
 44px controls, keyboard, no horizontal overflow and honest error status.
 If phone/browser access is unavailable, state that explicitly; do not mark phone QA passed.
