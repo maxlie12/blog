@@ -16,14 +16,14 @@ export interface Rect {
 }
 
 /** The whole ranch at full size, and the middle lane down its centre. */
-export const RANCH_BOUNDS: Rect = { x0: -3.5, x1: 5.4, z0: 6.2, z1: 13.4 };
+export const RANCH_BOUNDS: Rect = { x0: -5.5, x1: 5.4, z0: 6.2, z1: 13.4 };
 export const LANE: Rect = { x0: 0.2, x1: 2.0, z0: 6.2, z1: 13.4 };
 
 /** Each pen at the first level and at full size; the side against the lane and the back stay put.
  * The chicken and duck yards share the fence between them. */
 const PEN_GROWTH: Record<PenId, { small: Rect; full: Rect }> = {
-  chicken: { small: { x0: -2.8, x1: 0.2, z0: 6.2, z1: 7.9 }, full: { x0: -3.5, x1: 0.2, z0: 6.2, z1: 7.9 } },
-  duck: { small: { x0: -2.8, x1: 0.2, z0: 7.9, z1: 9.4 }, full: { x0: -3.5, x1: 0.2, z0: 7.9, z1: 9.6 } },
+  chicken: { small: { x0: -4.5, x1: 0.2, z0: 6.2, z1: 7.9 }, full: { x0: -5.5, x1: 0.2, z0: 6.2, z1: 7.9 } },
+  duck: { small: { x0: -4.5, x1: 0.2, z0: 7.9, z1: 9.4 }, full: { x0: -5.5, x1: 0.2, z0: 7.9, z1: 9.6 } },
   sheep: { small: { x0: -2.6, x1: 0.2, z0: 9.95, z1: 12.4 }, full: { x0: -3.5, x1: 0.2, z0: 9.95, z1: 13.4 } },
   cow: { small: { x0: 2.0, x1: 4.3, z0: 6.2, z1: 11.2 }, full: { x0: 2.0, x1: 5.4, z0: 6.2, z1: 13.4 } },
 };

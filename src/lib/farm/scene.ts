@@ -171,7 +171,7 @@ const CAMERA_OFFSET = new THREE.Vector3(1, 1.08, 1.3).normalize().multiplyScalar
  */
 const VIEWS: Record<FarmView, { target: THREE.Vector3; width: number; height: number; phone: number; focus?: THREE.Vector3 }> = {
   farm: { target: new THREE.Vector3(-4.1, 0, 0.3), width: 11.2, height: 10, phone: 0.86, focus: FARM_CENTER },
-  orchard: { target: new THREE.Vector3(-7.4, 0, 8.3), width: 9.4, height: 8.6, phone: 0.7 },
+  orchard: { target: new THREE.Vector3(ORCHARD.x + 0.1, 0, 8.3), width: 9.4, height: 8.6, phone: 0.7 },
   pond: { target: new THREE.Vector3(5.9, 0, 0.7), width: 9.6, height: 8.4, phone: 0.66 },
   river: { target: new THREE.Vector3(12, 0, -0.9), width: 7.8, height: 7.6, phone: 0.8 },
   ranch: { target: new THREE.Vector3(1.5, 0, 9.9), width: 13.6, height: 10.4, phone: 0.7 },

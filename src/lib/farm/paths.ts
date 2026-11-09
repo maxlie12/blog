@@ -18,7 +18,7 @@ export type Place = "house" | "outside" | "farm" | "orchard" | "pond" | "river" 
 
 /* ───────────── layout ───────────── */
 export const FIELD = { x: -4.6, z: 0.7, pitch: 2.05, size: 1.74 };
-export const ORCHARD = { x: -7.5, z: 8.55, pitch: 2.3 };
+export const ORCHARD = { x: -9.5, z: 8.55, pitch: 2.3 };
 export const POND = { x: 6.1, z: 0.9, rx: 3.7, rz: 2.8 };
 export const ROAD_Z = 5.4;
 /** River centre line, from a spring at the foot of the mountain to the cliff edge. */
@@ -298,6 +298,11 @@ node("duckSouthEast", -0.75, 9.15, "duck");
 node("duckSouth", -1.45, 9.18, "duck");
 link("duckIn", "duckEast", "duckNorthEast", "duckNorth");
 link("duckEast", "duckSouthEast", "duckSouth");
+// Reach the new west yard around the duck house instead of crossing it.
+node("duckNorthWest", -3.4, 8.12, "duck");
+node("duckWest", -3.8, 8.65, "duck");
+node("duckSouthWest", -3.4, 9.18, "duck");
+link("duckNorth", "duckNorthWest", "duckWest", "duckSouthWest", "duckSouth");
 node("sheepMiddle", -1.1, 11.4, "sheep");
 link("sheepIn", "sheepMiddle");
 node("cowMiddle", 3.1, 9.4, "cow");
