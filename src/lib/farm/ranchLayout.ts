@@ -16,15 +16,15 @@ export interface Rect {
 }
 
 /** The whole ranch at full size, and the middle lane down its centre. */
-export const RANCH_BOUNDS: Rect = { x0: -5.5, x1: 5.4, z0: 6.2, z1: 13.4 };
-export const LANE: Rect = { x0: 0.2, x1: 2.0, z0: 6.2, z1: 13.4 };
+export const RANCH_BOUNDS: Rect = { x0: -5.5, x1: 5.4, z0: 6.2, z1: 14.8 };
+export const LANE: Rect = { x0: 0.2, x1: 2.0, z0: 6.2, z1: 14.8 };
 
 /** Each pen at the first level and at full size; the side against the lane and the back stay put.
  * The chicken and duck yards share the fence between them. */
 const PEN_GROWTH: Record<PenId, { small: Rect; full: Rect }> = {
-  chicken: { small: { x0: -4.5, x1: 0.2, z0: 6.2, z1: 7.9 }, full: { x0: -5.5, x1: 0.2, z0: 6.2, z1: 7.9 } },
-  duck: { small: { x0: -4.5, x1: 0.2, z0: 7.9, z1: 9.4 }, full: { x0: -5.5, x1: 0.2, z0: 7.9, z1: 9.6 } },
-  sheep: { small: { x0: -2.6, x1: 0.2, z0: 9.95, z1: 12.4 }, full: { x0: -3.5, x1: 0.2, z0: 9.95, z1: 13.4 } },
+  chicken: { small: { x0: -4.5, x1: 0.2, z0: 6.2, z1: 8.6 }, full: { x0: -5.5, x1: 0.2, z0: 6.2, z1: 8.6 } },
+  duck: { small: { x0: -4.5, x1: 0.2, z0: 8.6, z1: 11.0 }, full: { x0: -5.5, x1: 0.2, z0: 8.6, z1: 11.0 } },
+  sheep: { small: { x0: -2.6, x1: 0.2, z0: 11.35, z1: 13.8 }, full: { x0: -3.5, x1: 0.2, z0: 11.35, z1: 14.5 } },
   cow: { small: { x0: 2.0, x1: 4.3, z0: 6.2, z1: 11.2 }, full: { x0: 2.0, x1: 5.4, z0: 6.2, z1: 13.4 } },
 };
 
@@ -41,21 +41,21 @@ export function penRect(pen: PenId, level: number): Rect {
 }
 
 /** The small pond in the duck yard (the duck house west of it, open ground and the trough east): centre and radii. */
-export const DUCK_POND = { x: -1.45, z: 8.65, rx: 0.5, rz: 0.33 };
+export const DUCK_POND = { x: -1.45, z: 9.35, rx: 0.5, rz: 0.33 };
 
 /** Buildings and fixtures, as rectangles on the ground (centre ± half size). */
 export const FIXTURES: Record<string, { pen: PenId | "lane"; x: number; z: number; hx: number; hz: number }> = {
   henHouse: { pen: "chicken", x: -1.85, z: 6.72, hx: 0.52, hz: 0.38 },
   chickenTrough: { pen: "chicken", x: -0.35, z: 6.68, hx: 0.25, hz: 0.17 },
-  duckHouse: { pen: "duck", x: -2.42, z: 8.65, hx: 0.25, hz: 0.25 },
-  duckTrough: { pen: "duck", x: -0.3, z: 9.2, hx: 0.2, hz: 0.12 },
-  sheepShelter: { pen: "sheep", x: -1.9, z: 10.4, hx: 0.55, hz: 0.32 },
-  sheepTrough: { pen: "sheep", x: -0.36, z: 10.55, hx: 0.2, hz: 0.38 },
+  duckHouse: { pen: "duck", x: -2.42, z: 9.35, hx: 0.25, hz: 0.25 },
+  duckTrough: { pen: "duck", x: -0.3, z: 9.9, hx: 0.2, hz: 0.12 },
+  sheepShelter: { pen: "sheep", x: -1.9, z: 11.8, hx: 0.55, hz: 0.32 },
+  sheepTrough: { pen: "sheep", x: -0.36, z: 11.95, hx: 0.2, hz: 0.38 },
   cowShed: { pen: "cow", x: 3.3, z: 6.85, hx: 0.75, hz: 0.45 },
   cowTrough: { pen: "cow", x: 2.42, z: 8.7, hx: 0.22, hz: 0.5 },
   pump: { pen: "lane", x: 1.55, z: 8.2, hx: 0.2, hz: 0.2 },
   feedStore: { pen: "lane", x: 1.05, z: 6.85, hx: 0.45, hz: 0.3 },
-  incubator: { pen: "lane", x: 1.1, z: 12.6, hx: 0.6, hz: 0.5 },
+  incubator: { pen: "lane", x: 1.1, z: 14.0, hx: 0.6, hz: 0.5 },
 };
 
 /** The trough each pen's animals eat from. */

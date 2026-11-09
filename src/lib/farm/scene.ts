@@ -174,7 +174,7 @@ const VIEWS: Record<FarmView, { target: THREE.Vector3; width: number; height: nu
   orchard: { target: new THREE.Vector3(ORCHARD.x + 0.1, 0, 8.3), width: 9.4, height: 8.6, phone: 0.7 },
   pond: { target: new THREE.Vector3(5.9, 0, 0.7), width: 9.6, height: 8.4, phone: 0.66 },
   river: { target: new THREE.Vector3(12, 0, -0.9), width: 7.8, height: 7.6, phone: 0.8 },
-  ranch: { target: new THREE.Vector3(1.5, 0, 9.9), width: 13.6, height: 10.4, phone: 0.7 },
+  ranch: { target: new THREE.Vector3(1.5, 0, 10.6), width: 13.6, height: 11.8, phone: 0.7 },
 };
 const RIVER_Y = 0.07;
 const JETTY_Z = -1.2;
@@ -3235,9 +3235,9 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       for (const side of [-1, 1]) bench.add(part(rbox(0.05, 0.28, 0.18, 0.012), "#6b4a30", side * 0.26, 0.14, 0));
       props.add(bench);
       for (const [mx, mz] of [[lane + 0.62, 9.05], [lane + 0.55, 9.3]]) props.add(part(cylinder(0.09, 0.1, 0.3, 12), "#c9cfd2", mx, 0.15, mz), part(cylinder(0.05, 0.08, 0.08, 12), "#c9cfd2", mx, 0.34, mz), part(cylinder(0.06, 0.06, 0.02, 12), "#9aa4a8", mx, 0.39, mz));
-      props.add(part(cylinder(0.17, 0.15, 0.4, 12), "#8f5d3a", lane - 0.6, 0.2, 9.3), part(cylinder(0.172, 0.172, 0.03, 12), "#5a4a3a", lane - 0.6, 0.12, 9.3), part(cylinder(0.172, 0.172, 0.03, 12), "#5a4a3a", lane - 0.6, 0.3, 9.3), part(cylinder(0.15, 0.15, 0.01, 12), "#7fb6c0", lane - 0.6, 0.39, 9.3));
+      props.add(part(cylinder(0.17, 0.15, 0.4, 12), "#8f5d3a", lane - 0.6, 0.2, 13.3), part(cylinder(0.172, 0.172, 0.03, 12), "#5a4a3a", lane - 0.6, 0.12, 13.3), part(cylinder(0.172, 0.172, 0.03, 12), "#5a4a3a", lane - 0.6, 0.3, 13.3), part(cylinder(0.15, 0.15, 0.01, 12), "#7fb6c0", lane - 0.6, 0.39, 13.3));
       const blooms = ["#f28fb1", "#ffd166", "#ef6f6c", "#ffffff"];
-      for (const [bx, bz] of [[LANE.x0 + 0.12, 9.85], [LANE.x0 + 0.12, 12.6], [LANE.x1 - 0.12, 7.6], [LANE.x1 - 0.12, 11.3]]) {
+      for (const [bx, bz] of [[LANE.x0 + 0.12, 9.85], [LANE.x0 + 0.12, 14.0], [LANE.x1 - 0.12, 7.6], [LANE.x1 - 0.12, 11.3]]) {
         props.add(part(rbox(0.16, 0.12, 0.42, 0.02), "#8f5d3a", bx, 0.06, bz));
         for (let i = 0; i < 4; i += 1) {
           leafAt(leaves, "#4f8f3b", bx, 0.12, bz - 0.15 + i * 0.1, i * 1.7, 0.7, 0.12, 0.06, 0.3, 0.5);

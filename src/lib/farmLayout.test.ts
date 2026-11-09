@@ -51,7 +51,10 @@ test("ranch: pens grow with the level, stay inside the ranch and never overlap e
     }
   }
   // The ranch stays on the island (radius about 15.75, with room for the grassy lip).
-  for (const [x, z] of [[RANCH_BOUNDS.x0, RANCH_BOUNDS.z1], [RANCH_BOUNDS.x1, RANCH_BOUNDS.z1]]) assert.ok(Math.hypot(x, z) < 15);
+  // The enclosing rectangle has empty southern corners; check the actual occupied areas.
+  for (const rect of [...PENS.map((pen) => penRect(pen, TOP_LEVEL)), LANE]) {
+    for (const x of [rect.x0, rect.x1]) for (const z of [rect.z0, rect.z1]) assert.ok(Math.hypot(x, z) < 15);
+  }
 });
 
 test("ranch: buildings and the duck pond fit in the smallest pens, and each animal has room", () => {

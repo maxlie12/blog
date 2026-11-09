@@ -74,7 +74,7 @@ const FENCES: Fence[] = [
 ];
 
 /** Where each pen's gate opens onto the lane (along the lane's side), shared with the scene. */
-export const GATE_SPANS: Record<PenId, [number, number]> = { chicken: [7.25, 7.8], duck: [8.15, 8.75], sheep: [11.05, 11.75], cow: [9.45, 10.25] };
+export const GATE_SPANS: Record<PenId, [number, number]> = { chicken: [7.25, 7.8], duck: [8.85, 9.45], sheep: [12.45, 13.15], cow: [9.45, 10.25] };
 
 /** The pens' fences at a ranch level, with their gates onto the lane left open. */
 function penFences(level: number): Fence[] {
@@ -92,8 +92,8 @@ function penFences(level: number): Fence[] {
 /** Gates onto the lane, as [x outside, x inside, z]. */
 export const PEN_GATES: Record<PenId, [number, number, number]> = {
   chicken: [LANE.x0 + 0.3, LANE.x0 - 0.3, 7.52],
-  duck: [LANE.x0 + 0.3, LANE.x0 - 0.3, 8.45],
-  sheep: [LANE.x0 + 0.3, LANE.x0 - 0.3, 11.4],
+  duck: [LANE.x0 + 0.3, LANE.x0 - 0.3, 9.15],
+  sheep: [LANE.x0 + 0.3, LANE.x0 - 0.3, 12.8],
   cow: [LANE.x1 - 0.15, LANE.x1 + 0.3, 9.62],
 };
 
@@ -125,8 +125,8 @@ const LANE_PROPS: Shape[] = [
   rect(lane + 0.25, 10.0, 0.24, 0.27), rect(lane - 0.22, 10.05, 0.24, 0.27),
   rect(lane + 0.4, 10.95, 0.26, 0.26),
   rect(lane + 0.5, 11.75, 0.11, 0.33),
-  round(lane + 0.62, 9.05, 0.1), round(lane + 0.55, 9.3, 0.1), round(lane - 0.6, 9.3, 0.17),
-  rect(LANE.x0 + 0.12, 9.85, 0.08, 0.21), rect(LANE.x0 + 0.12, 12.6, 0.08, 0.21), rect(LANE.x1 - 0.12, 7.6, 0.08, 0.21), rect(LANE.x1 - 0.12, 11.3, 0.08, 0.21),
+  round(lane + 0.62, 9.05, 0.1), round(lane + 0.55, 9.3, 0.1), round(lane - 0.6, 13.3, 0.17),
+  rect(LANE.x0 + 0.12, 9.85, 0.08, 0.21), rect(LANE.x0 + 0.12, 14.0, 0.08, 0.21), rect(LANE.x1 - 0.12, 7.6, 0.08, 0.21), rect(LANE.x1 - 0.12, 11.3, 0.08, 0.21),
   round(LANE.x0 + 0.06, 7.05, 0.05), round(LANE.x1 - 0.06, 7.05, 0.05), round(LANE.x0 + 0.06, 11.95, 0.05), round(LANE.x1 - 0.06, 11.95, 0.05),
   round(LANE.x0 + 0.2, 6.4, 0.06), round(LANE.x1 - 0.2, 6.4, 0.06),
 ];
@@ -291,19 +291,19 @@ link("cowOut", "cowIn");
 node("chickenMiddle", -1.0, 7.5, "chicken");
 node("chickenWest", -2.3, 7.55, "chicken");
 link("chickenIn", "chickenMiddle", "chickenWest");
-node("duckEast", -0.55, 8.6, "duck");
-node("duckNorthEast", -0.75, 8.1, "duck");
-node("duckNorth", -1.45, 8.08, "duck");
-node("duckSouthEast", -0.75, 9.15, "duck");
-node("duckSouth", -1.45, 9.18, "duck");
+node("duckEast", -0.55, 9.3, "duck");
+node("duckNorthEast", -0.75, 8.8, "duck");
+node("duckNorth", -1.45, 8.78, "duck");
+node("duckSouthEast", -0.75, 9.85, "duck");
+node("duckSouth", -1.45, 9.88, "duck");
 link("duckIn", "duckEast", "duckNorthEast", "duckNorth");
 link("duckEast", "duckSouthEast", "duckSouth");
 // Reach the new west yard around the duck house instead of crossing it.
-node("duckNorthWest", -3.4, 8.12, "duck");
-node("duckWest", -3.8, 8.65, "duck");
-node("duckSouthWest", -3.4, 9.18, "duck");
+node("duckNorthWest", -3.4, 8.82, "duck");
+node("duckWest", -3.8, 9.35, "duck");
+node("duckSouthWest", -3.4, 9.88, "duck");
 link("duckNorth", "duckNorthWest", "duckWest", "duckSouthWest", "duckSouth");
-node("sheepMiddle", -1.1, 11.4, "sheep");
+node("sheepMiddle", -1.1, 12.8, "sheep");
 link("sheepIn", "sheepMiddle");
 node("cowMiddle", 3.1, 9.4, "cow");
 link("cowIn", "cowMiddle");
