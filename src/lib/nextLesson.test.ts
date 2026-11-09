@@ -101,3 +101,15 @@ test("due selection ignores future, missing and uncompleted records and sorts ol
   assert.equal(selectNextLesson(lessons, "luan", completed, new Set(), due)?.lesson.id, lessons[1].id);
   assert.equal(selectNextLesson(lessons, "luan", completed, new Set(), due.map(r => ({ ...r, isDue: false })))?.reason, "next");
 });
+
+test("Chinese one-tap recommendation uses the same draft/due/new priorities independent of English", () => {
+  const chinese = [
+    lesson("daily-2026-11-09-zh-listening", "zh", "Beginner"),
+    lesson("daily-2026-11-08-zh-listening", "zh", "Beginner"),
+  ];
+  const completed = new Set(["daily-2026-11-08-zh-listening"]);
+  const due = [{ lessonId: "daily-2026-11-08-zh-listening", interval: 1 as const, dueDate: "2026-11-09", isDue: true }];
+  assert.equal(selectNextLesson(chinese, "luan", completed, new Set(), due)?.reason, "due-review");
+  assert.equal(selectNextLesson(chinese, "luan", completed, new Set(["daily-2026-11-09-zh-listening"]), due)?.reason, "resume");
+  assert.equal(selectNextLesson(chinese, "luan", completed, new Set(), [])?.lesson.id, "daily-2026-11-09-zh-listening");
+});
