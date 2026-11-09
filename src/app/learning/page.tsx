@@ -19,7 +19,7 @@ export default async function LearningPage() {
     <div className="learning-page">
       <header className="section-page__header">
         <h1>Learning</h1>
-        <p>Không cần đăng nhập. Tập nói trong tình huống thật, nghe và đọc hỗ trợ, rồi dùng lại bằng câu của bạn. Học lúc rảnh, không có bài bù bắt buộc.</p>
+        <p>Mở lên là học: tiếp tục bài dở, ôn bài đến hạn hoặc bắt đầu một bài mới trong 5–10 phút. Có thể dừng và quay lại lúc rảnh; không có bài bù bắt buộc.</p>
       </header>
 
       <StartLearning lessons={lessons} />
