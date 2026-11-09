@@ -46,6 +46,10 @@ Existing Japanese support remains compatible; no new Japanese work is requested.
 - Conversation now labels its save action as a local draft and names stage 5 as the completion/self-reflection step; it still does **not** use Daily adaptive review.
 - Preview/mobile QA for these later label edits is still pending. No claim of accurate automatic assessment: Cambridge results may be entered manually; free-form language and pronunciation are not graded.
 
+## Daily entry point for both study languages (2026-11-09)
+- The primary profile-weighted next lesson can favor English. A separate Chinese quick-access link now reuses `selectNextLesson` on Chinese lessons, with the identical draft → oldest due → new order. This is a second *entry point*, not a new planner or scheduling algorithm.
+- Added a selector regression test for the Chinese subset. UI requires preview + device QA; no local test/build rerun in this chat. Changes committed to draft PR #2 only.
+
 ## Verification / next smallest work
 Read docs/changes/LEARN-014-recall-loop.md for exact evidence and limits.
 121 tests, lint and production build pass. Preview Daily save/leave/resume/Done/rate/reload
