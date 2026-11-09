@@ -22,10 +22,12 @@ export default async function LearningPage() {
         <p>Không cần đăng nhập. Tập nói trong tình huống thật, nghe và đọc hỗ trợ, rồi dùng lại bằng câu của bạn. Học lúc rảnh, không có bài bù bắt buộc.</p>
       </header>
 
-      <ConversationLaunch />
-      <details><summary>Daily · bài đang dở, bài đã học và lịch ôn</summary>
       <StartLearning lessons={lessons} />
-      <LearningPath {...path} />
+      <details><summary>Danh sách bài Daily và lộ trình học</summary>
+        <LearningPath {...path} />
+      </details>
+      <details><summary>Luyện hội thoại theo tình huống (tùy chọn)</summary>
+        <ConversationLaunch />
       </details>
       <nav className="learning-games" aria-label="Trò chơi">
         <p><strong>Góc thư giãn</strong> Không tính vào Done hay trình độ.</p>
