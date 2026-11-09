@@ -36,6 +36,11 @@ Existing Japanese support remains compatible; no new Japanese work is requested.
 - Conversation history remains local in conversationPractice.ts. Never infer retention from
   completion counts or silently convert conversation completion into Daily Done.
 
+## Evening study entry point (2026-11-09)
+- The `/learning` landing page now puts `StartLearning` directly above the fold before optional sections; Daily list/path and conversation are collapsible. This only changes page composition and copy, not scheduling/storage.
+- This landing change has not been independently browser/mobile QA'd; verify the latest PR preview deploy before claiming it works on a real phone. Keep PR draft and production untouched.
+- For first use: open `/learning`, start the suggested Daily, save/done, self-check, return later to confirm persistence; do not expect conversation to use the Daily adaptive scheduler.
+
 ## Verification / next smallest work
 Read docs/changes/LEARN-014-recall-loop.md for exact evidence and limits.
 121 tests, lint and production build pass. Preview Daily save/leave/resume/Done/rate/reload
