@@ -52,10 +52,23 @@ Existing Japanese support remains compatible; no new Japanese work is requested.
 
 ## Verification / next smallest work
 Read docs/changes/LEARN-014-recall-loop.md for exact evidence and limits.
-121 tests, lint and production build pass. Preview Daily save/leave/resume/Done/rate/reload
-passed at 664fac1; phone viewport, virtual keyboard and microphone remain unverified.
+Current checkpoint: 124 tests, lint and production build pass. EN Daily full loop verified
+at 016ead8 and ZH at 875e63b; see LEARN-015 for evidence. Phone viewport, virtual keyboard
+and actual microphone recording remain unverified.
 Required UI loop: learn → save → leave → return → recall → reload; check at phone width,
 44px controls, keyboard, no horizontal overflow and honest error status.
 If phone/browser access is unavailable, state that explicitly; do not mark phone QA passed.
-Next: verify the Daily slice on a real phone before deciding whether conversation needs the
-same retention loop. Do not expand scope just to fill this table.
+Next: use the current Daily loop for real study; phone smoke-check on the same browser/origin.
+Pause feature development; fix only reproduced blockers. Do not expand the conversation scope.
+
+
+## Readiness fixes and limits (LEARN-015)
+- 016ead8 adds explicit "Lưu nháp · học sau" (no Done), correct restored-Done copy and safe
+  draft parsing shared by PracticeCoach and recommendations. Existing draft keys preserved.
+- 875e63b keeps English reachable when the main recommendation is Chinese and removes
+  duplicate Chinese links. Same selector, no new planner.
+- Desktop EN/ZH save/leave/reload/resume/Done/compare/rate/reload verified with synthetic
+  text on isolated preview origins. Due priority verified with a synthetic historical backup.
+- Browser cannot resize/emulate phones; a file-based harness was blocked and not bypassed.
+  No real-phone, virtual keyboard, Safari, touch or audio-quality pass is claimed.
+- Latest evidence/checklist: docs/changes/LEARN-015-daily-ready-qa.md. No production release.
