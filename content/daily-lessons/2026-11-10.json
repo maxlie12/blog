@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-10",
+  "title": "Nghe yêu cầu — xác nhận điều mình hiểu",
+  "kind": "restart",
+  "note": "Giữ B1+ tự đánh giá và bước nghe/đọc hiểu: chưa có bằng chứng hoàn thành mới. Dùng lại nguồn đã xác minh; không học bù bắt buộc. Chỉ bài đầu là chính.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-10-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — nghe rồi xác nhận",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải bài thi hay câu hỏi chính thức. Không mở đáp án trước khi làm.",
+      "material": "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues",
+      "exercises": "Nguồn Cambridge dùng lại: miễn phí, audio và câu hỏi B1–B2; không mặc định có transcript. Nghe một hội thoại tối đa hai lượt. Ghi ba dòng bằng tiếng Anh: người nói muốn gì; một chi tiết nghe chắc; một câu hỏi làm rõ điều chưa nghe chắc. Không đoán chi tiết thành sự thật. Ghi số lượt nghe và hỗ trợ đã dùng. Không cần hoàn thành toàn bộ nguồn.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-10-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — hiểu điều thay đổi",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải bài thi hay câu hỏi chính thức. Không mở đáp án trước khi làm.",
+      "material": "Mia: Can we meet at ten instead of nine?\nAn: I have a call at ten. Would eleven work?\nMia: Yes. Please bring the latest design, not the old screenshots.",
+      "exercises": "Đọc hội thoại tự soạn, không phải transcript Cambridge. Viết giờ ban đầu, giờ cuối cùng hai người đồng ý và thứ cần mang theo. Giải thích vì sao họ đổi giờ bằng lời của bạn.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-10-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — hỏi lại lịch hẹn",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải bài thi hay câu hỏi chính thức. Không mở đáp án trước khi làm.",
+      "material": null,
+      "exercises": "Tình huống tự soạn: bạn chưa nghe rõ giờ hẹn và địa điểm. Tự hỏi hai câu làm rõ rồi xác nhận lại thông tin do bạn chọn, nói 30–45 giây. Đổi tình huống: bạn không rảnh giờ đó, đề xuất giờ khác. Lưu hai câu đã tự nói; gửi ChatGPT audio nếu muốn nhận xét, không coi trang học là nơi nhận audio.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-10-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5 phút — xác nhận lịch bằng tin nhắn",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải bài thi hay câu hỏi chính thức. Không mở đáp án trước khi làm.",
+      "material": null,
+      "exercises": "Viết 30–50 từ xác nhận một cuộc hẹn tự chọn: giờ, địa điểm, thứ cần chuẩn bị và một câu hỏi còn thiếu thông tin. Không chép hội thoại; không dùng AI sửa bản đầu. Đọc lại chỉ để xem người nhận có biết khi nào và ở đâu cần gặp bạn không.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-10-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — xin nước và đổi lựa chọn",
+      "level": "Sơ cấp · giao tiếp đời sống",
+      "instructions": "Bài do trợ lý tự soạn, không phải bài thi hay câu hỏi chính thức. Không mở đáp án trước khi làm.",
+      "material": "https://mandarinbean.com/im-thirsty/",
+      "exercises": "Dùng lại Mandarin Bean: text/pinyin/audio miễn phí, một số bài tập và bản dịch thuộc Premium; không cần mua. Nghe một câu ngắn từ nguồn rồi luyện cụm: 一杯水 yì bēi shuǐ — một cốc nước; 一杯茶 yì bēi chá — một tách trà; 请给我… qǐng gěi wǒ… — làm ơn cho tôi… . Che cụm, tự nói và gõ lời xin một đồ uống, đổi đồ uống rồi tự tạo một câu mới thể hiện lựa chọn của mình. Đây là nhiệm vụ tự soạn, không phải transcript. Viết tay tùy chọn, không lưu hoặc tự chấm.",
+      "completionCriteria": "Done chỉ khi đã tự tạo và lưu hai câu khác nhau, đồng thời đọc thành tiếng; không chép cụm làm đầu ra."
+    }
+  ]
+}
