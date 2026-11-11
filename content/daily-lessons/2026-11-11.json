@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-11",
+  "title": "Nghe chi tiết — phân biệt điều chắc và điều cần hỏi",
+  "kind": "restart",
+  "note": "Giữ B1+ tự đánh giá và bước nghe/đọc hiểu: chưa có bằng chứng hoàn thành mới. Dùng lại nguồn đã xác minh; không học bù bắt buộc. Chỉ bài đầu là chính.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-11-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — nghe một chi tiết hữu ích",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải bài thi hay câu hỏi chính thức. Không mở đáp án trước khi làm.",
+      "material": "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues",
+      "exercises": "Dùng lại nguồn Cambridge miễn phí, có audio và câu hỏi B1–B2; không mặc định có transcript. Giữ bước nghe/đọc hiểu, chưa chuyển sang shadowing. Chọn một hội thoại chưa làm; nếu chưa học bài cũ thì bắt đầu ngay hội thoại đầu, không phải học bù. Nghe tối đa hai lượt rồi tự viết: một câu nêu tình huống; một chi tiết nghe chắc; một câu hỏi làm rõ điều chưa chắc. Ghi số lượt nghe và hỗ trợ đã dùng. Không xem đáp án trước.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-11-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — chọn nơi nói chuyện",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải bài thi hay câu hỏi chính thức. Không mở đáp án trước khi làm.",
+      "material": "Sam: The café near the station is full.\nMai: There is another one opposite the library. It is quieter, but it closes at five.\nSam: We only need half an hour. Shall we go there now?\nMai: Yes, but I need to send a message first.",
+      "exercises": "Hội thoại do trợ lý tự soạn, không phải transcript Cambridge. Nêu vì sao họ không chọn quán đầu, một lợi thế và một giới hạn của quán thứ hai. Chi tiết nào chưa đủ để biết họ sẽ đến đúng giờ? Không tự thêm dữ kiện.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-11-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — đề xuất rồi hỏi lại",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải bài thi hay câu hỏi chính thức. Không mở đáp án trước khi làm.",
+      "material": null,
+      "exercises": "Tình huống tự soạn: bạn muốn gặp một người bạn ở quán yên tĩnh nhưng chưa rõ giờ đóng cửa. Nói 30–45 giây: đề xuất nơi gặp, nêu lý do, hỏi một thông tin còn thiếu. Biến thể: quán hết chỗ, tự đề xuất phương án khác. Lưu hai câu tự tạo; gửi ChatGPT audio nếu cần phản hồi, không gửi thông tin cá nhân thật.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-11-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5 phút — nhắn đề xuất có lý do",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải bài thi hay câu hỏi chính thức. Không mở đáp án trước khi làm.",
+      "material": null,
+      "exercises": "Viết 30–50 từ mời một người bạn đến quán: đề xuất địa điểm và giờ, nêu một lý do rồi hỏi xem họ có phù hợp không. Tự chọn chi tiết, không chép hội thoại hoặc nhờ AI sửa bản đầu. Chỉ rà lại một điểm: người nhận có biết cần trả lời điều gì không?",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-11-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — nói nhu cầu uống",
+      "level": "Sơ cấp · giao tiếp đời sống",
+      "instructions": "Bài do trợ lý tự soạn, không phải bài thi hay câu hỏi chính thức. Không mở đáp án trước khi làm.",
+      "material": "https://mandarinbean.com/im-thirsty/",
+      "exercises": "Dùng lại Mandarin Bean: text/pinyin/audio miễn phí; một số bài tập và bản dịch thuộc Premium, không cần mua. Nghe một câu ngắn. Cụm luyện do trợ lý tự soạn: 我想喝… wǒ xiǎng hē… — tôi muốn uống…; 水 shuǐ — nước; 茶 chá — trà; 不想 bù xiǎng — không muốn. Che cụm rồi tự gõ và nói một câu về thứ bạn muốn uống. Tạo câu thứ hai về lựa chọn bạn không muốn, đổi đồ uống. Không sao chép nguyên mẫu. Viết tay tùy chọn, không lưu và không tự chấm.",
+      "completionCriteria": "Done chỉ khi đã tự tạo và lưu hai câu khác nhau, đồng thời đọc thành tiếng; không chép cụm làm đầu ra."
+    }
+  ]
+}
