@@ -66,7 +66,7 @@ goods only go one step (egg → cake). A player with thousands of coins has noth
       were updated to the moved orchard. Not rerun: zoom, HUD, people and the other older checks;
       the ranch check's pen table predates the larger yards (commits `47294d8`, `95637f5`) and
       fails on that alone.
-- [ ] Vercel build + production deploy.
+- [x] Vercel build + production deploy (`bbcae86`).
 
 ## Result
 
