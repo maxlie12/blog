@@ -154,7 +154,7 @@ export const TREES: TreeDef[] = [
 export type AnimalId = "chicken" | "duck" | "sheep" | "cow";
 export type ProductId = "egg" | "duckEgg" | "wool" | "milk";
 export type WorkshopId = "saltery" | "bakery" | "loom" | "dairy";
-export type GoodId = "saltedEgg" | "cake" | "scarf" | "cheese";
+export type GoodId = "saltedEgg" | "cake" | "scarf" | "cheese" | "mooncake" | "creamCake" | "sweater" | "pizza";
 
 export interface AnimalDef {
   id: AnimalId;
@@ -186,11 +186,25 @@ export interface WorkshopDef {
   name: string;
   level: number;
   buildCost: number;
-  inputs: { products?: Partial<Record<ProductId, number>>; crops?: Partial<Record<CropId, number>> };
+  inputs: RecipeInputs;
   output: GoodId;
   seconds: number;
   xp: number;
   roof: string;
+}
+
+export interface RecipeInputs {
+  products?: Partial<Record<ProductId, number>>;
+  crops?: Partial<Record<CropId, number>>;
+  goods?: Partial<Record<GoodId, number>>;
+}
+
+/** Something a workshop makes: its first recipe, or the second one that opens at level 2. */
+export interface RecipeDef {
+  inputs: RecipeInputs;
+  output: GoodId;
+  seconds: number;
+  xp: number;
 }
 
 export const ANIMALS: AnimalDef[] = [
@@ -212,6 +226,11 @@ export const GOODS: (ProductDef & { id: GoodId })[] = [
   { id: "cake", name: "Bánh bông lan", emoji: "🍰", sellPrice: 60 },
   { id: "scarf", name: "Khăn len", emoji: "🧣", sellPrice: 150 },
   { id: "cheese", name: "Phô mai", emoji: "🧀", sellPrice: 120 },
+  // Second-tier goods, made from the first-tier ones in a level-2 workshop.
+  { id: "mooncake", name: "Bánh trung thu", emoji: "🥮", sellPrice: 280 },
+  { id: "creamCake", name: "Bánh kem", emoji: "🎂", sellPrice: 250 },
+  { id: "sweater", name: "Áo len", emoji: "🧥", sellPrice: 440 },
+  { id: "pizza", name: "Pizza", emoji: "🍕", sellPrice: 270 },
 ];
 
 export const WORKSHOPS: WorkshopDef[] = [
@@ -220,6 +239,20 @@ export const WORKSHOPS: WorkshopDef[] = [
   { id: "loom", name: "Xưởng dệt", level: 5, buildCost: 280, inputs: { products: { wool: 2 } }, output: "scarf", seconds: 200, xp: 10, roof: "#8a6bb5" },
   { id: "dairy", name: "Xưởng phô mai", level: 6, buildCost: 350, inputs: { products: { milk: 2 } }, output: "cheese", seconds: 240, xp: 12, roof: "#e3b53c" },
 ];
+
+/** The second recipe of each workshop, open from workshop level 2: it uses the workshop's own goods. */
+export const WORKSHOP_EXTRA: Record<WorkshopId, RecipeDef> = {
+  saltery: { inputs: { goods: { saltedEgg: 2 }, crops: { rice: 1 } }, output: "mooncake", seconds: 240, xp: 18 },
+  bakery: { inputs: { goods: { cake: 2 }, products: { milk: 1 } }, output: "creamCake", seconds: 210, xp: 16 },
+  loom: { inputs: { goods: { scarf: 2 } }, output: "sweater", seconds: 300, xp: 24 },
+  dairy: { inputs: { goods: { cheese: 1 }, crops: { tomato: 2 } }, output: "pizza", seconds: 300, xp: 22 },
+};
+export const WORKSHOP_MAX_LEVEL = 4;
+/** Cost of each upgrade, as a multiple of the build price (to level 2, 3, 4). */
+export const WORKSHOP_UPGRADE_FACTORS = [3, 8, 20];
+/** Speed and batches at once, by workshop level (index level − 1). */
+export const WORKSHOP_SPEED = [1, 1.15, 1.5, 2];
+export const WORKSHOP_BATCH = [1, 1, 2, 3];
 
 /** Feed bags the mill makes from one unit of each crop. Grains make the most. */
 export const MILL_YIELD: Record<CropId, number> = {
@@ -291,6 +324,24 @@ export const SPOT_UNLOCKS = [
 ];
 export const MAX_DROPS = 24;
 export const TRUCK = { capacity: 20, tripSeconds: 90, bonus: 1.2 };
+/** The truck by level: level 0 is the first truck; each upgrade costs coins and needs a player level. */
+export const TRUCK_LEVELS = [
+  { ...TRUCK, cost: 0, level: 1 },
+  { capacity: 30, tripSeconds: 75, bonus: 1.25, cost: 600, level: 5 },
+  { capacity: 45, tripSeconds: 60, bonus: 1.3, cost: 1800, level: 7 },
+  { capacity: 60, tripSeconds: 45, bonus: 1.4, cost: 5000, level: 9 },
+];
+/** Helpers: cats pick up products by themselves, a dog chases the bear away. */
+export const CAT = { costs: [800, 2500], level: 4, seconds: 25 };
+export const DOG = { cost: 1200, level: 5 };
+/**
+ * The bear only comes while the game is being played (ticks of a few seconds), by day, to a
+ * ranch with a few grown animals. While it is there the animals stop producing; nothing is lost.
+ */
+export const BEAR = { taps: 5, staySeconds: 50, dogSeconds: 8, level: 4, animals: 3, meanSeconds: 540, reward: 150, rewardPerLevel: 20, liveTickMs: 5000 };
+export const ORDER_SLOTS = 3;
+export const ORDER_SWAP_COST = 40;
+export const ORDER_BONUS = 1.7;
 
 export const FEED_DURATION_MS = 20 * 60 * 1000;
 export const HUNGRY_GROWTH = 0.35;
@@ -400,6 +451,33 @@ export interface WorkshopState {
   /** Seconds into the running batch, or null when idle. */
   progress: number | null;
   ready: number;
+  /** 1 (when absent) to WORKSHOP_MAX_LEVEL. */
+  level?: number;
+  /** The recipe being made (0 first, 1 second) and how many batches are in the oven. */
+  recipe?: number;
+  batch?: number;
+  /** The recipe the ready goods came from. */
+  readyRecipe?: number;
+}
+
+export interface BearState {
+  id: string;
+  /** When it wanders off by itself. */
+  until: number;
+  taps: number;
+}
+
+export interface OrderItem {
+  kind: GoodsKind;
+  id: string;
+  qty: number;
+}
+
+export interface Order {
+  id: string;
+  items: OrderItem[];
+  reward: number;
+  xp: number;
 }
 
 export interface TruckTrip {
@@ -435,6 +513,15 @@ export interface GameState {
     truck: TruckTrip | null;
     /** null until built. */
     incubator: { eggs: IncubatingEgg[] } | null;
+    /** Added with GAME-020; absent in older saves (level 0, no helpers, no bear, no orders yet). */
+    truckLevel?: number;
+    cats?: number;
+    /** Seconds of cat work saved up toward the next pick-up. */
+    catClock?: number;
+    dog?: boolean;
+    bear?: BearState | null;
+    orders?: Order[];
+    ordersDone?: number;
   };
   seeds: Partial<Record<CropId, number>>;
   saplings: Partial<Record<FruitId, number>>;
@@ -812,7 +899,7 @@ function barnBucket(kind: GoodsKind): keyof GameState["barn"] {
   return buckets[kind];
 }
 
-function barnCount(game: GameState, kind: GoodsKind, id: string): number {
+export function barnCount(game: GameState, kind: GoodsKind, id: string): number {
   return (game.barn[barnBucket(kind)] as Record<string, number | undefined>)[id] ?? 0;
 }
 
@@ -955,6 +1042,10 @@ export function advance(game: GameState, now: number, seed: number): GameState {
     if (state) workshops[id] = { ...state };
   }
   const eggs = (game.ranch.incubator?.eggs ?? []).map((egg) => ({ ...egg }));
+  const cats = game.ranch.cats ?? 0;
+  let catClock = game.ranch.catClock ?? 0;
+  const picked: ProductId[] = [];
+  let bear = game.ranch.bear ?? null;
   let feed = game.items.feed;
   let nextId = game.nextId;
   let clock = now - elapsed;
@@ -1015,7 +1106,10 @@ export function advance(game: GameState, now: number, seed: number): GameState {
         nextId += 1;
       }
     }
+    // A bear in the lane frightens the animals: nothing eats, grows or lays until it has gone.
+    const frightened = !!bear && clock < bear.until;
     for (const animal of animals) {
+      if (frightened) break;
       const def = ANIMAL_MAP[animal.species];
       // Grown animals sleep at night; the young eat and grow around the clock.
       if (time.asleep && animal.age >= def.growSeconds) continue;
@@ -1053,11 +1147,20 @@ export function advance(game: GameState, now: number, seed: number): GameState {
       const state = workshops[id];
       if (!state || state.progress === null) continue;
       state.progress += step;
-      if (state.progress >= WORKSHOP_MAP[id].seconds) {
+      if (state.progress >= workshopSeconds(id, state)) {
         state.progress = null;
-        state.ready += 1;
+        state.ready += state.batch ?? 1;
+        state.readyRecipe = state.recipe ?? 0;
       }
     }
+    // Cats carry products to the barn, one at a time, oldest first.
+    if (cats > 0 && drops.length > 0) {
+      catClock += step * cats;
+      while (catClock >= CAT.seconds && drops.length > 0) {
+        catClock -= CAT.seconds;
+        picked.push((drops.shift() as RanchDrop).product);
+      }
+    } else if (drops.length === 0) catClock = 0;
     clock += step * 1000;
   }
 
@@ -1070,18 +1173,39 @@ export function advance(game: GameState, now: number, seed: number): GameState {
     truck = null;
   }
 
-  return {
+  // The bear leaves by itself; a new one may come during live play, by day.
+  if (bear && now >= bear.until) bear = null;
+  const grownAnimals = animals.filter((animal) => animal.age >= ANIMAL_MAP[animal.species].growSeconds).length;
+  if (!bear && elapsed <= BEAR.liveTickMs && grownAnimals >= BEAR.animals && levelFromXp(game.xp) >= BEAR.level && !gameClock(game, now).asleep) {
+    if (random() < elapsed / 1000 / BEAR.meanSeconds) {
+      bear = { id: `b${nextId}`, until: now + (game.ranch.dog ? BEAR.dogSeconds : BEAR.staySeconds) * 1000, taps: 0 };
+      nextId += 1;
+    }
+  }
+
+  let barn = game.barn;
+  if (picked.length) {
+    const products = { ...barn.products };
+    for (const product of picked) products[product] = (products[product] ?? 0) + 1;
+    barn = { ...barn, products };
+  }
+  const ranch: GameState["ranch"] = { ...game.ranch, animals, drops, workshops, truck, incubator: game.ranch.incubator ? { eggs } : null };
+  if (cats > 0) ranch.catClock = catClock;
+  if (bear || game.ranch.bear) ranch.bear = bear;
+  const next: GameState = {
     ...game,
     coins,
     stats,
     plots,
     orchard: { ...game.orchard, spots },
     pond: { ...game.pond, fish, trash },
-    ranch: { ...game.ranch, animals, drops, workshops, truck, incubator: game.ranch.incubator ? { eggs } : null },
+    ranch,
+    barn,
     items: { ...game.items, feed },
     nextId,
     lastTick: now,
   };
+  return withOrders(next);
 }
 
 /* ───────────────────────── farm actions ───────────────────────── */
@@ -1609,20 +1733,52 @@ export function upgradeRanch(game: GameState): ActionResult {
   };
 }
 
-export function workshopInputsText(def: WorkshopDef): string {
+export function workshopInputsText(def: { inputs: RecipeInputs }): string {
   const parts: string[] = [];
+  for (const [id, qty] of Object.entries(def.inputs.goods ?? {})) parts.push(`${qty} ${GOOD_MAP[id as GoodId].name.toLowerCase()}`);
   for (const [id, qty] of Object.entries(def.inputs.products ?? {})) parts.push(`${qty} ${PRODUCT_MAP[id as ProductId].name.toLowerCase()}`);
   for (const [id, qty] of Object.entries(def.inputs.crops ?? {})) parts.push(`${qty} ${CROP_MAP[id as CropId].name.toLowerCase()}`);
   return parts.join(" + ");
 }
 
-export function canStartWorkshop(game: GameState, id: WorkshopId): boolean {
-  const def = WORKSHOP_MAP[id];
+export function workshopLevel(state: WorkshopState | undefined): number {
+  return Math.min(WORKSHOP_MAX_LEVEL, Math.max(1, Math.floor(state?.level ?? 1)));
+}
+
+/** A workshop's recipes: the first always, the second from level 2. */
+export function workshopRecipes(id: WorkshopId): RecipeDef[] {
+  return [WORKSHOP_MAP[id], WORKSHOP_EXTRA[id]];
+}
+
+/** How long the recipe in the oven takes at the workshop's level. */
+export function workshopSeconds(id: WorkshopId, state: WorkshopState | undefined, recipe = state?.recipe ?? 0): number {
+  return Math.round(workshopRecipes(id)[recipe === 1 ? 1 : 0].seconds / WORKSHOP_SPEED[workshopLevel(state) - 1]);
+}
+
+function recipeInputList(recipe: RecipeDef): [GoodsKind, string, number][] {
+  return [
+    ...Object.entries(recipe.inputs.goods ?? {}).map(([id, qty]) => ["good", id, qty ?? 0] as [GoodsKind, string, number]),
+    ...Object.entries(recipe.inputs.products ?? {}).map(([id, qty]) => ["product", id, qty ?? 0] as [GoodsKind, string, number]),
+    ...Object.entries(recipe.inputs.crops ?? {}).map(([id, qty]) => ["crop", id, qty ?? 0] as [GoodsKind, string, number]),
+  ];
+}
+
+/** How many batches of a recipe the workshop could start now (0 when it cannot). */
+export function workshopBatches(game: GameState, id: WorkshopId, recipe = 0): number {
   const state = game.ranch.workshops[id];
-  if (!state || state.progress !== null) return false;
-  for (const [product, qty] of Object.entries(def.inputs.products ?? {})) if (barnCount(game, "product", product) < (qty ?? 0)) return false;
-  for (const [crop, qty] of Object.entries(def.inputs.crops ?? {})) if (barnCount(game, "crop", crop) < (qty ?? 0)) return false;
-  return true;
+  if (!state || state.progress !== null) return 0;
+  const level = workshopLevel(state);
+  if (recipe === 1 && level < 2) return 0;
+  if (recipe !== 0 && recipe !== 1) return 0;
+  // Goods of the other recipe must be taken out first.
+  if (state.ready > 0 && (state.readyRecipe ?? 0) !== recipe) return 0;
+  let batches = WORKSHOP_BATCH[level - 1];
+  for (const [kind, item, qty] of recipeInputList(workshopRecipes(id)[recipe])) batches = Math.min(batches, Math.floor(barnCount(game, kind, item) / qty));
+  return Math.max(0, batches);
+}
+
+export function canStartWorkshop(game: GameState, id: WorkshopId, recipe = 0): boolean {
+  return workshopBatches(game, id, recipe) > 0;
 }
 
 export function buildWorkshop(game: GameState, id: WorkshopId): ActionResult {
@@ -1638,33 +1794,60 @@ export function buildWorkshop(game: GameState, id: WorkshopId): ActionResult {
   return { game: next.game, ok: true, message: `🔨 Đã xây ${def.name.toLowerCase()} · +5 XP.${next.suffix}`, tone: "good" };
 }
 
-export function startWorkshop(game: GameState, id: WorkshopId): ActionResult {
+/** The price of the workshop's next level, or null at the top. */
+export function workshopUpgradeCost(game: GameState, id: WorkshopId): number | null {
+  const state = game.ranch.workshops[id];
+  const level = workshopLevel(state);
+  if (!state || level >= WORKSHOP_MAX_LEVEL) return null;
+  return WORKSHOP_MAP[id].buildCost * WORKSHOP_UPGRADE_FACTORS[level - 1];
+}
+
+export function upgradeWorkshop(game: GameState, id: WorkshopId): ActionResult {
+  const def = WORKSHOP_MAP[id];
+  const state = game.ranch.workshops[id];
+  if (!def || !state) return fail(game, "Xây xưởng trước đã.", "info");
+  const cost = workshopUpgradeCost(game, id);
+  if (cost === null) return fail(game, `${def.name} đã ở cấp cao nhất.`, "info");
+  if (game.coins < cost) return fail(game, `Cần ${cost} xu để nâng cấp ${def.name.toLowerCase()}.`);
+  const level = workshopLevel(state) + 1;
+  const next = gainXp({ ...game, coins: game.coins - cost, ranch: { ...game.ranch, workshops: { ...game.ranch.workshops, [id]: { ...state, level } } } }, 10 * level);
+  const extra = GOOD_MAP[WORKSHOP_EXTRA[id].output];
+  const gain = level === 2 ? `mở món ${extra.emoji} ${extra.name.toLowerCase()}` : `làm nhanh hơn, ${WORKSHOP_BATCH[level - 1]} mẻ một lúc`;
+  return { game: next.game, ok: true, message: `⬆️ ${def.name} lên cấp ${level}: ${gain} · +${10 * level} XP.${next.suffix}`, tone: "good" };
+}
+
+export function startWorkshop(game: GameState, id: WorkshopId, recipe = 0): ActionResult {
   const def = WORKSHOP_MAP[id];
   const state = game.ranch.workshops[id];
   if (!def || !state) return fail(game, "Xây xưởng trước đã.", "info");
   if (state.progress !== null) return fail(game, `${def.name} đang chạy.`, "info");
-  if (!canStartWorkshop(game, id)) return fail(game, `Cần ${workshopInputsText(def)} trong kho.`);
+  if (recipe === 1 && workshopLevel(state) < 2) return fail(game, `Nâng ${def.name.toLowerCase()} lên cấp 2 để làm món này.`, "info");
+  const made = workshopRecipes(id)[recipe === 1 ? 1 : 0];
+  if (state.ready > 0 && (state.readyRecipe ?? 0) !== recipe) return fail(game, "Lấy hàng đã làm xong ra trước đã.", "info");
+  const batch = workshopBatches(game, id, recipe);
+  if (batch < 1) return fail(game, `Cần ${workshopInputsText(made)} trong kho.`);
   let next = game;
-  for (const [product, qty] of Object.entries(def.inputs.products ?? {})) next = changeBarn(next, "product", product, -(qty ?? 0));
-  for (const [crop, qty] of Object.entries(def.inputs.crops ?? {})) next = changeBarn(next, "crop", crop, -(qty ?? 0));
-  next = { ...next, ranch: { ...next.ranch, workshops: { ...next.ranch.workshops, [id]: { ...state, progress: 0 } } } };
-  const good = GOOD_MAP[def.output];
-  return { game: next, ok: true, message: `🏭 ${def.name} bắt đầu làm ${good.emoji} ${good.name.toLowerCase()} · xong sau ${formatDuration(def.seconds)}.`, tone: "good" };
+  for (const [kind, item, qty] of recipeInputList(made)) next = changeBarn(next, kind, item, -qty * batch);
+  const running: WorkshopState = { ...state, progress: 0, recipe: recipe === 1 ? 1 : 0, batch };
+  next = { ...next, ranch: { ...next.ranch, workshops: { ...next.ranch.workshops, [id]: running } } };
+  const good = GOOD_MAP[made.output];
+  return { game: next, ok: true, message: `🏭 ${def.name} bắt đầu làm ${batch > 1 ? `${batch} ` : ""}${good.emoji} ${good.name.toLowerCase()} · xong sau ${formatDuration(workshopSeconds(id, running))}.`, tone: "good" };
 }
 
 export function collectWorkshop(game: GameState, id: WorkshopId): ActionResult {
   const def = WORKSHOP_MAP[id];
   const state = game.ranch.workshops[id];
   if (!def || !state || state.ready < 1) return fail(game, "Chưa có thành phẩm.", "info");
-  const good = GOOD_MAP[def.output];
+  const made = workshopRecipes(id)[state.readyRecipe === 1 ? 1 : 0];
+  const good = GOOD_MAP[made.output];
   const stored = changeBarn(
     { ...game, ranch: { ...game.ranch, workshops: { ...game.ranch.workshops, [id]: { ...state, ready: 0 } } } },
     "good",
-    def.output,
+    made.output,
     state.ready,
   );
-  const next = gainXp(stored, def.xp * state.ready);
-  return { game: next.game, ok: true, message: `${good.emoji} +${state.ready} ${good.name} vào kho · +${def.xp * state.ready} XP.${next.suffix}`, tone: "good" };
+  const next = gainXp(stored, made.xp * state.ready);
+  return { game: next.game, ok: true, message: `${good.emoji} +${state.ready} ${good.name} vào kho · +${made.xp * state.ready} XP.${next.suffix}`, tone: "good" };
 }
 
 /** Truck price for a cart: on-the-spot price plus the city bonus. */
@@ -1676,27 +1859,176 @@ export function truckValue(game: GameState, cart: Record<string, number>, dateKe
     value += qty * entry.price;
     items += qty;
   }
-  return { value: Math.round(value * TRUCK.bonus), items };
+  return { value: Math.round(value * truckSpec(game).bonus), items };
+}
+
+/** The truck the farm has now. */
+export function truckSpec(game: GameState) {
+  return TRUCK_LEVELS[Math.min(TRUCK_LEVELS.length - 1, Math.max(0, Math.floor(game.ranch.truckLevel ?? 0)))];
+}
+
+export function nextTruckUpgrade(game: GameState) {
+  return TRUCK_LEVELS[Math.floor(game.ranch.truckLevel ?? 0) + 1] ?? null;
+}
+
+export function upgradeTruck(game: GameState): ActionResult {
+  const upgrade = nextTruckUpgrade(game);
+  if (!upgrade) return fail(game, "Xe tải đã ở cấp cao nhất.", "info");
+  if (game.ranch.truck) return fail(game, "Chờ xe về rồi nâng cấp.", "info");
+  if (levelFromXp(game.xp) < upgrade.level) return fail(game, `Xe tải mới mở ở cấp ${upgrade.level}.`);
+  if (game.coins < upgrade.cost) return fail(game, `Cần ${upgrade.cost} xu để đổi xe tải.`);
+  const next = gainXp({ ...game, coins: game.coins - upgrade.cost, ranch: { ...game.ranch, truckLevel: (game.ranch.truckLevel ?? 0) + 1 } }, 15);
+  return { game: next.game, ok: true, message: `🚚 Xe mới: chở ${upgrade.capacity} món, đi ${formatDuration(upgrade.tripSeconds)}, giá phố +${Math.round((upgrade.bonus - 1) * 100)}% · +15 XP.${next.suffix}`, tone: "good" };
 }
 
 export function sendTruck(game: GameState, cart: Record<string, number>, now: number, dateKey: string): ActionResult {
   if (game.ranch.truck) return fail(game, "Xe tải đang chạy, chờ xe về đã.", "info");
   const { value, items } = truckValue(game, cart, dateKey);
   if (items < 1) return fail(game, "Chất ít nhất một món lên xe.", "info");
-  if (items > TRUCK.capacity) return fail(game, `Xe chỉ chở được ${TRUCK.capacity} món mỗi chuyến.`);
+  const spec = truckSpec(game);
+  if (items > spec.capacity) return fail(game, `Xe chỉ chở được ${spec.capacity} món mỗi chuyến.`);
   let next = game;
   for (const entry of barnEntries(game, dateKey)) {
     const qty = Math.min(entry.owned, Math.max(0, Math.floor(cart[entry.key] ?? 0)));
     if (qty > 0) next = changeBarn(next, entry.kind, entry.id, -qty);
   }
-  next = { ...next, ranch: { ...next.ranch, truck: { departAt: now, returnAt: now + TRUCK.tripSeconds * 1000, value, items } } };
+  next = { ...next, ranch: { ...next.ranch, truck: { departAt: now, returnAt: now + spec.tripSeconds * 1000, value, items } } };
   const result = gainXp(next, Math.ceil(items / 2));
   return {
     game: result.game,
     ok: true,
-    message: `🚚 Xe chở ${items} món lên phố · về sau ${formatDuration(TRUCK.tripSeconds)} với ${value} xu.${result.suffix}`,
+    message: `🚚 Xe chở ${items} món lên phố · về sau ${formatDuration(spec.tripSeconds)} với ${value} xu.${result.suffix}`,
     tone: "good",
   };
+}
+
+/* ───────────────────────── helpers and the bear ───────────────────────── */
+
+/** The price of the next cat, or null when the farm has them all. */
+export function nextCatCost(game: GameState): number | null {
+  return CAT.costs[game.ranch.cats ?? 0] ?? null;
+}
+
+export function buyCat(game: GameState): ActionResult {
+  const cost = nextCatCost(game);
+  if (cost === null) return fail(game, "Trại đã đủ mèo rồi.", "info");
+  if (levelFromXp(game.xp) < CAT.level) return fail(game, `Mèo mở ở cấp ${CAT.level}.`);
+  if (game.coins < cost) return fail(game, `Cần ${cost} xu để nuôi mèo.`);
+  const next = gainXp({ ...game, coins: game.coins - cost, ranch: { ...game.ranch, cats: (game.ranch.cats ?? 0) + 1 } }, 10);
+  return { game: next.game, ok: true, message: `🐈 Mèo về trại: nó tự nhặt trứng, sữa, len vào kho · +10 XP.${next.suffix}`, tone: "good" };
+}
+
+export function buyDog(game: GameState): ActionResult {
+  if (game.ranch.dog) return fail(game, "Trại đã có chó rồi.", "info");
+  if (levelFromXp(game.xp) < DOG.level) return fail(game, `Chó mở ở cấp ${DOG.level}.`);
+  if (game.coins < DOG.cost) return fail(game, `Cần ${DOG.cost} xu để nuôi chó.`);
+  const next = gainXp({ ...game, coins: game.coins - DOG.cost, ranch: { ...game.ranch, dog: true } }, 10);
+  return { game: next.game, ok: true, message: `🐕 Chó về trại: gấu tới là nó đuổi đi ngay · +10 XP.${next.suffix}`, tone: "good" };
+}
+
+/** A tap on the bear: a few of them cage it, and it is sold to the zoo. */
+export function tapBear(game: GameState): ActionResult {
+  const bear = game.ranch.bear;
+  if (!bear) return fail(game, "Gấu đi mất rồi.", "info");
+  const taps = bear.taps + 1;
+  if (taps < BEAR.taps) {
+    return { game: { ...game, ranch: { ...game.ranch, bear: { ...bear, taps } } }, ok: true, message: `🐻 Sắp nhốt được! Chạm thêm ${BEAR.taps - taps} lần.`, tone: "info" };
+  }
+  const reward = BEAR.reward + BEAR.rewardPerLevel * levelFromXp(game.xp);
+  const next = gainXp({ ...game, coins: game.coins + reward, stats: { ...game.stats, earned: game.stats.earned + reward }, ranch: { ...game.ranch, bear: null } }, 6);
+  return { game: next.game, ok: true, message: `🐻 Nhốt được gấu! Sở thú trả ${reward} xu · +6 XP.${next.suffix}`, tone: "good" };
+}
+
+/* ───────────────────────── orders ───────────────────────── */
+
+function basePrice(kind: GoodsKind, id: string): number {
+  if (kind === "crop") return CROP_MAP[id as CropId].sellPrice;
+  if (kind === "product") return PRODUCT_MAP[id as ProductId].sellPrice;
+  return GOOD_MAP[id as GoodId].sellPrice;
+}
+
+export function orderItemInfo(item: OrderItem): { name: string; emoji: string } {
+  const def = item.kind === "crop" ? CROP_MAP[item.id as CropId] : item.kind === "product" ? PRODUCT_MAP[item.id as ProductId] : GOOD_MAP[item.id as GoodId];
+  return { name: def.name, emoji: def.emoji };
+}
+
+/** What the farm can make now: its animals' products, its workshops' goods, and its best crops. */
+function orderPool(game: GameState): [GoodsKind, string][] {
+  const pool: [GoodsKind, string][] = [];
+  const level = levelFromXp(game.xp);
+  for (const crop of CROPS.filter((item) => item.level <= level).slice(-4)) pool.push(["crop", crop.id]);
+  const species = new Set(game.ranch.animals.map((animal) => animal.species));
+  for (const animal of ANIMALS) if (species.has(animal.id)) pool.push(["product", animal.product]);
+  for (const def of WORKSHOPS) {
+    const state = game.ranch.workshops[def.id];
+    if (!state) continue;
+    pool.push(["good", def.output]);
+    if (workshopLevel(state) >= 2) pool.push(["good", WORKSHOP_EXTRA[def.id].output]);
+  }
+  return pool;
+}
+
+function makeOrder(game: GameState, taken: Set<string>): Order {
+  const random = mulberry32(game.nextId * 7919 + (game.ranch.ordersDone ?? 0) * 31 + 17);
+  const done = game.ranch.ordersDone ?? 0;
+  const pool = orderPool(game);
+  // Later orders ask for more kinds; goods come up more often than raw crops.
+  const kinds = Math.min(pool.length, 1 + (random() < 0.55 ? 1 : 0) + (done >= 8 && random() < 0.4 ? 1 : 0));
+  const items: OrderItem[] = [];
+  for (let tries = 0; tries < 24 && items.length < kinds; tries += 1) {
+    const [kind, id] = pool[Math.floor(random() * pool.length)];
+    if (items.some((item) => item.kind === kind && item.id === id)) continue;
+    if (kind === "crop" && pool.length > 4 && random() < 0.5) continue;
+    const price = basePrice(kind, id);
+    const size = 1 + Math.min(4, Math.floor(done / 5));
+    const qty = Math.max(1, Math.round(((price >= 200 ? 1 : price >= 60 ? 2 : 4) + random() * 2) * (0.6 + size * 0.4)));
+    items.push({ kind, id, qty });
+  }
+  const value = items.reduce((sum, item) => sum + basePrice(item.kind, item.id) * item.qty, 0);
+  let id = `o${game.nextId}`;
+  while (taken.has(id)) id += "x";
+  return { id, items, reward: Math.max(30, Math.round((value * ORDER_BONUS) / 5) * 5), xp: Math.max(3, Math.ceil(value / 30)) };
+}
+
+/** Keeps the order board full. */
+function withOrders(game: GameState): GameState {
+  const orders = game.ranch.orders ?? [];
+  if (orders.length >= ORDER_SLOTS) return game;
+  let next = game;
+  const list = orders.slice();
+  while (list.length < ORDER_SLOTS) {
+    list.push(makeOrder(next, new Set(list.map((order) => order.id))));
+    next = { ...next, nextId: next.nextId + 1 };
+  }
+  return { ...next, ranch: { ...next.ranch, orders: list } };
+}
+
+export function canFillOrder(game: GameState, order: Order): boolean {
+  return order.items.every((item) => barnCount(game, item.kind, item.id) >= item.qty);
+}
+
+export function fillOrder(game: GameState, id: string): ActionResult {
+  const order = (game.ranch.orders ?? []).find((item) => item.id === id);
+  if (!order) return fail(game, "Đơn này không còn nữa.", "info");
+  if (!canFillOrder(game, order)) return fail(game, "Kho chưa đủ hàng cho đơn này.");
+  let next = game;
+  for (const item of order.items) next = changeBarn(next, item.kind, item.id, -item.qty);
+  next = {
+    ...next,
+    coins: next.coins + order.reward,
+    stats: { ...next.stats, earned: next.stats.earned + order.reward },
+    ranch: { ...next.ranch, orders: (next.ranch.orders ?? []).filter((item) => item.id !== id), ordersDone: (next.ranch.ordersDone ?? 0) + 1 },
+  };
+  const result = gainXp(withOrders(next), order.xp);
+  return { game: result.game, ok: true, message: `📦 Giao đơn xong: +${order.reward} xu · +${order.xp} XP.${result.suffix}`, tone: "good" };
+}
+
+export function swapOrder(game: GameState, id: string): ActionResult {
+  const orders = game.ranch.orders ?? [];
+  if (!orders.some((item) => item.id === id)) return fail(game, "Đơn này không còn nữa.", "info");
+  if (game.coins < ORDER_SWAP_COST) return fail(game, `Cần ${ORDER_SWAP_COST} xu để đổi đơn.`);
+  const next = withOrders({ ...game, coins: game.coins - ORDER_SWAP_COST, nextId: game.nextId + 1, ranch: { ...game.ranch, orders: orders.filter((item) => item.id !== id) } });
+  return { game: next, ok: true, message: `🔄 Đã đổi đơn khác · −${ORDER_SWAP_COST} xu.`, tone: "info" };
 }
 
 /* ───────────────────────── rewards ───────────────────────── */
@@ -1819,10 +2151,37 @@ function parseRanch(value: unknown, now: number): GameState["ranch"] {
     const item = workshopSource[id] as Record<string, unknown> | undefined;
     if (!item || typeof item !== "object") continue;
     workshops[id] = {
-      progress: typeof item.progress === "number" && Number.isFinite(item.progress) ? num(item.progress, 0, 0, WORKSHOP_MAP[id].seconds) : null,
+      progress: typeof item.progress === "number" && Number.isFinite(item.progress) ? num(item.progress, 0, 0, WORKSHOP_EXTRA[id].seconds) : null,
       ready: Math.floor(num(item.ready, 0, 0, 99)),
+      level: Math.floor(num(item.level, 1, 1, WORKSHOP_MAX_LEVEL)),
+      recipe: item.recipe === 1 ? 1 : 0,
+      batch: Math.floor(num(item.batch, 1, 1, WORKSHOP_BATCH[WORKSHOP_MAX_LEVEL - 1])),
+      readyRecipe: item.readyRecipe === 1 ? 1 : 0,
     };
   }
+  const truckLevel = Math.floor(num(source.truckLevel, 0, 0, TRUCK_LEVELS.length - 1));
+  const cats = Math.floor(num(source.cats, 0, 0, CAT.costs.length));
+  const bearSource = source.bear as Record<string, unknown> | null | undefined;
+  const bear =
+    bearSource && typeof bearSource === "object" && typeof bearSource.until === "number"
+      ? { id: typeof bearSource.id === "string" ? bearSource.id : "b0", until: num(bearSource.until, now), taps: Math.floor(num(bearSource.taps, 0, 0, BEAR.taps - 1)) }
+      : null;
+  const kinds: GoodsKind[] = ["crop", "product", "good"];
+  const known = (kind: GoodsKind, id: unknown) =>
+    typeof id === "string" && (kind === "crop" ? id in CROP_MAP : kind === "product" ? PRODUCT_IDS.includes(id as ProductId) : GOOD_IDS.includes(id as GoodId));
+  const orders: Order[] = (Array.isArray(source.orders) ? source.orders : [])
+    .filter((item): item is Record<string, unknown> => !!item && typeof item === "object" && typeof item.id === "string" && Array.isArray(item.items))
+    .slice(0, ORDER_SLOTS)
+    .map((item) => ({
+      id: item.id as string,
+      items: (item.items as Record<string, unknown>[])
+        .filter((entry) => !!entry && typeof entry === "object" && kinds.includes(entry.kind as GoodsKind) && known(entry.kind as GoodsKind, entry.id))
+        .slice(0, 4)
+        .map((entry) => ({ kind: entry.kind as GoodsKind, id: entry.id as string, qty: Math.floor(num(entry.qty, 1, 1, 99)) })),
+      reward: Math.floor(num(item.reward, 30, 0, 1_000_000)),
+      xp: Math.floor(num(item.xp, 3, 0, 10_000)),
+    }))
+    .filter((order) => order.items.length > 0);
   const truckSource = source.truck as Record<string, unknown> | null | undefined;
   const truck =
     truckSource && typeof truckSource === "object" && typeof truckSource.returnAt === "number"
@@ -1830,7 +2189,7 @@ function parseRanch(value: unknown, now: number): GameState["ranch"] {
           departAt: num(truckSource.departAt, now),
           returnAt: num(truckSource.returnAt, now),
           value: Math.floor(num(truckSource.value, 0, 0, 1_000_000)),
-          items: Math.floor(num(truckSource.items, 0, 0, TRUCK.capacity)),
+          items: Math.floor(num(truckSource.items, 0, 0, TRUCK_LEVELS[TRUCK_LEVELS.length - 1].capacity)),
         }
       : null;
   const incubatorSource = source.incubator as Record<string, unknown> | null | undefined;
@@ -1847,7 +2206,11 @@ function parseRanch(value: unknown, now: number): GameState["ranch"] {
             }),
         }
       : null;
-  return { capacityLevel, animals, drops, workshops, truck, incubator };
+  return {
+    capacityLevel, animals, drops, workshops, truck, incubator,
+    truckLevel, cats, catClock: num(source.catClock, 0, 0, CAT.seconds), dog: source.dog === true, bear, orders,
+    ordersDone: Math.floor(num(source.ordersDone, 0, 0, 1_000_000)),
+  };
 }
 
 function num(value: unknown, fallback: number, min = 0, max = Number.MAX_SAFE_INTEGER): number {

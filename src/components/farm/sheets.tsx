@@ -34,6 +34,7 @@ export function ShopSheet({ game, tab, onTab, onAct }: { game: Farm.GameState; t
   const unlock = Farm.nextPlotUnlock(game);
   const pond = Farm.nextPondUpgrade(game);
   const ranch = Farm.nextRanchUpgrade(game);
+  const catCost = Farm.nextCatCost(game);
   const firstLocked = game.plots.findIndex((plot) => plot.status === "locked");
   const spot = Farm.nextSpotUnlock(game);
   const firstLockedSpot = game.orchard.spots.findIndex((item) => item.status === "locked");
@@ -183,6 +184,26 @@ export function ShopSheet({ game, tab, onTab, onAct }: { game: Farm.GameState; t
             </div>
             <div className="fg-list__buy">
               {ranch ? <button type="button" disabled={level < ranch.level || game.coins < ranch.cost} onClick={() => onAct((current) => Farm.upgradeRanch(current))}>Mở rộng</button> : null}
+            </div>
+          </li>
+          <li>
+            <span className="fg-list__icon" aria-hidden="true">🐈</span>
+            <div>
+              <strong>Mèo nhặt đồ <em>· {game.ranch.cats ?? 0}/{Farm.CAT.costs.length} con</em></strong>
+              <small>{catCost !== null ? `${catCost} xu · cần cấp ${Farm.CAT.level} · mèo tự nhặt trứng, sữa, len vào kho.` : "Trại đã đủ mèo."}</small>
+            </div>
+            <div className="fg-list__buy">
+              {catCost !== null ? <button type="button" disabled={level < Farm.CAT.level || game.coins < catCost} onClick={() => onAct((current) => Farm.buyCat(current))}>Nuôi</button> : null}
+            </div>
+          </li>
+          <li>
+            <span className="fg-list__icon" aria-hidden="true">🐕</span>
+            <div>
+              <strong>Chó giữ trại{game.ranch.dog ? <em> · đã có</em> : null}</strong>
+              <small>{game.ranch.dog ? "Gấu tới là chó đuổi đi ngay." : `${Farm.DOG.cost} xu · cần cấp ${Farm.DOG.level} · gấu tới là chó đuổi đi ngay.`}</small>
+            </div>
+            <div className="fg-list__buy">
+              {game.ranch.dog ? null : <button type="button" disabled={level < Farm.DOG.level || game.coins < Farm.DOG.cost} onClick={() => onAct((current) => Farm.buyDog(current))}>Nuôi</button>}
             </div>
           </li>
           <li>
@@ -358,8 +379,11 @@ export function WorkshopSheet({ game, onAct }: { game: Farm.GameState; onAct: Ac
     <ul className="fg-list fg-list--tall">
       {Farm.WORKSHOPS.map((def) => {
         const state = game.ranch.workshops[def.id];
-        const good = Farm.GOOD_MAP[def.output];
         const locked = level < def.level;
+        const shopLevel = Farm.workshopLevel(state);
+        const recipes = Farm.workshopRecipes(def.id);
+        const upgradeCost = Farm.workshopUpgradeCost(game, def.id);
+        const batch = Farm.WORKSHOP_BATCH[shopLevel - 1];
         let status: ReactNode;
         let action: ReactNode = null;
         if (!state) {
@@ -369,31 +393,64 @@ export function WorkshopSheet({ game, onAct }: { game: Farm.GameState; onAct: Ac
               Xây
             </button>
           );
-        } else if (state.ready > 0) {
-          status = `Có ${state.ready} ${good.name.toLowerCase()} chờ lấy`;
-          action = <button type="button" onClick={() => onAct((current) => Farm.collectWorkshop(current, def.id))}>Lấy hàng</button>;
         } else if (state.progress !== null) {
-          const ratio = state.progress / def.seconds;
+          const seconds = Farm.workshopSeconds(def.id, state);
+          const made = Farm.GOOD_MAP[recipes[state.recipe === 1 ? 1 : 0].output];
           status = (
             <>
-              <span className="fg-progress" aria-hidden="true"><em style={{ width: `${Math.round(ratio * 100)}%` }} /></span>
-              Đang làm · xong sau {Farm.formatDuration(def.seconds - state.progress)}
+              <span className="fg-progress" aria-hidden="true"><em style={{ width: `${Math.round((state.progress / seconds) * 100)}%` }} /></span>
+              Đang làm {state.batch && state.batch > 1 ? `${state.batch} ` : ""}{made.name.toLowerCase()} · xong sau {Farm.formatDuration(seconds - state.progress)}
             </>
           );
-        } else {
-          const ready = Farm.canStartWorkshop(game, def.id);
-          status = ready ? "Đủ nguyên liệu" : "Thiếu nguyên liệu trong kho";
-          action = <button type="button" disabled={!ready} onClick={() => onAct((current) => Farm.startWorkshop(current, def.id))}>Làm</button>;
-        }
+        } else if (state.ready > 0) {
+          const made = Farm.GOOD_MAP[recipes[state.readyRecipe === 1 ? 1 : 0].output];
+          status = `Có ${state.ready} ${made.name.toLowerCase()} chờ lấy`;
+        } else status = "Đang nghỉ";
         return (
-          <li key={def.id} data-locked={(locked && !state) || undefined}>
-            <span className="fg-list__icon" style={{ background: `${def.roof}33` }} aria-hidden="true">{good.emoji}</span>
+          <li key={def.id} data-locked={(locked && !state) || undefined} className="fg-shop-row">
+            <span className="fg-list__icon" style={{ background: `${def.roof}33` }} aria-hidden="true">{Farm.GOOD_MAP[def.output].emoji}</span>
             <div>
-              <strong>{def.name}</strong>
-              <small>{Farm.workshopInputsText(def)} → 1 {good.name.toLowerCase()} ({good.sellPrice} xu) · {Farm.formatDuration(def.seconds)}</small>
+              <strong>{def.name}{state ? <em> · cấp {shopLevel}</em> : null}</strong>
               <small className="fg-status">{status}</small>
+              {state && state.ready > 0 ? (
+                <button type="button" className="fg-recipe" onClick={() => onAct((current) => Farm.collectWorkshop(current, def.id))}>⭐ Lấy {state.ready} món đã xong</button>
+              ) : null}
+              {recipes.map((recipe, index) => {
+                const good = Farm.GOOD_MAP[recipe.output];
+                const open = index === 0 || shopLevel >= 2;
+                const batches = state ? Farm.workshopBatches(game, def.id, index) : 0;
+                return (
+                  <div key={recipe.output} className="fg-recipe-row" data-locked={!open || undefined}>
+                    <small>
+                      {good.emoji} {Farm.workshopInputsText(recipe)} → {good.name.toLowerCase()} ({good.sellPrice} xu) · {Farm.formatDuration(state ? Farm.workshopSeconds(def.id, state, index) : recipe.seconds)}
+                      {!open ? " · mở ở xưởng cấp 2" : ""}
+                    </small>
+                    {state && open ? (
+                      <button type="button" disabled={batches < 1} aria-label={`Làm ${good.name}`} onClick={() => onAct((current) => Farm.startWorkshop(current, def.id, index))}>
+                        Làm{batches > 1 ? ` ×${batches}` : ""}
+                      </button>
+                    ) : null}
+                  </div>
+                );
+              })}
+              {state ? (
+                <small>
+                  {upgradeCost === null
+                    ? `Cấp cao nhất: ${batch} mẻ một lúc.`
+                    : shopLevel === 1
+                      ? `Lên cấp 2 (${upgradeCost} xu): mở món ${Farm.GOOD_MAP[recipes[1].output].name.toLowerCase()}.`
+                      : `Lên cấp ${shopLevel + 1} (${upgradeCost} xu): nhanh hơn, ${Farm.WORKSHOP_BATCH[shopLevel]} mẻ một lúc.`}
+                </small>
+              ) : null}
             </div>
-            <div className="fg-list__buy">{action}</div>
+            <div className="fg-list__buy">
+              {action}
+              {state && upgradeCost !== null ? (
+                <button type="button" disabled={game.coins < upgradeCost} aria-label={`Nâng cấp ${def.name}, ${upgradeCost} xu`} onClick={() => onAct((current) => Farm.upgradeWorkshop(current, def.id))}>
+                  ⬆️ {upgradeCost}
+                </button>
+              ) : null}
+            </div>
           </li>
         );
       })}
@@ -401,7 +458,45 @@ export function WorkshopSheet({ game, onAct }: { game: Farm.GameState; onAct: Ac
   );
 }
 
-/** The incubator: build it, set eggs from the barn, turn them, and bring the hatchlings out. */
+/** Standing orders: deliver what is asked from the barn for a reward above the market price. */
+export function OrdersSheet({ game, onAct }: { game: Farm.GameState; onAct: ActFn }) {
+  const orders = game.ranch.orders ?? [];
+  return (
+    <>
+      <p className="fg-featured">Giao đủ hàng trong kho để nhận thưởng cao hơn giá chợ. Đã giao {game.ranch.ordersDone ?? 0} đơn — càng giao nhiều, đơn càng lớn.</p>
+      {orders.length === 0 ? <p className="fg-empty">Đơn mới sắp tới…</p> : null}
+      <ul className="fg-list fg-list--tall">
+        {orders.map((order) => {
+          const ready = Farm.canFillOrder(game, order);
+          return (
+            <li key={order.id} className="fg-shop-row">
+              <span className="fg-list__icon" aria-hidden="true">📦</span>
+              <div>
+                <strong>Thưởng {coinFormat.format(order.reward)} xu <em>· +{order.xp} XP</em></strong>
+                {order.items.map((item) => {
+                  const info = Farm.orderItemInfo(item);
+                  const owned = Farm.barnCount(game, item.kind, item.id);
+                  return (
+                    <small key={`${item.kind}:${item.id}`} className={owned >= item.qty ? undefined : "fg-warn"}>
+                      {info.emoji} {item.qty} {info.name.toLowerCase()} · có {Math.min(owned, item.qty)}/{item.qty}
+                    </small>
+                  );
+                })}
+              </div>
+              <div className="fg-list__buy">
+                <button type="button" disabled={!ready} onClick={() => onAct((current) => Farm.fillOrder(current, order.id))}>Giao</button>
+                <button type="button" disabled={game.coins < Farm.ORDER_SWAP_COST} aria-label={`Đổi đơn khác, ${Farm.ORDER_SWAP_COST} xu`} onClick={() => onAct((current) => Farm.swapOrder(current, order.id))}>
+                  🔄 {Farm.ORDER_SWAP_COST}
+                </button>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </>
+  );
+}
+
 export function IncubatorSheet({ game, onAct }: { game: Farm.GameState; onAct: ActFn }) {
   const level = Farm.levelFromXp(game.xp);
   const incubator = game.ranch.incubator;
@@ -487,7 +582,9 @@ export function TruckSheet({ game, today, onAct }: { game: Farm.GameState; today
       </div>
     );
   }
-  const room = Farm.TRUCK.capacity - loaded.items;
+  const spec = Farm.truckSpec(game);
+  const upgrade = Farm.nextTruckUpgrade(game);
+  const room = spec.capacity - loaded.items;
   function change(key: string, owned: number, delta: number) {
     setCart((current) => {
       const next = Math.max(0, Math.min(owned, (current[key] ?? 0) + delta));
@@ -495,7 +592,7 @@ export function TruckSheet({ game, today, onAct }: { game: Farm.GameState; today
     });
   }
   function fillUp() {
-    let space = Farm.TRUCK.capacity;
+    let space = spec.capacity;
     const next: Record<string, number> = {};
     // Most valuable goods first.
     for (const entry of [...entries].sort((a, b) => b.price - a.price)) {
@@ -509,8 +606,14 @@ export function TruckSheet({ game, today, onAct }: { game: Farm.GameState; today
   return (
     <>
       <p className="fg-featured">
-        Xe chở tối đa {Farm.TRUCK.capacity} món, đi về mất {Farm.formatDuration(Farm.TRUCK.tripSeconds)} và bán được giá cao hơn {Math.round((Farm.TRUCK.bonus - 1) * 100)}% so với bán tại kho.
+        Xe chở tối đa {spec.capacity} món, đi về mất {Farm.formatDuration(spec.tripSeconds)} và bán được giá cao hơn {Math.round((spec.bonus - 1) * 100)}% so với bán tại kho.
       </p>
+      {upgrade ? (
+        <div className="fg-recipe-row">
+          <small>🚚 Xe mới ({upgrade.cost} xu · cần cấp {upgrade.level}): chở {upgrade.capacity} món, đi {Farm.formatDuration(upgrade.tripSeconds)}, giá phố +{Math.round((upgrade.bonus - 1) * 100)}%.</small>
+          <button type="button" disabled={game.coins < upgrade.cost || Farm.levelFromXp(game.xp) < upgrade.level} onClick={() => onAct((current) => Farm.upgradeTruck(current))}>Đổi xe</button>
+        </div>
+      ) : null}
       {entries.length === 0 ? <p className="fg-empty">Kho trống — chưa có gì để chở.</p> : null}
       <ul className="fg-list">
         {entries.map((entry) => {
@@ -520,7 +623,7 @@ export function TruckSheet({ game, today, onAct }: { game: Farm.GameState; today
               <span className="fg-list__icon" aria-hidden="true">{entry.emoji}</span>
               <div>
                 <strong>{entry.name} <em>· có {entry.owned}</em></strong>
-                <small>{Math.round(entry.price * Farm.TRUCK.bonus)} xu mỗi phần ở phố</small>
+                <small>{Math.round(entry.price * spec.bonus)} xu mỗi phần ở phố</small>
               </div>
               <div className="fg-stepper">
                 <button type="button" aria-label={`Bớt ${entry.name}`} disabled={qty === 0} onClick={() => change(entry.key, entry.owned, -1)}>−</button>
@@ -545,7 +648,7 @@ export function TruckSheet({ game, today, onAct }: { game: Farm.GameState; today
               setCart({});
             }}
           >
-            🚚 Chở {loaded.items}/{Farm.TRUCK.capacity} món · {coinFormat.format(loaded.value)} xu
+            🚚 Chở {loaded.items}/{spec.capacity} món · {coinFormat.format(loaded.value)} xu
           </button>
         </div>
       ) : null}

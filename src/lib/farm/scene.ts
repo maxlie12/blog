@@ -66,6 +66,7 @@ import { QUALITY_PRESETS, type Quality } from "./quality";
 import { NO_COVER, ZOOM_MAX, clampZoom, coverLift, defaultHeight, isNarrow, panLimits, zoomMin, type Cover } from "./view";
 import { FIELD, GATE_SPANS, HOME, IDLE_SPOTS, JETTY_FOOT, ORCHARD, PEN_GATES, POND, RIVER_HALF, RIVER_POINTS, ROAD_Z, dropStand, incubatorStand, plotPosition, plotStand, pondPoint, pondStand, route, routeLength, spotPosition, treeStand, troughStand, type Place, type Point } from "./paths";
 import { choresBetween, type Chore } from "./chores";
+import { BEAR, workshopLevel } from "./engine";
 import { BODY_SIZE, CHORE_ACTS, IDLE_SECONDS, REST, SITTING, SPEED, STRIDE, TWO_HANDED, chorePose, fishingPose, idlePose, mixPose, phaseFor, standPose, walkPose, type Idle, type Pose, type Tool } from "./people";
 import { DUCK_POND, FIXTURES, LANE, PEN_OF, PEN_ROOM, RANCH_BOUNDS, TOP_LEVEL, TROUGH_OF, fixtureRect, inDuckPond, inside, penRect, walkable, type PenId } from "./ranchLayout";
 
@@ -91,7 +92,8 @@ export type SceneHit =
   | { kind: "workshop"; id: WorkshopId }
   | { kind: "trough" }
   | { kind: "truck" }
-  | { kind: "incubator" };
+  | { kind: "incubator" }
+  | { kind: "bear" };
 
 /** Where the player's zoom stands, for the zoom buttons. */
 export interface ZoomState {
@@ -3066,7 +3068,8 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     const running = !!state && state.progress !== null;
     const ready = (state?.ready ?? 0) > 0;
     const locked = levelFromXp(game.xp) < def.level;
-    const key = `${state ? "built" : locked ? "locked" : "open"}|${running}|${ready}`;
+    const shopLevel = workshopLevel(state);
+    const key = `${state ? "built" : locked ? "locked" : "open"}|${running}|${ready}|${shopLevel}`;
     const [x, z] = WORKSHOP_SPOTS[id];
     const group = new THREE.Group();
     group.position.set(x, 0, z);
@@ -3086,6 +3089,22 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       roof.position.y = 0.98;
       root.add(roof, part(rbox(0.42, 0.62, 0.05, 0.015), "#7a5638", 0.3, 0.31, 0.66), part(rbox(0.22, 0.55, 0.22, 0.03), "#a9573f", -0.45, 1.55, -0.2));
       addWindow(root, -0.38, 0.6, 0.66, 0.36, 0.3, root);
+      // Each level shows: gold studs over the door, then a lean-to annex, a second chimney with
+      // crates of goods, and at the top a flag on the roof.
+      for (let i = 0; i < shopLevel; i += 1) root.add(part(sphere(0.045, 8, 6), "#f2c94c", 0.3 + (i - (shopLevel - 1) / 2) * 0.12, 0.74, 0.67));
+      if (shopLevel >= 2) {
+        root.add(part(rbox(0.6, 0.62, 0.9, 0.03), "#ead7b1", 1.05, 0.31, -0.05));
+        const lean = part(rbox(0.72, 0.06, 1.02, 0.02), def.roof, 1.07, 0.68, -0.05);
+        lean.rotation.z = -0.28;
+        root.add(lean, part(rbox(0.04, 0.3, 0.3, 0.01), "#7a5638", 1.36, 0.3, 0.1));
+      }
+      if (shopLevel >= 3) {
+        root.add(part(rbox(0.2, 0.5, 0.2, 0.03), "#a9573f", 0.45, 1.5, -0.25));
+        for (const [bx, bz, by] of [[-0.95, 0.5, 0.11], [-1.0, 0.15, 0.11], [-0.97, 0.33, 0.33]]) root.add(part(rbox(0.26, 0.2, 0.26, 0.03), "#c8935a", bx, by, bz));
+      }
+      if (shopLevel >= 4) {
+        root.add(part(cylinder(0.018, 0.018, 0.75, 6), "#7a5638", 0, 2.0, 0), part(rbox(0.34, 0.2, 0.02, 0.005), "#f2c94c", 0.18, 2.24, 0));
+      }
       for (let i = 0; i < 2; i += 1) {
         const puff = new THREE.Mesh(sphere(0.14 + i * 0.05, 7, 5), smokeMaterial);
         puff.position.set(-0.45, 1.9 + i * 0.3, -0.2);
@@ -4327,6 +4346,201 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
   function giveChores(chores: Chore[]) {
     for (const chore of chores) if (chore.view === viewName) farmerChores.push(chore);
     while (farmerChores.length > MAX_QUEUED) farmerChores.shift();
+  }
+
+  /* ───────────── helpers and the bear: cats that pick up products, a dog, a bear in the lane ───────────── */
+  // Small four-legged bodies built here (facing +z): one baked body and four legs that swing as they walk.
+  type CritterKind = "cat" | "cat2" | "dog" | "bear";
+  interface Critter {
+    kind: CritterKind;
+    group: THREE.Group;
+    body: THREE.Mesh;
+    legs: THREE.Mesh[];
+    x: number;
+    z: number;
+    facing: number;
+    phase: number;
+    speed: number;
+    moving: boolean;
+    cage: THREE.Mesh | null;
+  }
+  const CRITTER_SHAPES: Record<CritterKind, { length: number; height: number; width: number; leg: number; coat: string; trim: string; speed: number }> = {
+    cat: { length: 0.3, height: 0.13, width: 0.12, leg: 0.11, coat: "#e39a4c", trim: "#fff4e0", speed: 1.5 },
+    cat2: { length: 0.3, height: 0.13, width: 0.12, leg: 0.11, coat: "#8d8f96", trim: "#f1f1ee", speed: 1.5 },
+    dog: { length: 0.46, height: 0.2, width: 0.18, leg: 0.19, coat: "#a5713f", trim: "#f3e3c3", speed: 2.4 },
+    bear: { length: 0.9, height: 0.5, width: 0.46, leg: 0.3, coat: "#5b3d2b", trim: "#c9a27a", speed: 0.8 },
+  };
+  function buildCritter(kind: CritterKind): Critter {
+    const shape = CRITTER_SHAPES[kind];
+    const { length, height, width, leg, coat, trim } = shape;
+    const root = new THREE.Group();
+    const top = leg + height / 2;
+    const torso = part(sphere(0.5, 12, 9), coat, 0, top, 0);
+    torso.scale.set(width, height, length);
+    root.add(torso);
+    const headSize = kind === "bear" ? 0.2 : kind === "dog" ? 0.105 : 0.08;
+    const headY = top + height * (kind === "bear" ? 0.25 : 0.45), headZ = length * 0.5;
+    root.add(part(sphere(headSize, 10, 8), coat, 0, headY, headZ));
+    const snout = part(sphere(headSize * 0.5, 8, 6), trim, 0, headY - headSize * 0.25, headZ + headSize * 0.8);
+    root.add(snout, part(sphere(headSize * 0.16, 6, 5), "#1d1a18", 0, headY - headSize * 0.15, headZ + headSize * 1.25));
+    for (const side of [-1, 1]) {
+      root.add(part(sphere(headSize * 0.12, 6, 5), "#1d1a18", side * headSize * 0.42, headY + headSize * 0.2, headZ + headSize * 0.82));
+      if (kind === "dog") {
+        const ear = part(rbox(headSize * 0.45, headSize * 0.9, headSize * 0.25, 0.01), tint(coat, -0.15), side * headSize * 0.9, headY + headSize * 0.1, headZ);
+        ear.rotation.z = side * 0.35;
+        root.add(ear);
+      } else if (kind === "bear") root.add(part(sphere(headSize * 0.32, 8, 6), tint(coat, -0.1), side * headSize * 0.7, headY + headSize * 0.75, headZ - headSize * 0.1));
+      else root.add(part(cone(headSize * 0.38, headSize * 0.7, 4), coat, side * headSize * 0.55, headY + headSize * 0.9, headZ));
+    }
+    if (kind === "bear") root.add(part(sphere(0.07, 8, 6), tint(coat, -0.1), 0, top + 0.05, -length * 0.5));
+    else {
+      const tail = part(cylinder(0.014, 0.02, length * 0.75, 6), kind === "dog" ? coat : tint(coat, -0.1), 0, top + length * 0.3, -length * 0.5);
+      tail.rotation.x = kind === "dog" ? -0.9 : -0.35;
+      root.add(tail);
+      root.add(part(sphere(width * 0.42, 8, 6), trim, 0, top - height * 0.15, length * 0.32));
+    }
+    const body = bake(root, true, true, false);
+    body.userData.ownsGeometry = true;
+    body.raycast = () => {};
+    const group = new THREE.Group();
+    group.add(body);
+    const legRoot = new THREE.Group();
+    legRoot.add(part(cylinder(width * 0.2, width * 0.17, leg, 6), kind === "bear" ? tint(coat, -0.08) : coat, 0, -leg / 2, 0), part(sphere(width * 0.2, 6, 5), kind === "bear" ? tint(coat, -0.15) : trim, 0, -leg + width * 0.1, width * 0.06));
+    const legGeometry = bakeGeometry(legRoot, false) ?? new THREE.BufferGeometry();
+    const legs: THREE.Mesh[] = [];
+    for (const [sx, sz] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
+      const mesh = new THREE.Mesh(legGeometry, surface);
+      mesh.position.set(sx * width * 0.3, leg, sz * length * 0.3);
+      mesh.castShadow = shadowsOn;
+      mesh.raycast = () => {};
+      group.add(mesh);
+      legs.push(mesh);
+    }
+    let cage: THREE.Mesh | null = null;
+    if (kind === "bear") {
+      group.userData.hit = { kind: "bear" } satisfies SceneHit;
+      const hit = new THREE.Mesh(sphere(0.75, 8, 6), hiddenMaterial);
+      hit.position.y = 0.5;
+      group.add(hit);
+      // The cage: bars that rise round the bear with each tap.
+      const bars = new THREE.Group();
+      for (let i = 0; i < 12; i += 1) {
+        const a = (i / 12) * Math.PI * 2;
+        bars.add(part(cylinder(0.02, 0.02, 1.0, 5), "#6b6f75", Math.cos(a) * 0.52, 0.5, Math.sin(a) * 0.7));
+      }
+      bars.add(part(cylinder(0.56, 0.56, 0.04, 14), "#565a60", 0, 1.0, 0));
+      cage = bake(bars, false, false);
+      cage.userData.ownsGeometry = true;
+      cage.raycast = () => {};
+      cage.scale.set(1, 0.001, 1.25);
+      cage.visible = false;
+      group.add(cage);
+    }
+    world.add(group);
+    return { kind, group, body, legs, x: 0, z: 0, facing: 0, phase: 0, speed: shape.speed, moving: false, cage };
+  }
+  function removeCritter(critter: Critter) {
+    world.remove(critter.group);
+    critter.body.geometry.dispose();
+    critter.legs[0].geometry.dispose();
+    critter.cage?.geometry.dispose();
+  }
+  /** Walks a critter toward a point; returns true once there. */
+  function critterTo(critter: Critter, x: number, z: number, dt: number, motion: number, reach = 0.08): boolean {
+    const dx = x - critter.x, dz = z - critter.z;
+    const distance = Math.hypot(dx, dz);
+    critter.moving = distance > reach;
+    if (critter.moving) {
+      const step = Math.min(distance, critter.speed * dt);
+      critter.x += (dx / distance) * step;
+      critter.z += (dz / distance) * step;
+      critter.facing = turnTo(critter.facing, Math.atan2(dx, dz), dt * 10);
+      critter.phase += (step / CRITTER_SHAPES[critter.kind].leg) * 1.6;
+    }
+    const swing = critter.moving ? Math.sin(critter.phase) * 0.6 : 0;
+    critter.legs.forEach((leg, i) => (leg.rotation.x = (i === 0 || i === 3 ? swing : -swing)));
+    critter.body.position.y = critter.moving && motion ? Math.abs(Math.sin(critter.phase)) * 0.012 : 0;
+    critter.group.position.set(critter.x, 0, critter.z);
+    critter.group.rotation.y = critter.facing;
+    return !critter.moving;
+  }
+  const LANE_X = (LANE.x0 + LANE.x1) / 2;
+  const CAT_HOME: Point[] = [[0.72, 6.5], [1.5, 7.05]];
+  const DOG_HOME: Point = [1.62, 7.45];
+  const BEAR_WALK: Point[] = [[LANE_X - 0.1, 7.45], [LANE_X - 0.1, 8.75]];
+  const cats: Critter[] = [];
+  let dog: Critter | null = null;
+  let bearView: { critter: Critter; id: string; leg: number; taps: number } | null = null;
+
+  function stepCritters(dt: number, elapsed: number, motion: number) {
+    const ranch = latest?.ranch;
+    if (!ranch) return;
+    // Cats: one per cat owned; each heads for a product on the ground (the engine takes the oldest first).
+    const wanted = Math.min(CAT_HOME.length, ranch.cats ?? 0);
+    while (cats.length < wanted) {
+      const cat = buildCritter(cats.length ? "cat2" : "cat");
+      [cat.x, cat.z] = CAT_HOME[cats.length];
+      cats.push(cat);
+    }
+    while (cats.length > wanted) removeCritter(cats.pop() as Critter);
+    cats.forEach((cat, index) => {
+      const drop = ranch.drops[index] ?? ranch.drops[0];
+      const [x, z] = drop ? dropPoint(drop) : CAT_HOME[index];
+      const there = critterTo(cat, x, z, dt, motion, drop ? 0.25 : 0.06);
+      if (there && !drop) cat.facing = turnTo(cat.facing, 0.6, dt * 4);
+      // Sitting at home: the body settles back a little.
+      cat.body.rotation.x = there && !drop ? -0.35 : 0;
+    });
+    // The bear: in from the road, pacing the lane; tapped into its cage; gone when the engine says so.
+    const bear = ranch.bear ?? null;
+    if (bear && (!bearView || bearView.id !== bear.id)) {
+      if (bearView) removeCritter(bearView.critter);
+      const critter = buildCritter("bear");
+      critter.x = LANE_X;
+      critter.z = ROAD_Z + 0.2;
+      bearView = { critter, id: bear.id, leg: 0, taps: 0 };
+    } else if (!bear && bearView) {
+      burst(bearView.taps >= BEAR.taps - 1 ? "spark" : "dirt", bearView.critter.x, 0.5, bearView.critter.z, 12);
+      removeCritter(bearView.critter);
+      bearView = null;
+    }
+    if (bear && bearView) {
+      const critter = bearView.critter;
+      if (bear.taps !== bearView.taps) {
+        bearView.taps = bear.taps;
+        burst("spark", critter.x, 0.8, critter.z, 6);
+      }
+      if (critter.cage) {
+        critter.cage.visible = bear.taps > 0;
+        const rise = bear.taps / BEAR.taps;
+        critter.cage.scale.y += (Math.max(0.001, rise) - critter.cage.scale.y) * Math.min(1, dt * 10);
+      }
+      // A caged bear stops; a free one paces up and down.
+      const [x, z] = BEAR_WALK[bearView.leg];
+      if (bear.taps >= BEAR.taps - 1) critterTo(critter, critter.x, critter.z, dt, motion);
+      else if (critterTo(critter, x, z, dt, motion)) bearView.leg = 1 - bearView.leg;
+      if (motion) critter.body.rotation.z = Math.sin(elapsed * 2.2) * 0.04;
+    }
+    // The dog: by the feed store; at the bear, barking, while it is there.
+    if (ranch.dog && !dog) {
+      dog = buildCritter("dog");
+      [dog.x, dog.z] = DOG_HOME;
+    } else if (!ranch.dog && dog) {
+      removeCritter(dog);
+      dog = null;
+    }
+    if (dog) {
+      if (bearView) {
+        const b = bearView.critter;
+        const there = critterTo(dog, b.x + 0.55, b.z + 0.75, dt, motion, 0.15);
+        if (there) dog.facing = turnTo(dog.facing, Math.atan2(b.x - dog.x, b.z - dog.z), dt * 10);
+        dog.body.position.y = there && motion ? Math.abs(Math.sin(elapsed * 9)) * 0.05 : dog.body.position.y;
+      } else {
+        const there = critterTo(dog, DOG_HOME[0], DOG_HOME[1], dt, motion);
+        if (there) dog.facing = turnTo(dog.facing, 2.4, dt * 4);
+        dog.body.rotation.x = there ? -0.3 : 0;
+      }
+    }
   }
 
   /* ───────────── fishing: the farmer's rod, line, float, the fish on the hook, the basket ───────────── */
@@ -5584,6 +5798,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
     stepParticles(dt);
     if (motion) stepRiver(elapsed);
     stepPeople(dt, elapsed, motion, clockNow.hour);
+    stepCritters(dt, elapsed, motion);
     stepFishingView(elapsed, motion);
     fallMaterial.opacity = 0.74 + Math.sin(elapsed * 5) * 0.05 * motion;
 
@@ -5924,6 +6139,7 @@ export function createFarmScene(container: HTMLElement, options: SceneOptions): 
       renderer.domElement.removeEventListener("touchstart", onTouchStart);
       renderer.domElement.removeEventListener("wheel", onWheel);
       [farmer, ...helpers.map((helper) => helper.walker)].forEach((walker) => walker.body.mesh.skeleton.dispose());
+      [...cats, dog, bearView?.critter].forEach((critter) => critter && removeCritter(critter));
       primitives.forEach((item) => item.dispose());
       owned.forEach((item) => item.dispose());
       fishTemplates.forEach((item) => item.dispose());

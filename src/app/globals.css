@@ -2650,6 +2650,20 @@ body { line-height: 1.65; }
 .fg-list em { color: var(--fg-muted); font-style: normal; font-weight: 600; }
 .fg-list small { display: block; color: var(--fg-muted); font-size: .7rem; line-height: 1.35; }
 .fg-list__buy { display: flex; gap: .3rem; }
+/* GAME-020: workshop recipes, upgrades, orders, the bear button. */
+.fg-shop-row { align-items: start !important; }
+.fg-shop-row .fg-list__buy { flex-direction: column; align-items: stretch; }
+.fg-shop-row .fg-list__buy button { min-height: 2.75rem; white-space: nowrap; }
+.fg-recipe-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: .3rem; padding: .3rem .45rem; background: #f4f7ee; border-radius: 10px; }
+.fg-recipe-row[data-locked] { opacity: .6; }
+.fg-recipe-row small { flex: 1; min-width: 0; }
+.fg-recipe-row button, .fg-recipe { min-height: 2.75rem; padding: .4rem .75rem; color: var(--fg-cream); background: var(--fg-line); border: 0; border-radius: 12px; box-shadow: inset 0 -3px 0 #0003; font-size: .76rem; font-weight: 750; white-space: nowrap; cursor: pointer; }
+.fg-recipe { display: block; margin-top: .3rem; background: #c9861f; }
+.fg-recipe-row button:disabled { opacity: .45; cursor: not-allowed; }
+.fg-recipe-row button:focus-visible, .fg-recipe:focus-visible { outline: 3px solid var(--fg-ink); outline-offset: 2px; }
+.fg-card__actions .fg-bear { background: #a8442f; }
+@media (prefers-reduced-motion: no-preference) { .fg-card__actions .fg-bear { animation: fg-bear-pulse .9s ease-in-out infinite alternate; } }
+@keyframes fg-bear-pulse { to { box-shadow: inset 0 -3px 0 #0003, 0 0 0 5px #a8442f55; } }
 .fg-wide { width: 100%; margin-top: .5rem; padding: .75rem; font-size: .82rem; }
 .fg-empty { padding: 1rem; color: var(--fg-muted); background: #eef4e6; border-radius: 14px; text-align: center; font-size: .8rem; }
 .fg-inventory { margin-top: 1rem; padding-top: .8rem; border-top: 1px dashed #c6d9bd; font-size: .8rem; }

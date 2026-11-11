@@ -2,6 +2,14 @@
 
 Last verified: 2026-11-07 (farm chicken and duck yards; harness browser checks).
 
+## 2026-11-11 — Farm: things to spend coins on
+
+- Workshops upgrade to level 4 (second-tier goods at level 2, then faster and in batches), the
+  truck has three upgrades, a cat picks up products, a dog guards, a gentle bear can be caged for
+  coins, and three standing orders pay above market price. Older saves load unchanged.
+- Checks: `farmEconomy.test.ts` (6), ESLint, `tsc`; browser economy check 13/13, play test 30/30.
+  See `docs/changes/GAME-020-farm-frenzy-economy.md`. Next: `GAME-021`, a timed challenge mode.
+
 ## 2026-11-07 — Farm: separate chicken and duck yards
 
 - The ranch's poultry yard is now a chicken yard (hen house, straw nests) and a duck yard (pond,

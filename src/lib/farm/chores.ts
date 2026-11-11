@@ -80,7 +80,8 @@ export function choresBetween(before: GameState | null, after: GameState): Chore
     for (const species of ["chicken", "duck", "sheep", "cow"] as AnimalId[]) if (kinds.has(species)) chores.push({ kind: "pour", view: "ranch", species });
   }
   const drops = new Set(ranch.drops.map((item) => item.id));
-  for (const drop of oldRanch.drops) if (!drops.has(drop.id)) chores.push({ kind: "collect", view: "ranch", drop });
+  // The player's pick-up earns XP; a cat's does not, and is the cat's own work.
+  if (after.xp > before.xp) for (const drop of oldRanch.drops) if (!drops.has(drop.id)) chores.push({ kind: "collect", view: "ranch", drop });
   const oldAnimals = new Set(oldRanch.animals.map((animal) => animal.id));
   const hatched = (oldRanch.incubator?.eggs.length ?? 0) > (ranch.incubator?.eggs.length ?? 0);
   for (const animal of ranch.animals) if (!oldAnimals.has(animal.id) && !hatched) chores.push({ kind: "newAnimal", view: "ranch", species: animal.species });

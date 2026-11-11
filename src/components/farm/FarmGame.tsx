@@ -19,7 +19,7 @@ import { PlotCard, PondCard, RanchCard, TreeCard } from "./cards";
 import FarmScene3D from "./FarmScene3D";
 import FishingPanel, { type FishingOutcome } from "./FishingPanel";
 import { SHEET_TITLES, coinFormat, type ShopTab, type SheetName } from "./shared";
-import { BarnSheet, GiftSheet, HelpSheet, IncubatorSheet, MillSheet, SaplingSheet, SeedSheet, Sheet, ShopSheet, TruckSheet, WorkshopSheet } from "./sheets";
+import { BarnSheet, OrdersSheet, GiftSheet, HelpSheet, IncubatorSheet, MillSheet, SaplingSheet, SeedSheet, Sheet, ShopSheet, TruckSheet, WorkshopSheet } from "./sheets";
 
 type Tool = SceneTool;
 type Toast = { id: number; text: string; tone: Farm.Tone };
@@ -137,6 +137,7 @@ const HIT_VIEW: Record<SceneHit["kind"], FarmView | null> = {
   workshop: "ranch",
   trough: "ranch",
   truck: "ranch",
+  bear: "ranch",
   incubator: "ranch",
 };
 
@@ -443,10 +444,11 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
     if (!game) return;
     const state = game.ranch.workshops[id];
     if (state && state.ready > 0) return act((current) => Farm.collectWorkshop(current, id));
-    if (state && state.progress === null && Farm.canStartWorkshop(game, id)) return act((current) => Farm.startWorkshop(current, id));
+    // A level-1 workshop has one recipe: a tap starts it. With two, the sheet lets the player choose.
+    if (state && state.progress === null && Farm.workshopLevel(state) < 2 && Farm.canStartWorkshop(game, id)) return act((current) => Farm.startWorkshop(current, id));
     if (state && state.progress !== null) {
       const def = Farm.WORKSHOP_MAP[id];
-      return say(`${def.name} đang làm · xong sau ${Farm.formatDuration(def.seconds - state.progress)}.`);
+      return say(`${def.name} đang làm · xong sau ${Farm.formatDuration(Farm.workshopSeconds(id, state) - state.progress)}.`);
     }
     setSheet("workshops");
   }
@@ -484,6 +486,8 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
         return setSheet("truck");
       case "incubator":
         return setSheet("incubator");
+      case "bear":
+        return act((current) => Farm.tapBear(current));
     }
   }
 
@@ -664,6 +668,8 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
                 onMill={() => setSheet("mill")}
                 onWorkshops={() => setSheet("workshops")}
                 onTruck={() => setSheet("truck")}
+                onOrders={() => setSheet("orders")}
+                onBear={() => act((current) => Farm.tapBear(current))}
                 onBuy={() => openShop("animals")}
                 onIncubator={() => setSheet("incubator")}
               />
@@ -695,6 +701,7 @@ export default function FarmGame({ practiceDays }: { practiceDays: PracticeDay[]
             {sheet === "gifts" ? <GiftSheet game={game} today={today} practice={practice} dailyReady={dailyReady} onAct={act} /> : null}
             {sheet === "mill" ? <MillSheet game={game} onAct={act} onShop={() => openShop("items")} /> : null}
             {sheet === "workshops" ? <WorkshopSheet game={game} onAct={act} /> : null}
+            {sheet === "orders" ? <OrdersSheet game={game} onAct={act} /> : null}
             {sheet === "incubator" ? <IncubatorSheet game={game} onAct={act} /> : null}
             {sheet === "truck" ? <TruckSheet game={game} today={today} onAct={act} /> : null}
             {sheet === "help" ? <HelpSheet /> : null}

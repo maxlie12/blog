@@ -231,6 +231,8 @@ export function RanchCard({
   onTruck,
   onBuy,
   onIncubator,
+  onOrders,
+  onBear,
 }: {
   game: Farm.GameState;
   onCollect: () => void;
@@ -239,7 +241,11 @@ export function RanchCard({
   onTruck: () => void;
   onBuy: () => void;
   onIncubator: () => void;
+  onOrders: () => void;
+  onBear: () => void;
 }) {
+  const bear = game.ranch.bear ?? null;
+  const fillable = (game.ranch.orders ?? []).filter((order) => Farm.canFillOrder(game, order)).length;
   const drops = game.ranch.drops.length;
   const waiting = game.ranch.animals.filter((animal) => Farm.animalSecondsLeft(game, animal) === null).length;
   const ready = Object.values(game.ranch.workshops).reduce((sum, item) => sum + (item?.ready ?? 0), 0);
@@ -256,14 +262,17 @@ export function RanchCard({
         {ready ? <span>⭐ {ready} thành phẩm</span> : null}
         {hatched ? <span>🐣 {hatched} con non đã nở</span> : null}
         {needTurn ? <span className="fg-warn">🔄 Lò ấp cần đảo trứng</span> : null}
+        {bear ? <span className="fg-warn">🐻 Gấu vào trại! Con vật ngừng ăn, ngừng đẻ{game.ranch.dog ? " · chó đang đuổi" : ""}</span> : null}
         <span>{truck ? `🚚 Về sau ${Farm.formatDuration((truck.returnAt - game.lastTick) / 1000)}` : "🚚 Xe ở trại"}</span>
       </div>
       <div className="fg-card__actions">
+        {bear ? <button type="button" className="fg-bear" onClick={onBear}>🐻 Nhốt gấu ({bear.taps}/{Farm.BEAR.taps})</button> : null}
         <button type="button" onClick={onCollect} disabled={drops === 0}>🧺 Nhặt ({drops})</button>
         <button type="button" onClick={onMill}>🥣 Thức ăn</button>
         <button type="button" onClick={onWorkshops}>🏭 Xưởng</button>
         <button type="button" onClick={onIncubator}>🥚 Lò ấp{eggs.length ? ` (${eggs.length})` : ""}</button>
         <button type="button" onClick={onTruck}>🚚 Lên phố</button>
+        <button type="button" onClick={onOrders}>📦 Đơn hàng{fillable ? ` (${fillable})` : ""}</button>
         <button type="button" onClick={onBuy}>🐣 Mua con</button>
       </div>
     </div>
