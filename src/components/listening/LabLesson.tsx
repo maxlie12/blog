@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { PronounceButton } from "@/components/PronounceButton";
 import { dateInLearningTimezone, getLocalCompletionSummary, recordLocalCompletion } from "@/lib/localLearningProgress";
 import {
-  PART_WEIGHTS, WRITING_CHECKLIST, gradeLabel, isComplete, labTotal, withLessonResult, writeScore, writingCheck,
+  PART_WEIGHTS, WRITING_CHECKLIST, drillLines, gradeLabel, isComplete, labTotal, withLessonResult, writeScore, writingCheck,
   type LabLesson as Lesson, type LabParts,
 } from "@/lib/listeningLab";
 import { useLearnerProfile } from "@/lib/useLearnerProfile";
@@ -131,7 +131,12 @@ export function LabLesson({ lesson, levelName, next }: { lesson: Lesson; levelNa
 
         {step === 2 && (
           <>
-            <p className="ll-how">Đọc lời thoại (bấm loa để nghe từng câu), rồi trả lời câu hỏi đọc hiểu. Câu nào ở bước Nghe bạn trả lời sai, tìm lại trong lời thoại.</p>
+            {lesson.textKind === "summary" ? (
+              <p className="ll-how">Bài đọc dưới đây là bản tóm tắt bài nghe bằng tiếng Anh đơn giản (Phòng nghe viết lại). Đọc rồi trả lời câu hỏi đọc hiểu.
+                {lesson.sourceUrl && <> Lời gốc đầy đủ: <a href={lesson.sourceUrl} target="_blank" rel="noopener noreferrer">mở bài trên VOA</a>.</>}</p>
+            ) : (
+              <p className="ll-how">Đọc lời thoại (bấm loa để nghe từng câu), rồi trả lời câu hỏi đọc hiểu. Câu nào ở bước Nghe bạn trả lời sai, tìm lại trong lời thoại.</p>
+            )}
             <ol className="ll-transcript">
               {lesson.transcript.map((line, index) => (
                 <li key={index}>{line.s && <strong>{line.s}:</strong>} {line.t} <PronounceButton text={line.t} /></li>
@@ -146,7 +151,7 @@ export function LabLesson({ lesson, levelName, next }: { lesson: Lesson; levelNa
             <h3>A. Chính tả ({lesson.dictation.length} câu, máy chấm)</h3>
             <p className="ll-how">Nghe một câu trong bài và gõ lại. Không cần viết hoa hay dấu câu.</p>
             {lesson.dictation.map((line, index) => (
-              <DictationLine key={line} n={index + 1} line={lesson.transcript[line]} rate={rate}
+              <DictationLine key={line} n={index + 1} line={drillLines(lesson)[line]} rate={rate}
                 onScore={(value) => setDict((old) => old.map((item, i) => (i === index ? value : item)))} />
             ))}
             <h3>B. Viết ngắn (tự chấm)</h3>
@@ -179,7 +184,7 @@ export function LabLesson({ lesson, levelName, next }: { lesson: Lesson; levelNa
           <>
             <p className="ll-how">Nghe mẫu, nói theo (bắt chước nhịp và chỗ nhấn), ghi âm rồi nghe lại và tự chấm từng câu.</p>
             {lesson.speaking.map((line, index) => (
-              <SpeakLine key={line} n={index + 1} line={lesson.transcript[line]} rate={rate} rating={ratings[index]}
+              <SpeakLine key={line} n={index + 1} line={drillLines(lesson)[line]} rate={rate} rating={ratings[index]}
                 onRate={(value) => {
                   const next = ratings.map((item, i) => (i === index ? value : item));
                   setRatings(next);

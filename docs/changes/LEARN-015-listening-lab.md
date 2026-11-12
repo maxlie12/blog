@@ -35,6 +35,18 @@ trên trang, không có câu hỏi chấm điểm, không rõ tiến độ lưu 
   phần, Dễ → Khó) và một nút "Tất cả bài · luyện đề"; StartLearning (Daily, tiếng Trung) ở ngay
   dưới. Trang danh sách có mục "Học thế nào" và "Lưu ở đâu".
 
+## Follow-up (2026-11-12): 6 bài VOA giọng thật
+
+- Owner: "chọn random được chứ" — tự chọn bài VOA. Thêm 2 bài mỗi mức (tổng 18): Dễ — Let's
+  Learn English bài 2 và 15; Vừa — anh em nhà Wright, nguyệt thực toàn phần; Khó — quỹ đạo Trái
+  Đất và kỷ băng hà, vì sao Sao Hoả đỏ.
+- Audio là mp3 của VOA (`voa-audio.voanews.eu`, public domain), chỉnh được tốc độ; ghi nguồn và
+  link bài gốc. Công cụ đọc web chỉ cho trích ngắn, nên bài đọc của các bài này là bản tóm tắt
+  tiếng Anh đơn giản do Phòng nghe viết lại (ghi rõ trên trang, link lời gốc đầy đủ); câu chính
+  tả/nói theo (`drill`) trích nguyên văn từ bài. Câu hỏi, từ vựng (có dùng "Words in This Story")
+  và đề viết do dự án soạn.
+- Nếu mp3 không tải được, trình phát báo lỗi và đưa link bài gốc.
+
 ## Scope
 
 ### May edit
@@ -75,6 +87,10 @@ trên trang, không có câu hỏi chấm điểm, không rõ tiến độ lưu 
       trọn 4 phần, chấm, xem lại, lịch sử; không cuộn ngang; mọi nút/ô chọn ≥ 44 px; không lỗi
       trang.
 - [x] Vercel build + production deploy (`469453b`).
+- [x] Follow-up VOA: `listeningLab.test.ts` 6 pass (18 bài, 6 bài mỗi mức, 2 bài VOA mỗi mức, link
+      mp3/nguồn đúng dạng, câu chính tả trong `drill`); trình duyệt 47/47 (thêm: bài VOA phát mp3
+      VOA, ghi nguồn, tốc độ áp vào audio, ghi chú tóm tắt + link, chính tả đọc câu trích).
+- [ ] Vercel build + production deploy (follow-up).
 
 ## Result
 
@@ -84,8 +100,9 @@ trên trang, không có câu hỏi chấm điểm, không rõ tiến độ lưu 
   `docs/STATUS.md`.
 - **Found while checking:** hàng bước cuộn ngang trên điện thoại giấu mất bước đang làm (bước 6
   nằm ngoài màn hình): giờ tự cuộn tới bước hiện tại.
-- **Not checked / remaining risk:** chưa có mp3 VOA thật — máy build không mở được trang VOA, nên
-  audio là giọng đọc của trình duyệt (chất lượng tuỳ máy; iPhone/Chrome có giọng en-US tốt).
+- **Not checked / remaining risk:** chưa phát thử được mp3 VOA từ máy build (không có mạng ra
+  ngoài); link lấy từ chính trang bài VOA. VOA ngừng ra bài mới từ 3/2025, kho bài cũ vẫn online.
+  12 bài tự soạn dùng giọng đọc của trình duyệt (chất lượng tuỳ máy).
   Chưa thử giọng thật, micro và chép lời trên điện thoại thật. Điểm Phòng nghe chưa nằm trong
   file sao lưu JSON của tiến độ (Done thì có). Mức Dễ/Vừa/Khó ghi "khoảng A2/B1/B2" là độ khó
   của bài, không phải đánh giá người học.

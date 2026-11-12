@@ -42,7 +42,7 @@ export function LabEntry() {
   return (
     <section className="ll-entry" aria-labelledby="ll-entry-title">
       <div>
-        <p className="eyebrow">TIẾNG ANH · PHÒNG NGHE · 10–15 PHÚT</p>
+        <p className="eyebrow">TIẾNG ANH · PHÒNG NGHE · 10–20 PHÚT</p>
         <h2 id="ll-entry-title">Bài {ALL.indexOf(next) + 1}: {next.title}</h2>
         <p>{levelName(next)} · {next.titleVi}. Mỗi bài: từ vựng → nghe → đọc → viết → nói, có chấm điểm.</p>
         <small aria-live="polite">{store ? `${done}/${ALL.length} bài đã xong${lastTest ? ` · đề gần nhất ${percent(lastTest.score / lastTest.total)}` : ""}` : "Đang đọc tiến độ trên máy…"}</small>
@@ -64,7 +64,7 @@ export function LabIndex() {
       <section className="ll-guide" aria-labelledby="ll-guide-title">
         <h2 id="ll-guide-title">Học thế nào</h2>
         <ol>
-          <li>Bắt đầu từ mức <strong>Dễ</strong>, làm bài theo thứ tự. Mỗi bài 10–15 phút.</li>
+          <li>Bắt đầu từ mức <strong>Dễ</strong>, làm bài theo thứ tự. Mỗi bài 10–20 phút; bài có nhãn VOA là giọng thật.</li>
           <li>Mỗi bài có 6 bước cố định: <strong>Từ vựng → Nghe → Đọc → Viết → Nói → Kết quả</strong>. Nghe, Đọc và chính tả máy chấm; viết ngắn và nói bạn tự chấm theo bài mẫu.</li>
           <li>Làm đủ 4 phần thì bấm <strong>Lưu &amp; Done</strong>. Điểm dưới 60% thì nên học lại bài đó hôm sau.</li>
           <li>Xong 3–4 bài của một mức thì làm <strong>Luyện đề</strong> mức đó; đề đổi theo ngày.</li>
@@ -95,7 +95,7 @@ export function LabIndex() {
                       <span className="ll-card__n">{ALL.indexOf(lesson) + 1}</span>
                       <span className="ll-card__body">
                         <strong>{lesson.title}</strong>
-                        <span>{lesson.titleVi} · {lesson.minutes} phút</span>
+                        <span>{lesson.titleVi} · {lesson.minutes} phút{lesson.audioUrl ? " · VOA giọng thật" : ""}</span>
                         <small>{store ? s.label : "…"}</small>
                       </span>
                     </Link>

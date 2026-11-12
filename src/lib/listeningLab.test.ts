@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  LEVELS, WRITING_CHECKLIST, buildTest, compareDictation, emptyLabStore, isComplete, labLesson, labLessons, labTotal,
+  LEVELS, WRITING_CHECKLIST, buildTest, compareDictation, drillLines, emptyLabStore, isComplete, labLesson, labLessons, labTotal,
   nextLabLesson, parseLabStore, withLessonResult, withTestResult, writeScore, writingCheck, type LabParts,
 } from "./listeningLab.ts";
 
@@ -19,10 +19,19 @@ test("every lesson is complete and its answers and line numbers are in range", (
       assert.equal(item.a.length, 4, item.q);
       assert.ok(item.c >= 0 && item.c < 4 && item.why, item.q);
     }
-    for (const line of [...lesson.dictation, ...lesson.speaking]) assert.ok(lesson.transcript[line], `${lesson.id} line ${line}`);
+    for (const line of [...lesson.dictation, ...lesson.speaking]) assert.ok(drillLines(lesson)[line], `${lesson.id} line ${line}`);
+    if (lesson.audioUrl) {
+      assert.match(lesson.audioUrl, /^https:\/\/voa-audio\.voanews\.eu\/vle\/.+\.mp3$/, lesson.id);
+      assert.ok(lesson.sourceUrl?.startsWith("https://learningenglish.voanews.com/") && lesson.source, `${lesson.id} credits VOA`);
+      assert.equal(lesson.textKind, "summary", `${lesson.id} reading text is our summary`);
+    }
     assert.ok(lesson.write?.prompt && lesson.write.model, `${lesson.id} writing`);
   }
-  for (const level of LEVELS) assert.ok(labLessons(level.id).length >= 3, level.id);
+  for (const level of LEVELS) {
+    assert.equal(labLessons(level.id).length, 6, level.id);
+    assert.equal(labLessons(level.id).filter((lesson) => lesson.audioUrl).length, 2, `${level.id} VOA lessons`);
+  }
+  assert.deepEqual([...new Set(labLessons().map((lesson) => lesson.level))], ["easy", "medium", "hard"], "lessons run easy → hard");
   assert.equal(labLesson("nope"), null);
 });
 
@@ -60,7 +69,8 @@ test("a test is the same for the same day and uses two different lessons of its 
       if (level) for (const id of a.lessonIds) assert.equal(labLesson(id)!.level, level);
       assert.ok(a.questions.length >= 6 && a.dictations.length === 2);
       for (const q of a.questions) assert.ok(labLesson(q.lessonId)![q.kind][q.index], "question exists");
-      assert.ok(labLesson(a.speaking.lessonId)!.transcript[a.speaking.line]);
+      for (const d of a.dictations) assert.ok(drillLines(labLesson(d.lessonId)!)[d.line]);
+      assert.ok(drillLines(labLesson(a.speaking.lessonId)!)[a.speaking.line]);
     }
   }
 });

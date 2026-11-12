@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState, useSyncExternalStore } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { SpeakingRecorder } from "@/components/SpeakingRecorder";
 import { readProfileStorage, writeProfileStorage } from "@/lib/learnerProfiles";
 import {
@@ -98,13 +98,21 @@ export function LabPlayer({ lesson, rate, onRate }: { lesson: LabLesson; rate: n
   const supported = useSpeechSupported();
   const [line, setLine] = useState<number | null>(null);
   const [plays, setPlays] = useState(0);
+  const [failed, setFailed] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
   useEffect(() => stopSpeech, []);
+  useEffect(() => { if (audioRef.current) audioRef.current.playbackRate = rate; }, [rate]);
 
   if (lesson.audioUrl) {
     return (
       <div className="ll-player">
-        <audio controls preload="none" src={lesson.audioUrl} onPlay={() => setPlays((n) => n + 1)} />
-        {lesson.source && <small>Nguồn: {lesson.source}</small>}
+        <audio ref={audioRef} controls preload="none" src={lesson.audioUrl} aria-label={`Audio bài ${lesson.title}`}
+          onPlay={(event) => { event.currentTarget.playbackRate = rate; setPlays((n) => n + 1); }} onError={() => setFailed(true)} />
+        <RatePicker rate={rate} onRate={onRate} />
+        <p className="ll-note" aria-live="polite">
+          {failed ? <>Không tải được audio từ VOA. </> : plays ? `Đã nghe ${plays} lần · ` : "Giọng thật của VOA · "}
+          {lesson.source}{lesson.sourceUrl && <> · <a href={lesson.sourceUrl} target="_blank" rel="noopener noreferrer">bài gốc</a></>}
+        </p>
       </div>
     );
   }

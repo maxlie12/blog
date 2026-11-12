@@ -2,6 +2,15 @@
 
 Last verified: 2026-11-12 (English listening lab; unit tests and harness browser check).
 
+## 2026-11-12 — Phòng nghe: six VOA Learning English lessons with real audio
+
+- 18 lessons now: each level adds two VOA lessons (Let's Learn English 2 and 15; the Wright
+  brothers, a lunar eclipse; ice ages, why Mars is red) that play VOA's own mp3 with a speed
+  control, credit and a link to the original. Their reading text is a plain-English summary;
+  dictation and speaking use exact sentences from the story.
+- Checks: `listeningLab.test.ts` (6), ESLint; browser check 47/47. The mp3 links were not played
+  from the build machine (no outside network).
+
 ## 2026-11-12 — English: Phòng nghe (listening lab) with 4 skills and practice tests
 
 - `/learning/listening`: 12 short lessons in three levels (Dễ, Vừa, Khó). Each lesson is one page

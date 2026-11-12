@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
-  buildTest, compareDictation, gradeLabel, labLesson, withTestResult, type LabLevel, type LabTestRecord,
+  buildTest, compareDictation, drillLines, gradeLabel, labLesson, withTestResult, type LabLevel, type LabTestRecord,
 } from "@/lib/listeningLab";
 import { useLearnerProfile } from "@/lib/useLearnerProfile";
 import { ChoiceQuestion, LabPlayer, LAB_CHANGED, SpeakLine, loadLab, percent, saveLab, speakLines, stopSpeech, useSpeechSupported } from "./labShared";
@@ -68,7 +68,7 @@ export function LabTest({ date, level, levelName }: { date: string; level?: LabL
   function submit() {
     stopSpeech();
     const right = ordered.filter((q, index) => picked[index] === labLesson(q.lessonId)![q.kind][q.index].c).length;
-    const dictation = test.dictations.reduce((sum, item, index) => sum + compareDictation(labLesson(item.lessonId)!.transcript[item.line].t, typed[index] ?? "").score, 0);
+    const dictation = test.dictations.reduce((sum, item, index) => sum + compareDictation(drillLines(labLesson(item.lessonId)!)[item.line].t, typed[index] ?? "").score, 0);
     const record: LabTestRecord = {
       date, level, minutes: minutesSince(started), speak: rating,
       score: Math.round((right + dictation) * 10) / 10, total: ordered.length + test.dictations.length,
@@ -132,6 +132,7 @@ export function LabTest({ date, level, levelName }: { date: string; level?: LabL
       {section === 1 && lessons.map((lesson, li) => (
         <div key={lesson.id} className="ll-test-part">
           <h3>Bài {li === 0 ? "A" : "B"}: {lesson.title}</h3>
+          {lesson.textKind === "summary" && <p className="ll-note">Bản tóm tắt bài nghe bằng tiếng Anh đơn giản.</p>}
           <ol className="ll-transcript">
             {lesson.transcript.map((line, index) => <li key={index}>{line.s && <strong>{line.s}:</strong>} {line.t}</li>)}
           </ol>
@@ -140,7 +141,7 @@ export function LabTest({ date, level, levelName }: { date: string; level?: LabL
       ))}
 
       {section === 2 && test.dictations.map((item, index) => {
-        const line = labLesson(item.lessonId)!.transcript[item.line];
+        const line = drillLines(labLesson(item.lessonId)!)[item.line];
         return (
           <div key={index} className="ll-dict">
             <div className="ll-player__row">
@@ -155,7 +156,7 @@ export function LabTest({ date, level, levelName }: { date: string; level?: LabL
       })}
 
       {section === 3 && (() => {
-        const line = labLesson(test.speaking.lessonId)!.transcript[test.speaking.line];
+        const line = drillLines(labLesson(test.speaking.lessonId)!)[test.speaking.line];
         return <SpeakLine n={1} line={line} rate={rate} rating={rating} onRate={setRating} />;
       })()}
 
@@ -181,7 +182,7 @@ export function LabTest({ date, level, levelName }: { date: string; level?: LabL
           {ordered.map((_, index) => question(index))}
           <h3>Chính tả</h3>
           {test.dictations.map((item, index) => {
-            const line = labLesson(item.lessonId)!.transcript[item.line].t;
+            const line = drillLines(labLesson(item.lessonId)!)[item.line].t;
             const check = compareDictation(line, typed[index] ?? "");
             return (
               <div key={index} className="ll-dict__result">

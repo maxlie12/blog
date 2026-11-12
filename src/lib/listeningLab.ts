@@ -1,9 +1,9 @@
 /**
  * Phòng nghe (Listening Lab): bài nghe tiếng Anh có cấu trúc cố định kiểu ESL Lab, học đủ
- * 4 kĩ năng trên một trang: từ vựng → nghe (trắc nghiệm) → đọc transcript (đọc hiểu) → viết
- * chính tả → nói theo. Toàn bộ hội thoại, câu hỏi và lời giải do dự án tự soạn (không chép
- * nguồn có bản quyền). Audio mặc định đọc bằng giọng máy của trình duyệt; một bài có thể gắn
- * `audioUrl` (mp3 thật, ví dụ VOA — public domain) khi có mạng để lấy link.
+ * 4 kĩ năng trên một trang: từ vựng → nghe (trắc nghiệm) → đọc (đọc hiểu) → viết (chính tả +
+ * viết ngắn) → nói theo. 12 bài hội thoại do dự án tự soạn, đọc bằng giọng máy của trình duyệt;
+ * 6 bài VOA Learning English (public domain) phát mp3 thật của VOA, bài đọc là bản tóm tắt
+ * viết lại, câu chính tả/nói theo trích nguyên văn. Câu hỏi và lời giải đều do dự án soạn.
  *
  * Kết quả lưu ngay trên máy (localStorage của hồ sơ học đang chọn, không gửi đi đâu); Done/streak
  * ghi qua `recordLocalCompletion` ở trang bài. Điểm ở đây là tự luyện, không chứng nhận CEFR.
@@ -45,19 +45,24 @@ export interface LabLesson {
   transcript: LabLine[];
   listening: LabChoice[];
   reading: LabChoice[];
-  /** Chỉ số dòng transcript dùng cho chính tả và nói theo. */
+  /** "summary": bài đọc là bản tóm tắt viết lại của audio thật (lời gốc ở `sourceUrl`). */
+  textKind?: "dialogue" | "summary";
+  /** Câu trích nguyên văn từ audio, dùng cho chính tả và nói theo; mặc định là `transcript`. */
+  drill?: LabLine[];
+  /** Chỉ số dòng trong `drillLines(bài)` dùng cho chính tả và nói theo. */
   dictation: number[];
   speaking: number[];
   /** Viết tự do: đề tiếng Anh và một bài mẫu để so. */
   write: { prompt: string; model: string };
   audioUrl?: string;
   source?: string;
+  sourceUrl?: string;
 }
 
 export const LEVELS: { id: LabLevel; name: string; cefr: string; blurb: string }[] = [
-  { id: "easy", name: "Dễ", cefr: "A2", blurb: "Hội thoại ngắn hằng ngày, nói chậm, câu đơn." },
-  { id: "medium", name: "Vừa", cefr: "B1", blurb: "Hội thoại dài hơn và bản tin ngắn, có chi tiết cần dò." },
-  { id: "hard", name: "Khó", cefr: "B2", blurb: "Chuyện kể, bản tin khoa học và họp nhóm nhiều người nói." },
+  { id: "easy", name: "Dễ", cefr: "A2", blurb: "Hội thoại ngắn hằng ngày, nói chậm, câu đơn; 2 bài VOA Let's Learn English giọng thật." },
+  { id: "medium", name: "Vừa", cefr: "B1", blurb: "Hội thoại dài hơn và bản tin ngắn, có chi tiết cần dò; 2 bài VOA (lịch sử, thiên văn)." },
+  { id: "hard", name: "Khó", cefr: "B2", blurb: "Chuyện kể, họp nhóm nhiều người nói; 2 bản tin khoa học VOA tốc độ gần tự nhiên." },
 ];
 
 /* ───────────────────────────── bài học ───────────────────────────── */
@@ -554,6 +559,313 @@ const RAW_LESSONS: Omit<LabLesson, "write">[] = [
     dictation: [0, 7],
     speaking: [2, 7, 9],
   },
+  /* ── Bài VOA Learning English: audio thật (public domain), bài đọc là bản tóm tắt viết lại,
+        câu chính tả/nói theo trích nguyên văn (`drill`). ── */
+  {
+    id: "e5-voa-hello-anna",
+    level: "easy",
+    title: "Hello! I'm Anna",
+    titleVi: "Chào hàng xóm mới",
+    minutes: 10,
+    intro: "VOA Let's Learn English, bài 2: Anna mới đến Washington, D.C. và gặp hàng xóm ở toà chung cư.",
+    vocab: [
+      { w: "new", pos: "adj", vi: "mới (vừa đến)", ex: "She is new to the city." },
+      { w: "small town", pos: "n", vi: "thị trấn nhỏ", ex: "I am from a small town." },
+      { w: "apartment", pos: "n", vi: "căn hộ", ex: "I live in apartment C2." },
+      { w: "roommate", pos: "n", vi: "bạn ở cùng phòng/căn hộ", ex: "Marsha is my roommate." },
+      { w: "welcome", pos: "v", vi: "chào đón", ex: "Welcome to our building!" },
+    ],
+    textKind: "summary",
+    transcript: [
+      { t: "Anna is new to Washington, D.C." },
+      { t: "Her friend Pete introduces her to Jonathan, a neighbor in their apartment building." },
+      { t: "Jonathan asks Anna where she is from. She is from a small town." },
+      { t: "Jonathan lives in apartment B4." },
+      { t: "Anna lives in apartment C2 with her roommate, Marsha." },
+      { t: "Jonathan knows Marsha. He says she is nice." },
+      { t: "Pete lives in apartment D7. He has to go." },
+      { t: "Before he leaves, Pete tells Anna to call Marsha at work." },
+      { t: "Anna thanks Pete and goes to her apartment." },
+    ],
+    drill: [
+      { s: "Jonathan", t: "Hey, Pete! Who’s your friend?" },
+      { s: "Pete", t: "She is Anna. She is new to D.C." },
+      { s: "Jonathan", t: "Where are you from?" },
+      { s: "Anna", t: "I am from a small town." },
+      { s: "Jonathan", t: "Well, welcome to D.C." },
+    ],
+    listening: [
+      { q: "Who is new to Washington, D.C.?", a: ["Pete", "Jonathan", "Anna", "Marsha"], c: 2, why: "Pete giới thiệu: She is Anna. She is new to D.C." },
+      { q: "Where is Anna from?", a: ["A big city", "A small town", "Another country", "New York"], c: 1, why: "I am from a small town." },
+      { q: "Which apartment does Anna live in?", a: ["B4", "D7", "C2", "A1"], c: 2, why: "Jonathan ở B4, Pete ở D7, Anna ở C2." },
+      { q: "What does Pete tell Anna to do?", a: ["Call Marsha at work", "Go to the store", "Meet him later", "Find a new apartment"], c: 0, why: "Pete nhắc Anna gọi cho Marsha ở chỗ làm." },
+    ],
+    reading: [
+      { q: "Who is Marsha?", a: ["Anna's boss", "Anna's roommate", "Pete's sister", "Jonathan's coworker"], c: 1, why: "Anna lives in apartment C2 with her roommate, Marsha." },
+      { q: "What does Jonathan say about Marsha?", a: ["She is busy", "She is new", "She is nice", "She is from a small town"], c: 2, why: "He says she is nice." },
+      { q: "Who lives in apartment B4?", a: ["Jonathan", "Pete", "Anna", "Marsha"], c: 0, why: "Jonathan lives in apartment B4." },
+    ],
+    dictation: [1, 3],
+    speaking: [0, 2, 4],
+    audioUrl: "https://voa-audio.voanews.eu/vle/2016/02/10/56246d7b-5fa4-42d2-90b0-d403e6b46227.mp3",
+    source: "VOA Learning English — Let's Learn English, Lesson 2",
+    sourceUrl: "https://learningenglish.voanews.com/a/lets-learn-english-lesson-2-hello/3113733.html",
+  },
+  {
+    id: "e6-voa-people-watching",
+    level: "easy",
+    title: "I Love People Watching",
+    titleVi: "Ngắm người qua lại",
+    minutes: 12,
+    intro: "VOA Let's Learn English, bài 15: giờ nghỉ trưa, Anna và bạn bè tả ngoại hình của nhau và của sếp.",
+    vocab: [
+      { w: "tall", pos: "adj", vi: "cao", ex: "Anna is tall." },
+      { w: "short", pos: "adj", vi: "thấp", ex: "Ashley and Keyana are short." },
+      { w: "straight hair", pos: "n", vi: "tóc thẳng", ex: "Ashley has straight hair." },
+      { w: "curly hair", pos: "n", vi: "tóc xoăn", ex: "Keyana has curly hair." },
+      { w: "glasses", pos: "n", vi: "kính (đeo mắt)", ex: "My boss wears glasses." },
+      { w: "hurry", pos: "v", vi: "vội, làm gấp", ex: "No need to hurry." },
+    ],
+    textKind: "summary",
+    transcript: [
+      { t: "It is a sunny day in Washington, D.C." },
+      { t: "Anna and her friend Ashley eat lunch outside and watch people walk by." },
+      { t: "Keyana, who works with Anna, joins them." },
+      { t: "They talk about how they look. Anna is tall, but Ashley and Keyana are short." },
+      { t: "Ashley has straight hair. Keyana and Anna have curly hair." },
+      { t: "Then Keyana goes back to work." },
+      { t: "Ashley asks about Anna's boss. Anna says her boss is short, has straight, light hair and wears glasses." },
+      { t: "Then the boss, Ms. Weaver, walks toward them, and Anna hides behind a bench!" },
+      { t: "Ms. Weaver finds her. She says there is no need to hurry, and she sits down to people-watch too." },
+    ],
+    drill: [
+      { s: "Anna", t: "Hello! People from all over the world come to Washington, D.C." },
+      { s: "Keyana", t: "For example, Anna, you are tall. But Ashley and I are short." },
+      { s: "Anna", t: "Ashley, you have straight hair. Keyana and I have curly hair." },
+      { s: "Ms. Weaver", t: "No need to hurry. I love people-watching too!" },
+    ],
+    listening: [
+      { q: "Where do Anna and Ashley have lunch?", a: ["In the office", "Outside", "At a restaurant", "At home"], c: 1, why: "Hai người ăn trưa ngoài trời và ngắm người đi qua." },
+      { q: "Who is tall?", a: ["Ashley", "Keyana", "Anna", "Ms. Weaver"], c: 2, why: "Anna, you are tall. But Ashley and I are short." },
+      { q: "What does Anna's boss wear?", a: ["A hat", "Glasses", "A red coat", "A uniform"], c: 1, why: "Sếp của Anna đeo kính." },
+      { q: "What does Anna do when her boss comes?", a: ["She says hello", "She hides", "She goes back to work", "She calls Ashley"], c: 1, why: "Anna trốn sau ghế băng." },
+    ],
+    reading: [
+      { q: "Who has curly hair?", a: ["Ashley and Keyana", "Anna and Ashley", "Keyana and Anna", "Only Ms. Weaver"], c: 2, why: "Keyana and Anna have curly hair." },
+      { q: "What is the boss's hair like?", a: ["Curly and dark", "Straight and light", "Short and curly", "Long and red"], c: 1, why: "...has straight, light hair." },
+      { q: "What does Ms. Weaver do at the end?", a: ["She tells Anna to hurry", "She goes back to the office", "She sits down to people-watch", "She eats lunch with Keyana"], c: 2, why: "She sits down to people-watch too." },
+    ],
+    dictation: [1, 2],
+    speaking: [0, 2, 3],
+    audioUrl: "https://voa-audio.voanews.eu/vle/2016/05/31/b08ceeac-8274-4e2d-b678-2cd30ba31f4f.mp3",
+    source: "VOA Learning English — Let's Learn English, Lesson 15",
+    sourceUrl: "https://learningenglish.voanews.com/a/lets-learn-english-lesson-15-i-love-people-watching/3343720.html",
+  },
+  {
+    id: "m5-voa-wright-brothers",
+    level: "medium",
+    title: "Wilbur and Orville Wright: The First Airplane",
+    titleVi: "Anh em nhà Wright và chiếc máy bay đầu tiên",
+    minutes: 15,
+    intro: "VOA Learning English (All About America): hai anh em người Mỹ làm ra chiếc máy bay có động cơ đầu tiên.",
+    vocab: [
+      { w: "glider", pos: "n", vi: "tàu lượn (máy bay không động cơ)", ex: "A glider has no engine." },
+      { w: "flight", pos: "n", vi: "chuyến bay", ex: "The first flight lasted 12 seconds." },
+      { w: "wing", pos: "n", vi: "cánh (máy bay, chim)", ex: "The plane had wings 12 meters across." },
+      { w: "demonstration", pos: "n", vi: "buổi trình diễn", ex: "Wilbur gave flying demonstrations in France." },
+      { w: "modest", pos: "adj", vi: "khiêm tốn", ex: "They became famous but stayed modest." },
+    ],
+    textKind: "summary",
+    transcript: [
+      { t: "Wilbur and Orville Wright were American brothers." },
+      { t: "Wilbur was born in 1867 in Indiana. Orville was born four years later in Ohio." },
+      { t: "They wanted to show that a machine heavier than air could fly." },
+      { t: "First, they tested their ideas with gliders at Kitty Hawk, North Carolina." },
+      { t: "On December 17, 1903, Orville made the first powered flight. He was in the air for 12 seconds." },
+      { t: "In 1908, Wilbur flew for crowds in France, and the United States military bought a Wright plane." },
+      { t: "The brothers became famous, but they stayed modest and kept improving their planes." },
+      { t: "They also taught other people to fly." },
+      { t: "Wilbur died in 1912. Orville died in 1948." },
+      { t: "Their first airplane is now in the Air and Space Museum in Washington, D.C." },
+    ],
+    drill: [
+      { t: "Wilbur Wright was born in 1867 near Melville, Indiana." },
+      { t: "His brother Orville was born four years later in Dayton, Ohio." },
+      { t: "The plane had wings 12 meters across." },
+      { t: "Orville flew the plane 36 meters." },
+      { t: "He was in the air for 12 seconds." },
+    ],
+    listening: [
+      { q: "Where did the brothers test their gliders?", a: ["Dayton, Ohio", "Kitty Hawk, North Carolina", "Washington, D.C.", "Paris, France"], c: 1, why: "Họ thử tàu lượn ở Kitty Hawk, North Carolina." },
+      { q: "Who made the first powered flight?", a: ["Wilbur", "Orville", "Both brothers together", "A French pilot"], c: 1, why: "Orville bay chuyến có động cơ đầu tiên ngày 17/12/1903." },
+      { q: "How long was the first flight?", a: ["12 minutes", "36 seconds", "12 seconds", "One hour"], c: 2, why: "He was in the air for 12 seconds. (36 là số mét bay được.)" },
+      { q: "Where is the first Wright airplane today?", a: ["In a museum in Ohio", "At Kitty Hawk", "In France", "In the Air and Space Museum in Washington, D.C."], c: 3, why: "Chiếc máy bay đầu tiên đang ở Bảo tàng Hàng không và Vũ trụ, Washington." },
+    ],
+    reading: [
+      { q: "How much older was Wilbur than Orville?", a: ["One year", "Two years", "Four years", "Twelve years"], c: 2, why: "Orville was born four years later." },
+      { q: "What happened in 1908?", a: ["Orville was born", "Wilbur flew for crowds in France", "They built their first glider", "Wilbur died"], c: 1, why: "In 1908, Wilbur flew for crowds in France." },
+      { q: "\"They stayed modest\" means they…", a: ["did not act proud", "stopped flying", "became very rich", "moved to France"], c: 0, why: "modest = khiêm tốn, không khoe khoang." },
+    ],
+    dictation: [1, 3],
+    speaking: [0, 2, 4],
+    audioUrl: "https://voa-audio.voanews.eu/vle/2025/03/05/e897fcf6-3ce1-4da9-a5cf-08dd5afe0892.mp3",
+    source: "VOA Learning English — Marilyn Rice Christiano, adapted by John Russell",
+    sourceUrl: "https://learningenglish.voanews.com/a/wilbur-and-orville-wright-the-first-airplane/7998765.html",
+  },
+  {
+    id: "m6-voa-lunar-eclipse",
+    level: "medium",
+    title: "Total Lunar Eclipse to Turn Moon Red",
+    titleVi: "Nguyệt thực toàn phần làm Mặt Trăng đỏ",
+    minutes: 15,
+    intro: "VOA Learning English (Science & Technology): nguyệt thực là gì, vì sao gọi là “trăng máu”, ở đâu nhìn thấy được.",
+    vocab: [
+      { w: "eclipse", pos: "n", vi: "hiện tượng thực (nhật thực, nguyệt thực)", ex: "A lunar eclipse happens at night." },
+      { w: "lunar", pos: "adj", vi: "thuộc Mặt Trăng", ex: "A lunar eclipse is called nguyệt thực." },
+      { w: "shadow", pos: "n", vi: "cái bóng", ex: "Earth's shadow falls on the Moon." },
+      { w: "atmosphere", pos: "n", vi: "khí quyển", ex: "Some sunlight passes through Earth's atmosphere." },
+      { w: "curved", pos: "adj", vi: "cong", ex: "The shadow always looked curved." },
+      { w: "equipment", pos: "n", vi: "thiết bị", ex: "You need no special equipment." },
+    ],
+    textKind: "summary",
+    transcript: [
+      { t: "A total lunar eclipse will make the Moon look red over North and South America." },
+      { t: "A lunar eclipse happens when Earth is between the Sun and the Moon, and Earth's shadow falls on the Moon." },
+      { t: "In a total lunar eclipse, the shadow covers the whole Moon." },
+      { t: "A solar eclipse is different: the Moon blocks sunlight from reaching Earth." },
+      { t: "People also call a total lunar eclipse a \"blood moon\" because of its red-orange color." },
+      { t: "The color comes from a little sunlight that passes through Earth's atmosphere." },
+      { t: "This eclipse can be seen for about one hour. You need a clear sky, but no special equipment." },
+      { t: "It is harder to see in Europe and Africa because the Moon is close to setting there." },
+      { t: "Long ago, the Greek thinker Aristotle saw that Earth's shadow on the Moon was always curved. This supported the idea that Earth is round." },
+      { t: "Lunar and solar eclipses happen four to seven times a year." },
+    ],
+    drill: [
+      { t: "A total lunar eclipse is about to make the moon appear a reddish color across the Western Hemisphere." },
+      { t: "A total lunar eclipse can also be called a blood moon." },
+      { t: "The American space agency NASA says lunar and solar eclipses happen between four and seven times a year." },
+      { t: "As long as the sky is clear, you should be able to see it." },
+      { t: "The total lunar eclipse may be harder to see in Europe and Africa because the moon will be close to setting." },
+    ],
+    listening: [
+      { q: "Where will the eclipse be easiest to see?", a: ["Asia and Australia", "North and South America", "Europe and Africa", "Only in Texas"], c: 1, why: "Rõ nhất ở Bắc và Nam Mỹ (Tây bán cầu)." },
+      { q: "What is another name for a total lunar eclipse?", a: ["A blue moon", "A blood moon", "A new moon", "A sun shadow"], c: 1, why: "It can also be called a blood moon." },
+      { q: "About how long can this eclipse be seen?", a: ["Ten minutes", "One hour", "All night", "Three days"], c: 1, why: "Nhìn thấy trong khoảng một giờ." },
+      { q: "What do you need to see it?", a: ["A telescope", "Special glasses", "A clear sky", "A camera"], c: 2, why: "As long as the sky is clear… không cần thiết bị đặc biệt." },
+    ],
+    reading: [
+      { q: "During a lunar eclipse, what is between the Sun and the Moon?", a: ["Earth", "Mars", "A cloud", "Another moon"], c: 0, why: "Earth is between the Sun and the Moon." },
+      { q: "Why does the Moon look red?", a: ["It gets very hot", "Some sunlight passes through Earth's atmosphere", "It reflects red rocks on Earth", "The Sun turns red"], c: 1, why: "The color comes from a little sunlight that passes through Earth's atmosphere." },
+      { q: "What did Aristotle's observation support?", a: ["The Moon is made of rock", "Earth is round", "The Sun moves around Earth", "Eclipses happen every week"], c: 1, why: "Bóng Trái Đất luôn cong → Trái Đất tròn." },
+    ],
+    dictation: [1, 3],
+    speaking: [0, 2, 4],
+    audioUrl: "https://voa-audio.voanews.eu/vle/2025/03/10/ab869609-867b-4773-048b-08dd5c8b1668.mp3",
+    source: "VOA Learning English — Adithi Ramakrishnan (AP), adapted by Andrew Smith",
+    sourceUrl: "https://learningenglish.voanews.com/a/total-lunar-eclipse-to-turn-moon-red/8005741.html",
+  },
+  {
+    id: "h5-voa-ice-ages",
+    level: "hard",
+    title: "Study Shows How Earth's Orbit Affects Ice Ages",
+    titleVi: "Quỹ đạo Trái Đất và các kỷ băng hà",
+    minutes: 18,
+    intro: "VOA Learning English (Science & Technology): một nghiên cứu dự đoán khi nào kỷ băng hà tiếp theo bắt đầu.",
+    vocab: [
+      { w: "cycle", pos: "n", vi: "chu kỳ", ex: "Warm and cold periods come in cycles." },
+      { w: "tilt", pos: "n", vi: "độ nghiêng", ex: "The tilt of Earth's axis changes slowly." },
+      { w: "axis", pos: "n", vi: "trục (Trái Đất quay quanh nó)", ex: "Earth turns around its axis once a day." },
+      { w: "wobble", pos: "n", vi: "sự lắc lư, chao đảo", ex: "A spinning top has a small wobble." },
+      { w: "glaciation", pos: "n", vi: "thời kỳ băng phủ rộng", ex: "The next glaciation may start in 11,000 years." },
+      { w: "emissions", pos: "n", vi: "khí thải", ex: "Car emissions warm the planet." },
+    ],
+    textKind: "summary",
+    transcript: [
+      { t: "A new study says the next ice age will probably begin in about 11,000 years, unless human emissions change Earth's natural climate cycles." },
+      { t: "In an ice age, ice covers large parts of the north and south of the planet for a long time." },
+      { t: "The researchers studied three movements: the shape of Earth's orbit around the Sun, the tilt of its axis, and the wobble of that axis." },
+      { t: "About 100 years ago, the Serbian scientist Milutin Milankovitch said these cycles shape Earth's long-term climate." },
+      { t: "The team compared a million-year climate record from ice sheets and deep ocean temperatures with small, regular changes in Earth's orbit." },
+      { t: "They found cycles of warming and cooling of about 100,000 years." },
+      { t: "The last ice age ended about 11,700 years ago." },
+      { t: "Lead author Stephen Barker of Cardiff University says the next glaciation should come within 11,000 years and end about 66,000 years later." },
+      { t: "Co-author Lorraine Lisiecki says these climate changes follow patterns; they are not random." },
+      { t: "Next, the team wants to study the long-term effects of human activity on climate." },
+    ],
+    drill: [
+      { t: "Earth is believed to go through cycles of ice ages and warm periods." },
+      { t: "However, researchers have struggled to precisely date when each of the climate changes happened." },
+      { t: "They then compared this data with small but regular changes in Earth’s orbit over time." },
+      { t: "The group published its findings in Science on February 27." },
+      { t: "The team aims to expand its findings to investigate the long-term effects of human activity on climate." },
+    ],
+    listening: [
+      { q: "When will the next ice age probably begin, according to the study?", a: ["In about 1,100 years", "In about 11,000 years", "In about 66,000 years", "In about 100,000 years"], c: 1, why: "Khoảng 11.000 năm nữa (nếu khí thải không làm lệch chu kỳ)." },
+      { q: "Which is NOT one of the three movements the team studied?", a: ["The shape of Earth's orbit", "The tilt of Earth's axis", "The wobble of the axis", "The speed of the Moon"], c: 3, why: "Ba chuyển động: hình dạng quỹ đạo, độ nghiêng trục, độ lắc của trục." },
+      { q: "Who said about 100 years ago that these cycles shape climate?", a: ["Stephen Barker", "Milutin Milankovitch", "Lorraine Lisiecki", "Andrew Smith"], c: 1, why: "Nhà khoa học Serbia Milutin Milankovitch." },
+      { q: "Where does the lead author work?", a: ["University of California", "Cardiff University in Britain", "NASA", "Brown University"], c: 1, why: "Stephen Barker, Đại học Cardiff (Anh)." },
+    ],
+    reading: [
+      { q: "How long ago did the last ice age end?", a: ["About 1,170 years", "About 11,700 years", "About 100,000 years", "About 900,000 years"], c: 1, why: "The last ice age ended about 11,700 years ago." },
+      { q: "What could change the natural cycles, according to the first sentence?", a: ["The Moon", "Human emissions", "Ocean animals", "Earthquakes"], c: 1, why: "...unless human emissions change Earth's natural climate cycles." },
+      { q: "\"These changes are not random\" means they…", a: ["happen in a pattern", "are very fast", "are dangerous", "cannot be studied"], c: 0, why: "random = ngẫu nhiên; not random = có quy luật." },
+    ],
+    dictation: [0, 3],
+    speaking: [1, 2, 4],
+    audioUrl: "https://voa-audio.voanews.eu/vle/2025/03/05/f9ea33c3-b1e6-41e4-a601-08dd5afe0892.mp3",
+    source: "VOA Learning English — Issam Ahmed (AFP), adapted by Andrew Smith",
+    sourceUrl: "https://learningenglish.voanews.com/a/study-shows-how-earth-s-orbit-affects-ice-ages/7997495.html",
+  },
+  {
+    id: "h6-voa-mars-red",
+    level: "hard",
+    title: "New Discovery Could Explain What Gives Mars its Red Color",
+    titleVi: "Vì sao Sao Hoả màu đỏ?",
+    minutes: 18,
+    intro: "VOA Learning English (Science & Technology): khoáng chất có thể làm Sao Hoả đỏ, và nó gợi ý điều gì về nước trên Sao Hoả.",
+    vocab: [
+      { w: "mineral", pos: "n", vi: "khoáng chất", ex: "Ferrihydrite is a mineral that contains iron." },
+      { w: "spacecraft", pos: "n", vi: "tàu vũ trụ", ex: "Several spacecraft collected data about Mars." },
+      { w: "sample", pos: "n", vi: "mẫu vật", ex: "The rover is collecting rock samples." },
+      { w: "verify", pos: "v", vi: "kiểm chứng", ex: "Scientists need samples to verify the idea." },
+      { w: "opportunity", pos: "n", vi: "cơ hội", ex: "The findings are an opportunity for new research." },
+    ],
+    textKind: "summary",
+    transcript: [
+      { t: "Scientists think they have found the mineral that makes Mars look red." },
+      { t: "The mineral is called ferrihydrite. It is a kind of iron oxide, and it can form where there is a lot of water." },
+      { t: "Earlier studies suggested a different mineral, hematite." },
+      { t: "An international team led by Brown University in the United States and the University of Bern in Switzerland did the research." },
+      { t: "They used data from several spacecraft and rovers, and they also made man-made Martian dust in a laboratory." },
+      { t: "Ferrihydrite needs oxygen and water to form, so Mars may once have had liquid water, and perhaps some kind of life." },
+      { t: "Today Mars is dry and cold, very different from those conditions." },
+      { t: "To be sure, scientists need real samples from Mars. NASA's Perseverance rover is collecting them now." },
+      { t: "The study was published in the journal Nature Communications." },
+    ],
+    drill: [
+      { t: "Scientists say they might have identified the mineral on Mars that is responsible for making the planet appear red." },
+      { t: "The mineral appears reddish in color and can form in water-rich environments." },
+      { t: "The study is based on Martian data collected by several spacecraft." },
+      { t: "Past studies had suggested a mineral called hematite might be the cause." },
+      { t: "These conditions were very different from the dry, cold environment of Mars today." },
+    ],
+    listening: [
+      { q: "What is the mineral in the new study called?", a: ["Hematite", "Ferrihydrite", "Quartz", "Copper"], c: 1, why: "Ferrihydrite, một loại ôxít sắt." },
+      { q: "What does this mineral suggest about Mars's past?", a: ["It was very hot", "It may have had liquid water", "It had no air", "It was blue"], c: 1, why: "Nó hình thành khi có nhiều nước → Sao Hoả từng có nước lỏng." },
+      { q: "Which two universities led the research?", a: ["Brown and Bern", "Yale and Cardiff", "Harvard and Oxford", "Bern and Cardiff"], c: 0, why: "Brown University (Mỹ) và University of Bern (Thuỵ Sĩ)." },
+      { q: "How can scientists finally check the idea?", a: ["With better telescopes", "With samples from Mars", "With a new computer game", "By visiting the Moon"], c: 1, why: "Cần mẫu vật thật từ Sao Hoả (rover Perseverance đang thu thập)." },
+    ],
+    reading: [
+      { q: "Which mineral did earlier studies point to?", a: ["Ferrihydrite", "Hematite", "Iron", "Oxygen"], c: 1, why: "Earlier studies suggested a different mineral, hematite." },
+      { q: "What two things are needed for ferrihydrite to form?", a: ["Heat and dust", "Oxygen and water", "Ice and rock", "Sunlight and wind"], c: 1, why: "Ferrihydrite needs oxygen and water to form." },
+      { q: "Which rover is collecting samples now?", a: ["Curiosity", "Perseverance", "Opportunity", "Spirit"], c: 1, why: "NASA's Perseverance rover is collecting them now." },
+    ],
+    dictation: [1, 3],
+    speaking: [0, 2, 4],
+    audioUrl: "https://voa-audio.voanews.eu/vle/2025/02/27/58e7f806-65ba-4432-0363-08dd4a817621.mp3",
+    source: "VOA Learning English — Bryan Lynn",
+    sourceUrl: "https://learningenglish.voanews.com/a/new-discovery-could-explain-what-gives-mars-its-red-color/7990107.html",
+  },
 ];
 
 const WRITING: Record<string, LabLesson["write"]> = {
@@ -601,13 +913,45 @@ const WRITING: Record<string, LabLesson["write"]> = {
     prompt: "Your team must choose: fix the old app or build a new one. Give your opinion with two reasons (3–4 sentences).",
     model: "I think we should fix the old app first. Users are complaining now, and a fix can be ready in weeks, not months. Building from scratch would use most of the budget. We can plan a new version next year.",
   },
+  "e5-voa-hello-anna": {
+    prompt: "Introduce yourself to a new neighbor in 2–3 sentences: your name, where you are from, and where you live.",
+    model: "Hi, I'm Minh. I'm from a small town near Hue. I live in apartment 5B, next to the stairs.",
+  },
+  "e6-voa-people-watching": {
+    prompt: "Describe a friend or family member in 2–3 sentences: height, hair, and one more detail.",
+    model: "My brother is tall and thin. He has short, curly black hair. He wears glasses when he reads.",
+  },
+  "m5-voa-wright-brothers": {
+    prompt: "Which invention is the most important in your life? Write 3 sentences: what it is, how you use it, and why.",
+    model: "For me, the most important invention is the smartphone. I use it to talk to my family, pay for things and study English. Without it, my day would be much slower.",
+  },
+  "m6-voa-lunar-eclipse": {
+    prompt: "Describe something you saw in the sky (a sunset, the Moon, a storm…). Write 3 sentences: when, where, and how it looked.",
+    model: "Last summer I watched the sunset from the beach in Vung Tau. The sky turned orange and then deep red. It was so beautiful that everyone stopped talking.",
+  },
+  "h5-voa-ice-ages": {
+    prompt: "Write 3–4 sentences: one change in the weather or climate you notice where you live, and one thing people can do about it.",
+    model: "In my city, summers are getting hotter every year, and the rain comes at strange times. Many streets flood after heavy storms. People can plant more trees and use public transport instead of motorbikes. Small changes from many people can make a difference.",
+  },
+  "h6-voa-mars-red": {
+    prompt: "If you could ask a scientist one question about space, what would it be? Write 3–4 sentences and explain why.",
+    model: "I would ask whether there was ever life on Mars. The planet once had water, so tiny living things might have lived there. If the answer is yes, it would change how we see our place in the universe. I would also like to know when people will travel there.",
+  },
   "h4-working-anywhere": {
     prompt: "Would you rather work from home or in an office? Give two reasons (4 sentences).",
     model: "I would rather work from home for most of the week. First, I save an hour every day because I don't commute. Second, it's quieter, so I can focus on difficult tasks. Still, I'd like to go to the office once a week to see my team.",
   },
 };
 
-const LESSONS: LabLesson[] = RAW_LESSONS.map((lesson) => ({ ...lesson, write: WRITING[lesson.id] }));
+const LEVEL_ORDER: LabLevel[] = ["easy", "medium", "hard"];
+const LESSONS: LabLesson[] = RAW_LESSONS
+  .map((lesson) => ({ ...lesson, write: WRITING[lesson.id] }))
+  .sort((a, b) => LEVEL_ORDER.indexOf(a.level) - LEVEL_ORDER.indexOf(b.level));
+
+/** Các câu dùng cho chính tả và nói theo của một bài. */
+export function drillLines(lesson: LabLesson): LabLine[] {
+  return lesson.drill ?? lesson.transcript;
+}
 
 export function labLessons(level?: LabLevel): LabLesson[] {
   return level ? LESSONS.filter((lesson) => lesson.level === level) : LESSONS;
@@ -779,6 +1123,7 @@ export function buildTest(seed: string, level?: LabLevel): LabTest {
   });
   const speaker = picked[h % 2];
   const speaking = { lessonId: speaker.id, line: speaker.speaking[(h >>> 4) % speaker.speaking.length] };
+  // Chỉ số chính tả/nói trỏ vào drillLines(bài).
   return { lessonIds: picked.map((lesson) => lesson.id), questions: unique, dictations, speaking, minutes: 15 };
 }
 
