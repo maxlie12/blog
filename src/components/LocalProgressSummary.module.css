@@ -110,3 +110,18 @@
 @media (prefers-reduced-motion: reduce) {
   .syncStatus[data-state="syncing"] > span { animation: none; }
 }
+
+.periodReview{display:grid;gap:.7rem}
+.periodReview h3{margin:0}
+.periodCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem}
+.periodCard{min-width:0;padding:.8rem;display:grid;align-content:start;gap:.55rem;border:1px solid var(--border);border-radius:14px;background:var(--surface)}
+.periodCard p{margin:0;overflow-wrap:anywhere}
+.periodTotals{font-size:.87rem;font-weight:700}
+.skillCounts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.4rem;margin:0}
+.skillCounts>div{border-radius:9px;padding:.45rem .55rem;background:color-mix(in srgb,var(--sage) 35%,var(--surface))}
+.skillCounts dt{font-size:.78rem;color:var(--text-muted)}
+.skillCounts dd{margin:0;font-weight:800;color:var(--forest)}
+.periodControls{display:flex;gap:.5rem;flex-wrap:wrap}
+.periodControls :global(.button){min-height:44px}
+.periodControls :global(.button)[aria-pressed="true"]{background:var(--forest);color:var(--surface);border-color:var(--forest)}
+@media(max-width:760px){.periodCards{grid-template-columns:1fr}}

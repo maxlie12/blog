@@ -7,16 +7,22 @@ import {
   exportLocalProgressBackup,
   getLocalLanguageActivity,
   getLocalLanguageSummary,
+  getLocalProgressReview,
+  PROGRESS_SKILLS,
   importLocalProgressBackup,
   syncLocalProgress,
   type LocalActivityDay,
   type LocalProgressSummary,
+  type LocalProgressWindow,
+  type ProgressSkill,
 } from "@/lib/localLearningProgress";
 import styles from "./LocalProgressSummary.module.css";
 
 type DashboardState = Record<LanguageId, {
   summary: LocalProgressSummary;
   days: LocalActivityDay[];
+  week: LocalProgressWindow;
+  month: LocalProgressWindow;
 }>;
 
 export type TestPacket = { date: string; title: string; kind: "weekly-test" | "monthly-test" };
@@ -25,6 +31,8 @@ function readDashboard(): DashboardState {
   return Object.fromEntries(LANGUAGES.map((language) => [language.id, {
     summary: getLocalLanguageSummary(language.id),
     days: getLocalLanguageActivity(language.id),
+    week: getLocalProgressReview(language.id,7),
+    month: getLocalProgressReview(language.id,28),
   }])) as DashboardState;
 }
 
@@ -59,8 +67,36 @@ function ActivityGrid({ days }: { days: LocalActivityDay[] }) {
   </div>;
 }
 
+const SKILL_NAMES:Record<ProgressSkill,string>={listening:"Nghe",reading:"Đọc",writing:"Viết",speaking:"Nói"};
+function nextSkill(p:LocalProgressWindow):string{
+  if(!PROGRESS_SKILLS.some(skill=>p.skills[skill]>0))return "Chưa có lượt Done theo kỹ năng. Hãy bắt đầu bằng một bài ngắn.";
+  const least=[...PROGRESS_SKILLS].sort((a,b)=>p.skills[a]-p.skills[b])[0];
+  return `Gợi ý: luyện ${SKILL_NAMES[least].toLowerCase()} 5 phút vì kỹ năng này ít lượt Done nhất kỳ; không có nghĩa là yếu nhất.`;
+}
+function PeriodReview({progress,days}:{progress:DashboardState;days:7|28}){
+  return <section className={styles.periodReview} aria-labelledby="period-review-title">
+    <h3 id="period-review-title">Tổng kết 7/28 ngày theo kỹ năng</h3>
+    <p className={styles.note}>Chỉ đếm hoạt động được ghi trên hồ sơ này; không suy ra điểm năng lực.</p>
+    <div className={styles.periodCards}>{LANGUAGES.map(language=>{
+      const p=progress[language.id][days===7?"week":"month"];
+      return <div className={styles.periodCard} key={language.id} data-language={language.id}>
+        <strong>{language.shortLabel}</strong>
+        <p className={styles.periodTotals}>{p.doneCount} lượt Done · {p.reviewCount} lượt ôn · {p.activeDays}/{days} ngày có hoạt động</p>
+        <dl className={styles.skillCounts}>{PROGRESS_SKILLS.map(skill=><div key={skill}>
+          <dt>{SKILL_NAMES[skill]}</dt><dd>{p.skills[skill]}</dd>
+        </div>)}</dl>
+        {p.other>0&&<p className={styles.note}>{p.other} hoạt động tổng hợp/khác.</p>}
+        <p className={styles.note}>{nextSkill(p)}</p>
+      </div>;
+    })}</div>
+    <p className={styles.note}>Done là hoàn thành hoạt động; ôn là tự kiểm tra trí nhớ. Không phải điểm CEFR/HSK.</p>
+    <Link href="#learning-start-title">Đến bài tiếp theo hoặc bài ôn được chọn ở trên →</Link>
+  </section>;
+}
+
 export function LocalProgressSummary({ testPackets = [] }: { testPackets?: TestPacket[] }) {
   const [progress, setProgress] = useState<DashboardState | null>(null);
+  const [reviewDays,setReviewDays] = useState<7|28>(7);
   const [message, setMessage] = useState("");
   const [syncState, setSyncState] = useState<"syncing" | "synced" | "offline">("syncing");
   const fileInput = useRef<HTMLInputElement>(null);
@@ -148,6 +184,11 @@ export function LocalProgressSummary({ testPackets = [] }: { testPackets?: TestP
           <span>{progress[language.id].summary.totalCompleted} bài đã Done</span>
         </div>)}
       </div>
+      <div className={styles.periodControls} role="group" aria-label="Chọn khoảng thời gian tổng kết">
+        <button type="button" className="button button--ghost" aria-pressed={reviewDays===7} onClick={()=>setReviewDays(7)}>7 ngày</button>
+        <button type="button" className="button button--ghost" aria-pressed={reviewDays===28} onClick={()=>setReviewDays(28)}>28 ngày</button>
+      </div>
+      <PeriodReview progress={progress} days={reviewDays}/>
       <ActivityGrid days={combinedDays} />
       <div className={styles.checkpoint}>
         <div><strong>Mốc kiểm tra năng lực</strong><span>Không khóa theo streak</span></div>
