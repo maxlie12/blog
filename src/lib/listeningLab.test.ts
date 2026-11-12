@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   LEVELS, PART_EVIDENCE, WRITING_CHECKLIST, buildTest, compareDictation, drillLines, emptyLabStore, isComplete, labLesson, labLessons, labTotal,
-  nextLabLesson, parseLabStore, withLessonResult, withTestResult, writeScore, writingCheck, type LabParts,
+  nextLabLesson, parseLabStore, withLessonResult, withTestResult, writeScore, writingCheck, writingRubric, type LabParts,
 } from "./listeningLab.ts";
 
 const done: LabParts = { listen: 1, read: 1, write: 1, speak: 1 };
@@ -97,4 +97,20 @@ test("four-skill evidence labels distinguish objective scoring from self-reporte
   assert.deepEqual(Object.keys(PART_EVIDENCE), ['listen', 'read', 'write', 'speak']);
   assert.equal(isComplete({ listen: 1, read: null, write: 1, speak: 1 }), false);
   assert.equal(isComplete(done), true);
+});
+
+test("writing rubric offers evidence-based one-step retry without grading meaning", () => {
+  const cafe = labLesson("e1-coffee-shop")!;
+  const weak = writingRubric(cafe, "I want coffee");
+  assert.deepEqual(weak.checks.map((item) => item.passed), [false, false, false, null]);
+  assert.match(weak.nextStep, /ít nhất 2 câu/);
+  const improved = writingRubric(cafe, "Can I have a medium coffee, please? I'd also like a muffin to go.");
+  assert.deepEqual(improved.checks.map((item) => item.passed), [true, true, true, null]);
+  assert.match(improved.nextStep, /đề và bài mẫu/);
+  const hard = writingRubric(labLesson("h4-working-anywhere")!, "I work here. I like home.");
+  assert.match(hard.checks[0].detail, /2\/4 câu/);
+  const empty = writingRubric(cafe, "");
+  assert.equal(empty.checks[0].passed, false);
+  assert.equal(empty.checks[3].passed, null);
+  assert.deepEqual(Object.keys(cafe.write), ["prompt", "model"]);
 });

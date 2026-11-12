@@ -103,7 +103,24 @@ async function assessmentEvidence(browser, engine) {
     }
     assert.ok(rendered.includes('Chưa có điểm'), 'No score must not masquerade as graded');
     await page.getByText('Điều kiện Done:', { exact: false }).waitFor();
-    console.log('PASS ' + engine + ' 390px: four-skill evidence labels and honest empty score');
+    await page.locator('.ll-steps button').nth(3).click();
+    const essay = page.locator('#ll-essay');
+    await essay.waitFor({state:'visible'});
+    await essay.fill('I want coffee');
+    const rubricButton = page.getByRole('button', {name: 'Xem rubric & gợi ý sửa'});
+    await rubricButton.waitFor({state:'visible'});
+    await rubricButton.click();
+    const rubric = page.getByRole('region', {name: 'Rubric bản nháp'});
+    await rubric.waitFor({state:'visible'});
+    await rubric.getByText(/Sửa một điểm trước:/).waitFor();
+    assert.match(await rubric.innerText(), /Cần sửa — Độ dài theo đề/);
+    await rubric.getByRole('button',{name:'Sửa bài và thử lại'}).click();
+    await essay.fill("Can I have a medium coffee, please? I'd also like a muffin to go.");
+    await rubric.getByText(/Đạt mục tiêu — Độ dài theo đề/).waitFor();
+    await rubric.getByText(/Đạt mục tiêu — Từ vựng trong bài/).waitFor();
+    assert.match(await rubric.innerText(), /Tự kiểm tra — Đúng đề và ngữ pháp/);
+    assert.equal(await page.evaluate(() => localStorage.getItem('ll-essay')), null, 'Do not persist private essay');
+    console.log('PASS ' + engine + ' 390px: observable writing rubric, actionable retry and no invented grammar grade');
   } finally {
     await context.close();
   }
