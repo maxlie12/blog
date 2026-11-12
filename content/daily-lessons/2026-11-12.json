@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-12",
+  "title": "Hiểu lời nhờ — hỏi trước khi hành động",
+  "kind": "restart",
+  "note": "Giữ B1+ tự đánh giá và bước nghe/đọc hiểu: chưa có bằng chứng hoàn thành mới. Dùng lại nguồn đã xác minh; không học bù bắt buộc. Chỉ bài đầu là chính.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-12-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — nghe để biết cần làm gì",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải bài thi hay câu hỏi chính thức. Không mở đáp án trước khi làm.",
+      "material": "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues",
+      "exercises": "Dùng lại nguồn Cambridge miễn phí, audio và câu hỏi B1–B2; không mặc định có transcript. Chưa có bằng chứng hoàn thành nên giữ bước nghe/đọc hiểu. Nghe một hội thoại tối đa hai lượt, không mở đáp án. Tự ghi ba dòng tiếng Anh: việc người nói muốn làm; một chi tiết giúp thực hiện việc đó; một điều bạn chưa chắc và câu hỏi để hỏi lại. Nếu không nghe được chi tiết, ghi rõ chưa nghe ra, không đoán. Lưu số lượt nghe và hỗ trợ đã dùng. Chỉ làm nhiệm vụ này là đủ, không cần học bù.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-12-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — đọc lời nhờ có giới hạn",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải bài thi hay câu hỏi chính thức. Không mở đáp án trước khi làm.",
+      "material": "Linh: Could you send me the draft before lunch?\nBen: I can send the text, but the images are not ready.\nLinh: That is fine. Please mark the missing images so I know what to review.\nBen: Should I email it or put it in the shared folder?\nLinh: The shared folder, please.",
+      "exercises": "Hội thoại tự soạn, không phải transcript Cambridge. Trả lời bằng lời của bạn: cần gửi gì, khi nào và qua đâu? Phần nào chưa hoàn thiện và người nhận muốn đánh dấu như thế nào? Chỉ dùng dữ kiện có trong đoạn.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-12-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — xác nhận phần mình làm được",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải bài thi hay câu hỏi chính thức. Không mở đáp án trước khi làm.",
+      "material": null,
+      "exercises": "Tình huống tự soạn: một người bạn nhờ gửi kế hoạch chuyến đi trước trưa, nhưng bạn mới có lịch trình, chưa có giá vé. Nói 30–45 giây: xác nhận phần sẽ gửi, nói rõ phần còn thiếu, hỏi cách gửi. Đổi tình huống: bạn cần thêm thời gian, đề xuất giờ mới. Lưu hai câu tự tạo; gửi ChatGPT audio nếu muốn góp ý phát âm.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-12-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5 phút — viết tin nhắn bàn giao ngắn",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài do trợ lý tự soạn, không phải bài thi hay câu hỏi chính thức. Không mở đáp án trước khi làm.",
+      "material": null,
+      "exercises": "Viết 30–50 từ gửi bạn về kế hoạch chuyến đi: phần đã chuẩn bị, phần còn thiếu và một câu hỏi cần họ trả lời. Không chép hội thoại hay dùng AI sửa bản đầu. Đọc lại chỉ để kiểm tra người nhận có biết điều gì đã sẵn sàng và điều gì chưa sẵn sàng không.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-12-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — chọn đồ uống cho mình",
+      "level": "Sơ cấp · giao tiếp đời sống",
+      "instructions": "Bài do trợ lý tự soạn, không phải bài thi hay câu hỏi chính thức. Không mở đáp án trước khi làm.",
+      "material": "https://mandarinbean.com/im-thirsty/",
+      "exercises": "Dùng lại Mandarin Bean: text/pinyin/audio miễn phí; một số bài tập và bản dịch Premium, không cần mua. Nghe một câu ngắn từ nguồn. Cụm tự soạn: 喝水 hē shuǐ — uống nước; 喝茶 hē chá — uống trà; 现在 xiànzài — bây giờ; 想 xiǎng — muốn. Nhìn cụm rồi che chữ và pinyin. Tự nói, gõ một câu cho biết bây giờ muốn uống gì; thêm một câu mới về lựa chọn vào buổi tối (晚上 wǎnshang — buổi tối). Không chép nguyên mẫu. Viết tay tùy chọn, không lưu và không tự chấm.",
+      "completionCriteria": "Done chỉ khi đã tự tạo và lưu hai câu khác nhau, đồng thời đọc thành tiếng; không chép cụm làm đầu ra."
+    }
+  ]
+}
