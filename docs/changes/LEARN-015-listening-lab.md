@@ -6,7 +6,7 @@
   nào, không biết lưu ra sao; muốn như ESL Lab: bài nghe rõ ràng để nghe, đọc và làm bài; thêm
   luyện đề/kiểm tra và học đủ 4 kĩ năng. Owner chốt: phòng nghe kiểu ESL Lab, nguồn ưu tiên VOA,
   lưu điểm + Done như hệ hiện tại)
-- **Status:** done locally; deploy below
+- **Status:** done (deployed `469453b`); real-phone check by owner pending
 - **Owner:** Claude
 - **Date:** 2026-11-11
 - **Builds on:** `docs/DAILY-LEARNING.md`, `docs/MAX-LEARNING-CONTEXT.md`
@@ -74,7 +74,7 @@ trên trang, không có câu hỏi chấm điểm, không rõ tiến độ lưu 
       tải lại trang quay về Kết quả với điểm cũ; lưu theo hồ sơ; thẻ chuyển sang bài 2; một đề
       trọn 4 phần, chấm, xem lại, lịch sử; không cuộn ngang; mọi nút/ô chọn ≥ 44 px; không lỗi
       trang.
-- [ ] Vercel build + production deploy.
+- [x] Vercel build + production deploy (`469453b`).
 
 ## Result
 
