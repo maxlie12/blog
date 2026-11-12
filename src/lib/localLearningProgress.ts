@@ -165,6 +165,24 @@ export function getLocalLanguageActivity(language: string, days = 28, now = new 
   });
 }
 
+export const PROGRESS_SKILLS = ["listening","reading","writing","speaking"] as const;
+export type ProgressSkill = typeof PROGRESS_SKILLS[number];
+export type LocalProgressWindow = { activeDays:number; doneCount:number; reviewCount:number; skills:Record<ProgressSkill,number>; other:number };
+/** Count only recorded practice, without inferring competency or CEFR. */
+export function getLocalProgressReview(language:string,days:7|28,now=new Date()):LocalProgressWindow {
+  const last=dateInLearningTimezone(now), first=addDays(last,1-days);
+  const events=readStore().completions.filter(item=>item.language===language&&item.date>=first&&item.date<=last);
+  const skills:Record<ProgressSkill,number>={listening:0,reading:0,writing:0,speaking:0};
+  let doneCount=0,reviewCount=0,other=0;
+  for(const item of events){
+    if(item.id.startsWith("review:")){reviewCount++;continue}
+    doneCount++;
+    if(PROGRESS_SKILLS.some(skill=>skill===item.skill))skills[item.skill as ProgressSkill]++;
+    else other++;
+  }
+  return {activeDays:new Set(events.map(item=>item.date)).size,doneCount,reviewCount,skills,other};
+}
+
 export function getLocalCompletedLessonIds(): Set<string> {
   return new Set(readStore().completions.map((item) => item.lessonId));
 }

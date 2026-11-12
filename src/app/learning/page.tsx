@@ -25,6 +25,7 @@ export default async function LearningPage() {
 
       <LabEntry />
       <StartLearning lessons={lessons} />
+      <LocalProgressSummary />
       <details><summary>Danh sách bài Daily và lộ trình học</summary>
         <LearningPath {...path} />
       </details>
@@ -36,7 +37,6 @@ export default async function LearningPage() {
         <Link href="/learning/village" className="button button--ghost">Làng Rêu →</Link>
         <Link href="/learning/world" className="button button--ghost">Nông trại →</Link>
       </nav>
-      <LocalProgressSummary />
     </div>
   );
 }

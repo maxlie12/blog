@@ -14,6 +14,9 @@ on:
       - 'src/lib/listeningLab.ts'
       - 'src/lib/listeningLab.test.ts'
       - 'src/lib/localLearningProgress.ts'
+      - 'src/lib/localLearningProgress.test.ts'
+      - 'src/components/LocalProgressSummary.tsx'
+      - 'src/components/LocalProgressSummary.module.css'
       - 'src/lib/localLessonState.ts'
 
 permissions:

@@ -5,6 +5,7 @@ import {
   getLocalCompletedLessonIds,
   getLocalLanguageActivity,
   getLocalLanguageSummary,
+  getLocalProgressReview,
   getLocalDueReviews,
   getLocalScheduledReview,
   importLocalProgressBackup,
@@ -218,4 +219,32 @@ test("recall metadata survives the unchanged server validation and a sync round 
     assert.equal(getLocalScheduledReview("a", now)?.lastRecall?.rating, "again");
     assert.equal(getLocalScheduledReview("a", now)?.dueDate, "2026-11-02");
   } finally { globalThis.fetch = originalFetch; }
+});
+
+test("7/28-day progress counts only recorded Done and separates review, skill, language and profile",()=>{
+  const items=[
+    {...completion,id:"lesson:en1",language:"en",skill:"listening",date:"2026-11-12"},
+    {...completion,id:"review:1:en1",language:"en",skill:"listening",date:"2026-11-12"},
+    {...completion,id:"lesson:en2",language:"en",skill:"speaking",date:"2026-11-07"},
+    {...completion,id:"guided:en",language:"en",skill:"mixed",date:"2026-11-02"},
+    {...completion,id:"lesson:old",language:"en",skill:"reading",date:"2026-10-14"},
+    {...completion,id:"lesson:future",language:"en",skill:"reading",date:"2026-11-13"},
+    {...completion,id:"lesson:zh",language:"zh",skill:"writing",date:"2026-11-11"},
+  ];
+  storage.setItem("learning-completions-v1",JSON.stringify({version:1,completions:items}));
+  const now=new Date("2026-11-12T08:00:00.000Z");
+  assert.deepEqual(getLocalProgressReview("en",7,now),{activeDays:2,doneCount:2,reviewCount:1,skills:{listening:1,reading:0,writing:0,speaking:1},other:0});
+  assert.deepEqual(getLocalProgressReview("en",28,now),{activeDays:3,doneCount:3,reviewCount:1,skills:{listening:1,reading:0,writing:0,speaking:1},other:1});
+  assert.equal(getLocalProgressReview("zh",7,now).skills.writing,1);
+  assert.equal(getLocalProgressReview("ja",28,now).doneCount,0);
+  setActiveLearnerProfile("phi");
+  assert.equal(getLocalProgressReview("en",7,now).doneCount,0);
+});
+test("7-day report respects Hanoi calendar and excludes prior-day boundary",()=>{
+  recordLocalCompletion({id:"lesson:old",lessonId:"old",language:"en",skill:"reading",minutes:5},new Date("2026-11-05T16:59:59.000Z"));
+  recordLocalCompletion({id:"lesson:new",lessonId:"new",language:"en",skill:"writing",minutes:5},new Date("2026-11-05T17:00:00.000Z"));
+  recordLocalCompletion({id:"review:1:new",lessonId:"new",language:"en",skill:"writing",minutes:3},new Date("2026-11-12T10:00:00.000Z"));
+  const now=new Date("2026-11-12T15:00:00.000Z"),week=getLocalProgressReview("en",7,now);
+  assert.equal(week.doneCount,1);assert.equal(week.reviewCount,1);assert.equal(week.activeDays,2);
+  assert.equal(week.skills.reading,0);assert.equal(getLocalProgressReview("en",28,now).doneCount,2);
 });
