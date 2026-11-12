@@ -5,7 +5,7 @@
 - **Issue:** `LEARN-018` (owner request, 2026-11-12: bên trong thẻ "Tiếp tục từ việc quan trọng
   nhất" chưa rõ ràng; muốn luồng để ChatGPT đọc và cập nhật mỗi ngày. Owner chốt qua câu hỏi:
   phiếu yêu cầu ChatGPT huấn luyện + giao kế hoạch, không soạn JSON)
-- **Status:** PR open; release after CI + preview
+- **Status:** done — merged PR #10, production `cf939dc`; real-phone check by owner pending
 - **Owner:** Claude
 - **Date:** 2026-11-12
 - **Builds on:** `LEARN-015-listening-lab.md`, `LEARN-017-speaking-room.md`
@@ -91,6 +91,10 @@ smoke Chromium/WebKit) → Vercel preview → merge to `master`. Rollback: rever
       chép tay. Cả hai: không cuộn ngang, không tràn khung, nút ≥ 44 px, không lỗi trang.
 - [x] CI smoke (`scripts/learning-mobile-smoke.mjs`): thêm `studyBriefFlow` (Chromium + WebKit,
       320 px, bản build thật).
+- [x] CI trên PR #10 (`3381dc6`): "Max Learning quality gates" và "Learning mobile viewport E2E"
+      xanh; log có "PASS Chromium/WebKit 320px: ChatGPT brief carries previous plan; pasted plan
+      persists after reload". Vercel preview xanh. Merge → production `cf939dc` (Vercel xanh).
+      Rollback: revert `cf939dc` (production trước đó `5e9cdc9`).
 - QA: thực hiện tuần tự bởi cùng một agent (không có reviewer độc lập); iPhone thật / Safari
       clipboard: NOT VERIFIED.
 
