@@ -69,7 +69,7 @@ async function study(browser, width, lessonId) {
     await page.getByText('ĐÃ GHI DONE · CHƯA TỰ CHẤM NĂNG LỰC').waitFor({timeout:10000});
     await page.getByRole('button',{name:'Đã tự nhớ lại · mở phần đối chiếu'}).click();
     await page.getByRole('button',{name:'Nhớ và dùng lại được'}).click();
-    await page.getByText('Đã lưu kết quả tự kiểm tra trên thiết bị.').waitFor({timeout:10000});
+    await page.getByText(/Lần tự kiểm tra/).waitFor({ timeout: 10000 });
 
     await page.reload({waitUntil:'domcontentloaded'});
     await textBox.waitFor({state:'visible',timeout:20000});
