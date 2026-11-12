@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react"
 import { SpeakingRecorder } from "@/components/SpeakingRecorder";
 import { readProfileStorage, writeProfileStorage } from "@/lib/learnerProfiles";
 import {
-  LAB_STORE_KEY, SPEAK_RATINGS, compareDictation, parseLabStore, type DictationResult, type LabChoice, type LabLesson,
+  LAB_STORE_KEY, SPEAK_RATINGS, compareDictation, parseLabStore, speakingRetryFeedback, type DictationResult, type LabChoice, type LabLesson,
   type LabLine, type LabStore,
 } from "@/lib/listeningLab";
 
@@ -234,7 +234,9 @@ export function SpeakLine({ n, line, rate, rating, onRate }: { n: number; line: 
   const supported = useSpeechSupported();
   const [heard, setHeard] = useState<string | null>(null);
   const [hidden, setHidden] = useState(false);
-  const match = heard ? compareDictation(line.t, heard) : null;
+  const [showGuide, setShowGuide] = useState(false);
+  const [take, setTake] = useState(1);
+  const feedback = speakingRetryFeedback(line.t, heard);
   return (
     <div className="ll-speak">
       <p className="ll-speak__line"><span className="ll-q__n">{n}.</span> {hidden ? <span className="ll-note">(đã che — nói lại không nhìn, rồi mở để so)</span> : line.t}</p>
@@ -242,9 +244,34 @@ export function SpeakLine({ n, line, rate, rating, onRate }: { n: number; line: 
         <button type="button" className="button button--ghost" disabled={!supported} onClick={() => speakLines([line], rate)}>Nghe mẫu</button>
         <button type="button" className="ll-chip" aria-pressed={hidden} onClick={() => setHidden((value) => !value)}>{hidden ? "Mở câu" : "Che câu"}</button>
       </div>
-      <SpeakingRecorder language="en" onTranscript={setHeard}
-        hint="Ghi âm rồi nghe lại, so với câu mẫu. Bản ghi chỉ ở máy này. Nếu muốn, bấm Chép lời để máy nghe thử bạn nói gì (lần đầu tải khoảng 100MB)." />
-      {match && <p className="ll-note">Máy nghe được: &ldquo;{heard}&rdquo; — khớp {Math.round(match.score * 100)}% số từ. Chỉ để tham khảo.</p>}
+      <p className="ll-note">Lần luyện {take}. Ghi âm và nghe lại nếu có micro; phần chép lời chỉ là gợi ý, không phải điểm phát âm.</p>
+      <SpeakingRecorder key={take} language="en" onTranscript={setHeard}
+        hint="Nghe lại bản ghi rồi so nhịp và độ rõ với mẫu. Audio chỉ ở bộ nhớ trang; chép lời tùy chọn chạy trên máy (có thể tải model khoảng 100MB)." />
+      {heard && <p className="ll-note">Máy chép được: &ldquo;{heard}&rdquo;. Kết quả nhận dạng có thể thiếu hoặc sai từ; không dùng để chấm phát âm.</p>}
+      <div className="ll-actions">
+        <button type="button" className="button button--ghost" aria-expanded={showGuide} onClick={() => setShowGuide((value) => !value)}>
+          {showGuide ? "Ẩn gợi ý luyện lại" : "Xem gợi ý luyện lại"}
+        </button>
+      </div>
+      {showGuide && (
+        <section className="ll-note" aria-label={`Gợi ý luyện nói câu ${n}`}>
+          <p><strong>Cần làm tiếp:</strong> {feedback.nextStep}</p>
+          {feedback.source === "asr" && (
+            <p>{feedback.missing.length
+              ? `Máy có thể chưa nhận ra: ${feedback.missing.slice(0, 6).join(", ")}${feedback.missing.length > 6 ? "…" : ""}.`
+              : "Máy đã nhận ra các từ mẫu theo thứ tự; vẫn cần tự nghe để đánh giá."}</p>
+          )}
+          <ul>
+            <li>Nghe mẫu và chú ý chỗ ngắt cụm, nhấn từ quan trọng.</li>
+            <li>Nghe bản ghi của mình; tự nhận xét chỗ nào quá nhanh, thiếu rõ hoặc bị ngập ngừng.</li>
+            <li>Nói lại, nghe lại rồi mới chọn mức tự chấm phía dưới.</li>
+          </ul>
+          <button type="button" className="button button--ghost" onClick={() => { stopSpeech(); setHeard(null); setTake((value) => value + 1); }}>
+            Luyện lại câu này
+          </button>
+          <p>Thử lại không tự thay đổi điểm đã lưu; muốn cập nhật điểm hãy tự chọn mức chấm mới.</p>
+        </section>
+      )}
       <div className="ll-rate" role="radiogroup" aria-label={`Tự chấm câu ${n}`}>
         <span>Tự chấm</span>
         {SPEAK_RATINGS.map((item) => (

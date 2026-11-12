@@ -120,6 +120,18 @@ async function assessmentEvidence(browser, engine) {
     await rubric.getByText(/Đạt mục tiêu — Từ vựng trong bài/).waitFor();
     assert.match(await rubric.innerText(), /Tự kiểm tra — Đúng đề và ngữ pháp/);
     assert.equal(await page.evaluate(() => localStorage.getItem('ll-essay')), null, 'Do not persist private essay');
+    await page.locator('.ll-steps button').nth(4).click();
+    const speaking = page.locator('.ll-speak').first();
+    await speaking.waitFor({ state: 'visible' });
+    await speaking.getByRole('button', { name: 'Xem gợi ý luyện lại' }).click();
+    const guide = speaking.getByRole('region', { name: 'Gợi ý luyện nói câu 1' });
+    await guide.getByText(/Cần làm tiếp:/).waitFor();
+    assert.match(await guide.innerText(), /Nghe câu mẫu một lần/);
+    assert.match(await guide.innerText(), /không tự thay đổi điểm đã lưu/);
+    await guide.getByRole('button', { name: 'Luyện lại câu này' }).click();
+    await speaking.getByText('Lần luyện 2.', { exact: false }).waitFor();
+    await speaking.getByRole('button', { name: 'Ẩn gợi ý luyện lại' }).click();
+    console.log('PASS ' + engine + ' 390px: honest speaking guidance, local-only retry and no auto-grade');
     console.log('PASS ' + engine + ' 390px: observable writing rubric, actionable retry and no invented grammar grade');
   } finally {
     await context.close();

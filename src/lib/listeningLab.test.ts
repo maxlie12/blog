@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   LEVELS, PART_EVIDENCE, WRITING_CHECKLIST, buildTest, compareDictation, drillLines, emptyLabStore, isComplete, labLesson, labLessons, labTotal,
-  nextLabLesson, parseLabStore, withLessonResult, withTestResult, writeScore, writingCheck, writingRubric, type LabParts,
+  nextLabLesson, parseLabStore, speakingRetryFeedback, withLessonResult, withTestResult, writeScore, writingCheck, writingRubric, type LabParts,
 } from "./listeningLab.ts";
 
 const done: LabParts = { listen: 1, read: 1, write: 1, speak: 1 };
@@ -113,4 +113,21 @@ test("writing rubric offers evidence-based one-step retry without grading meanin
   assert.equal(empty.checks[0].passed, false);
   assert.equal(empty.checks[3].passed, null);
   assert.deepEqual(Object.keys(cafe.write), ["prompt", "model"]);
+});
+
+test("speaking retry feedback is actionable but never a pronunciation grade", () => {
+  const expected = "Can I have a medium coffee, please?";
+  const noMicrophone = speakingRetryFeedback(expected, null);
+  assert.equal(noMicrophone.source, "self");
+  assert.deepEqual(noMicrophone.missing, []);
+  assert.match(noMicrophone.nextStep, /Nghe câu mẫu/);
+  const missed = speakingRetryFeedback(expected, "Can I have a coffee please");
+  assert.equal(missed.source, "asr");
+  assert.deepEqual(missed.missing, ["medium"]);
+  assert.match(missed.nextStep, /medium/);
+  assert.match(missed.nextStep, /nhận dạng sai/);
+  const allRecognized = speakingRetryFeedback(expected, "can i have a medium coffee please");
+  assert.deepEqual(allRecognized.missing, []);
+  assert.match(allRecognized.nextStep, /chưa chứng minh phát âm chuẩn/);
+  assert.equal(speakingRetryFeedback(expected, " ").source, "self");
 });
