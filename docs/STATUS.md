@@ -2,6 +2,16 @@
 
 Last verified: 2026-11-12 (English listening lab; unit tests and harness browser check).
 
+## 2026-11-12 — Start card made readable + daily ChatGPT study brief
+
+- The "Tiếp tục từ việc quan trọng nhất" card reads in one line of sight: status label, lesson
+  title, one meta line, one reason; goal/review/Done note fold into "Bài này gồm gì?".
+- "Kế hoạch mỗi ngày với ChatGPT": copy coach instructions once, copy today's brief (7-day
+  activity, Daily, Phòng nghe, Phòng nói, previous plan), paste ChatGPT's plan back — saved per
+  profile in this browser (7 days), shown on /learning and carried in tomorrow's brief.
+- Checks: `studyBrief.test.ts` (6), ESLint, `tsc`; harness 26/26 at 390/320 px; CI smoke adds
+  the brief flow. See `docs/changes/LEARN-018-start-card-chatgpt-brief.md`.
+
 ## 2026-11-12 — Phòng nói: speaking situations with a practice routine
 
 - `/learning/speaking`: 9 situations in three levels, each with two cases (a normal one and one

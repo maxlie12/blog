@@ -9,6 +9,7 @@ import type { LessonSummary } from "@/lib/lessonTypes";
 import { selectNextLesson, type NextLesson } from "@/lib/nextLesson";
 import type { ScheduledReview } from "@/lib/reviewSchedule";
 import { useLearnerProfile } from "@/lib/useLearnerProfile";
+import { StudyBrief } from "./StudyBrief";
 
 const actionLabel = {
   resume: "Tiếp tục bài đang dở",
@@ -17,12 +18,22 @@ const actionLabel = {
   review: "Ôn lại một bài",
 } as const;
 
-const reasonLabel = {
-  resume: "Bạn có bản nháp chưa Done. Hệ thống giữ đúng bài đó để không mất mạch học.",
-  "due-review": "Bài này đến hạn ôn. Nhớ lại ngắn trước khi học bài mới; lịch tiếp theo dựa trên kết quả bạn tự kiểm tra.",
-  next: "Đây là bài chưa Done phù hợp tiếp theo trong lộ trình hiện tại.",
-  review: "Bạn đã Done toàn bộ bài hiện có. Hệ thống chọn lại bài đầu lộ trình để ôn.",
+// Thứ tự đọc trong thẻ: trạng thái → tên bài → một dòng thông tin → một câu lý do; chi tiết thu gọn.
+const statusLabel = {
+  resume: "Đang làm dở",
+  "due-review": "Đến hạn ôn",
+  next: "Bài mới",
+  review: "Ôn lại",
 } as const;
+
+const reasonLabel = {
+  resume: "Bạn có bản nháp chưa Done — làm tiếp để không mất mạch học.",
+  "due-review": "Đến hạn ôn: tự nhớ lại trước, rồi mới mở phần đối chiếu và tự chấm.",
+  next: "Bài chưa làm tiếp theo trong lộ trình của bạn.",
+  review: "Bạn đã Done hết bài hiện có — ôn lại từ đầu lộ trình.",
+} as const;
+
+const skillLabel: Record<string, string> = { listening: "Nghe", reading: "Đọc", writing: "Viết", speaking: "Nói" };
 
 export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
   const learner = useLearnerProfile();
@@ -30,6 +41,7 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
   const [englishTarget, setEnglishTarget] = useState<NextLesson | null>(null);
   const [chineseTarget, setChineseTarget] = useState<NextLesson | null>(null);
   const [dueReview, setDueReview] = useState<{ review: ScheduledReview; title: string } | null>(null);
+  const [lessonIds] = useState(() => new Set(lessons.filter((lesson) => lesson.language === "en").map((lesson) => lesson.id)));
 
   useEffect(() => {
     const choose = () => {
@@ -51,20 +63,28 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
     return () => window.removeEventListener("learning-progress-changed", choose);
   }, [learner.id, lessons]);
 
+  const daily = target ? dailyLessonDate(target.lesson.id) : null;
   return (
+    <>
     <section className="learning-start" aria-labelledby="learning-start-title">
       <div>
-        <p className="eyebrow">PHIÊN HỌC TIẾP THEO · 5–10 PHÚT</p>
+        <p className="eyebrow">BÀI DAILY · 5–10 PHÚT</p>
         <h2 id="learning-start-title">Tiếp tục từ việc quan trọng nhất</h2>
         {target ? (
           <div className="learning-start__selection" aria-live="polite">
-            <strong>{target.lesson.title}</strong>
-            <span>{getLanguageLabel(target.lesson.language, true)} · {target.lesson.level}</span>
-            <span>{dailyLessonDate(target.lesson.id) ? `Daily ${dailyLessonDate(target.lesson.id)}` : "Bài luyện theo chủ đề/cấp độ"} · {target.lesson.skill}</span>
-            <p><strong>Mục tiêu:</strong> {target.lesson.exercises}</p>
-            <small>{target.reason === "resume" ? "Đang học · đã có bản nháp" : target.reason === "review" || target.reason === "due-review" ? "Đã Done · đang ôn lại" : "Chưa Done"}. Done là tự báo, không phải điểm trình độ.</small>
+            <p className="learning-start__status" data-reason={target.reason}>{statusLabel[target.reason]}</p>
+            <strong className="learning-start__title">{target.lesson.title}</strong>
+            <span>
+              {getLanguageLabel(target.lesson.language, true)} · {target.lesson.level} · {skillLabel[target.lesson.skill] ?? target.lesson.skill}
+              {" · "}{daily ? `Daily ${daily}` : "Bài theo chủ đề"}
+            </span>
             <p>{reasonLabel[target.reason]}</p>
-            {target.review && <small>Mốc ôn +{target.review.interval} ngày · đến hạn {target.review.dueDate}</small>}
+            <details className="learning-start__more">
+              <summary>Bài này gồm gì?</summary>
+              <p><strong>Mục tiêu:</strong> {target.lesson.exercises}</p>
+              {target.review && <p><strong>Lịch ôn:</strong> mốc +{target.review.interval} ngày · đến hạn {target.review.dueDate}</p>}
+              <p>Done là bạn tự báo để giữ thói quen, không phải điểm trình độ.</p>
+            </details>
           </div>
         ) : (
           <p aria-live="polite">Đang đọc tiến độ trên thiết bị để chọn bài…</p>
@@ -95,5 +115,7 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
         <small>Hôm nay không làm bài được? <Link href="/learning/practice">Tự luyện từ mới và đọc to</Link>.</small>
       </div>
     </section>
+    <StudyBrief lessonIds={lessonIds} nextDaily={englishTarget ? englishTarget.lesson.title : null} />
+    </>
   );
 }

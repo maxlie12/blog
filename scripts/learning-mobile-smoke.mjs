@@ -180,6 +180,37 @@ async function progressReview(browser, engine) {
     console.log('PASS '+engine+' 320px: seven/28-day Done and review separation, languages, reload and overflow');
   } finally { await context.close(); }
 }
+async function studyBriefFlow(browser, engine) {
+  // LEARN-018: daily ChatGPT brief carries yesterday's plan; a pasted plan persists across reload.
+  const context = await browser.newContext({viewport:{width:320,height:844},isMobile:true,hasTouch:true});
+  try {
+    const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).map(x=>[x.type,x.value]));
+    const today = parts.year+'-'+parts.month+'-'+parts.day;
+    const [y,m,d] = today.split('-').map(Number);
+    const yesterday = new Date(Date.UTC(y,m-1,d-1)).toISOString().slice(0,10);
+    await context.addInitScript((day)=>{
+      if (localStorage.getItem('learning-active-profile-v1')) return;
+      localStorage.setItem('learning-active-profile-v1','luan');
+      localStorage.setItem('learning-profile:luan:chatgpt-plan-v1',JSON.stringify([{date:day,text:'QA synthetic plan: listening lesson 2'}]));
+    },yesterday);
+    const page = await context.newPage();
+    const response = await page.goto(base+'/learning',{waitUntil:'domcontentloaded'});
+    assert.equal(response?.status(),200);
+    await page.getByRole('heading',{name:'Kế hoạch mỗi ngày với ChatGPT'}).waitFor();
+    await page.getByText('Xem trước nội dung sẽ sao chép').click();
+    const preview = await page.locator('#sb-preview-text').inputValue();
+    assert.match(preview,new RegExp('PHIẾU HỌC TIẾNG ANH — '+today));
+    assert.ok(preview.includes('KẾ HOẠCH LẦN TRƯỚC (bạn giao ngày '+yesterday+'):\nQA synthetic plan: listening lesson 2'),'brief carries yesterday plan');
+    await page.getByLabel('Kế hoạch ChatGPT giao hôm nay').fill('QA synthetic plan for today');
+    await page.getByRole('button',{name:'Lưu kế hoạch hôm nay'}).click();
+    await page.getByRole('region',{name:'Kế hoạch hôm nay từ ChatGPT'}).waitFor();
+    await page.reload({waitUntil:'domcontentloaded'});
+    assert.match(await page.getByRole('region',{name:'Kế hoạch hôm nay từ ChatGPT'}).innerText(),/QA synthetic plan for today/);
+    assert.ok((await page.getByRole('button',{name:'Sao chép phiếu hôm nay'}).boundingBox())?.height>=44);
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth)<=2,'Study brief overflow on 320px');
+    console.log('PASS '+engine+' 320px: ChatGPT brief carries previous plan; pasted plan persists after reload');
+  } finally { await context.close(); }
+}
 try {
   await waitForServer();
   for (const [engine, launcher] of [['Chromium', chromium], ['WebKit', webkit]]) {
@@ -189,6 +220,7 @@ try {
       await study(browser,320,'level-zh-beginner-writing');
       await assessmentEvidence(browser, engine);
       await progressReview(browser, engine);
+      await studyBriefFlow(browser, engine);
     } finally {
       await browser.close();
       browser = undefined;
