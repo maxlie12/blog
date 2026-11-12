@@ -1,0 +1,39 @@
+name: Learning mobile viewport E2E
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [master]
+    paths:
+      - 'scripts/learning-mobile-smoke.mjs'
+      - '.github/workflows/learning-mobile-e2e.yml'
+      - 'src/components/PracticeCoach.tsx'
+      - 'src/components/ReviewCompletion.tsx'
+      - 'src/components/StartLearning.tsx'
+      - 'src/lib/localLearningProgress.ts'
+      - 'src/lib/localLessonState.ts'
+
+permissions:
+  contents: read
+
+jobs:
+  mobile-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DATABASE_URL: file:../data/ci-learning-e2e.db
+      SITE_TIMEZONE: Asia/Ho_Chi_Minh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Prepare isolated SQLite directory
+        run: mkdir -p data
+      - run: npm run db:migrate
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - name: Bilingual mobile viewport persistence smoke
+        run: node scripts/learning-mobile-smoke.mjs
