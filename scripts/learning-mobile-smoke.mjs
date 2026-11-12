@@ -51,7 +51,12 @@ async function study(browser, width, lessonId) {
     await page.goto(base + '/learning',{waitUntil:'domcontentloaded'});
     await page.goto(route,{waitUntil:'domcontentloaded'});
     await textBox.waitFor({state:'visible',timeout:20000});
-    assert.equal(await textBox.inputValue(),synthetic,'Draft must persist after navigating and reloading');
+    await page.waitForFunction(
+      ({ selector, expected }) => document.querySelector(selector)?.value === expected,
+      { selector: '#' + lessonId + '-response', expected: synthetic },
+      { timeout: 12000 },
+    );
+    assert.equal(await textBox.inputValue(), synthetic, 'Draft must persist after navigating and reloading');
     const saved = await page.locator('p[role="status"]').allTextContents();
     assert.ok(saved.some(x=>x.includes('khôi phục bài đang dở')),'Must clearly say draft is restored, not Done');
 
@@ -68,7 +73,12 @@ async function study(browser, width, lessonId) {
 
     await page.reload({waitUntil:'domcontentloaded'});
     await textBox.waitFor({state:'visible',timeout:20000});
-    assert.equal(await textBox.inputValue(),synthetic,'Completed answer must remain on this device');
+    await page.waitForFunction(
+      ({ selector, expected }) => document.querySelector(selector)?.value === expected,
+      { selector: '#' + lessonId + '-response', expected: synthetic },
+      { timeout: 12000 },
+    );
+    assert.equal(await textBox.inputValue(), synthetic, 'Completed answer must remain on this device');
     await page.getByText('ĐÃ GHI DONE · CHƯA TỰ CHẤM NĂNG LỰC').waitFor();
     await page.getByText(/Lần tự kiểm tra/).waitFor();
     assert.deepEqual(errors,[],'No client JS errors');
