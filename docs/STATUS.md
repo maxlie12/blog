@@ -1,6 +1,18 @@
 # Status
 
-Last verified: 2026-11-07 (farm chicken and duck yards; harness browser checks).
+Last verified: 2026-11-12 (English listening lab; unit tests and harness browser check).
+
+## 2026-11-12 — English: Phòng nghe (listening lab) with 4 skills and practice tests
+
+- `/learning/listening`: 12 short lessons in three levels (Dễ, Vừa, Khó). Each lesson is one page
+  with six fixed steps: vocabulary → listen (graded multiple choice) → read the transcript
+  (graded) → write (graded dictation + a short prompt with a model answer and self-check) →
+  speak along (local recording, self-rated) → results and Done. Practice tests per level or mixed,
+  fixed per day, with a timer and a history. `/learning` opens with one "Học tiếp bài N" card.
+- Scores are kept on this device per learner profile; Done uses the existing local completion.
+  Audio is the browser's own voice for now (VOA could not be reached from the build machine).
+- Checks: `listeningLab.test.ts` (6), ESLint, `tsc`; browser check 41/41 at 390 px. See
+  `docs/changes/LEARN-015-listening-lab.md`.
 
 ## 2026-11-11 — Farm: things to spend coins on
 
