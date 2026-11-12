@@ -1108,6 +1108,33 @@ export function writeScore(dictation: number | null, checked: number | null): nu
   return dictation === null ? ratio : (dictation + ratio) / 2;
 }
 
+/** ASR only highlights possible missing words; it cannot prove pronunciation quality. */
+export function speakingRetryFeedback(expected: string, transcript: string | null): {
+  source: "self" | "asr";
+  missing: string[];
+  nextStep: string;
+} {
+  if (!transcript?.trim()) {
+    return {
+      source: "self",
+      missing: [],
+      nextStep: "Nghe câu mẫu một lần, nói lại chậm theo từng cụm, rồi nghe bản ghi của mình.",
+    };
+  }
+  const missing = compareDictation(expected, transcript).words.filter((word) => !word.ok).map((word) => word.w);
+  return missing.length
+    ? {
+        source: "asr",
+        missing,
+        nextStep: `Thử nói lại cụm chứa “${missing[0]}”, rồi nghe so với câu mẫu. Máy có thể nhận dạng sai.`,
+      }
+    : {
+        source: "asr",
+        missing: [],
+        nextStep: "Bản chép lời nhận ra đủ từ theo thứ tự. Nghe lại nhịp, trọng âm và độ rõ; điều này chưa chứng minh phát âm chuẩn.",
+      };
+}
+
 /** Tự chấm phần nói, mỗi câu: 0 chưa giống, 0.5 gần giống, 1 giống bản mẫu. */
 export const SPEAK_RATINGS = [
   { value: 0, label: "Chưa giống" },
