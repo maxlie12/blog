@@ -6,7 +6,7 @@ import { PronounceButton } from "@/components/PronounceButton";
 import { dateInLearningTimezone, getLocalCompletionSummary, recordLocalCompletion } from "@/lib/localLearningProgress";
 import {
   PART_EVIDENCE, PART_WEIGHTS, WRITING_CHECKLIST, drillLines, gradeLabel, isComplete, labTotal, withLessonResult, writeScore, writingCheck,
-  type LabLesson as Lesson, type LabParts,
+  writingRubric, type LabLesson as Lesson, type LabParts,
 } from "@/lib/listeningLab";
 import { useLearnerProfile } from "@/lib/useLearnerProfile";
 import { DictationLine, LAB_CHANGED, LabPlayer, QuizBlock, SpeakLine, loadLab, percent, saveLab, stopSpeech } from "./labShared";
@@ -25,6 +25,7 @@ export function LabLesson({ lesson, levelName, next }: { lesson: Lesson; levelNa
   const [rate, setRate] = useState(0.9);
   const [dict, setDict] = useState<(number | null)[]>(() => lesson.dictation.map(() => null));
   const [essay, setEssay] = useState("");
+  const [rubricOpen, setRubricOpen] = useState(false);
   const [checked, setChecked] = useState<boolean[]>(() => WRITING_CHECKLIST.map(() => false));
   const [ratings, setRatings] = useState<(number | null)[]>(() => lesson.speaking.map(() => null));
   const [doneOn, setDoneOn] = useState<string | null>(null);
@@ -77,6 +78,7 @@ export function LabLesson({ lesson, levelName, next }: { lesson: Lesson; levelNa
   const dictDone = dict.every((value) => value !== null);
   const dictScore = dictDone ? dict.reduce<number>((sum, value) => sum + (value ?? 0), 0) / dict.length : null;
   const check = writingCheck(lesson, essay);
+  const rubric = rubricOpen && essay.trim() ? writingRubric(lesson, essay) : null;
 
   return (
     <article className="ll-lesson" aria-labelledby="ll-title">
@@ -159,6 +161,27 @@ export function LabLesson({ lesson, levelName, next }: { lesson: Lesson; levelNa
             <label htmlFor="ll-essay">Bài viết của bạn (chỉ ở trang này, không lưu hay gửi đi)</label>
             <textarea id="ll-essay" className="ll-input" rows={4} value={essay} onChange={(event) => setEssay(event.target.value)} />
             <p className="ll-note" aria-live="polite">{check.sentences} câu · từ vựng đã dùng: {check.used.length ? check.used.join(", ") : "chưa có"}</p>
+            <div className="ll-actions">
+              <button type="button" className="button button--ghost" disabled={!essay.trim()} onClick={() => setRubricOpen(true)}>
+                Xem rubric &amp; gợi ý sửa
+              </button>
+            </div>
+            {rubric && (
+              <section className="ll-note" aria-label="Rubric bản nháp" aria-live="polite">
+                <p><strong>Đối chiếu bản nháp</strong> — quy tắc gợi ý về hình thức, không chấm ngữ pháp hoặc mức CEFR.</p>
+                <ul>
+                  {rubric.checks.map((item) => (
+                    <li key={item.id}>
+                      <strong>{item.passed === null ? "Tự kiểm tra" : item.passed ? "Đạt mục tiêu" : "Cần sửa"} — {item.label}:</strong> {item.detail}
+                    </li>
+                  ))}
+                </ul>
+                <p><strong>Sửa một điểm trước:</strong> {rubric.nextStep}</p>
+                <button type="button" className="button button--ghost" onClick={() => document.getElementById("ll-essay")?.focus()}>
+                  Sửa bài và thử lại
+                </button>
+              </section>
+            )}
             <details className="ll-model"><summary>Xem bài mẫu</summary><p>{lesson.write.model}</p></details>
             <fieldset className="ll-checklist">
               <legend>Tự kiểm tra sau khi so với bài mẫu</legend>

@@ -1052,6 +1052,48 @@ export function writingCheck(lesson: LabLesson, text: string): { sentences: numb
   return { sentences, used };
 }
 
+/** Observable writing practice feedback. These rules cannot judge meaning, grammar or proficiency. */
+export function writingRubric(lesson: LabLesson, draft: string): {
+  checks: { id: string; label: string; passed: boolean | null; detail: string; retry: string }[];
+  nextStep: string;
+} {
+  const clean = draft.trim();
+  const text = writingCheck(lesson, clean);
+  const requested = lesson.write.prompt.match(/(\d+)(?:[–-]\d+)? sentences?/i);
+  const minimum = requested ? Number(requested[1]) : 2;
+  const checks = [
+    {
+      id: "sentences",
+      label: "Độ dài theo đề",
+      passed: text.sentences >= minimum,
+      detail: `${text.sentences}/${minimum} câu có ít nhất hai từ (mục tiêu tối thiểu).`,
+      retry: `Viết thêm cho đủ ít nhất ${minimum} câu có ý hoàn chỉnh.`,
+    },
+    {
+      id: "vocabulary",
+      label: "Từ vựng trong bài",
+      passed: text.used.length >= 2,
+      detail: `${text.used.length}/2 từ hoặc cụm từ trong bài: ${text.used.join(", ") || "chưa có"}.`,
+      retry: "Thử dùng tự nhiên thêm một từ hoặc cụm từ của bài; đừng nhồi từ làm sai nghĩa.",
+    },
+    {
+      id: "ending",
+      label: "Dấu kết câu",
+      passed: /[.!?]$/.test(clean),
+      detail: /[.!?]$/.test(clean) ? "Đã có dấu kết câu ở cuối đoạn." : "Chưa thấy dấu chấm, chấm hỏi hoặc chấm than ở cuối đoạn.",
+      retry: "Đọc lại câu cuối và thêm dấu kết câu phù hợp.",
+    },
+    {
+      id: "meaning",
+      label: "Đúng đề và ngữ pháp",
+      passed: null,
+      detail: "Không tự chấm được nội dung, lập luận, ngữ pháp và tính tự nhiên.",
+      retry: "Tự đối chiếu với đề và bài mẫu; chọn một chỗ chưa đúng ý hoặc ngữ pháp để viết lại.",
+    },
+  ];
+  return { checks, nextStep: checks.find((item) => item.passed === false)?.retry ?? checks[3].retry };
+}
+
 /** Câu tự kiểm tra cho bài viết; điểm viết = trung bình chính tả và tỉ lệ câu đã tích. */
 export const WRITING_CHECKLIST = [
   "Trả lời đúng điều đề hỏi",
