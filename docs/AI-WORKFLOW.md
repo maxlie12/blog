@@ -48,3 +48,7 @@ Do not use `--persist --force` unless the owner explicitly approves replacing an
 - Local browser data must say that it is device-specific.
 - ChatGPT feedback is optional; the site itself must be able to save a Done state.
 - Motion must explain progress, respect `prefers-reduced-motion`, and never block the lesson.
+
+## Seven-stage evidence handoff
+
+For scoped Max Learning work, follow [LEARNING-DELIVERY.md](LEARNING-DELIVERY.md). It supplies PM → BA → Architect/Dev → TEST → QA → DevOps → Orchestrator roles, required tests and an evidence-based release gate. Reuse the pinned Ponytail and UI/UX skills above rather than installing duplicates.
