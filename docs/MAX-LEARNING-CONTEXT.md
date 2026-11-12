@@ -1,6 +1,10 @@
 # Max Learning — context for the next Work session
 
-Updated 2026-11-09. Start here, then WORK-ROUTER and the active brief.
+Updated 2026-11-09 (archived checkpoint); corrected 2026-11-12.
+
+> **Current-state correction:** PR #2 was merged into `master` on 2026-11-09. Its older keep-draft/unmerged instructions below are historical QA notes, not instructions for current releases. Newer listening/speaking changes also reached `master` on 2026-11-12. Consult current HEAD, `docs/STATUS.md`, `docs/LEARNING-DELIVERY.md`, and the actual deployment before planning; real iPhone/Safari QA remains a separate acceptance gate.
+
+Start with WORK-ROUTER and the active brief.
 Source: maxlie12/blog, draft PR #2, branch codex/learning-resume-review. Never merge or
 release production without the user's request. Working code is not a verified release.
 

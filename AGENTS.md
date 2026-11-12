@@ -26,6 +26,8 @@ Additionally:
 - Read `.claude/skills/ponytail/SKILL.md` for coding changes.
 - Read `.claude/skills/ui-ux-pro-max/SKILL.md` for any visible or interactive change.
 
+For role-based Max Learning work, read `docs/LEARNING-DELIVERY.md` and invoke the existing native `learning-orchestrator` skill. Do not bypass the current change brief or release QA gates.
+
 ## Working rules
 
 1. Trace the real user flow and storage path before editing.

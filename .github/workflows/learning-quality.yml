@@ -1,0 +1,67 @@
+name: Max Learning quality gates
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - '.claude/skills/learning-*/**'
+      - 'docs/LEARNING-DELIVERY.md'
+      - 'docs/AI-WORKFLOW.md'
+      - 'docs/changes/OPS-001-learning-delivery.md'
+      - 'docs/MAX-LEARNING-CONTEXT.md'
+      - 'AGENTS.md'
+      - 'CLAUDE.md'
+      - 'scripts/check-learning-agent-kit.mjs'
+      - '.github/workflows/learning-quality.yml'
+      - 'src/app/learning/**'
+      - 'src/components/**'
+      - 'src/lib/**'
+      - 'content/daily-lessons/**'
+  push:
+    branches: [master]
+    paths:
+      - '.claude/skills/learning-*/**'
+      - 'docs/LEARNING-DELIVERY.md'
+      - 'docs/AI-WORKFLOW.md'
+      - 'docs/changes/OPS-001-learning-delivery.md'
+      - 'docs/MAX-LEARNING-CONTEXT.md'
+      - 'AGENTS.md'
+      - 'CLAUDE.md'
+      - 'scripts/check-learning-agent-kit.mjs'
+      - '.github/workflows/learning-quality.yml'
+      - 'src/app/learning/**'
+      - 'src/components/**'
+      - 'src/lib/**'
+      - 'content/daily-lessons/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: max-learning-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DATABASE_URL: file:../data/ci.db
+      SITE_TIMEZONE: Asia/Ho_Chi_Minh
+      BLOG_READ_ONLY_PREVIEW: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Verify seven-stage agent kit
+        run: node scripts/check-learning-agent-kit.mjs
+      - name: Install
+        run: npm ci
+      - name: Unit and integration tests
+        run: npm test
+      - name: Lint
+        run: npm run lint
+      - name: Production build
+        run: npm run build
