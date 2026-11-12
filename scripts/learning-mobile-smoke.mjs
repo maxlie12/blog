@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from 'playwright';
+import { chromium, webkit } from 'playwright';
 
 const port = 3400 + (process.pid % 1000);
 const base = `http://127.0.0.1:${port}`;
@@ -69,12 +69,41 @@ async function study(browser, width, lessonId) {
     await context.close();
   }
 }
+async function assessmentEvidence(browser, engine) {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  try {
+    const page = await context.newPage();
+    const response = await page.goto(base + '/learning/listening/e1-coffee-shop', { waitUntil: 'domcontentloaded' });
+    assert.equal(response?.status(), 200);
+    await page.locator('.ll-steps button').last().click();
+    const table = page.locator('.ll-results');
+    await table.waitFor({ state: 'visible' });
+    assert.equal(await table.locator('tbody tr').count(), 4);
+    const rendered = await table.innerText();
+    for (const source of ['Máy chấm đáp án', 'Chính tả máy chấm + tự kiểm tra', 'Người học tự chấm']) {
+      assert.ok(rendered.includes(source), engine + ' missing evidence source: ' + source);
+    }
+    assert.ok(rendered.includes('Chưa có điểm'), 'No score must not masquerade as graded');
+    await page.getByText('Điều kiện Done:', { exact: false }).waitFor();
+    console.log('PASS ' + engine + ' 390px: four-skill evidence labels and honest empty score');
+  } finally {
+    await context.close();
+  }
+}
 try {
   await waitForServer();
-  browser = await chromium.launch({headless:true});
-  await study(browser,390,'level-en-a2-writing');
-  await study(browser,320,'level-zh-beginner-writing');
-  console.log('Mobile viewport smoke: 2 bilingual synthetic flows PASS; real iOS Safari/audio NOT TESTED');
+  for (const [engine, launcher] of [['Chromium', chromium], ['WebKit', webkit]]) {
+    browser = await launcher.launch({ headless: true });
+    try {
+      await study(browser,390,'level-en-a2-writing');
+      await study(browser,320,'level-zh-beginner-writing');
+      await assessmentEvidence(browser, engine);
+    } finally {
+      await browser.close();
+      browser = undefined;
+    }
+  }
+  console.log('Mobile viewport smoke: Chromium + WebKit synthetic bilingual flows PASS; real iOS Safari/audio NOT TESTED');
 } finally {
   await browser?.close();
   server.kill('SIGTERM');

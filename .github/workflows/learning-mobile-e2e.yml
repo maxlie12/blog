@@ -10,6 +10,9 @@ on:
       - 'src/components/PracticeCoach.tsx'
       - 'src/components/ReviewCompletion.tsx'
       - 'src/components/StartLearning.tsx'
+      - 'src/components/listening/LabLesson.tsx'
+      - 'src/lib/listeningLab.ts'
+      - 'src/lib/listeningLab.test.ts'
       - 'src/lib/localLearningProgress.ts'
       - 'src/lib/localLessonState.ts'
 
@@ -34,6 +37,6 @@ jobs:
         run: mkdir -p data
       - run: npm run db:migrate
       - run: npm run build
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium webkit
       - name: Bilingual mobile viewport persistence smoke
         run: node scripts/learning-mobile-smoke.mjs

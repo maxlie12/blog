@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { PronounceButton } from "@/components/PronounceButton";
 import { dateInLearningTimezone, getLocalCompletionSummary, recordLocalCompletion } from "@/lib/localLearningProgress";
 import {
-  PART_WEIGHTS, WRITING_CHECKLIST, drillLines, gradeLabel, isComplete, labTotal, withLessonResult, writeScore, writingCheck,
+  PART_EVIDENCE, PART_WEIGHTS, WRITING_CHECKLIST, drillLines, gradeLabel, isComplete, labTotal, withLessonResult, writeScore, writingCheck,
   type LabLesson as Lesson, type LabParts,
 } from "@/lib/listeningLab";
 import { useLearnerProfile } from "@/lib/useLearnerProfile";
@@ -198,16 +198,23 @@ export function LabLesson({ lesson, levelName, next }: { lesson: Lesson; levelNa
         {step === 5 && (
           <>
             <table className="ll-results">
-              <caption className="sr-only">Điểm từng phần</caption>
-              <thead><tr><th scope="col">Phần</th><th scope="col">Điểm</th><th scope="col">Tỉ trọng</th></tr></thead>
+              <caption className="sr-only">Điểm luyện tập theo 4 kỹ năng và nguồn đánh giá</caption>
+              <thead><tr><th scope="col">Phần</th><th scope="col">Điểm</th><th scope="col">Tỉ trọng</th><th scope="col">Nguồn đánh giá</th></tr></thead>
               <tbody>
                 {(Object.keys(PART_NAMES) as (keyof LabParts)[]).map((part) => (
-                  <tr key={part}><th scope="row">{PART_NAMES[part]}</th><td>{parts[part] === null ? "chưa làm" : percent(parts[part])}</td><td>{PART_WEIGHTS[part]}%</td></tr>
+                  <tr key={part}><th scope="row">{PART_NAMES[part]}</th><td>{parts[part] === null ? "chưa làm" : percent(parts[part])}</td><td>{PART_WEIGHTS[part]}%</td><td>{PART_EVIDENCE[part].source}</td></tr>
                 ))}
               </tbody>
-              <tfoot><tr><th scope="row">Tổng</th><td colSpan={2}>{total === null ? "—" : `${total}% · ${gradeLabel(total)}`}</td></tr></tfoot>
+              <tfoot><tr><th scope="row">Tổng</th><td colSpan={3}>{total === null ? "Chưa có điểm" : complete ? `${total}% · ${gradeLabel(total)} (điểm tự luyện)` : `${total}% tạm tính trên các phần đã làm · chưa đủ 4 phần`}</td></tr></tfoot>
             </table>
-            <p className="ll-note">Điểm và ngày làm lưu trên máy này (hồ sơ {learner.name}). Đây là điểm tự luyện, không phải chứng nhận trình độ.</p>
+            <div className="ll-note">
+              <p><strong>Cách đánh giá từng kỹ năng</strong></p>
+              <ul>{(Object.keys(PART_NAMES) as (keyof LabParts)[]).map((part) => (
+                <li key={part}><strong>{PART_NAMES[part]}:</strong> {PART_EVIDENCE[part].criterion}</li>
+              ))}</ul>
+              <p><strong>Điều kiện Done:</strong> đã lưu điểm ở cả 4 phần; không yêu cầu mức điểm tối thiểu. Viết ngắn vẫn tùy chọn, nói vẫn tự chấm. Đây là hoàn thành vòng luyện, không phải bài thi xác nhận trình độ.</p>
+              <p>Điểm và ngày làm lưu trên máy này (hồ sơ {learner.name}); không lưu bài viết hay bản ghi âm.</p>
+            </div>
             <div className="ll-actions" aria-live="polite">
               {doneOn ? <p className="ll-score"><strong>Đã Done</strong> ngày {doneOn}.</p> : (
                 <button type="button" className="button button--primary" disabled={!complete} onClick={markDone}>Lưu &amp; Done</button>
