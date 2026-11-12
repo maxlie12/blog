@@ -4,7 +4,7 @@
 
 - **Issue:** `LEARN-017` (owner request, 2026-11-12: làm sao để chắc chắn nói được; thêm tình
   huống để nói, các phương pháp theo tâm lý học và các trường hợp khác nhau)
-- **Status:** done locally; deploy below
+- **Status:** done (deployed `d60f936`); real-phone check by owner pending
 - **Owner:** Claude
 - **Date:** 2026-11-12
 - **Builds on:** `LEARN-015-listening-lab.md` (Phòng nghe), `SpeakingRecorder` (ghi âm tại máy)
@@ -66,7 +66,7 @@ anxiety (Horwitz, Horwitz & Cope 1986) — private rehearsal and rescue phrases.
       ngược, câu mẫu, 100% và 88%; 4/3/2 đủ 3 lượt; "Nói được", lịch ôn +7 ngày, Done; tải lại
       giữ buổi hôm nay; danh sách cập nhật; che câu ở Phòng nghe; không cuộn ngang, nút ≥ 44 px.
       Phòng nghe chạy lại 47/47.
-- [ ] Vercel build + production deploy.
+- [x] Vercel build + production deploy (`d60f936`).
 
 ## Result
 
