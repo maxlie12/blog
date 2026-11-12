@@ -36,8 +36,16 @@ async function study(browser, width, lessonId) {
     assert.equal(response?.status(),200,'Lesson page must load');
     const textBox = page.locator('#' + lessonId + '-response');
     await textBox.waitFor({state:'visible',timeout:20000});
-    await textBox.fill(synthetic);
-    await page.getByRole('button',{name:'Lưu nháp · học sau'}).click();
+    const saveDraft = page.getByRole('button', { name: 'Lưu nháp · học sau' });
+    // WebKit can render SSR markup before hydration; do not mistake pre-hydration typing for a saved draft.
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      await textBox.fill('');
+      await textBox.fill(synthetic);
+      if (await saveDraft.isEnabled()) break;
+      await page.waitForTimeout(300);
+    }
+    assert.ok(await saveDraft.isEnabled(), 'The draft button must become enabled after typing');
+    await saveDraft.click();
     await page.getByText('Đã lưu nháp trên thiết bị, chưa ghi Done.',{exact:false}).waitFor({timeout:10000});
 
     await page.goto(base + '/learning',{waitUntil:'domcontentloaded'});
