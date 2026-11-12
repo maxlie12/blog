@@ -233,12 +233,14 @@ export function DictationLine({ n, line, rate, onScore }: { n: number; line: Lab
 export function SpeakLine({ n, line, rate, rating, onRate }: { n: number; line: LabLine; rate: number; rating: number | null; onRate: (value: number) => void }) {
   const supported = useSpeechSupported();
   const [heard, setHeard] = useState<string | null>(null);
+  const [hidden, setHidden] = useState(false);
   const match = heard ? compareDictation(line.t, heard) : null;
   return (
     <div className="ll-speak">
-      <p className="ll-speak__line"><span className="ll-q__n">{n}.</span> {line.t}</p>
+      <p className="ll-speak__line"><span className="ll-q__n">{n}.</span> {hidden ? <span className="ll-note">(đã che — nói lại không nhìn, rồi mở để so)</span> : line.t}</p>
       <div className="ll-player__row">
         <button type="button" className="button button--ghost" disabled={!supported} onClick={() => speakLines([line], rate)}>Nghe mẫu</button>
+        <button type="button" className="ll-chip" aria-pressed={hidden} onClick={() => setHidden((value) => !value)}>{hidden ? "Mở câu" : "Che câu"}</button>
       </div>
       <SpeakingRecorder language="en" onTranscript={setHeard}
         hint="Ghi âm rồi nghe lại, so với câu mẫu. Bản ghi chỉ ở máy này. Nếu muốn, bấm Chép lời để máy nghe thử bạn nói gì (lần đầu tải khoảng 100MB)." />

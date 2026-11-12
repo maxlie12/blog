@@ -50,6 +50,7 @@ export function LabEntry() {
       <div className="ll-entry__actions">
         <Link className="button button--primary" href={`/learning/listening/${next.id}`}>Học tiếp bài {ALL.indexOf(next) + 1} →</Link>
         <Link className="button button--ghost" href="/learning/listening">Tất cả bài · luyện đề</Link>
+        <Link className="button button--ghost" href="/learning/speaking">Phòng nói · 9 tình huống</Link>
       </div>
     </section>
   );
@@ -74,6 +75,7 @@ export function LabIndex() {
         <div className="ll-actions">
           <Link className="button button--primary" href={`/learning/listening/${next.id}`}>Học tiếp: {next.title} →</Link>
           <Link className="button button--ghost" href="/learning/listening/test">Luyện đề tổng hợp</Link>
+          <Link className="button button--ghost" href="/learning/speaking">Muốn nói được: Phòng nói</Link>
         </div>
       </section>
 

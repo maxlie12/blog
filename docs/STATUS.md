@@ -2,6 +2,16 @@
 
 Last verified: 2026-11-12 (English listening lab; unit tests and harness browser check).
 
+## 2026-11-12 — Phòng nói: speaking situations with a practice routine
+
+- `/learning/speaking`: 9 situations in three levels, each with two cases (a normal one and one
+  where something goes wrong) and an if-then plan, plus 7 rescue phrases. Fixed routine: chunks
+  and shadowing → recall from Vietnamese → timed role-play with a model answer → 4/3/2 fluency →
+  result. "Nói được" = ≥80% chunks and ≥80% turns answered at once in both cases; spaced review
+  1/3/7+ days. Done once per practice day. Phòng nghe gains a "Che câu" (say it without looking).
+- Checks: `speakingRoom.test.ts` (4), ESLint, `tsc`; browser checks 25/25 and 47/47. See
+  `docs/changes/LEARN-017-speaking-room.md`.
+
 ## 2026-11-12 — Phòng nghe: six VOA Learning English lessons with real audio
 
 - 18 lessons now: each level adds two VOA lessons (Let's Learn English 2 and 15; the Wright

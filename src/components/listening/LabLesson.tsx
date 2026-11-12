@@ -219,6 +219,7 @@ export function LabLesson({ lesson, levelName, next }: { lesson: Lesson; levelNa
               {next && <Link className="button button--primary" href={`/learning/listening/${next.id}`}>Bài tiếp: {next.title} →</Link>}
               <Link className="button button--ghost" href={`/learning/listening/test?level=${lesson.level}`}>Luyện đề mức {levelName}</Link>
               <Link className="button button--ghost" href="/learning/listening">Danh sách bài</Link>
+              <Link className="button button--ghost" href="/learning/speaking">Luyện nói theo tình huống</Link>
             </div>
           </>
         )}

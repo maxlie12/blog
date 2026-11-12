@@ -3808,3 +3808,18 @@ a.path-node--done:hover .path-node__circle { color: var(--surface); }
 .ll-test-bar__clock { font-family: var(--font-mono), monospace; font-weight: 700; }
 .ll-test-part { display: grid; gap: .6rem; }
 .ll-history ul { margin: .3rem 0 0; padding-left: 1.2rem; }
+
+/* Phòng nói (LEARN-017). */
+.sr-rescue, .sr-due, .sr-rounds { display: grid; gap: .45rem; margin: 0; padding: 0; list-style: none; }
+.sr-rescue li, .sr-rounds li { display: flex; align-items: center; justify-content: space-between; gap: .6rem; padding: .5rem .75rem; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-raised); }
+.sr-rescue li > span { display: grid; gap: .1rem; }
+.sr-rescue small { color: var(--text-muted); }
+.sr-rounds li[data-done="true"] { border-left: 4px solid var(--forest); }
+.sr-due a { display: inline-flex; align-items: center; min-height: 44px; }
+.sr-card, .sr-turn { display: grid; gap: .6rem; padding: 1rem; border: 1px solid var(--border); border-radius: 16px; background: var(--surface-raised); }
+.sr-card__vi { margin: 0; font-size: 1.2rem; font-weight: 600; }
+.sr-card__en { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: 0; padding: .55rem .75rem; border-left: 3px solid var(--forest); background: var(--surface); font-size: 1.05rem; }
+.sr-turn__partner { display: grid; gap: .35rem; padding: .6rem .75rem; border-radius: 12px; background: var(--sage); }
+.sr-turn__partner p, .sr-turn__cue { margin: 0; }
+.sr-timer { font-family: var(--font-mono), monospace; font-weight: 700; color: var(--forest); }
+.sr-timer[data-over="true"] { color: var(--ll-wrong); }
