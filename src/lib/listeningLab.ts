@@ -973,6 +973,14 @@ export interface LabParts {
 
 export const PART_WEIGHTS = { listen: 35, read: 25, write: 25, speak: 15 } as const;
 
+/** Nguồn của từng điểm, không đồng nhất với một bài đánh giá năng lực CEFR. */
+export const PART_EVIDENCE: Record<keyof LabParts, { source: string; criterion: string }> = {
+  listen: { source: "Máy chấm đáp án", criterion: "Trả lời câu hỏi nghe, so với đáp án." },
+  read: { source: "Máy chấm đáp án", criterion: "Trả lời câu hỏi đọc, so với đáp án." },
+  write: { source: "Chính tả máy chấm + tự kiểm tra", criterion: "Làm chính tả; bài viết ngắn và checklist là tùy chọn, không được máy chấm ngữ pháp." },
+  speak: { source: "Người học tự chấm", criterion: "Nói theo các câu mẫu và tự chọn mức giống; chưa kiểm chứng phát âm." },
+};
+
 /** Tổng điểm phần trăm trên các phần ĐÃ làm (null khi chưa làm gì). */
 export function labTotal(parts: LabParts): number | null {
   let got = 0;

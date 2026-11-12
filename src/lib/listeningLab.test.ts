@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  LEVELS, WRITING_CHECKLIST, buildTest, compareDictation, drillLines, emptyLabStore, isComplete, labLesson, labLessons, labTotal,
+  LEVELS, PART_EVIDENCE, WRITING_CHECKLIST, buildTest, compareDictation, drillLines, emptyLabStore, isComplete, labLesson, labLessons, labTotal,
   nextLabLesson, parseLabStore, withLessonResult, withTestResult, writeScore, writingCheck, type LabParts,
 } from "./listeningLab.ts";
 
@@ -87,4 +87,14 @@ test("store: best counts only full attempts, bad data reads as empty, next lesso
   assert.equal(nextLabLesson(store).id, "e2-directions");
   store = withTestResult(store, { date: "2026-11-12", score: 7, total: 10, minutes: 12 });
   assert.equal(parseLabStore(JSON.stringify(store)).tests[0].score, 7);
+});
+
+test("four-skill evidence labels distinguish objective scoring from self-reported work", () => {
+  assert.match(PART_EVIDENCE.listen.source, /Máy chấm/);
+  assert.match(PART_EVIDENCE.read.source, /Máy chấm/);
+  assert.match(PART_EVIDENCE.write.criterion, /không được máy chấm ngữ pháp/);
+  assert.match(PART_EVIDENCE.speak.source, /tự chấm/);
+  assert.deepEqual(Object.keys(PART_EVIDENCE), ['listen', 'read', 'write', 'speak']);
+  assert.equal(isComplete({ listen: 1, read: null, write: 1, speak: 1 }), false);
+  assert.equal(isComplete(done), true);
 });
