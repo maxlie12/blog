@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-13",
+  "title": "Mini-test tuần — nhớ lại, hỏi rõ và xác nhận",
+  "kind": "weekly-test",
+  "note": "Mốc ôn 7 ngày tính từ 09/10/2026. Không thêm nguồn hay tăng mức; chưa có bằng chứng hoàn thành. Chỉ phiên nghe 5 phút là chính; các phiên khác tùy chọn, làm rải lúc rảnh. Không suy ra CEFR từ tự kiểm tra.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-13-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — mini-test nghe ý định",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Mini-test do trợ lý tự soạn, không phải bài thi chính thức Cambridge. Không xem đáp án hoặc nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng; gửi ChatGPT bài viết/audio để nhận phản hồi.",
+      "material": "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues",
+      "exercises": "Ôn nguồn Cambridge đã dùng: miễn phí, audio và câu hỏi B1–B2; không mặc định có transcript. Trước khi mở nguồn, dành 30 giây nhớ lại một tình huống hoặc cách hỏi rõ từng luyện; chưa học thì ghi chưa học, không bị trừ điểm. Nghe một hội thoại tối đa hai lượt. Đóng audio rồi ghi bằng tiếng Anh: ý định người nói, một chi tiết có bằng chứng nghe và một câu hỏi tự tạo khi chưa rõ. Ghi số lượt nghe. Chưa mở đáp án; không đoán phần chưa nghe được. Đây là đầu ra thực hành, chưa phải kết quả chấm.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-13-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — mini-test đọc giới hạn",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Mini-test do trợ lý tự soạn, không phải bài thi chính thức Cambridge. Không xem đáp án hoặc nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng; gửi ChatGPT bài viết/audio để nhận phản hồi.",
+      "material": "Linh: Could you send me the draft before lunch?\nBen: I can send the text, but the images are not ready.\nLinh: That is fine. Please mark the missing images so I know what to review.\nBen: Should I email it or put it in the shared folder?\nLinh: The shared folder, please.",
+      "exercises": "Ôn hội thoại đã có hôm trước. Đọc một lượt rồi che đoạn: tự ghi cần gửi gì, thời hạn, nơi gửi và phần còn thiếu. Mở lại, tự đánh dấu dòng nào có bằng chứng trong đoạn, dòng nào mình đã đoán; chưa xem key. Nếu chưa học trước, coi đây là kiểm tra đầu vào ngắn, không phải kiểm tra khả năng nhớ.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-13-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — mini-test nói hỏi rõ",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Mini-test do trợ lý tự soạn, không phải bài thi chính thức Cambridge. Không xem đáp án hoặc nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng; gửi ChatGPT bài viết/audio để nhận phản hồi.",
+      "material": null,
+      "exercises": "Không xem bài cũ: nói 30–45 giây trong tình huống một người bạn nhờ gửi kế hoạch chuyến đi nhưng bạn chưa có giá vé. Nêu phần có thể gửi, giới hạn hiện tại và hỏi một thông tin cần làm rõ. Sau đó đổi sang tình huống đổi giờ hẹn và nói hai câu. Gửi ChatGPT audio nếu cần nhận xét; không có audio thì chưa thể đánh giá phát âm. Lưu một chỗ bị bí, không tự gán điểm trình độ.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-13-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5–10 phút — mini-test viết xác nhận",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Mini-test do trợ lý tự soạn, không phải bài thi chính thức Cambridge. Không xem đáp án hoặc nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng; gửi ChatGPT bài viết/audio để nhận phản hồi.",
+      "material": null,
+      "exercises": "Không xem mẫu: viết 40–60 từ cho bạn xác nhận cuộc hẹn tự chọn. Cần có giờ, địa điểm, lý do lựa chọn, một giới hạn và một câu hỏi cần người nhận trả lời. Chưa dùng AI sửa bản đầu. Lưu bản đầu và thời gian; gửi ChatGPT để nhận một góp ý về nội dung và một lỗi ngôn ngữ ưu tiên. Sau phản hồi mới viết lại hai câu, không cần sửa mọi lỗi.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-13-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — mini-test Trung nhớ và tạo câu",
+      "level": "Sơ cấp · giao tiếp đời sống",
+      "instructions": "Mini-test do trợ lý tự soạn, không phải bài thi chính thức Cambridge. Không xem đáp án hoặc nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng; gửi ChatGPT bài viết/audio để nhận phản hồi.",
+      "material": "https://mandarinbean.com/im-thirsty/",
+      "exercises": "Trước khi xem gợi ý, tự nói rồi gõ hai câu: bây giờ muốn uống gì và buổi tối muốn uống gì khác. Đổi tình huống sang nhờ người khác lấy đồ uống, tự tạo thêm một câu. Nếu bí mới dùng cụm ôn: 想喝 xiǎng hē — muốn uống; 一杯水 yì bēi shuǐ — một cốc nước; 请给我 qǐng gěi wǒ — làm ơn cho tôi. Ghi có/không dùng gợi ý. Mandarin Bean nguồn cũ có text/pinyin/audio miễn phí; một số bài tập/bản dịch Premium, không cần mua. Nghe lại sau lần tự nhớ. Viết tay tùy chọn, không lưu và không tự chấm.",
+      "completionCriteria": "Done chỉ khi đã tự tạo và lưu hai câu khác nhau, đồng thời đọc thành tiếng; không chép cụm làm đầu ra."
+    }
+  ]
+}
