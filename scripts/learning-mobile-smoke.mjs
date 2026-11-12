@@ -137,6 +137,49 @@ async function assessmentEvidence(browser, engine) {
     await context.close();
   }
 }
+async function progressReview(browser, engine) {
+  const context = await browser.newContext({viewport:{width:320,height:844},isMobile:true,hasTouch:true});
+  try {
+    const localDay = new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+    const p = Object.fromEntries(localDay.map(x=>[x.type,x.value]));
+    const today = p.year+'-'+p.month+'-'+p.day;
+    const offset = n => {
+      const [y,m,d]=today.split('-').map(Number);
+      return new Date(Date.UTC(y,m-1,d+n)).toISOString().slice(0,10);
+    };
+    const time = new Date().toISOString();
+    const rows = [
+      {id:'lesson:progress-smoke-en-new',lessonId:'progress-smoke-en-new',language:'en',skill:'listening',minutes:5,date:today,completedAt:time},
+      {id:'review:1:progress-smoke-en-new',lessonId:'progress-smoke-en-new',language:'en',skill:'listening',minutes:3,date:today,completedAt:time},
+      {id:'lesson:progress-smoke-en-old',lessonId:'progress-smoke-en-old',language:'en',skill:'speaking',minutes:5,date:offset(-10),completedAt:time},
+      {id:'lesson:progress-smoke-zh',lessonId:'progress-smoke-zh',language:'zh',skill:'writing',minutes:5,date:offset(-1),completedAt:time},
+    ];
+    await context.addInitScript((events)=>{
+      localStorage.setItem('learning-profile:luan:learning-completions-v1',JSON.stringify({version:1,completions:events}));
+      localStorage.setItem('learning-active-profile-v1','luan');
+    },rows);
+    const page = await context.newPage();
+    const response = await page.goto(base+'/learning',{waitUntil:'domcontentloaded'});
+    assert.equal(response?.status(),200);
+    await page.getByRole('heading',{name:'Tổng kết 7/28 ngày theo kỹ năng'}).waitFor();
+    const en = page.locator('[data-language="en"]');
+    const zh = page.locator('[data-language="zh"]');
+    await page.getByRole('button',{name:'7 ngày'}).click();
+    assert.match(await en.innerText(),/1 lượt Done · 1 lượt ôn/);
+    assert.match(await zh.innerText(),/1 lượt Done · 0 lượt ôn/);
+    await page.getByRole('button',{name:'28 ngày'}).click();
+    assert.match(await en.innerText(),/2 lượt Done · 1 lượt ôn/);
+    assert.match(await zh.innerText(),/1 lượt Done · 0 lượt ôn/);
+    assert.ok((await page.getByRole('button',{name:'28 ngày'}).boundingBox())?.height>=44);
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth)<=2,'Progress UI overflow on 320px');
+    await page.reload({waitUntil:'domcontentloaded'});
+    await page.getByRole('heading',{name:'Tổng kết 7/28 ngày theo kỹ năng'}).waitFor();
+    await page.getByRole('button',{name:'28 ngày'}).click();
+    assert.match(await en.innerText(),/2 lượt Done · 1 lượt ôn/);
+    assert.match(await page.locator('[class*="periodReview"]').innerText(),/không suy ra điểm năng lực/);
+    console.log('PASS '+engine+' 320px: seven/28-day Done and review separation, languages, reload and overflow');
+  } finally { await context.close(); }
+}
 try {
   await waitForServer();
   for (const [engine, launcher] of [['Chromium', chromium], ['WebKit', webkit]]) {
@@ -145,6 +188,7 @@ try {
       await study(browser,390,'level-en-a2-writing');
       await study(browser,320,'level-zh-beginner-writing');
       await assessmentEvidence(browser, engine);
+      await progressReview(browser, engine);
     } finally {
       await browser.close();
       browser = undefined;
