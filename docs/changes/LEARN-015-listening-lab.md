@@ -90,7 +90,7 @@ trên trang, không có câu hỏi chấm điểm, không rõ tiến độ lưu 
 - [x] Follow-up VOA: `listeningLab.test.ts` 6 pass (18 bài, 6 bài mỗi mức, 2 bài VOA mỗi mức, link
       mp3/nguồn đúng dạng, câu chính tả trong `drill`); trình duyệt 47/47 (thêm: bài VOA phát mp3
       VOA, ghi nguồn, tốc độ áp vào audio, ghi chú tóm tắt + link, chính tả đọc câu trích).
-- [ ] Vercel build + production deploy (follow-up).
+- [x] Vercel build + production deploy (follow-up `b056130`).
 
 ## Result
 
