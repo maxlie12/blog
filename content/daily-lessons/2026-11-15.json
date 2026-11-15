@@ -1,0 +1,74 @@
+{
+  "date": "2026-11-15",
+  "title": "Nghe lời đề nghị — hỏi rõ trước khi đồng ý",
+  "kind": "restart",
+  "note": "Giữ B1+ tự đánh giá và bước nghe/đọc hiểu vì chưa có bài làm mới. Chỉ nhiệm vụ đầu là chính; các phần khác tùy chọn, không học bù bắt buộc. Chủ nhật tuần ISO 46: có Blog Seed tùy chọn, không xuất bản blog thay người học.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-15-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — nghe một lời đề nghị",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues",
+      "exercises": "Dùng lại Cambridge Listening to dialogues: miễn phí, audio và câu hỏi B1–B2; không mặc định có transcript. Nghe một hội thoại tối đa hai lượt, chưa mở đáp án. Tự ghi ba dòng tiếng Anh: người nói đề nghị hoặc muốn điều gì; một chi tiết nghe chắc; một câu hỏi bạn sẽ dùng để xác nhận điều chưa rõ. Nếu không nghe ra thì ghi rõ, không đoán thành dữ kiện. Ghi số lượt nghe và hỗ trợ. Chưa chuyển sang shadowing hoặc bước mới khi chưa có bằng chứng hoàn thành.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-15-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — đọc kế hoạch có phương án khác",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "Kim: Would you like to walk in the park this afternoon?\nLeo: Yes, but I need to be home by six.\nKim: We could meet at four near the main gate.\nLeo: That works. What if it rains?\nKim: We can meet at the café across the street instead.",
+      "exercises": "Hội thoại tự soạn, không phải transcript Cambridge. Nêu thời gian và nơi gặp, giới hạn của Leo và phương án nếu trời mưa. Dùng lời của bạn giải thích một điểm cần hỏi thêm trước khi đi; phân biệt dữ kiện trong đoạn với câu hỏi do bạn tạo.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-15-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — rủ bạn và xử lý thay đổi",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Tình huống tự soạn: rủ bạn đi bộ nhưng bạn phải về trước một giờ tự chọn. Nói 30–45 giây: lời mời, giờ và nơi gặp, giới hạn của mình, phương án nếu trời mưa. Đổi tình huống: bạn kia đến muộn, tự nói hai câu điều chỉnh. Lưu hai câu tự tạo; gửi ChatGPT audio để nhận phản hồi nếu muốn.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-15-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5 phút — viết lời mời rõ ràng",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Viết 30–50 từ rủ một người bạn tham gia hoạt động cuối tuần: giờ, nơi gặp, một lý do và phương án thay thế. Không chép hội thoại, không dùng AI sửa bản đầu. Chỉ kiểm tra người nhận có biết phải xác nhận điều gì không.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-15-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — mời bạn uống gì",
+      "level": "Sơ cấp · giao tiếp đời sống",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "https://mandarinbean.com/im-thirsty/",
+      "exercises": "Dùng lại Mandarin Bean: text/pinyin/audio miễn phí, một số bài tập và bản dịch Premium; không cần mua. Nghe một câu ngắn. Cụm tự soạn: 你想喝什么？Nǐ xiǎng hē shénme? — Bạn muốn uống gì?; 一杯茶 yì bēi chá — một tách trà; 一杯水 yì bēi shuǐ — một cốc nước. Che chữ/pinyin, tự nói và gõ một cặp hỏi–đáp, rồi tạo một câu mới đổi người hoặc đồ uống. Viết tay tùy chọn, không lưu và không tự chấm.",
+      "completionCriteria": "Done chỉ khi đã nói và lưu một cặp hỏi–đáp cùng một câu mới tự tạo; không tự suy ra trình độ."
+    },
+    {
+      "id": "daily-2026-11-15-en-blog-seed",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 10–15 phút — Blog Seed: A Small Change That Made My Week Easier",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Gợi ý do trợ lý tự soạn, không phải bài chính thức. Không có bài mẫu hoặc đáp án. Không bắt buộc, không thay nhiệm vụ chính và không xuất bản blog thay bạn.",
+      "material": null,
+      "exercises": "Viết bản nháp tiếng Anh 100–150 từ từ một trải nghiệm thật; có thể là điều chỉnh cách làm frontend, học hoặc tổ chức ngày sống. Tiêu đề gợi ý: A Small Change That Made My Week Easier. Ba câu hỏi lập dàn ý: (1) What was making your week difficult? (2) What small change did you try, and why? (3) What happened, and what would you keep or change next time? Cụm hữu ích: get distracted — bị phân tâm; set aside time — dành riêng thời gian; a small adjustment — điều chỉnh nhỏ; instead of + V-ing — thay vì; what worked for me — điều hiệu quả với tôi; I noticed that… — tôi nhận thấy rằng… . Tự viết bản đầu, không bịa kết quả hoặc đưa dữ liệu công việc riêng. Gửi ChatGPT để sửa một lỗi lập luận, một lỗi ngôn ngữ và đề xuất bản chỉnh sửa sau khi bạn đã viết.",
+      "completionCriteria": "Có bản nháp do mình tự viết; Done chỉ ghi thực hành, không suy ra CEFR hoặc tiến bộ."
+    }
+  ]
+}
