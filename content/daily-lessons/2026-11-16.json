@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-16",
+  "title": "Nghe để hiểu — xác nhận việc tiếp theo",
+  "kind": "restart",
+  "note": "Chưa có bài làm mới: giữ B1+ tự đánh giá, bước nghe/đọc hiểu và nguồn đã xác minh. Chỉ nhiệm vụ đầu là chính, các phần khác tùy chọn; không học bù bắt buộc. Không có Blog Seed hôm nay.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-16-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — nghe rồi hỏi việc tiếp theo",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues",
+      "exercises": "Dùng lại Cambridge Listening to dialogues: miễn phí, audio và câu hỏi B1–B2; không mặc định có transcript. Nghe một hội thoại tối đa hai lượt, không mở đáp án. Tự viết ba dòng: người nói muốn gì; một chi tiết nghe chắc; một câu hỏi để biết cần làm gì tiếp theo. Ghi chưa nghe ra nếu không chắc, không bịa chi tiết. Lưu số lượt nghe và hỗ trợ đã dùng. Chưa chuyển bước trong chu kỳ khi chưa có bằng chứng hoàn thành. Nếu chưa học trước, chỉ làm nhiệm vụ này là đủ.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-16-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — đọc yêu cầu kiểm tra",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "Nina: The form works on my laptop, but I have not checked it on a phone.\nTom: I can test it after lunch. Which part should I check first?\nNina: The date field. Some people say they cannot change it.\nTom: Should I fix it straight away?\nNina: First, send me the steps and a screenshot using test data.",
+      "exercises": "Hội thoại do trợ lý tự soạn, không phải transcript Cambridge hay dữ liệu dự án thật. Nêu thiết bị cần kiểm tra, phần ưu tiên và thứ phải gửi trước khi sửa. Chi tiết nào mới chỉ là phản ánh của người dùng, chưa được Tom xác minh? Giải thích bằng lời của bạn.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-16-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — hỏi rõ trước khi nhận việc",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Tình huống tự soạn: đồng nghiệp nhờ kiểm tra một form nhưng chưa nói rõ thiết bị và lỗi. Nói 30–45 giây: hỏi hai câu làm rõ rồi xác nhận việc sẽ kiểm tra trước. Biến thể: chỉ có mười phút, đề xuất phạm vi nhỏ hơn. Lưu hai câu tự tạo và một chỗ bị bí. Gửi ChatGPT audio nếu muốn nhận xét phát âm; không đưa thông tin công việc thật.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-16-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5 phút — viết cập nhật chưa kết luận",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Viết 30–50 từ báo cho đồng nghiệp trong tình huống giả lập: phần sẽ kiểm tra, thời điểm gửi kết quả và một điều chưa xác minh. Không tuyên bố đã tìm ra lỗi khi chưa kiểm tra. Tự chọn chi tiết, không chép đoạn đọc hoặc dùng AI sửa bản đầu. Rà lại một điểm: người nhận có phân biệt kế hoạch với kết quả đã có không?",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-16-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — đổi ý khi chọn đồ uống",
+      "level": "Sơ cấp · giao tiếp đời sống",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "https://mandarinbean.com/im-thirsty/",
+      "exercises": "Dùng lại Mandarin Bean: text/pinyin/audio miễn phí; một số bài tập và bản dịch Premium, không cần mua. Nghe một câu ngắn. Cụm tự soạn để ôn: 想喝 xiǎng hē — muốn uống; 不想喝 bù xiǎng hē — không muốn uống; 水 shuǐ — nước; 茶 chá — trà; 咖啡 kāfēi — cà phê. Che chữ/pinyin, tự nói và gõ một câu muốn uống gì và một câu không muốn uống gì. Sau đó tạo một câu mới đổi thời điểm hoặc người nói. Viết tay tùy chọn, không lưu và không tự chấm.",
+      "completionCriteria": "Done chỉ khi đã nói và lưu hai câu cùng một câu mới do mình tạo; không chép mẫu, không tự suy ra trình độ."
+    }
+  ]
+}
