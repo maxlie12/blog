@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-18",
+  "title": "Nghe để hỏi rõ — tránh hiểu nhầm lịch hẹn",
+  "kind": "restart",
+  "note": "Chưa có bài làm mới: giữ B1+ tự đánh giá, bước nghe/đọc hiểu và nguồn đã xác minh. Chỉ nhiệm vụ đầu là chính, các phần khác tùy chọn; không học bù bắt buộc. Không có Blog Seed hôm nay.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-18-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — nghe rồi xác nhận",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues",
+      "exercises": "Dùng lại Cambridge Listening to dialogues: miễn phí, audio và câu hỏi B1–B2; không mặc định có transcript. Giữ bước nghe/đọc hiểu vì chưa có bài làm mới. Nghe một hội thoại tối đa hai lượt rồi viết ba dòng tiếng Anh: người nói đang trao đổi việc gì; một chi tiết nghe chắc; một câu hỏi để xác nhận phần chưa rõ. Nếu chưa nghe ra thì ghi rõ, không đoán thành sự thật. Ghi số lượt nghe và hỗ trợ đã dùng. Chưa mở đáp án. Chỉ nhiệm vụ này là chính, không cần học bù.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-18-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — đọc thay đổi lịch hẹn",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "Rosa: Could we move our call to Thursday afternoon?\nDan: I am free after three, but I need to finish by four.\nRosa: Half an hour should be enough. Shall we start at three fifteen?\nDan: Yes. Could you send the new link?\nRosa: Of course. I will send it this evening.",
+      "exercises": "Hội thoại tự soạn, không phải transcript Cambridge. Nêu ngày và giờ bắt đầu đã đồng ý, giới hạn của Dan và việc Rosa hứa làm. Dựa vào thời lượng dự kiến, cuộc gọi có kết thúc trước giới hạn không? Giải thích bằng một câu tự viết, không xem đáp án trước.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-18-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — đổi lịch một cách rõ ràng",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Tình huống tự soạn: bạn muốn đổi giờ gọi với một người bạn. Nói 30–45 giây: đề xuất giờ mới, nêu một giới hạn và hỏi họ có phù hợp không. Biến thể: họ chỉ rảnh mười lăm phút, tự đề xuất cách rút ngắn cuộc gọi. Lưu hai câu tự tạo và một điểm bị bí; gửi ChatGPT audio nếu muốn góp ý phát âm.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-18-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5 phút — nhắn xác nhận lịch mới",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Viết 30–50 từ xác nhận một cuộc gọi giả lập: ngày giờ, thời lượng, một nội dung muốn trao đổi và yêu cầu gửi đường dẫn. Tự chọn chi tiết, không chép đoạn đọc hay dùng AI sửa bản đầu. Rà một điểm: người nhận có phân biệt được giờ bắt đầu và giờ phải kết thúc không?",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-18-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — lựa chọn bây giờ và lát nữa",
+      "level": "Sơ cấp · giao tiếp đời sống",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "https://mandarinbean.com/im-thirsty/",
+      "exercises": "Mandarin Bean nguồn cũ: text/pinyin/audio miễn phí; một số bài tập và bản dịch Premium, không cần mua. Nghe một câu ngắn. Ôn cụm tự soạn: 现在 xiànzài — bây giờ; 想喝 xiǎng hē — muốn uống; 水 shuǐ — nước; 茶 chá — trà; 晚上 wǎnshang — buổi tối. Nhìn rồi che chữ/pinyin, tự nói và gõ hai câu: bây giờ muốn uống gì, buổi tối chọn gì khác. Thêm một câu mới nói về người bạn giả định. Không chép mẫu. Viết tay tùy chọn, không lưu và không tự chấm.",
+      "completionCriteria": "Done chỉ khi đã nói và lưu hai câu cùng một câu mới do mình tạo; không suy ra trình độ."
+    }
+  ]
+}
