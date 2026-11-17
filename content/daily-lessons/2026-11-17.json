@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-17",
+  "title": "Nghe yêu cầu — phân biệt lựa chọn và quyết định",
+  "kind": "restart",
+  "note": "Chưa có bài làm mới: giữ B1+ tự đánh giá, bước nghe/đọc hiểu và nguồn đã xác minh. Chỉ nhiệm vụ đầu là chính, các phần khác tùy chọn; không học bù bắt buộc. Không có Blog Seed hôm nay.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-17-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — nghe điều đã chốt",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues",
+      "exercises": "Dùng lại Cambridge Listening to dialogues: miễn phí, audio và câu hỏi B1–B2; không mặc định có transcript. Giữ bước nghe/đọc hiểu. Nghe một hội thoại tối đa hai lượt, chưa mở đáp án. Ghi ba dòng tiếng Anh: tình huống chính; một chi tiết đã được người nói xác nhận; một điều chưa rõ cùng câu hỏi để làm rõ. Nếu không xác định được điều đã chốt, ghi chưa nghe chắc, không đoán. Lưu số lượt nghe và hỗ trợ. Chỉ làm một hội thoại là đủ, không học bù bắt buộc.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-17-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — đọc phương án nhận hàng",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "Eva: Your order is ready, but the delivery driver cannot come today.\nMinh: Can I collect it after work?\nEva: Yes, we close at seven. Please bring your order number.\nMinh: I might arrive at half past six. Is there parking nearby?\nEva: There is a car park behind the shop, but I do not know if it will be full.",
+      "exercises": "Hội thoại tự soạn, không phải transcript Cambridge. Nêu vấn đề giao hàng, giờ đóng cửa và thứ Minh cần mang. Giờ Minh đến đã chắc chắn chưa? Thông tin nào về bãi xe chưa được xác nhận? Trả lời bằng lời của bạn, không thêm dữ kiện.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-17-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — hỏi trước khi đến lấy hàng",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Tình huống tự soạn: bạn muốn đến nhận một món hàng sau giờ làm nhưng chưa rõ giờ đóng cửa. Nói 30–45 giây: nêu mục đích, hỏi giờ và thứ cần mang, đề xuất giờ đến. Biến thể: không đến kịp, hỏi phương án ngày mai. Lưu hai câu tự tạo và một điểm bị bí; gửi ChatGPT audio nếu muốn góp ý phát âm. Không dùng mã đơn thật.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-17-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5 phút — nhắn xác nhận có điều kiện",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Viết 30–50 từ nhắn cửa hàng trong tình huống giả lập: món muốn nhận, giờ dự kiến đến, một điều cần hỏi và phương án nếu đến muộn. Tự chọn chi tiết, không chép hội thoại hoặc dùng AI sửa bản đầu. Rà một điểm: câu nào là dự kiến và câu nào là thông tin đã chắc?",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-17-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — hỏi và đổi đồ uống",
+      "level": "Sơ cấp · giao tiếp đời sống",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "https://mandarinbean.com/im-thirsty/",
+      "exercises": "Nguồn Mandarin Bean dùng lại: text/pinyin/audio miễn phí; một số bài tập và bản dịch Premium, không cần mua. Nghe một câu ngắn. Ôn cụm tự soạn: 你想喝什么？Nǐ xiǎng hē shénme? — Bạn muốn uống gì?; 想喝 xiǎng hē — muốn uống; 茶 chá — trà; 水 shuǐ — nước. Che chữ/pinyin, tự nói rồi gõ cặp hỏi–đáp chọn đồ uống. Tạo thêm một câu mới thể hiện lựa chọn khác vào buổi tối (晚上 wǎnshang — buổi tối). Viết tay tùy chọn, không lưu hoặc tự chấm.",
+      "completionCriteria": "Done chỉ khi đã nói và lưu cặp hỏi–đáp cùng một câu mới tự tạo; không chép mẫu, không suy ra trình độ."
+    }
+  ]
+}
