@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-19",
+  "title": "Nghe nhu cầu — xin nhắc lại khi chưa rõ",
+  "kind": "restart",
+  "note": "Chưa có bài làm mới: giữ B1+ tự đánh giá, bước nghe/đọc hiểu và nguồn đã xác minh. Chỉ nhiệm vụ đầu là chính, các phần khác tùy chọn; không học bù bắt buộc. Không có Blog Seed hôm nay.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-19-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — nghe ý chính và hỏi lại",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues",
+      "exercises": "Dùng lại Cambridge Listening to dialogues: miễn phí, audio và câu hỏi B1–B2; không mặc định có transcript. Giữ bước nghe/đọc hiểu, không tự chuyển chu kỳ. Nghe một hội thoại tối đa hai lượt, chưa mở đáp án. Viết ba dòng tiếng Anh: nhu cầu chính của người nói; một chi tiết nghe chắc; một câu tự tạo xin nhắc lại hoặc làm rõ phần chưa nghe được. Ghi chưa nghe ra nếu cần, không bịa. Lưu số lượt nghe và hỗ trợ. Chỉ nhiệm vụ này là chính, không học bù bắt buộc.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-19-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — đọc chỉ dẫn khi đến nơi",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "Visitor: Is the workshop in room twelve?\nHost: It was, but we have moved upstairs to room twenty.\nVisitor: Sorry, did you say room two or twenty?\nHost: Twenty, on the second floor. The stairs are beside the reception desk.\nVisitor: Thanks. Do I need to sign in first?\nHost: Yes, please give your name at reception.",
+      "exercises": "Hội thoại tự soạn, không phải transcript Cambridge. Nêu phòng ban đầu, phòng mới và việc khách phải làm trước. Khách đã làm gì để tránh hiểu nhầm số phòng? Tự viết thêm một câu hỏi nếu chưa biết lối đi; không sao chép lời khách.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-19-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — hỏi đường và xác nhận số phòng",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Tình huống tự soạn: bạn đến một buổi học, nghe chưa rõ phòng hai hay phòng hai mươi. Nói 30–45 giây: xin nhắc lại, xác nhận số phòng và hỏi cách lên tầng. Biến thể: bạn không tìm thấy cầu thang, tự hỏi lại bằng cách khác. Lưu hai câu tự tạo; gửi ChatGPT audio nếu muốn góp ý phát âm. Không cần nói nhanh.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-19-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5 phút — nhắn hỏi thông tin còn thiếu",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Viết 30–50 từ cho người tổ chức buổi học giả lập: xác nhận thời gian, hỏi số phòng và nơi đăng ký khi đến. Tự chọn chi tiết; không dùng AI sửa bản đầu hoặc chép đoạn đọc. Chỉ rà lại người nhận có biết chính xác hai thông tin bạn cần họ xác nhận không.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-19-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — xin nước và hỏi lựa chọn",
+      "level": "Sơ cấp · giao tiếp đời sống",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài thi chính thức. Không mở đáp án hoặc dùng AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "https://mandarinbean.com/im-thirsty/",
+      "exercises": "Dùng lại Mandarin Bean: text/pinyin/audio miễn phí; một số bài tập và bản dịch Premium, không cần mua. Nghe một câu ngắn. Ôn cụm tự soạn: 请给我… qǐng gěi wǒ… — làm ơn cho tôi…; 一杯水 yì bēi shuǐ — một cốc nước; 一杯茶 yì bēi chá — một tách trà; 你呢？nǐ ne? — còn bạn? Nhìn rồi che chữ/pinyin, tự nói và gõ một lời xin đồ uống và câu hỏi cho bạn đi cùng. Tạo một câu mới đổi đồ uống hoặc người nhận. Viết tay tùy chọn, không lưu và không tự chấm.",
+      "completionCriteria": "Done chỉ khi đã nói và lưu hai câu cùng một câu mới do mình tạo; không suy ra trình độ."
+    }
+  ]
+}
