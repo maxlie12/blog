@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-20",
+  "title": "Mini-test tuần — nghe, xác nhận và phản hồi",
+  "kind": "weekly-test",
+  "note": "Mốc ôn 7 ngày tính từ 09/10/2026. Chưa có bài làm mới nên giữ B1+ tự đánh giá, không tăng mức hoặc chuyển bước chu kỳ. Chỉ phiên nghe 5 phút là chính; các phiên khác tùy chọn, không yêu cầu học bù. Không có Blog Seed.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-20-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — mini-test nghe và hỏi rõ",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Mini-test ôn tập do trợ lý tự soạn, không phải bài thi chính thức. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi thời gian và hỗ trợ đã dùng.",
+      "material": "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues",
+      "exercises": "Ôn Cambridge Listening to dialogues đã dùng: miễn phí, audio và câu hỏi B1–B2; không mặc định có transcript. Trước khi mở nguồn, nhớ lại một cách xin nhắc lại từng luyện; chưa học thì ghi chưa học. Nghe một hội thoại tối đa hai lượt, đóng audio và tự viết ba dòng tiếng Anh: nhu cầu chính, một chi tiết nghe chắc, một câu hỏi làm rõ điều chưa chắc. Không đoán thành dữ kiện, chưa mở đáp án. Ghi số lượt nghe và hỗ trợ; chỉ phiên này là nhiệm vụ chính.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-20-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — mini-test đọc chỉ dẫn cũ",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Mini-test ôn tập do trợ lý tự soạn, không phải bài thi chính thức. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi thời gian và hỗ trợ đã dùng.",
+      "material": "Visitor: Is the workshop in room twelve?\nHost: It was, but we have moved upstairs to room twenty.\nVisitor: Sorry, did you say room two or twenty?\nHost: Twenty, on the second floor. The stairs are beside the reception desk.\nVisitor: Thanks. Do I need to sign in first?\nHost: Yes, please give your name at reception.",
+      "exercises": "Ôn hội thoại hôm trước. Đọc một lượt rồi che đoạn, tự ghi: phòng mới, tầng, nơi có cầu thang và việc cần làm trước. Mở lại, đánh dấu mỗi ý có/không có bằng chứng; chưa xem key. Viết thêm một câu hỏi tự tạo để tránh nhầm số phòng. Nếu chưa học đoạn này, ghi lần đầu, không coi kết quả là khả năng nhớ.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-20-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — mini-test nói hai tình huống",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Mini-test ôn tập do trợ lý tự soạn, không phải bài thi chính thức. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi thời gian và hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Không xem bài cũ: nói 30–45 giây khi đến lớp và chưa nghe rõ số phòng, cần xin nhắc lại và hỏi đường. Sau đó đổi sang gọi cho cửa hàng để hỏi giờ đến lấy hàng, tự nói hai câu. Lưu một câu mình đã dùng được và một chỗ bị bí; gửi ChatGPT audio nếu muốn nhận xét phát âm. Không có audio thì chưa đánh giá phát âm; không tự quy đổi CEFR.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-20-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5–10 phút — mini-test viết xác nhận",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Mini-test ôn tập do trợ lý tự soạn, không phải bài thi chính thức. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi thời gian và hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Không xem mẫu: viết 40–60 từ nhắn người tổ chức buổi học giả lập, xác nhận thời gian, hỏi phòng và cách đăng ký khi đến. Tự thêm một giới hạn về thời gian của bạn và hỏi phương án phù hợp. Lưu bản đầu và thời gian, không dùng AI sửa trước. Gửi ChatGPT để nhận một góp ý về ý nghĩa và một lỗi ngôn ngữ ưu tiên; sau phản hồi mới sửa hai câu.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-20-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — mini-test Trung tự tạo lời nhờ",
+      "level": "Sơ cấp · giao tiếp đời sống",
+      "instructions": "Mini-test ôn tập do trợ lý tự soạn, không phải bài thi chính thức. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi thời gian và hỗ trợ đã dùng.",
+      "material": "https://mandarinbean.com/im-thirsty/",
+      "exercises": "Không xem cụm trước: tự nói rồi gõ lời xin một đồ uống và hỏi bạn đi cùng muốn gì. Tạo thêm một câu đổi lựa chọn. Nếu bí mới xem cụm ôn: 请给我… qǐng gěi wǒ… — làm ơn cho tôi…; 一杯水 yì bēi shuǐ — một cốc nước; 你呢？nǐ ne? — còn bạn? Ghi có/không dùng gợi ý. Sau lần tự nhớ mới nghe lại Mandarin Bean nguồn cũ: text/pinyin/audio miễn phí, một số bài tập/bản dịch Premium; không cần mua. Viết tay tùy chọn, không lưu và không tự chấm.",
+      "completionCriteria": "Done chỉ khi đã nói và lưu hai câu cùng một câu mới do mình tạo; không suy ra trình độ."
+    }
+  ]
+}
