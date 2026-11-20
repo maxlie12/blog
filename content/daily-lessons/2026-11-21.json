@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-21",
+  "title": "Nghe để hiểu — hỏi lại thay vì đoán",
+  "kind": "restart",
+  "note": "Chưa có bài làm mới: giữ B1+ tự đánh giá và bước nghe/đọc hiểu, không tự chuyển bước sau mini-test. Chỉ khởi động 5 phút là chính; phần còn lại tùy chọn, không học bù bắt buộc. Dùng lại nguồn đã xác minh. Không có Blog Seed.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-21-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — hiểu nhu cầu và xác nhận",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues",
+      "exercises": "Dùng lại Cambridge Listening to dialogues: miễn phí, có audio và câu hỏi B1–B2; không mặc định có transcript. Nghe một hội thoại tối đa hai lượt, chưa mở đáp án. Tự viết ba dòng tiếng Anh: người nói cần gì; một chi tiết nghe chắc; một câu hỏi để xác nhận điều chưa rõ. Không nghe ra thì ghi rõ, không đoán thành dữ kiện. Ghi số lượt nghe và hỗ trợ đã dùng. Giữ bước nghe/đọc hiểu; chỉ nhiệm vụ này là chính.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-21-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — đọc yêu cầu mượn đồ",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "Noah: Can I borrow your charger for the afternoon?\nLinh: Yes, but I need it back before five.\nNoah: Thanks. Does it work with my phone?\nLinh: I am not sure. It has a USB-C connector.\nNoah: I will check first. Where should I leave it afterwards?\nLinh: On my desk, please.",
+      "exercises": "Hội thoại tự soạn, không phải transcript Cambridge. Nêu món đồ muốn mượn, hạn trả và nơi để lại. Chi tiết nào chưa được xác nhận? Tự viết một câu hỏi khác để làm rõ trước khi mượn, không chép lời Noah.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-21-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — mượn đồ và thống nhất trả",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Tình huống tự soạn: bạn muốn mượn sạc của một người quen nhưng chưa rõ có phù hợp điện thoại không. Nói 30–45 giây: xin mượn, hỏi độ phù hợp và thống nhất lúc trả. Biến thể: cần dùng lâu hơn dự kiến, tự xin đổi thời gian. Lưu hai câu tự tạo và một chỗ bị bí; gửi ChatGPT audio nếu cần góp ý phát âm.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-21-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5 phút — nhắn xác nhận trả đồ",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Viết 30–50 từ nhắn người cho mượn đồ trong tình huống giả lập: cảm ơn, xác nhận giờ và nơi trả, hỏi một thông tin còn thiếu. Không chép đoạn đọc hoặc dùng AI sửa bản đầu. Chỉ rà xem người nhận có biết bạn cam kết trả như thế nào không.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-21-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — xin đồ uống và đổi người",
+      "level": "Sơ cấp · giao tiếp đời sống",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "https://mandarinbean.com/im-thirsty/",
+      "exercises": "Dùng lại Mandarin Bean: text/pinyin/audio miễn phí; một số bài tập và bản dịch Premium, không cần mua. Nghe một câu ngắn. Cụm tự soạn để ôn: 请给我… qǐng gěi wǒ… — làm ơn cho tôi…; 一杯水 yì bēi shuǐ — một cốc nước; 一杯茶 yì bēi chá — một tách trà; 朋友 péngyou — bạn. Nhìn rồi che chữ/pinyin, tự nói và gõ lời xin đồ uống cho mình. Tạo câu thứ hai về đồ uống bạn mình muốn, rồi một câu mới đổi lựa chọn. Viết tay tùy chọn, không lưu và không tự chấm.",
+      "completionCriteria": "Done chỉ khi đã nói và lưu hai câu cùng một câu mới do mình tạo; không suy ra trình độ."
+    }
+  ]
+}
