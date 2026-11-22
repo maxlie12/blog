@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-22",
+  "title": "Nghe và xác nhận — đổi kế hoạch khi cần",
+  "kind": "restart",
+  "note": "Chưa có bài làm mới: giữ B1+ tự đánh giá và bước nghe/đọc hiểu, không chuyển chu kỳ. Chỉ khởi động 5 phút là chính; phần còn lại tùy chọn, không học bù bắt buộc. Dùng nguồn đã xác minh. Chủ nhật tuần ISO 47: không có Blog Seed.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-22-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — nghe điều thay đổi",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues",
+      "exercises": "Dùng lại Cambridge Listening to dialogues: miễn phí, có audio và câu hỏi B1–B2; không mặc định có transcript. Nghe một hội thoại tối đa hai lượt, không mở đáp án. Tự viết ba dòng tiếng Anh: tình huống chính; một chi tiết nghe chắc; một câu hỏi làm rõ điều chưa chắc. Nếu hội thoại có thay đổi kế hoạch, nêu điều thay đổi; nếu không, không bịa thêm. Ghi số lượt nghe và hỗ trợ. Chỉ một nhiệm vụ này là đủ; chưa chuyển bước chu kỳ khi chưa có bằng chứng hoàn thành.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-22-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — đọc thay đổi nơi gặp",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "Maya: The sports centre is closed this morning.\nAn: Shall we meet at the park instead?\nMaya: Yes, but I only have an hour before lunch.\nAn: We can meet by the north gate at ten.\nMaya: Is that the gate near the bus stop?\nAn: No, that is the south gate. I will send you a map.",
+      "exercises": "Hội thoại do trợ lý tự soạn, không phải transcript Cambridge. Nêu lý do đổi địa điểm, giờ và cổng đã chọn, giới hạn của Maya. Cổng gần trạm xe buýt có phải nơi hẹn không? Giải thích bằng lời bạn và nêu việc An sẽ làm để tránh hiểu nhầm.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-22-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — đổi địa điểm và hỏi lại",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Tình huống tự soạn: nơi hẹn đóng cửa, bạn muốn chuyển sang công viên. Nói 30–45 giây: đề xuất chỗ mới, giờ gặp và hỏi rõ cổng vào. Biến thể: bạn chỉ còn ba mươi phút, tự đề xuất điều chỉnh. Lưu hai câu tự tạo và một chỗ bị bí; gửi ChatGPT audio nếu muốn nhận xét phát âm.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-22-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5 phút — nhắn hướng dẫn gặp nhau",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Viết 30–50 từ cho bạn trong tình huống giả lập: báo đổi địa điểm, xác nhận giờ và cổng, nhắc một điểm dễ nhầm và hỏi họ có cần bản đồ không. Không chép hội thoại hoặc nhờ AI sửa bản đầu. Chỉ rà người nhận có đủ thông tin để tìm đúng nơi không.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-22-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — hỏi bạn muốn uống gì",
+      "level": "Sơ cấp · giao tiếp đời sống",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "https://mandarinbean.com/im-thirsty/",
+      "exercises": "Dùng lại Mandarin Bean: text/pinyin/audio miễn phí, một số bài tập và bản dịch Premium; không cần mua. Nghe một câu ngắn. Ôn cụm tự soạn: 你想喝什么？Nǐ xiǎng hē shénme? — Bạn muốn uống gì?; 一杯水 yì bēi shuǐ — một cốc nước; 一杯茶 yì bēi chá — một tách trà; 现在 xiànzài — bây giờ. Nhìn rồi che chữ/pinyin, tự nói và gõ cặp hỏi–đáp chọn đồ uống. Tạo thêm một câu mới đổi thời điểm hoặc lựa chọn. Không chép mẫu. Viết tay tùy chọn, không lưu hoặc tự chấm.",
+      "completionCriteria": "Done chỉ khi đã nói và lưu cặp hỏi–đáp cùng một câu mới do mình tạo; không suy ra trình độ."
+    }
+  ]
+}
