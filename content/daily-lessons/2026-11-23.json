@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-23",
+  "title": "Nghe và hỏi rõ — báo việc chưa xác minh",
+  "kind": "restart",
+  "note": "Giữ B1+ tự đánh giá và bước nghe/đọc hiểu; chưa có bài làm mới. Một nhiệm vụ chính 5 phút, không học bù.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-23-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — nghe mốc cần xác nhận",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues",
+      "exercises": "Dùng lại nguồn Cambridge miễn phí có audio, bài tập B1–B2; không cần transcript. Nghe một đoạn tối đa hai lượt: lượt đầu tìm mục đích, lượt hai kiểm tra một chi tiết. Viết ba dòng tiếng Anh: việc chính, chi tiết nghe chắc (ưu tiên giờ hoặc hạn nếu có), và câu hỏi để xác nhận một điều còn thiếu. Ghi số lượt nghe; chưa mở đáp án và không bịa.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-23-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — đọc yêu cầu kiểm tra",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "Jo: Could you check why the search page is slow?\nKim: I can check it this morning. Does it happen every time?\nJo: I only noticed it on my phone. Please send me a short update by noon, even if you haven't found the cause.",
+      "exercises": "Đọc hội thoại tự soạn. Viết ba ý: nhiệm vụ, điều đã quan sát và thời hạn cập nhật. Điều nào về lỗi vẫn chưa biết? Giải thích bằng lời của bạn.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-23-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — hỏi rõ lỗi",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Tình huống giả lập: khách báo trang tìm kiếm chậm nhưng chưa nêu thiết bị. Nói 30–45 giây: hỏi hai thông tin và nêu bước kiểm tra đầu tiên. Lưu hai câu tự tạo; gửi ChatGPT audio nếu cần góp ý.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-23-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5 phút — viết cập nhật ngắn",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Viết 30–50 từ cho đồng nghiệp giả lập: điều đã thấy, điều chưa chắc, bước tiếp theo và lúc sẽ cập nhật. Không dùng dữ liệu công việc thật.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-23-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — gọi đồ uống cho hai người",
+      "level": "Sơ cấp · giao tiếp đời sống",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "https://mandarinbean.com/im-thirsty/",
+      "exercises": "Nguồn Mandarin Bean dùng lại: chữ, pinyin và audio miễn phí; một số phần Premium không bắt buộc. Nhìn rồi che cụm: 一杯茶 yì bēi chá — một tách trà; 两杯水 liǎng bēi shuǐ — hai cốc nước; 请给我 qǐng gěi wǒ — làm ơn cho tôi. Tự nói rồi gõ lời gọi cho hai người; thêm câu mới đổi số lượng hoặc thức uống. Viết tay tùy chọn, không lưu và không tự chấm.",
+      "completionCriteria": "Done chỉ khi đã nói và gõ hai câu tự tạo, không chép mẫu."
+    }
+  ]
+}
