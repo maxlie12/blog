@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-24",
+  "title": "Nghe yêu cầu — phân biệt kết quả và việc cần làm",
+  "kind": "restart",
+  "note": "Giữ B1+ tự đánh giá và bước nghe/đọc hiểu; chưa có bài làm mới. Một nhiệm vụ chính 5 phút, không học bù.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-24-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — nghe rồi xác nhận bước tiếp theo",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues",
+      "exercises": "Dùng lại Cambridge Listening to dialogues miễn phí (B1–B2, có audio, không cần transcript). Nghe một hội thoại tối đa hai lượt, chưa mở đáp án. Viết ba dòng tiếng Anh: mục đích của cuộc trao đổi; một chi tiết nghe chắc; câu hỏi xác nhận người nghe cần làm gì tiếp theo. Nếu chưa rõ, ghi điều chưa rõ thay vì đoán. Ghi số lượt nghe.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-24-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — đọc báo cáo lỗi",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "Amy: The new button looks fine on my laptop, but it disappears on my phone.\nBen: Does it happen before or after you sign in?\nAmy: I only tried it after signing in. Can you check the other case before our call?",
+      "exercises": "Đọc hội thoại tự soạn. Tự ghi hiện tượng, điều kiện đã thử và tình huống chưa kiểm tra. Nêu vì sao chưa thể kết luận lỗi xảy ra với mọi người.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-24-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — báo tình trạng kiểm thử",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Đóng vai frontend developer trong tình huống giả lập: nút vẫn hiện trên máy tính nhưng bạn chưa thử điện thoại. Nói 30–45 giây: điều đã thử, điều chưa chắc và một câu hỏi để khoanh vùng. Ghi lại hai câu tự nói.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-24-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5 phút — nhắn bước tiếp theo",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Viết 30–50 từ cho đồng nghiệp giả lập: một quan sát, một điều chưa kiểm tra và lúc sẽ báo lại. Tự rà xem người nhận phân biệt được quan sát với kết luận chưa. Không dùng dữ liệu công việc thật.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-24-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — đổi món ở quán",
+      "level": "Sơ cấp · giao tiếp đời sống",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "https://mandarinbean.com/im-thirsty/",
+      "exercises": "Dùng lại Mandarin Bean: chữ, pinyin và audio miễn phí; phần Premium không bắt buộc. Ôn 一杯水 yì bēi shuǐ — một cốc nước; 一杯茶 yì bēi chá — một tách trà; 请给我 qǐng gěi wǒ — làm ơn cho tôi. Che cụm, tự nói rồi gõ lời gọi một món. Quán hết món đó: tự tạo và gõ câu mới đổi món hoặc số lượng. Viết tay tùy chọn, không lưu hay tự chấm.",
+      "completionCriteria": "Done chỉ khi đã nói và gõ hai câu tự tạo, không chép mẫu."
+    }
+  ]
+}
