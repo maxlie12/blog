@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-25",
+  "title": "Nghe để phân biệt kế hoạch và điều đã chốt",
+  "kind": "restart",
+  "note": "Giữ B1+ tự đánh giá và bước nghe/đọc hiểu; chưa có bài làm mới. Một nhiệm vụ chính 5 phút, không học bù.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-25-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — nghe điều đã chốt",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "https://www.cambridgeenglish.org/learning-english/activities-for-learners/b1l054-listening-to-dialogues",
+      "exercises": "Mở lại Cambridge Listening to dialogues, miễn phí, B1–B2, có audio. Nghe một đoạn tối đa hai lượt, chưa mở đáp án. Viết hai câu tiếng Anh: câu 1 nêu một điều bạn nghe chắc; câu 2 xác nhận một chi tiết còn chưa rõ bằng câu hỏi. Ghi số lượt nghe. Không cần transcript.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-25-en-reading",
+      "language": "en",
+      "skill": "reading",
+      "title": "Tùy chọn 5 phút — đọc tin nhắn đổi lịch",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "Mia: I can review the new layout on Thursday morning. The mobile version is ready, but I'm still waiting for the desktop screenshots.\\nLeo: Let's keep Thursday for now. I'll confirm the time after lunch.",
+      "exercises": "Đọc tin nhắn tự soạn. Ghi hai gạch đầu dòng bằng tiếng Anh: điều đã sẵn sàng và điều còn chờ xác nhận.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-25-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — hỏi lại giờ hẹn",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Tình huống tự soạn: đồng nghiệp báo dời buổi góp ý giao diện sang chiều nhưng chưa nói giờ. Nói 30 giây để nhắc lại điều bạn hiểu và hỏi giờ chính xác. Ghi lại một câu bạn tự nói hoặc gửi ChatGPT audio.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-25-en-writing",
+      "language": "en",
+      "skill": "writing",
+      "title": "Tùy chọn 5 phút — chốt lịch qua tin nhắn",
+      "level": "B1+ tự đánh giá · giữ mức",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": null,
+      "exercises": "Viết 30–50 từ cho đồng nghiệp giả lập: nêu việc đã chốt, điều chưa chắc và lúc sẽ xác nhận lại. Không dùng dữ liệu công việc thật.",
+      "completionCriteria": "Lưu đầu ra tự tạo; Done ghi nhận thực hành, không chứng nhận trình độ."
+    },
+    {
+      "id": "daily-2026-11-25-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — nhờ lấy đồ ở bàn ăn",
+      "level": "Sơ cấp · giao tiếp đời sống",
+      "instructions": "Bài tập do trợ lý tự soạn, không phải bài chính thức của nguồn. Không xem đáp án hay nhờ AI sửa bản đầu. Ghi hỗ trợ đã dùng.",
+      "material": "https://mandarinbean.com/im-thirsty/",
+      "exercises": "Nguồn nghe bổ trợ: Mandarin Bean, chữ, pinyin và audio miễn phí; không cần Premium. Ôn 一双筷子 yì shuāng kuàizi — một đôi đũa; 一把勺子 yì bǎ sháozi — một cái thìa; 请给我 qǐng gěi wǒ — làm ơn cho tôi. Che cụm, rồi nói và gõ lời nhờ lấy đồ. Đổi sang món đồ còn lại và tự tạo câu mới có số lượng khác. Viết tay tùy chọn, không lưu hay tự chấm.",
+      "completionCriteria": "Done chỉ khi đã nói và gõ hai câu tự tạo, không chép mẫu."
+    }
+  ]
+}
