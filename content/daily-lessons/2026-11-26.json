@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-26",
+  "title": "Hẹn ở ga: giờ đã rõ, còn cửa nào?",
+  "kind": "restart",
+  "note": "Bài tự soạn của Max Learning, không phải bài chính thức. Chỉ bài đầu là nhiệm vụ chính; giữ mức và bước nghe/đọc hiểu.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-26-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — hẹn gặp ở ga",
+      "material": "Jo: Are we still meeting outside the station at eight?\nSam: Eight works. Can we meet by the ticket machines instead? It’s pouring outside.\nJo: Sure. Wait, there are machines at both entrances. Which ones?\nSam: Good point. Let me check which entrance my train comes into. I’ll text you before I board.",
+      "instructions": "Đọc hội thoại hoặc dùng chức năng đọc màn hình (giọng máy). Chưa xác minh trình phát nội bộ. Sau đó che lời thoại.",
+      "exercises": "Vì sao Jo vẫn chưa biết phải đợi ở đâu? Trả lời một câu tiếng Anh. Rồi đóng vai Jo: sắp mất kết nối mạng, hãy nhắn một câu đề xuất điểm hẹn cụ thể.",
+      "level": "B1+ tự đánh giá",
+      "completionCriteria": "Done khi tự viết cả câu trả lời và tin nhắn."
+    },
+    {
+      "id": "daily-2026-11-26-en-speaking",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — gọi khi sắp hết pin",
+      "material": null,
+      "instructions": "Bạn đang ở nhà ga, điện thoại chỉ còn 2% pin.",
+      "exercises": "Nói một lời nhắn 20 giây: mô tả một dấu hiệu để bạn mình nhận ra chỗ bạn đứng và cho biết bạn sẽ chờ bao lâu. Có thể gửi ChatGPT audio.",
+      "level": "B1+ tự đánh giá",
+      "completionCriteria": "Done khi tự nói được lời nhắn."
+    },
+    {
+      "id": "daily-2026-11-26-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — hẹn ở cửa ga",
+      "material": "在门口 zài ménkǒu — ở cửa ra vào\n在售票机旁边 zài shòupiàojī pángbiān — cạnh máy bán vé\n等你 děng nǐ — đợi bạn",
+      "instructions": "Đọc thành tiếng từng cụm, che chữ rồi nhớ lại.",
+      "exercises": "Tự nói rồi gõ một câu báo bạn đang đợi ở đâu. Đổi điểm hẹn và gõ thêm một câu mới. Viết tay tùy chọn, không lưu hay tự chấm.",
+      "level": "Sơ cấp · hội thoại",
+      "completionCriteria": "Done khi đã nói và gõ hai câu tự tạo."
+    }
+  ]
+}
