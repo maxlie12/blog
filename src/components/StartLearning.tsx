@@ -69,7 +69,7 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
     <section className="learning-start" aria-labelledby="learning-start-title">
       <div>
         <p className="eyebrow">BÀI DAILY · 5–10 PHÚT</p>
-        <h2 id="learning-start-title">Tiếp tục từ việc quan trọng nhất</h2>
+        <h2 id="learning-start-title">Buổi học ngắn của bạn</h2>
         {target ? (
           <div className="learning-start__selection" aria-live="polite">
             <p className="learning-start__status" data-reason={target.reason}>{statusLabel[target.reason]}</p>
@@ -111,7 +111,7 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
         {dueReview && (
           <small>Đến hạn ôn: <Link href={`/learning/${dueReview.review.lessonId}`}>{dueReview.title}</Link> (+{dueReview.review.interval} ngày)</small>
         )}
-        <Link className="button button--ghost" href="/learning/daily">Đổi bài · xem Daily theo ngày →</Link>
+        <Link className="button button--ghost" href="/learning/daily">Xem Daily theo ngày</Link>
         <small>Hôm nay không làm bài được? <Link href="/learning/practice">Tự luyện từ mới và đọc to</Link>.</small>
       </div>
     </section>

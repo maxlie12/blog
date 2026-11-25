@@ -8,6 +8,7 @@ import { getAuthenticatedLearnerId } from "@/lib/learnerAuth";
 import { getLearningPathData } from "@/lib/learningPathData";
 import { ConversationLaunch } from "@/components/ConversationPractice";
 import { LabEntry } from "@/components/listening/LabIndex";
+import styles from "./dashboard.module.css";
 
 export const metadata: Metadata = { title: "Learning" };
 export const dynamic = "force-dynamic";
@@ -17,19 +18,19 @@ export default async function LearningPage() {
   const [lessons, path] = await Promise.all([getAllLessons({ learnerId }), getLearningPathData()]);
 
   return (
-    <div className="learning-page">
+    <div className={`learning-page ${styles.dashboard}`}>
       <header className="section-page__header">
         <h1>Learning</h1>
-        <p>Tiếng Anh: học tiếp ở Phòng nghe (bài theo mức, đủ 4 kĩ năng, có chấm điểm và luyện đề). Bên dưới là bài Daily và tiếng Trung. Có thể dừng và quay lại lúc rảnh; không có bài bù bắt buộc.</p>
+        <p>Có 5 phút? Bắt đầu với Daily. Nếu có thêm thời gian, luyện đủ bốn kỹ năng trong Phòng nghe tiếng Anh. Không cần học bù.</p>
       </header>
 
-      <LabEntry />
       <StartLearning lessons={lessons} />
+      <LabEntry />
       <LocalProgressSummary />
-      <details><summary>Danh sách bài Daily và lộ trình học</summary>
+      <details className={styles.disclosure}><summary>Danh sách bài Daily và lộ trình học</summary>
         <LearningPath {...path} />
       </details>
-      <details><summary>Luyện hội thoại theo tình huống (tùy chọn)</summary>
+      <details className={styles.disclosure}><summary>Luyện hội thoại theo tình huống (tùy chọn)</summary>
         <ConversationLaunch />
       </details>
       <nav className="learning-games" aria-label="Trò chơi">

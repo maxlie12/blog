@@ -1,0 +1,82 @@
+.dashboard {
+  gap: clamp(1rem, 3vw, 1.65rem);
+}
+
+.dashboard :global(.learning-start) {
+  background: linear-gradient(145deg, var(--sage), var(--surface) 82%);
+  border-top: 3px solid var(--forest);
+}
+
+.dashboard :global(.learning-start__action .button),
+.dashboard :global(.ll-entry__actions .button) {
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.dashboard :global(.learning-start__action .button--primary) {
+  min-height: 52px;
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--text) 32%, transparent);
+}
+
+.dashboard :global(.learning-start__action .button--primary:active:not(:disabled)) {
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--text) 32%, transparent);
+}
+
+.dashboard :global(.ll-entry) {
+  background: var(--surface);
+}
+
+.disclosure {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding-inline: 1rem;
+  background: var(--surface);
+}
+
+.disclosure > summary {
+  min-height: 44px;
+  align-content: center;
+  padding-block: .5rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.disclosure[open] {
+  padding-bottom: 1rem;
+}
+
+.dashboard :is(a, button, summary):focus-visible {
+  outline: 2px solid var(--forest);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dashboard :global(.learning-start__action .button),
+  .dashboard :global(.ll-entry__actions .button) {
+    transition: transform 110ms ease-out, box-shadow 150ms ease-out, background-color 150ms ease-out;
+  }
+
+  .dashboard :global(.learning-start__status),
+  .disclosure[open] > :not(summary) {
+    animation: reveal 180ms ease-out both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard :global(.learning-start__action .button),
+  .dashboard :global(.ll-entry__actions .button) {
+    transition: none;
+  }
+
+  .dashboard :global(.learning-start__action .button:active:not(:disabled)),
+  .dashboard :global(.ll-entry__actions .button:active:not(:disabled)) {
+    transform: none;
+  }
+}
+
+@keyframes reveal {
+  from { opacity: .65; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
