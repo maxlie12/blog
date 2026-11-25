@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "installCommand": "npm ci",
+  "installCommand": "ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm ci",
   "buildCommand": "if [ \"$BLOG_READ_ONLY_PREVIEW\" = \"1\" ]; then npm run db:migrate; fi && npm run build"
 }
