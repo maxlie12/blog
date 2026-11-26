@@ -5,7 +5,7 @@
 - **Issue:** `LEARN-019` (owner, 2026-11-26: thẻ Daily "Tiếp tục từ việc quan trọng nhất" thừa và
   khó hiểu, cần phương pháp cụ thể; Phòng nghe vẫn là chính; cập nhật file md để ChatGPT thêm bài
   mỗi ngày vào đó; thêm chuẩn giọng Anh-Anh)
-- **Status:** active
+- **Status:** done — PR #11 merged, production `17e701f`; real-phone voices pending owner check
 - **Owner:** Claude
 - **Date:** 2026-11-26
 - **Builds on:** `LEARN-015-listening-lab.md`, `LEARN-017-speaking-room.md`,
@@ -73,9 +73,14 @@ preview → merge. Rollback: revert the merge commit (production before: `6d03b1
 - [x] Local (no packages could be installed here — network off for npm, so zod/React/Next tests
       run in CI): `englishVoice`, `studyBrief`, `listeningLab`, `speakingRoom` tests 21 pass with
       Node; `tsc --strict` on the pure modules clean.
-- [ ] CI on the PR: `npm test` (incl. `labDaily.test.ts`: every published file valid, bad files
-      rejected, today's lesson rule), lint, build, mobile smoke `dailyListeningFlow` (Chromium +
-      WebKit, 390 px: /learning has no old English card, "Học bài hôm nay/mới nhất" opens a
-      `d-YYYY-MM-DD` lesson, Anh-Anh survives reload, daily list has no overflow).
-- [ ] Vercel preview, merge, production check that /learning shows the daily lesson.
+- [x] CI on PR #11 (`cb2033e`): quality gates (`npm test` incl. `labDaily.test.ts` and
+      `englishVoice.test.ts`, lint, build) green; mobile E2E green on rerun — Chromium + WebKit
+      "PASS … daily Phòng nghe lesson opens from /learning; accent choice persists" and the
+      ChatGPT brief flow. First run: one WebKit timeout in the existing Done/recall flow
+      (`study`), passed on rerun → flaky, not caused by this change.
+- [x] Found on the way: the LEARN-018 brief preview could be empty when opened before the page
+      finished loading (also failing on `master`); fixed by filling it after load, smoke waits.
+- [x] Found on the way: every deploy had failed since 2026-11-18 (`npm ci` 404 on an
+      onnxruntime GPU binary) → `OPS-002` (PR #12, `f57f953`), merged first.
+- [x] Vercel preview green; merge → production `17e701f` green. Rollback: revert `17e701f`.
 - QA sequential (same agent). Real iPhone voices: NOT VERIFIED.

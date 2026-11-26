@@ -12,3 +12,6 @@
 - **Verification:** CI `npm ci` + test + lint + build green on the PR; Vercel preview green; after
   merge, production deploy green.
 - **Rollback:** revert the commit (installs fail again).
+- **Result:** PR #12 Vercel preview green (install works again); merged → production `f57f953`
+  green. GitHub Actions do not run on `.npmrc`-only changes; LEARN-019 CI (`npm ci` with this
+  file) passed.
