@@ -48,6 +48,34 @@ are for Chinese (and Japanese) only. The template is `content/listening-lab/2026
 Do not edit code, other lessons or learner data. Without saved attempts, do not infer progress or
 raise difficulty on your own; follow the level mix above.
 
+### Chủ đề hiện tại: trà, truyền thống và du lịch (owner, 2026-11-26 → 2026-12-21)
+
+Owner wants the coming lessons to prepare him to **offer tea to foreign tourists, talk about tea and
+its history, and interpret a tea tasting** between a Vietnamese tea master and a foreign guest.
+Lessons 2026-11-27 → 2026-12-01 are already written (offering tea · tea etiquette · lotus tea ·
+interpreting at a tasting · a short history of tea). From **2026-12-02** continue the series,
+roughly in this order, then repeat the cycle with new situations:
+
+1. Buying tea at a market or shop with a tourist (kinds, price per 100 g, gift boxes, polite bargaining)
+2. Describing taste and smell (fresh, grassy, floral, smoky, bitter, sweet aftertaste, strong/light)
+3. Tea and snacks for guests (green bean cake, candied fruit, peanuts); offering and politely refusing
+4. Tea at Tết and in family traditions (making tea for elders and visitors, gifts of tea)
+5. A tea farm visit (picking, drying, seasons) — Thai Nguyen or the northern mountains
+6. Interpreting a longer explanation: take notes, split it into short "He says…" sentences, check meaning
+7. A two-minute talk for tourists: "Tea in Vietnam" (opening, three points, a question to the group)
+8. Questions you cannot answer: say so honestly, offer to check, give what you do know
+9. Every 7th day: a review lesson mixing phrases from the week (level `medium`)
+
+Interpreting skills to recycle: "He says (that)…", "She'd like to know…", "Let me ask him.",
+"What he means is…", "In Vietnamese we call it…, which roughly means…", asking to repeat, and
+turning long Vietnamese sentences into two short English ones.
+
+**Facts:** use only well-known, stable facts (Thai Nguyen green tea, West Lake lotus tea, old Shan
+Tuyet trees in the northern mountains, street iced tea, offering tea to guests, using both hands).
+Hedge numbers and history ("people often say…", "many researchers think…"); never invent years,
+prices, records or legends. If unsure, make it a character's opinion or leave it out. Keep names
+without diacritics in English lines (Thai Nguyen, Ha Giang) so the device voice reads them.
+
 ## Daily packets (Chinese, Japanese and older English)
 
 `/learning/daily` provides dated language packets. The schema accepts the configured English, Chinese and Japanese language IDs. Start with one five-minute task. Since LEARN-019 the English daily lesson lives in Phòng nghe (above); packets dated 2026-11-27 or later carry Chinese/Japanese only, and older English packets stay readable under "Bài Daily dạng cũ" on /learning. The default opens the oldest packet containing an English lesson without reviewed evidence. Dates do not advance proficiency. The archive allows explicit selection.

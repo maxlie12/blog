@@ -1,0 +1,201 @@
+{
+  "date": "2026-11-28",
+  "id": "d-2026-11-28",
+  "level": "medium",
+  "title": "How to Enjoy Vietnamese Tea",
+  "titleVi": "Cách pha và thưởng trà",
+  "minutes": 15,
+  "intro": "Ở một quán trà, Linh vừa pha vừa giải thích cho hai du khách: tráng ấm chén, dùng nước bao nhiêu độ, rót thế nào và mời trà sao cho lịch sự.",
+  "vocab": [
+    {
+      "w": "pour",
+      "pos": "v",
+      "vi": "rót",
+      "ex": "She poured tea into four small cups."
+    },
+    {
+      "w": "rinse",
+      "pos": "v",
+      "vi": "tráng, rửa nhanh",
+      "ex": "Rinse the cups with hot water first."
+    },
+    {
+      "w": "leaves",
+      "pos": "n",
+      "vi": "lá (trà)",
+      "ex": "These tea leaves come from the north."
+    },
+    {
+      "w": "boiling",
+      "pos": "adj",
+      "vi": "đang sôi",
+      "ex": "Don't use boiling water for green tea."
+    },
+    {
+      "w": "sip",
+      "pos": "v",
+      "vi": "nhấp, uống từng ngụm",
+      "ex": "Sip the tea slowly."
+    },
+    {
+      "w": "host",
+      "pos": "n",
+      "vi": "chủ nhà",
+      "ex": "The host made tea for everyone."
+    },
+    {
+      "w": "polite",
+      "pos": "adj",
+      "vi": "lịch sự",
+      "ex": "It's polite to say thank you."
+    }
+  ],
+  "transcript": [
+    {
+      "s": "Linh",
+      "t": "Before we drink, I pour hot water over the teapot and the cups to warm them."
+    },
+    {
+      "s": "Sarah",
+      "t": "Why do you do that?"
+    },
+    {
+      "s": "Linh",
+      "t": "Warm cups keep the tea hot, and the smell of the tea comes out better."
+    },
+    {
+      "s": "Ben",
+      "t": "And now you're adding the leaves?"
+    },
+    {
+      "s": "Linh",
+      "t": "Yes. Then I pour a little water and throw the first pour away. It rinses the leaves."
+    },
+    {
+      "s": "Sarah",
+      "t": "I see. How hot should the water be?"
+    },
+    {
+      "s": "Linh",
+      "t": "For this green tea, I use water at about eighty-five degrees, not boiling. Boiling water makes it bitter."
+    },
+    {
+      "s": "Ben",
+      "t": "How long do you wait?"
+    },
+    {
+      "s": "Linh",
+      "t": "Not long, about thirty seconds. Then I fill every cup a little at a time, so each one has the same taste."
+    },
+    {
+      "s": "Sarah",
+      "t": "That's clever. Is there a polite way to drink it?"
+    },
+    {
+      "s": "Linh",
+      "t": "Give the first cups to the oldest people at the table, and use both hands when you offer a cup."
+    },
+    {
+      "s": "Ben",
+      "t": "Then we sip slowly and say thank you!"
+    },
+    {
+      "s": "Linh",
+      "t": "Exactly. And you can say the tea is good. It makes the host happy."
+    }
+  ],
+  "listening": [
+    {
+      "q": "Why does Linh pour hot water over the cups first?",
+      "a": [
+        "To clean the table",
+        "To warm them",
+        "To cool the tea",
+        "To make tea for herself"
+      ],
+      "c": 1,
+      "why": "...to warm them."
+    },
+    {
+      "q": "What happens to the first pour?",
+      "a": [
+        "Linh drinks it",
+        "She gives it to Ben",
+        "She throws it away",
+        "She keeps it for later"
+      ],
+      "c": 2,
+      "why": "...throw the first pour away. It rinses the leaves."
+    },
+    {
+      "q": "How hot is the water for this green tea?",
+      "a": [
+        "Boiling",
+        "About 85 degrees",
+        "About 50 degrees",
+        "Cold"
+      ],
+      "c": 1,
+      "why": "about eighty-five degrees, not boiling."
+    },
+    {
+      "q": "Who gets the first cups?",
+      "a": [
+        "The youngest people",
+        "The oldest people at the table",
+        "The host",
+        "Anyone who wants"
+      ],
+      "c": 1,
+      "why": "Give the first cups to the oldest people at the table."
+    }
+  ],
+  "reading": [
+    {
+      "q": "According to Linh, why not use boiling water?",
+      "a": [
+        "It makes the tea bitter",
+        "It breaks the cups",
+        "It takes too long",
+        "It has no smell"
+      ],
+      "c": 0,
+      "why": "Boiling water makes it bitter."
+    },
+    {
+      "q": "Why does Linh fill every cup a little at a time?",
+      "a": [
+        "To save tea",
+        "So each cup has the same taste",
+        "Because the teapot is small",
+        "To make the tea cooler"
+      ],
+      "c": 1,
+      "why": "...so each one has the same taste."
+    },
+    {
+      "q": "What makes the host happy?",
+      "a": [
+        "Drinking quickly",
+        "Saying the tea is good",
+        "Leaving early",
+        "Asking for coffee"
+      ],
+      "c": 1,
+      "why": "you can say the tea is good. It makes the host happy."
+    }
+  ],
+  "dictation": [
+    2,
+    11
+  ],
+  "speaking": [
+    4,
+    10,
+    12
+  ],
+  "write": {
+    "prompt": "Explain to a foreign friend, in 3 sentences, how to make or drink tea politely in Vietnam.",
+    "model": "First, warm the teapot and the cups with hot water. Give the first cups to the oldest people and offer each cup with both hands. Then sip slowly and tell the host the tea is good."
+  }
+}

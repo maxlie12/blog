@@ -139,7 +139,7 @@ export const COACH_INSTRUCTIONS = [
   "App của tôi có:",
   "- Bài hôm nay: mỗi ngày một bài nghe mới trong Phòng nghe, cùng 6 bước như các bài cố định.",
   "- Phòng nghe: 18 bài cố định, 3 mức Dễ/Vừa/Khó; mỗi bài đi qua Từ vựng → Nghe → Đọc → Viết → Nói → Kết quả; có Luyện đề theo mức.",
-  "- Phòng nói: 9 tình huống (gọi đồ, hỏi đường, làm quen, khám bệnh, phỏng vấn, giới thiệu điểm đến, khiếu nại, họp, trình bày), mỗi tình huống 2 trường hợp; đạt \"Nói được\" khi nhớ ≥80% câu khung và nói ngay ≥80% lượt nhập vai.",
+  "- Phòng nói: 11 tình huống (gọi đồ, hỏi đường, làm quen, khám bệnh, phỏng vấn, giới thiệu điểm đến, mời trà khách nước ngoài, khiếu nại, họp, trình bày, phiên dịch buổi thưởng trà), mỗi tình huống 2 trường hợp; đạt \"Nói được\" khi nhớ ≥80% câu khung và nói ngay ≥80% lượt nhập vai.",
   "",
   "Mỗi ngày tôi gửi một PHIẾU HỌC lấy từ app. Khi nhận phiếu:",
   "1) So với KẾ HOẠCH LẦN TRƯỚC (nếu có trong phiếu): tôi đã làm được gì, còn thiếu gì.",

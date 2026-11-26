@@ -74,7 +74,7 @@ export function LabEntry({ daily = [] }: { daily?: DailyLabSummary[] }) {
         {showToday && <Link className="button button--primary" href={`/learning/listening/${showToday.id}`}>{fresh ? "Học bài hôm nay" : "Học bài mới nhất"} →</Link>}
         <Link className={showToday ? "button button--ghost" : "button button--primary"} href={`/learning/listening/${next.id}`}>Học tiếp bài {ALL.indexOf(next) + 1}{showToday ? `: ${next.title}` : ""} →</Link>
         <Link className="button button--ghost" href="/learning/listening">Tất cả bài · luyện đề</Link>
-        <Link className="button button--ghost" href="/learning/speaking">Phòng nói · 9 tình huống</Link>
+        <Link className="button button--ghost" href="/learning/speaking">Phòng nói · luyện nói theo tình huống</Link>
       </div>
     </section>
   );

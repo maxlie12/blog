@@ -1,0 +1,203 @@
+{
+  "date": "2026-12-01",
+  "id": "d-2026-12-01",
+  "level": "hard",
+  "title": "Tea in Vietnam: A Short History",
+  "titleVi": "Trà ở Việt Nam: một chút lịch sử",
+  "minutes": 18,
+  "intro": "Minh, hướng dẫn viên, kể ngắn về lịch sử trà ở Việt Nam trước buổi thử trà: cây chè hoang, Thái Nguyên, trà đá vỉa hè và trà sen.",
+  "vocab": [
+    {
+      "w": "century",
+      "pos": "n",
+      "vi": "thế kỷ",
+      "ex": "Tea has been drunk here for centuries."
+    },
+    {
+      "w": "researcher",
+      "pos": "n",
+      "vi": "nhà nghiên cứu",
+      "ex": "Researchers still study where tea began."
+    },
+    {
+      "w": "province",
+      "pos": "n",
+      "vi": "tỉnh",
+      "ex": "Thai Nguyen is a province in the north."
+    },
+    {
+      "w": "respect",
+      "pos": "n",
+      "vi": "sự tôn trọng",
+      "ex": "Making tea for a guest shows respect."
+    },
+    {
+      "w": "occasion",
+      "pos": "n",
+      "vi": "dịp",
+      "ex": "Tea is not only for special occasions."
+    },
+    {
+      "w": "luxury",
+      "pos": "n",
+      "vi": "sự xa xỉ, hàng cao cấp",
+      "ex": "Lotus tea is a small luxury."
+    },
+    {
+      "w": "generation",
+      "pos": "n",
+      "vi": "thế hệ",
+      "ex": "The recipe passed down for generations."
+    },
+    {
+      "w": "tradition",
+      "pos": "n",
+      "vi": "truyền thống",
+      "ex": "Offering tea is an old tradition."
+    }
+  ],
+  "transcript": [
+    {
+      "s": "Minh",
+      "t": "Tea has been part of Vietnamese life for many centuries, but nobody knows the exact year it began."
+    },
+    {
+      "s": "Minh",
+      "t": "Many researchers believe wild tea first grew in the mountains where southern China and the north of Southeast Asia meet, including northern Vietnam."
+    },
+    {
+      "s": "Minh",
+      "t": "In provinces like Ha Giang and Yen Bai, you can still find old Shan Tuyet tea trees growing in the forest."
+    },
+    {
+      "s": "David",
+      "t": "So the tea plant is really at home here."
+    },
+    {
+      "s": "Minh",
+      "t": "Exactly. Later, people planted tea in many places. Today Thai Nguyen is the most famous province for green tea."
+    },
+    {
+      "s": "Minh",
+      "t": "Tea also became a way to show respect. When a guest arrives, the host makes tea before anything else."
+    },
+    {
+      "s": "David",
+      "t": "Is it only for special occasions?"
+    },
+    {
+      "s": "Minh",
+      "t": "Not at all. Look at the street corners in Hanoi. People sit on small plastic stools and drink cheap iced tea with friends."
+    },
+    {
+      "s": "David",
+      "t": "And what about lotus tea?"
+    },
+    {
+      "s": "Minh",
+      "t": "That's the luxury side. Hanoi families have scented green tea with lotus flowers for generations, and it was often a gift for important guests."
+    },
+    {
+      "s": "David",
+      "t": "It sounds like tea connects everyday life and tradition."
+    },
+    {
+      "s": "Minh",
+      "t": "That's a nice way to put it. Next, let's taste three teas and compare them."
+    }
+  ],
+  "listening": [
+    {
+      "q": "Does anyone know the exact year tea drinking began in Vietnam?",
+      "a": [
+        "Yes, it was 1500",
+        "No, nobody knows the exact year",
+        "Yes, exactly 1,000 years ago",
+        "Only the guide knows"
+      ],
+      "c": 1,
+      "why": "nobody knows the exact year it began."
+    },
+    {
+      "q": "Which province is most famous for green tea today?",
+      "a": [
+        "Ha Giang",
+        "Thai Nguyen",
+        "Yen Bai",
+        "Hanoi"
+      ],
+      "c": 1,
+      "why": "Today Thai Nguyen is the most famous province for green tea."
+    },
+    {
+      "q": "Where do people in Hanoi drink cheap iced tea?",
+      "a": [
+        "In expensive hotels",
+        "On street corners, on small plastic stools",
+        "Only at home",
+        "In temples"
+      ],
+      "c": 1,
+      "why": "People sit on small plastic stools and drink cheap iced tea."
+    },
+    {
+      "q": "What will they do next?",
+      "a": [
+        "Go to Ha Giang",
+        "Taste three teas and compare them",
+        "Buy lotus flowers",
+        "Have lunch"
+      ],
+      "c": 1,
+      "why": "let's taste three teas and compare them."
+    }
+  ],
+  "reading": [
+    {
+      "q": "Where do many researchers believe wild tea first grew?",
+      "a": [
+        "In Europe",
+        "In the mountains where southern China and the north of Southeast Asia meet",
+        "Only in Hanoi",
+        "On islands in the sea"
+      ],
+      "c": 1,
+      "why": "Many researchers believe wild tea first grew in the mountains where..."
+    },
+    {
+      "q": "How does tea show respect?",
+      "a": [
+        "The host makes tea for a guest first",
+        "People drink it alone",
+        "It is very cheap",
+        "It is always drunk cold"
+      ],
+      "c": 0,
+      "why": "When a guest arrives, the host makes tea before anything else."
+    },
+    {
+      "q": "\"The luxury side\" of tea means…",
+      "a": [
+        "the expensive, special kind",
+        "the cheap street kind",
+        "the oldest trees",
+        "the bitter taste"
+      ],
+      "c": 0,
+      "why": "luxury = xa xỉ, cao cấp — ở đây là trà sen."
+    }
+  ],
+  "dictation": [
+    3,
+    10
+  ],
+  "speaking": [
+    5,
+    7,
+    11
+  ],
+  "write": {
+    "prompt": "A tourist asks: \"Why is tea important in Vietnam?\" Answer in 3–4 sentences: one fact about history, one about tradition and one about everyday life.",
+    "model": "Tea has been part of Vietnamese life for centuries, and some wild tea trees in the north are very old. It is also a way to show respect, because we make tea for guests first. And it is part of everyday life: on Hanoi streets, friends drink cheap iced tea together."
+  }
+}

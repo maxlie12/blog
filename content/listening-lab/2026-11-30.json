@@ -1,0 +1,195 @@
+{
+  "date": "2026-11-30",
+  "id": "d-2026-11-30",
+  "level": "medium",
+  "title": "Interpreting at a Tea Tasting",
+  "titleVi": "Phiên dịch buổi thưởng trà",
+  "minutes": 15,
+  "intro": "Huy làm phiên dịch giữa nghệ nhân trà (chỉ nói tiếng Việt) và một du khách người Đức. Nghe cách Huy chuyển lời bằng \"He says…\", hỏi lại \"Let me ask him\" và giải thích một từ tiếng Việt.",
+  "vocab": [
+    {
+      "w": "He says (that)…",
+      "pos": "phrase",
+      "vi": "Ông ấy nói (rằng)… — câu mở đầu khi chuyển lời",
+      "ex": "He says the tea is from Ha Giang."
+    },
+    {
+      "w": "translate",
+      "pos": "v",
+      "vi": "dịch",
+      "ex": "How do you translate this word?"
+    },
+    {
+      "w": "local",
+      "pos": "adj",
+      "vi": "người/thuộc địa phương",
+      "ex": "Local people pick the leaves by hand."
+    },
+    {
+      "w": "pick",
+      "pos": "v",
+      "vi": "hái",
+      "ex": "They pick the leaves in spring."
+    },
+    {
+      "w": "rinse",
+      "pos": "v",
+      "vi": "tráng",
+      "ex": "The first pour rinses the leaves."
+    },
+    {
+      "w": "notice",
+      "pos": "v",
+      "vi": "nhận ra",
+      "ex": "Did you notice the sweet taste?"
+    }
+  ],
+  "transcript": [
+    {
+      "s": "Anna",
+      "t": "Huy, can you ask him where this tea comes from?"
+    },
+    {
+      "s": "Huy",
+      "t": "Of course. He says it comes from old Shan Tuyet tea trees in Ha Giang."
+    },
+    {
+      "s": "Anna",
+      "t": "Shan Tuyet? What does that mean?"
+    },
+    {
+      "s": "Huy",
+      "t": "People often translate it as \"mountain snow\". The young leaves have tiny white hairs, like snow."
+    },
+    {
+      "s": "Anna",
+      "t": "How old are the trees?"
+    },
+    {
+      "s": "Huy",
+      "t": "Let me ask him. He says some trees are a few hundred years old."
+    },
+    {
+      "s": "Huy",
+      "t": "He also says local people climb the trees to pick the leaves."
+    },
+    {
+      "s": "Anna",
+      "t": "Why did he pour the first cup away?"
+    },
+    {
+      "s": "Huy",
+      "t": "He says the first pour rinses the leaves and wakes them up. In Vietnamese, it's called \"trang tra\"."
+    },
+    {
+      "s": "Anna",
+      "t": "Please tell him I love it. It tastes fresh and a little sweet."
+    },
+    {
+      "s": "Huy",
+      "t": "He's happy to hear that. He says many people notice the sweetness, and he'd like you to try a second cup."
+    },
+    {
+      "s": "Anna",
+      "t": "Can you ask him if I can buy some?"
+    },
+    {
+      "s": "Huy",
+      "t": "He says yes, and he'll write the name on the box so you can find it again."
+    }
+  ],
+  "listening": [
+    {
+      "q": "Where does the tea come from?",
+      "a": [
+        "Thai Nguyen",
+        "Lotus flowers in Hanoi",
+        "Old Shan Tuyet trees in Ha Giang",
+        "A shop in Germany"
+      ],
+      "c": 2,
+      "why": "He says it comes from old Shan Tuyet tea trees in Ha Giang."
+    },
+    {
+      "q": "How old are some of the trees?",
+      "a": [
+        "A few years",
+        "About fifty years",
+        "A few hundred years",
+        "Two thousand years"
+      ],
+      "c": 2,
+      "why": "He says some trees are a few hundred years old."
+    },
+    {
+      "q": "Why did the master pour the first cup away?",
+      "a": [
+        "It was too hot",
+        "To rinse the leaves and wake them up",
+        "It was for Huy",
+        "It tasted bad"
+      ],
+      "c": 1,
+      "why": "the first pour rinses the leaves and wakes them up."
+    },
+    {
+      "q": "What will the master do for Anna?",
+      "a": [
+        "Give her a free cup",
+        "Write the name on the box",
+        "Take her to Ha Giang",
+        "Teach her Vietnamese"
+      ],
+      "c": 1,
+      "why": "he'll write the name on the box."
+    }
+  ],
+  "reading": [
+    {
+      "q": "Why do people translate Shan Tuyet as \"mountain snow\"?",
+      "a": [
+        "It grows in the snow",
+        "The young leaves have tiny white hairs",
+        "It is served cold",
+        "It is a white flower"
+      ],
+      "c": 1,
+      "why": "The young leaves have tiny white hairs, like snow."
+    },
+    {
+      "q": "What does Huy say before he asks the master a new question?",
+      "a": [
+        "He says that…",
+        "Let me ask him.",
+        "I don't know.",
+        "Please wait outside."
+      ],
+      "c": 1,
+      "why": "Let me ask him."
+    },
+    {
+      "q": "When Huy says \"He says it comes from…\", he is…",
+      "a": [
+        "giving his own opinion",
+        "passing on the master's words",
+        "asking Anna a question",
+        "saying goodbye"
+      ],
+      "c": 1,
+      "why": "He says… = chuyển lời người khác, không phải ý của Huy."
+    }
+  ],
+  "dictation": [
+    1,
+    5
+  ],
+  "speaking": [
+    3,
+    8,
+    12
+  ],
+  "write": {
+    "prompt": "A tea master says: \"Trà này pha bằng nước 85 độ, uống chậm mới thấy vị ngọt.\" Interpret it for a foreign guest in English, starting with \"He says that…\".",
+    "model": "He says that this tea is made with water at about 85 degrees. He says you should drink it slowly, and then you will notice the sweet taste."
+  }
+}

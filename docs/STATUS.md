@@ -3,6 +3,14 @@
 Last verified: 2026-11-12 (English listening lab; unit tests and harness browser check).
 
 
+
+## 2026-11-26 — Tea, tradition and tourism series; tea speaking situations
+
+- Phòng nghe daily lessons 27/11 → 01/12: offering tea, tea etiquette, West Lake lotus tea,
+  interpreting at a tea tasting ("He says…"), a short history of tea in Vietnam.
+- Phòng nói: "Mời trà khách nước ngoài" and "Phiên dịch buổi thưởng trà" (11 situations now).
+- `docs/DAILY-LEARNING.md` asks the ChatGPT automation to continue the theme from 02/12 to 21/12.
+  See `docs/changes/LEARN-020-tea-tourism-series.md`.
 ## 2026-11-26 — English daily = a Phòng nghe lesson; Anh-Mỹ/Anh-Anh voice
 
 - New `content/listening-lab/YYYY-MM-DD.json` lessons (zod-validated, `src/lib/labDaily.ts`) open at
