@@ -36,6 +36,50 @@
       "exercises": "Tự nói rồi gõ một câu báo bạn đang đợi ở đâu. Đổi điểm hẹn và gõ thêm một câu mới. Viết tay tùy chọn, không lưu hay tự chấm.",
       "level": "Sơ cấp · hội thoại",
       "completionCriteria": "Done khi đã nói và gõ hai câu tự tạo."
+    },
+    {
+      "id": "daily-2026-11-26-en-speaking-recommend",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — Giúp khách chọn trà",
+      "level": "B1+",
+      "material": "Tourist: I’m looking for a gift for my sister.\nSeller: What kind of tea does she usually drink?\nTourist: I’m not sure. She likes flowers, but she doesn’t like strong flavours.\nSeller: Would you like to smell these two before you decide?",
+      "instructions": "Hội thoại tự soạn, không phải bài chính thức. Đọc hoặc dùng tính năng đọc màn hình, sau đó che lời thoại.",
+      "exercises": "Khách biết và chưa biết điều gì về sở thích của chị mình? Trả lời ngắn rồi đóng vai người bán: Khách ngửi thử rồi nói: “That one’s a bit too strong.” Hãy hỏi thêm một câu và đề nghị bước tiếp theo.",
+      "completionCriteria": "Tự trả lời câu hỏi hiểu bài và nói hoặc viết lời đáp của người bán."
+    },
+    {
+      "id": "daily-2026-11-26-en-speaking-budget",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — Báo giá khi khách có ngân sách riêng",
+      "level": "B1+",
+      "material": "Tourist: Is that price for the box or for one packet?\nSeller: The box. It has three packets and costs 180,000 dong.\nTourist: I only have 100,000 left, and I need two small gifts.\nSeller: Let me show you what we sell separately.",
+      "instructions": "Hội thoại tự soạn, không phải bài chính thức. Đọc hoặc dùng tính năng đọc màn hình, sau đó che lời thoại.",
+      "exercises": "Vì sao hộp trà chưa phù hợp dù khách muốn mua quà? Trả lời ngắn rồi đóng vai người bán: Bạn có gói nhỏ giá 45.000 đồng. Hãy đề xuất phương án cho hai người và báo tổng tiền bằng tiếng Anh.",
+      "completionCriteria": "Tự trả lời câu hỏi hiểu bài và nói hoặc viết lời đáp của người bán."
+    },
+    {
+      "id": "daily-2026-11-26-en-speaking-luggage",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — Tư vấn đóng gói trước chuyến bay",
+      "level": "B1+",
+      "material": "Tourist: I’m flying tomorrow. Does the tea come in a glass jar?\nSeller: This one does, but we also have sealed packets.\nTourist: That sounds easier. I’m worried the jar might break in my bag.",
+      "instructions": "Hội thoại tự soạn, không phải bài chính thức. Đọc hoặc dùng tính năng đọc màn hình, sau đó che lời thoại.",
+      "exercises": "Vì sao khách quan tâm đến bao bì? Trả lời ngắn rồi đóng vai người bán: Khách hỏi: “Can I take this into my country?” Bạn không chắc quy định. Hãy nói rõ điều mình biết về bao bì và đề nghị khách kiểm tra điều gì.",
+      "completionCriteria": "Tự trả lời câu hỏi hiểu bài và nói hoặc viết lời đáp của người bán."
+    },
+    {
+      "id": "daily-2026-11-26-en-speaking-directions",
+      "language": "en",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — Chỉ đường cho khách sau khi mua",
+      "level": "B1+",
+      "material": "Tourist: Is this the way to the bus stop?\nSeller: Which bus are you taking?\nTourist: The airport bus. I saw a stop opposite the market.\nSeller: That’s for buses coming from the airport. Yours leaves from this side.",
+      "instructions": "Hội thoại tự soạn, không phải bài chính thức. Đọc hoặc dùng tính năng đọc màn hình, sau đó che lời thoại.",
+      "exercises": "Điều gì khiến khách có thể đợi nhầm xe? Trả lời ngắn rồi đóng vai người bán: Trong tình huống giả lập, trạm đúng nằm trước hiệu thuốc, cách quầy hai phút đi bộ. Hãy chỉ đường sao cho khách không sang đường nhầm.",
+      "completionCriteria": "Tự trả lời câu hỏi hiểu bài và nói hoặc viết lời đáp của người bán."
     }
   ]
 }
