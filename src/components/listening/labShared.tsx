@@ -116,11 +116,11 @@ export function AccentPicker() {
   const supported = useSpeechSupported();
   const accent = useAccent();
   const voices = useVoices();
+  const chosen = useVoiceName(accent);
   if (!supported) return null;
   const missing = voices.length > 0 && !hasAccentVoice(voices, accent);
   const basic = onlyBasicVoices(voices, accent);
   const list = accentVoices(voices, accent);
-  const chosen = useVoiceName(accent);
   const selected = chosen && list.some((voice) => voice.name === chosen) ? chosen : "";
   const label = ACCENTS.find((item) => item.id === accent)!.label;
   return (
