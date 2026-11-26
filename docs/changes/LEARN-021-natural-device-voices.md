@@ -4,7 +4,7 @@
 
 - **Issue:** `LEARN-021` (owner, 2026-11-26: Anh-Anh/Anh-Mỹ đã thật sự áp dụng chưa, giọng còn máy
   quá; có cái nào nhiều giọng hơn không)
-- **Status:** active
+- **Status:** done — PR #14 merged, production `22b614c`; real iPhone voices pending owner check
 - **Owner:** Claude
 - **Date:** 2026-11-26
 - **Builds on:** `LEARN-019-daily-in-listening-lab.md`
@@ -40,3 +40,15 @@ label may be "Cao cấp"/"Nâng cao".
 
 Natural pre-generated audio (e.g. Kokoro, open source) for every lesson: needs the owner's choice
 (repo size, generation in CI). Offered as the next step.
+
+## Verification
+
+- [x] `englishVoice.test.ts` 5/5 (iPhone-like list with novelty/Eloquence voices, voiceURI quality,
+      Vietnamese labels, learner pick, basic-only hint); `tsc --strict` clean.
+- [x] CI PR #14: first run caught a hook called after an early return in the picker (lint error;
+      the lesson page broke in the mobile E2E). Fixed; then quality gates and the mobile E2E
+      (Chromium + WebKit, all flows incl. daily lesson + accent) green; Vercel preview green;
+      merged → production `22b614c` green.
+- [x] Follow-up: the mobile E2E now also runs when `src/components/listening/**` or
+      `src/lib/englishVoice.ts` change (this bug would not have triggered it).
+- Not verified: how each real iPhone voice sounds; which voices a given phone has.
