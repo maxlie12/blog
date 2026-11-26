@@ -224,6 +224,7 @@ async function studyBriefFlow(browser, engine) {
     assert.equal(response?.status(),200);
     await page.getByRole('heading',{name:'Kế hoạch mỗi ngày với ChatGPT'}).waitFor();
     await page.getByText('Xem trước nội dung sẽ sao chép').click();
+    await page.waitForFunction(()=>document.querySelector('#sb-preview-text')?.value.startsWith('PHIẾU HỌC'),null,{timeout:15000});
     const preview = await page.locator('#sb-preview-text').inputValue();
     assert.match(preview,new RegExp('PHIẾU HỌC TIẾNG ANH — '+today));
     assert.ok(preview.includes('KẾ HOẠCH LẦN TRƯỚC (bạn giao ngày '+yesterday+'):\nQA synthetic plan: listening lesson 2'),'brief carries yesterday plan');

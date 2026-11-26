@@ -74,6 +74,13 @@ export function StudyBrief({ daily }: { daily: DailyLabSummary[] }) {
     restore();
   }, [learner.id]);
 
+  // Điền sẵn ô xem trước sau khi trang chạy: nếu người học mở "Xem trước" trước khi trang tải xong,
+  // onToggle chưa gắn, ô vẫn có nội dung.
+  useEffect(() => {
+    const fill = () => setPreview(currentBrief(daily));
+    fill();
+  }, [daily, learner.id]);
+
   async function copy(kind: "brief" | "coach") {
     const text = kind === "brief" ? currentBrief(daily) : COACH_INSTRUCTIONS;
     setPreview(text);
