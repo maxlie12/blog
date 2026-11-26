@@ -4,6 +4,13 @@ Last verified: 2026-11-12 (English listening lab; unit tests and harness browser
 
 
 
+
+## 2026-11-26 — Less robotic read-aloud: skip novelty voices, prefer Premium/Enhanced, choose a voice
+
+- Voice ranking skips iPhone/Mac novelty and Eloquence voices and prefers Premium/Enhanced/Natural
+  (also by `voiceURI` and Vietnamese labels). "Giọng đọc" now lists the device's voices for the
+  accent with "Nghe thử"; the choice is saved per accent. Basic-only devices get a download hint.
+  See `docs/changes/LEARN-021-natural-device-voices.md`.
 ## 2026-11-26 — Tea, tradition and tourism series; tea speaking situations
 
 - Phòng nghe daily lessons 27/11 → 01/12: offering tea, tea etiquette, West Lake lotus tea,

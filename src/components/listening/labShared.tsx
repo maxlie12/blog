@@ -2,7 +2,10 @@
 
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { SpeakingRecorder } from "@/components/SpeakingRecorder";
-import { ACCENTS, ACCENT_CHANGED, hasAccentVoice, pickVoices, readAccent, saveAccent, type EnglishAccent } from "@/lib/englishVoice";
+import {
+  ACCENTS, ACCENT_CHANGED, accentVoices, hasAccentVoice, onlyBasicVoices, pickVoices, qualityLabel, readAccent, readVoiceName,
+  saveAccent, saveVoiceName, voiceQuality, type EnglishAccent,
+} from "@/lib/englishVoice";
 import { readProfileStorage, writeProfileStorage } from "@/lib/learnerProfiles";
 import {
   LAB_STORE_KEY, SPEAK_RATINGS, compareDictation, parseLabStore, speakingRetryFeedback, type DictationResult, type LabChoice, type LabLesson,
@@ -49,6 +52,10 @@ function subscribeAccent(onChange: () => void) {
   window.addEventListener("storage", onChange);
   return () => { window.removeEventListener(ACCENT_CHANGED, onChange); window.removeEventListener("storage", onChange); };
 }
+function useVoiceName(accent: EnglishAccent): string | null {
+  return useSyncExternalStore(subscribeAccent, () => readVoiceName(accent), () => null);
+}
+
 export function useAccent(): EnglishAccent {
   return useSyncExternalStore(subscribeAccent, readAccent, (): EnglishAccent => "en-US");
 }
@@ -72,9 +79,11 @@ export function speakLines(lines: LabLine[], rate: number, handlers: { onLine?: 
   const synth = window.speechSynthesis;
   synth.cancel();
   const accent = readAccent();
-  const ordered = pickVoices(synth.getVoices(), accent);
+  const ordered = pickVoices(synth.getVoices(), accent, readVoiceName(accent));
   const sameAccent = ordered.filter((voice) => voice.lang.replace("_", "-").toLowerCase() === accent.toLowerCase());
-  const voices = sameAccent.length ? sameAccent : ordered;
+  // Người nói thứ hai, thứ ba chỉ dùng giọng tử tế; máy chỉ có một giọng tốt thì đổi độ cao giọng.
+  const good = sameAccent.filter((voice, index) => index === 0 || voiceQuality(voice) <= 2);
+  const voices = good.length ? good : ordered;
   const speakers = [...new Set(lines.map((line) => line.s ?? ""))];
   lines.forEach((line, index) => {
     const who = speakers.indexOf(line.s ?? "");
@@ -109,6 +118,10 @@ export function AccentPicker() {
   const voices = useVoices();
   if (!supported) return null;
   const missing = voices.length > 0 && !hasAccentVoice(voices, accent);
+  const basic = onlyBasicVoices(voices, accent);
+  const list = accentVoices(voices, accent);
+  const chosen = useVoiceName(accent);
+  const selected = chosen && list.some((voice) => voice.name === chosen) ? chosen : "";
   const label = ACCENTS.find((item) => item.id === accent)!.label;
   return (
     <div className="ll-accent">
@@ -120,6 +133,21 @@ export function AccentPicker() {
           </button>
         ))}
       </div>
+      {list.length > 0 && (
+        <div className="ll-voice">
+          <label htmlFor={`ll-voice-${accent}`}>Giọng {label}</label>
+          <select id={`ll-voice-${accent}`} className="ll-select" value={selected} onChange={(event) => saveVoiceName(accent, event.target.value || null)}>
+            <option value="">Tự chọn giọng tốt nhất ({list[0].name})</option>
+            {list.map((voice) => <option key={voice.name} value={voice.name}>{voice.name} · {qualityLabel(voice)}</option>)}
+          </select>
+          <button type="button" className="ll-chip" onClick={() => speakLines([{ t: "Hello! Would you like some tea? This is green tea from Thai Nguyen." }], 0.9)}>Nghe thử</button>
+        </div>
+      )}
+      {basic && (
+        <p className="ll-note">
+          Máy chỉ có giọng {label} loại cơ bản nên nghe còn &ldquo;máy&rdquo;. Tải giọng tốt miễn phí rồi tải lại trang: iPhone/iPad vào Cài đặt › Trợ năng › Nội dung được đọc › Giọng nói › Tiếng Anh, chọn giọng có chữ &ldquo;Cao cấp&rdquo; hoặc &ldquo;Nâng cao&rdquo; (Premium/Enhanced); máy tính dùng Edge (giọng &ldquo;Natural&rdquo;) hoặc Chrome.
+        </p>
+      )}
       {missing && (
         <p className="ll-note" role="status">
           Máy này chưa có giọng {label}, đang đọc bằng giọng tiếng Anh khác. Thêm giọng: iPhone/iPad vào Cài đặt › Trợ năng › Nội dung được đọc › Giọng nói › Tiếng Anh; Android tìm mục &ldquo;Chuyển văn bản thành lời nói&rdquo; trong Cài đặt rồi tải giọng tiếng Anh ({accent === "en-GB" ? "Vương quốc Anh" : "Mỹ"}); máy tính dùng Chrome hoặc Edge.
