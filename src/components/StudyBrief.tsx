@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { readProfileStorage, writeProfileStorage } from "@/lib/learnerProfiles";
-import { labLessons } from "@/lib/listeningLab";
+import { isComplete, labLessons, todayDaily, type DailyLabSummary } from "@/lib/listeningLab";
 import {
-  dateInLearningTimezone, getLocalDueReviews, getLocalLanguageSummary, getLocalProgressReview,
+  dateInLearningTimezone, getLocalLanguageSummary, getLocalProgressReview,
 } from "@/lib/localLearningProgress";
 import { SPEAK_STORE_KEY, parseSpeakStore } from "@/lib/speakingRoom";
 import {
@@ -18,9 +18,18 @@ function readPlans(): PlanEntry[] {
   try { return parsePlans(readProfileStorage(PLAN_STORE_KEY)); } catch { return []; }
 }
 
+function todayInfo(daily: DailyLabSummary[], lab: ReturnType<typeof loadLab>, today: string) {
+  const lesson = todayDaily(daily, today);
+  if (!lesson) return null;
+  const record = lab.lessons[lesson.id];
+  const state = !record ? "new" : isComplete(record.parts) ? "done" : "started";
+  return { title: lesson.title, date: lesson.date, state, score: record ? record.last : null } as const;
+}
+
 /** Đọc số liệu trên máy ngay lúc bấm, để phiếu luôn mới nhất. */
-function currentBrief(lessonIds: Set<string>, nextDaily: string | null): string {
+function currentBrief(daily: DailyLabSummary[]): string {
   const today = dateInLearningTimezone();
+  const lab = loadLab();
   const summary = getLocalLanguageSummary("en");
   const week = getLocalProgressReview("en", 7);
   let speak = parseSpeakStore(null);
@@ -30,9 +39,8 @@ function currentBrief(lessonIds: Set<string>, nextDaily: string | null): string 
     streak: summary.currentStreak,
     totalDone: summary.totalCompleted,
     week: { activeDays: week.activeDays, doneCount: week.doneCount, reviewCount: week.reviewCount, skills: week.skills },
-    dueDailyReviews: getLocalDueReviews().filter((item) => lessonIds.has(item.lessonId)).length,
-    nextDaily,
-    listening: summarizeListening(loadLab(), labLessons().length),
+    todayLesson: todayInfo(daily, lab, today),
+    listening: summarizeListening(lab, labLessons().length, Object.fromEntries(daily.map((item) => [item.id, item.title]))),
     speaking: summarizeSpeaking(speak, today),
     previousPlan: previousPlan(readPlans(), today),
   });
@@ -48,7 +56,7 @@ async function copyText(text: string): Promise<boolean> {
 }
 
 /** Học cùng ChatGPT mỗi ngày: hướng dẫn một lần, phiếu mỗi ngày, dán kế hoạch về lại app. */
-export function StudyBrief({ lessonIds, nextDaily }: { lessonIds: Set<string>; nextDaily: string | null }) {
+export function StudyBrief({ daily }: { daily: DailyLabSummary[] }) {
   const learner = useLearnerProfile();
   const [plans, setPlans] = useState<PlanEntry[]>([]);
   const [draft, setDraft] = useState("");
@@ -67,7 +75,7 @@ export function StudyBrief({ lessonIds, nextDaily }: { lessonIds: Set<string>; n
   }, [learner.id]);
 
   async function copy(kind: "brief" | "coach") {
-    const text = kind === "brief" ? currentBrief(lessonIds, nextDaily) : COACH_INSTRUCTIONS;
+    const text = kind === "brief" ? currentBrief(daily) : COACH_INSTRUCTIONS;
     setPreview(text);
     if (await copyText(text)) {
       setMessage(kind === "brief" ? "Đã sao chép phiếu hôm nay. Mở ChatGPT và dán vào (giữ máy bấm Dán)." : "Đã sao chép hướng dẫn. Dán vào phần Instructions của Project trong ChatGPT, hoặc gửi làm tin nhắn đầu tiên.");
@@ -127,7 +135,7 @@ export function StudyBrief({ lessonIds, nextDaily }: { lessonIds: Set<string>; n
           </div>
           <details ref={previewRef} className="sb-preview" onToggle={(event) => {
             // Mở tay: luôn hiện phiếu mới nhất. Mở do sao chép thất bại: giữ đúng đoạn vừa định sao chép.
-            if (event.currentTarget.open && !keepPreview.current) setPreview(currentBrief(lessonIds, nextDaily));
+            if (event.currentTarget.open && !keepPreview.current) setPreview(currentBrief(daily));
             keepPreview.current = false;
           }}>
             <summary>Xem trước nội dung sẽ sao chép</summary>

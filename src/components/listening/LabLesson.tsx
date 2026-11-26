@@ -9,7 +9,7 @@ import {
   writingRubric, type LabLesson as Lesson, type LabParts,
 } from "@/lib/listeningLab";
 import { useLearnerProfile } from "@/lib/useLearnerProfile";
-import { DictationLine, LAB_CHANGED, LabPlayer, QuizBlock, SpeakLine, loadLab, percent, saveLab, stopSpeech } from "./labShared";
+import { AccentPicker, DictationLine, LAB_CHANGED, LabPlayer, QuizBlock, SpeakLine, loadLab, percent, saveLab, stopSpeech } from "./labShared";
 
 const STEPS = ["Từ vựng", "Nghe", "Đọc", "Viết", "Nói", "Kết quả"] as const;
 const PART_OF_STEP: (keyof LabParts | null)[] = [null, "listen", "read", "write", "speak", null];
@@ -86,6 +86,7 @@ export function LabLesson({ lesson, levelName, next }: { lesson: Lesson; levelNa
         <p className="eyebrow">PHÒNG NGHE · {levelName.toUpperCase()} · KHOẢNG {lesson.minutes} PHÚT</p>
         <h1 id="ll-title">{lesson.title}</h1>
         <p>{lesson.titleVi}. {lesson.intro}</p>
+        <AccentPicker />
       </header>
 
       <nav className="ll-steps" aria-label="Các bước của bài">

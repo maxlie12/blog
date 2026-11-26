@@ -9,7 +9,6 @@ import type { LessonSummary } from "@/lib/lessonTypes";
 import { selectNextLesson, type NextLesson } from "@/lib/nextLesson";
 import type { ScheduledReview } from "@/lib/reviewSchedule";
 import { useLearnerProfile } from "@/lib/useLearnerProfile";
-import { StudyBrief } from "./StudyBrief";
 
 const actionLabel = {
   resume: "Tiếp tục bài đang dở",
@@ -41,7 +40,6 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
   const [englishTarget, setEnglishTarget] = useState<NextLesson | null>(null);
   const [chineseTarget, setChineseTarget] = useState<NextLesson | null>(null);
   const [dueReview, setDueReview] = useState<{ review: ScheduledReview; title: string } | null>(null);
-  const [lessonIds] = useState(() => new Set(lessons.filter((lesson) => lesson.language === "en").map((lesson) => lesson.id)));
 
   useEffect(() => {
     const choose = () => {
@@ -65,11 +63,10 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
 
   const daily = target ? dailyLessonDate(target.lesson.id) : null;
   return (
-    <>
     <section className="learning-start" aria-labelledby="learning-start-title">
       <div>
-        <p className="eyebrow">BÀI DAILY · 5–10 PHÚT</p>
-        <h2 id="learning-start-title">Tiếp tục từ việc quan trọng nhất</h2>
+        <p className="eyebrow">TIẾNG TRUNG · BÀI DAILY · 5–10 PHÚT</p>
+        <h2 id="learning-start-title">Tiếng Trung: bài tiếp theo</h2>
         {target ? (
           <div className="learning-start__selection" aria-live="polite">
             <p className="learning-start__status" data-reason={target.reason}>{statusLabel[target.reason]}</p>
@@ -115,7 +112,5 @@ export function StartLearning({ lessons }: { lessons: LessonSummary[] }) {
         <small>Hôm nay không làm bài được? <Link href="/learning/practice">Tự luyện từ mới và đọc to</Link>.</small>
       </div>
     </section>
-    <StudyBrief lessonIds={lessonIds} nextDaily={englishTarget ? englishTarget.lesson.title : null} />
-    </>
   );
 }

@@ -37,8 +37,8 @@ export interface StudyBriefData {
   streak: number;
   totalDone: number;
   week: BriefActivity;
-  dueDailyReviews: number;
-  nextDaily: string | null;
+  /** Bài mới hôm nay ở Phòng nghe (bài mới nhất có ngày ≤ hôm nay). */
+  todayLesson: { title: string; date: string; state: "new" | "started" | "done"; score: number | null } | null;
   listening: BriefListening;
   speaking: BriefSpeaking;
   previousPlan: PlanEntry | null;
@@ -59,20 +59,21 @@ export function weakestPart(parts: LabParts): keyof LabParts | null {
   return weakest;
 }
 
-export function summarizeListening(store: LabStore, total: number): BriefListening {
+export function summarizeListening(store: LabStore, total: number, titles: Record<string, string> = {}): BriefListening {
   const records = Object.entries(store.lessons);
   const parts = {} as LabParts;
   for (const key of Object.keys(PART_WEIGHTS) as (keyof LabParts)[]) {
     const values = records.map(([, record]) => record.parts[key]).filter((value): value is number => value !== null);
     parts[key] = values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
   }
-  const latest = records.filter(([id]) => labLesson(id)).sort((a, b) => b[1].date.localeCompare(a[1].date))[0];
+  const title = (id: string) => labLesson(id)?.title ?? titles[id];
+  const latest = records.filter(([id]) => title(id)).sort((a, b) => b[1].date.localeCompare(a[1].date))[0];
   const test = store.tests[0];
   return {
     done: records.filter(([, record]) => isComplete(record.parts)).length,
     total,
     parts,
-    lastLesson: latest ? { title: labLesson(latest[0])!.title, score: latest[1].last, date: latest[1].date } : null,
+    lastLesson: latest ? { title: title(latest[0])!, score: latest[1].last, date: latest[1].date } : null,
     lastTest: test ? { score: test.score, total: test.total, date: test.date, level: LEVELS.find((level) => level.id === test.level)?.name ?? null } : null,
   };
 }
@@ -136,8 +137,8 @@ export const COACH_INSTRUCTIONS = [
   "Bạn là huấn luyện viên tiếng Anh của tôi. Tôi là người Việt, tự học mỗi ngày bằng một app riêng. Mục tiêu: nghe và nói được trong công việc và cuộc sống.",
   "",
   "App của tôi có:",
-  "- Daily: một bài ngắn mỗi ngày, có lịch ôn (nhớ lại rồi tự chấm).",
-  "- Phòng nghe: 18 bài, 3 mức Dễ/Vừa/Khó; mỗi bài đi qua Từ vựng → Nghe → Đọc → Viết → Nói → Kết quả; có Luyện đề theo mức.",
+  "- Bài hôm nay: mỗi ngày một bài nghe mới trong Phòng nghe, cùng 6 bước như các bài cố định.",
+  "- Phòng nghe: 18 bài cố định, 3 mức Dễ/Vừa/Khó; mỗi bài đi qua Từ vựng → Nghe → Đọc → Viết → Nói → Kết quả; có Luyện đề theo mức.",
   "- Phòng nói: 9 tình huống (gọi đồ, hỏi đường, làm quen, khám bệnh, phỏng vấn, giới thiệu điểm đến, khiếu nại, họp, trình bày), mỗi tình huống 2 trường hợp; đạt \"Nói được\" khi nhớ ≥80% câu khung và nói ngay ≥80% lượt nhập vai.",
   "",
   "Mỗi ngày tôi gửi một PHIẾU HỌC lấy từ app. Khi nhận phiếu:",
@@ -158,7 +159,10 @@ export function buildStudyBrief(data: StudyBriefData): string {
   const w = data.week;
   lines.push(`- 7 ngày qua: ${w.activeDays}/7 ngày có học · ${w.doneCount} lượt Done · ${w.reviewCount} lượt ôn · theo kỹ năng: Nghe ${w.skills.listening}, Đọc ${w.skills.reading}, Viết ${w.skills.writing}, Nói ${w.skills.speaking}`);
   lines.push(`- Chuỗi ngày học: ${data.streak} ngày liên tiếp · tổng ${data.totalDone} lần Done tiếng Anh`);
-  lines.push(`- Daily: ${data.dueDailyReviews} bài đến hạn ôn${data.nextDaily ? ` · bài tiếp theo: ${data.nextDaily}` : ""}`);
+  const today = data.todayLesson;
+  lines.push(today
+    ? `- Bài hôm nay (Phòng nghe, ngày ${today.date}): ${today.title} — ${today.state === "done" ? `đã xong, ${today.score}%` : today.state === "started" ? `đang làm dở, ${today.score}%` : "chưa làm"}`
+    : "- Bài hôm nay: chưa có bài mới trong Phòng nghe.");
 
   const listening = data.listening;
   const partBits = (Object.keys(PART_NAMES_VI) as (keyof LabParts)[])
@@ -191,7 +195,7 @@ export function buildStudyBrief(data: StudyBriefData): string {
   lines.push("");
   lines.push("VIỆC CỦA BẠN (ChatGPT) — trả lời bằng tiếng Việt, ngắn gọn:");
   lines.push("1) So với kế hoạch lần trước: tôi làm được gì, còn thiếu gì? Kỹ năng nào mạnh/yếu theo số liệu?");
-  lines.push("2) KẾ HOẠCH HÔM NAY 20–30 phút, chỉ chọn trong app (Daily, Phòng nghe: bài mới hay làm lại bài điểm thấp, Luyện đề, Phòng nói: tình huống cụ thể). Danh sách đánh số, ghi số phút từng mục.");
+  lines.push("2) KẾ HOẠCH HÔM NAY 20–30 phút, chỉ chọn trong app (Bài hôm nay, Phòng nghe: bài cố định tiếp theo hay làm lại bài điểm thấp, Luyện đề, Phòng nói: tình huống cụ thể). Danh sách đánh số, ghi số phút từng mục.");
   lines.push("3) 5 câu kiểm tra nhanh bằng tiếng Anh vừa sức tôi (trắc nghiệm hoặc điền từ), đáp án ở cuối.");
   lines.push("4) Nếu bên dưới có bài viết hoặc lời nói tôi đã chép lại: chữa từng câu và viết lại bản tốt hơn.");
   lines.push("");

@@ -12,7 +12,7 @@ import {
   type SpeakSituation, type SpeakStore,
 } from "@/lib/speakingRoom";
 import { useLearnerProfile } from "@/lib/useLearnerProfile";
-import { percent, speakLines, stopSpeech, useSpeechSupported } from "./labShared";
+import { AccentPicker, percent, speakLines, stopSpeech, useSpeechSupported } from "./labShared";
 
 const SPEAK_CHANGED = "speaking-room-changed";
 
@@ -71,6 +71,7 @@ export function SpeakIndex() {
     <>
       <section className="ll-guide" aria-labelledby="sr-how">
         <h2 id="sr-how">Luyện thế nào để chắc chắn nói được</h2>
+        <AccentPicker />
         <ol>
           <li><strong>Câu khung + nói đuổi:</strong> học sẵn cụm câu dùng ngay, nghe và nói theo 3 lần. Cụm có sẵn giúp nói trôi vì không phải ghép từng từ.</li>
           <li><strong>Nhớ lại chủ động:</strong> chỉ nhìn tiếng Việt, tự nói ra tiếng Anh rồi mới xem đáp án. Tự nhớ lại giữ câu lâu hơn đọc lại nhiều lần.</li>
@@ -360,6 +361,7 @@ export function SpeakPractice({ situation, next }: { situation: SpeakSituation; 
         <h1 id="sr-title">{situation.titleVi}</h1>
         <p><em>{situation.title}.</em> {situation.goal}</p>
         {previous?.date && previous.date !== today && <p className="ll-note">Lần trước {previous.date}: {previous.ready ? READINESS_LABEL[previous.ready] : "chưa xong"}{previous.due ? ` · hẹn ôn ${previous.due}` : ""}.</p>}
+        <AccentPicker />
       </header>
 
       <nav className="ll-steps" aria-label="Các bước luyện">

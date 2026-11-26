@@ -6,7 +6,7 @@ import {
   buildTest, compareDictation, drillLines, gradeLabel, labLesson, withTestResult, type LabLevel, type LabTestRecord,
 } from "@/lib/listeningLab";
 import { useLearnerProfile } from "@/lib/useLearnerProfile";
-import { ChoiceQuestion, LabPlayer, LAB_CHANGED, SpeakLine, loadLab, percent, saveLab, speakLines, stopSpeech, useSpeechSupported } from "./labShared";
+import { AccentPicker, ChoiceQuestion, LabPlayer, LAB_CHANGED, SpeakLine, loadLab, percent, saveLab, speakLines, stopSpeech, useSpeechSupported } from "./labShared";
 
 const SECTIONS = ["Nghe", "Đọc", "Chính tả", "Nói"] as const;
 
@@ -93,6 +93,7 @@ export function LabTest({ date, level, levelName }: { date: string; level?: LabL
     return (
       <section className="ll-panel" aria-labelledby="ll-test-intro">
         <h2 id="ll-test-intro">Đề hôm nay · {levelName}</h2>
+        <AccentPicker />
         <p className="ll-how">Làm theo thứ tự, mỗi phần xong mới sang phần sau; điểm hiện khi nộp bài. Mục tiêu khoảng {test.minutes} phút, không bị khoá giờ.</p>
         <ol className="ll-outline">
           <li><strong>Nghe</strong> — 2 bài, {listenQs.length} câu trắc nghiệm (không xem lời thoại).</li>

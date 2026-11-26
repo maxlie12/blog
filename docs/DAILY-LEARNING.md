@@ -1,6 +1,56 @@
 # Daily learning
 
-`/learning/daily` provides dated language packets. The schema accepts the configured English, Chinese and Japanese language IDs. Start with one five-minute task; English remains the current primary path, with Chinese and Japanese optional. The default opens the oldest packet containing an English lesson without reviewed evidence. Dates do not advance proficiency. The archive allows explicit selection.
+## Tiếng Anh mỗi ngày = một bài Phòng nghe (từ 2026-11-27)
+
+Owner decision (LEARN-019): English daily practice is **one new Phòng nghe lesson per day**, with
+the same six steps and scoring as the 18 fixed lessons (Từ vựng → Nghe → Đọc → Viết → Nói → Kết
+quả). Do **not** add English lessons to `content/daily-lessons` packets any more; those packets
+are for Chinese (and Japanese) only. The template is `content/listening-lab/2026-11-26.json`.
+
+**ChatGPT, every day:**
+
+1. Read the latest `master`. Pick the next date that has no file yet in `content/listening-lab/`
+   (publishing tomorrow's lesson the evening before is fine: the app shows a lesson only from its
+   date, in Asia/Ho_Chi_Minh time).
+2. Create `content/listening-lab/YYYY-MM-DD.json` — one JSON object, nothing else in the file:
+
+   | Field | Rule |
+   |---|---|
+   | `date` | `YYYY-MM-DD`, equal to the file name |
+   | `id` | `d-YYYY-MM-DD` (same date) |
+   | `level` | `easy` (≈A2), `medium` (≈B1) or `hard` (≈B2). Mostly `medium`; one `easy` and one `hard` per week |
+   | `title` / `titleVi` | English title / Vietnamese title, ≤ 90 chars |
+   | `minutes` | 10–20 (5–25 allowed) |
+   | `intro` | 1–2 Vietnamese sentences: the situation and what to listen for |
+   | `vocab` | 4–8 items `{ "w", "pos", "vi", "ex" }`; every word appears in the transcript; `ex` is a new example sentence |
+   | `transcript` | 6–16 lines `{ "s": speaker, "t": text }`, each ≤ 240 chars; 2–3 named speakers; **original dialogue** |
+   | `listening` | 3–5 questions answerable by ear: `{ "q", "a": [4 different options], "c": 0–3, "why" }` |
+   | `reading` | 2–4 questions on meaning, phrases or inference, same shape |
+   | `dictation` | exactly 2 transcript line indices (0-based), lines of 8–16 words |
+   | `speaking` | 2–3 transcript line indices: useful sentences to repeat |
+   | `write` | `{ "prompt": English task (2–4 sentences, linked to the situation), "model": a model answer }` |
+
+3. Content rules:
+   - Write original dialogue; never copy scripts, articles or song lyrics. Real-life situations for an adult
+     Vietnamese learner: travel and transport, work meetings and email, office and accounting
+     tasks, tourism and customer service, shopping, health, everyday plans and problems.
+   - Correct answers must be stated in the transcript; distractors plausible but clearly wrong.
+     Spread `c` across 0–3 instead of always 0. `why` is Vietnamese and quotes the line that proves it.
+   - No extra fields: no answer key, no URL, no audio file (the app reads lines with the device
+     voice, Anh-Mỹ or Anh-Anh as the learner chooses).
+   - Do not change an already published file's `id` or `date`; fixing typos in it is fine.
+4. Check: valid JSON, `id`/`date`/file name match, indices inside `transcript`, four different
+   options per question. The schema is `src/lib/labDaily.ts`; `npm test` and the build reject a
+   wrong file, so it never reaches the site.
+5. Commit only that file to `master` with the message
+   `content: publish Phòng nghe lesson for YYYY-MM-DD`. It is live after the Vercel deploy.
+
+Do not edit code, other lessons or learner data. Without saved attempts, do not infer progress or
+raise difficulty on your own; follow the level mix above.
+
+## Daily packets (Chinese, Japanese and older English)
+
+`/learning/daily` provides dated language packets. The schema accepts the configured English, Chinese and Japanese language IDs. Start with one five-minute task. Since LEARN-019 the English daily lesson lives in Phòng nghe (above); packets dated 2026-11-27 or later carry Chinese/Japanese only, and older English packets stay readable under "Bài Daily dạng cũ" on /learning. The default opens the oldest packet containing an English lesson without reviewed evidence. Dates do not advance proficiency. The archive allows explicit selection.
 
 Packets are versioned under `content/daily-lessons/YYYY-MM-DD.json`. They are validated by `src/lib/dailyLessons.ts`, merged into the existing lesson picker, and bundled for deployment. Lesson IDs must be globally unique and start with `daily-`. The first owner submission materializes its lesson in the database without overwriting Studio edits. Existing attempts are preserved. No schema migration is required for daily packets.
 
