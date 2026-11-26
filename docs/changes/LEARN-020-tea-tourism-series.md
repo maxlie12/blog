@@ -5,7 +5,7 @@
 - **Issue:** `LEARN-020` (owner, 2026-11-26: các bài gần nhất về truyền thống, du lịch, mời trà
   khi gặp khách nước ngoài, và làm sao thay người thưởng trà phiên dịch cuộc trò chuyện hay nói
   về trà và lịch sử)
-- **Status:** active
+- **Status:** done — PR #13 merged, production `ff5b234`
 - **Owner:** Claude
 - **Date:** 2026-11-26
 - **Builds on:** `LEARN-019-daily-in-listening-lab.md`, `LEARN-017-speaking-room.md`
@@ -39,3 +39,11 @@
 ## Release path
 
 Branch `claude/learn-020-tea-tourism` → PR → CI → Vercel preview → merge. Rollback: revert the merge.
+
+## Verification
+
+- [x] Local: 21 Node tests (speakingRoom incl. the two tea situations, studyBrief, listeningLab,
+      englishVoice); `tsc --strict` on pure modules; lesson files checked by script.
+- [x] CI PR #13: quality gates green (`npm test` incl. `labDaily.test.ts` validating the five new
+      files, lint, build); Vercel preview green; merged → production `ff5b234` green.
+- Not run: mobile E2E (no UI flow changed). Lesson facts reviewed by the author only.
