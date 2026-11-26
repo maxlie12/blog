@@ -11,7 +11,13 @@ import type { DailyLabSummary, LabLesson } from "./listeningLab.ts";
 
 const text = (max: number) => z.string().trim().min(1).max(max);
 const line = z.strictObject({ s: text(40).optional(), t: text(240) });
-const choice = z.strictObject({ q: text(240), a: z.array(text(160)).length(4), c: z.number().int().min(0).max(3), why: text(400) });
+const option = text(160);
+const choice = z.strictObject({
+  q: text(240),
+  a: z.tuple([option, option, option, option]),
+  c: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]),
+  why: text(400),
+});
 
 export const dailyLabSchema = z.strictObject({
   date: z.iso.date(),
