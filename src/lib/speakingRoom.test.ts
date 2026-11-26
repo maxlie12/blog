@@ -18,7 +18,8 @@ test("every situation is complete: chunks, two cases of four turns, a retell pro
       for (const t of c.turns) assert.ok(t.partner && t.cue && t.model, `${item.id}/${c.id}`);
     }
   }
-  for (const level of ["easy", "medium", "hard"]) assert.equal(SITUATIONS.filter((s) => s.level === level).length, 3, level);
+  for (const level of ["easy", "medium", "hard"]) assert.ok(SITUATIONS.filter((s) => s.level === level).length >= 3, level);
+  assert.ok(speakSituation("offer-tea") && speakSituation("tea-interpreter"), "tea situations");
   assert.ok(RESCUE.length >= 5);
   assert.equal(speakSituation("nope"), null);
 });

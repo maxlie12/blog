@@ -17,6 +17,7 @@ on:
       - 'src/components/**'
       - 'src/lib/**'
       - 'content/daily-lessons/**'
+      - 'content/listening-lab/**'
   push:
     branches: [master]
     paths:
@@ -33,6 +34,7 @@ on:
       - 'src/components/**'
       - 'src/lib/**'
       - 'content/daily-lessons/**'
+      - 'content/listening-lab/**'
 
 permissions:
   contents: read

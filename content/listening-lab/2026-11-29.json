@@ -1,0 +1,191 @@
+{
+  "date": "2026-11-29",
+  "id": "d-2026-11-29",
+  "level": "medium",
+  "title": "Lotus Tea from West Lake",
+  "titleVi": "Trà sen Hồ Tây",
+  "minutes": 15,
+  "intro": "Nam, hướng dẫn viên, giới thiệu trà sen Hồ Tây cho một du khách: trà được ướp thế nào, vì sao đắt và nên mua làm quà ra sao.",
+  "vocab": [
+    {
+      "w": "lotus",
+      "pos": "n",
+      "vi": "hoa sen",
+      "ex": "The lotus is a symbol of Vietnam."
+    },
+    {
+      "w": "overnight",
+      "pos": "adv",
+      "vi": "qua đêm",
+      "ex": "Leave the tea in the flower overnight."
+    },
+    {
+      "w": "tiny",
+      "pos": "adj",
+      "vi": "rất nhỏ",
+      "ex": "There are tiny yellow parts in the middle of the flower."
+    },
+    {
+      "w": "expensive",
+      "pos": "adj",
+      "vi": "đắt",
+      "ex": "Good lotus tea is expensive."
+    },
+    {
+      "w": "smell",
+      "pos": "v",
+      "vi": "có mùi, toả hương",
+      "ex": "This tea smells sweet."
+    },
+    {
+      "w": "souvenir",
+      "pos": "n",
+      "vi": "quà lưu niệm",
+      "ex": "A box of tea is a nice souvenir."
+    }
+  ],
+  "transcript": [
+    {
+      "s": "Claire",
+      "t": "These flowers are beautiful. Are they lotus flowers?"
+    },
+    {
+      "s": "Nam",
+      "t": "Yes. In summer, West Lake in Hanoi is famous for its pink lotus."
+    },
+    {
+      "s": "Nam",
+      "t": "People here use them to make lotus tea, one of Hanoi's most special drinks."
+    },
+    {
+      "s": "Claire",
+      "t": "How do they make it?"
+    },
+    {
+      "s": "Nam",
+      "t": "There are two ways. Some families put green tea inside a lotus flower and leave it overnight."
+    },
+    {
+      "s": "Nam",
+      "t": "Others mix the tea with the tiny yellow parts from the middle of many flowers, again and again."
+    },
+    {
+      "s": "Claire",
+      "t": "That sounds like a lot of work."
+    },
+    {
+      "s": "Nam",
+      "t": "It is. People often say you need more than a thousand flowers for one kilo of tea."
+    },
+    {
+      "s": "Claire",
+      "t": "No wonder it's expensive! What does it taste like?"
+    },
+    {
+      "s": "Nam",
+      "t": "It's green tea, but it smells soft and sweet, like the lake in the early morning."
+    },
+    {
+      "s": "Claire",
+      "t": "Can I buy some as a gift?"
+    },
+    {
+      "s": "Nam",
+      "t": "Sure. A small box is a good souvenir. Just keep it in a dry place."
+    }
+  ],
+  "listening": [
+    {
+      "q": "When is West Lake famous for its lotus flowers?",
+      "a": [
+        "In winter",
+        "In summer",
+        "In spring",
+        "All year"
+      ],
+      "c": 1,
+      "why": "In summer, West Lake in Hanoi is famous for its pink lotus."
+    },
+    {
+      "q": "What do some families put inside a lotus flower?",
+      "a": [
+        "Rice",
+        "Green tea",
+        "Sugar",
+        "Coffee"
+      ],
+      "c": 1,
+      "why": "Some families put green tea inside a lotus flower."
+    },
+    {
+      "q": "How many flowers do people often say you need for one kilo of tea?",
+      "a": [
+        "About ten",
+        "About a hundred",
+        "More than a thousand",
+        "Exactly five hundred"
+      ],
+      "c": 2,
+      "why": "more than a thousand flowers for one kilo of tea."
+    },
+    {
+      "q": "What does Claire want to do at the end?",
+      "a": [
+        "Swim in the lake",
+        "Buy some tea as a gift",
+        "Pick some flowers",
+        "Go to a café"
+      ],
+      "c": 1,
+      "why": "Can I buy some as a gift?"
+    }
+  ],
+  "reading": [
+    {
+      "q": "Why is lotus tea expensive?",
+      "a": [
+        "It comes from abroad",
+        "It needs many flowers and a lot of work",
+        "It is very old",
+        "It is sold only at night"
+      ],
+      "c": 1,
+      "why": "That sounds like a lot of work. — It is... more than a thousand flowers."
+    },
+    {
+      "q": "How should you keep lotus tea?",
+      "a": [
+        "In the fridge",
+        "In a dry place",
+        "In water",
+        "In the sun"
+      ],
+      "c": 1,
+      "why": "Just keep it in a dry place."
+    },
+    {
+      "q": "Which sentence is true?",
+      "a": [
+        "Lotus tea is a kind of coffee",
+        "Lotus tea is green tea that smells of lotus",
+        "Lotus tea has no smell",
+        "Lotus tea is made in winter"
+      ],
+      "c": 1,
+      "why": "It's green tea, but it smells soft and sweet."
+    }
+  ],
+  "dictation": [
+    1,
+    11
+  ],
+  "speaking": [
+    2,
+    4,
+    9
+  ],
+  "write": {
+    "prompt": "A tourist asks you what lotus tea is. Write 3 sentences: what it is, how it is made, and why it is special.",
+    "model": "Lotus tea is green tea that smells of lotus flowers from West Lake in Hanoi. Some families put the tea inside a lotus flower overnight. It is special because it needs a lot of flowers and a lot of work."
+  }
+}

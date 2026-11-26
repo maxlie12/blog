@@ -1,0 +1,187 @@
+{
+  "date": "2026-11-27",
+  "id": "d-2026-11-27",
+  "level": "easy",
+  "title": "Would You Like Some Tea?",
+  "titleVi": "Mời trà khách nước ngoài",
+  "minutes": 12,
+  "intro": "Mai mời một vị khách người Úc uống trà ở văn phòng. Nghe cách mời, cách dặn cầm chén và cách giải thích vị chát rồi ngọt hậu.",
+  "vocab": [
+    {
+      "w": "teapot",
+      "pos": "n",
+      "vi": "ấm trà",
+      "ex": "My grandmother has an old teapot."
+    },
+    {
+      "w": "offer",
+      "pos": "v",
+      "vi": "mời",
+      "ex": "We always offer tea to guests."
+    },
+    {
+      "w": "guest",
+      "pos": "n",
+      "vi": "khách",
+      "ex": "The guest sat near the window."
+    },
+    {
+      "w": "bitter",
+      "pos": "adj",
+      "vi": "đắng, chát",
+      "ex": "Strong green tea is a little bitter."
+    },
+    {
+      "w": "aftertaste",
+      "pos": "n",
+      "vi": "hậu vị (vị còn lại sau khi uống)",
+      "ex": "Good tea leaves a sweet aftertaste."
+    },
+    {
+      "w": "both hands",
+      "pos": "phrase",
+      "vi": "hai tay",
+      "ex": "Give the cup with both hands."
+    }
+  ],
+  "transcript": [
+    {
+      "s": "Mai",
+      "t": "Welcome to our office, Tom. Please sit down."
+    },
+    {
+      "s": "Tom",
+      "t": "Thank you. What a beautiful teapot!"
+    },
+    {
+      "s": "Mai",
+      "t": "Thanks. Would you like some tea? It's green tea from Thai Nguyen."
+    },
+    {
+      "s": "Tom",
+      "t": "Yes, please. I don't know much about Vietnamese tea."
+    },
+    {
+      "s": "Mai",
+      "t": "In Vietnam, we always offer tea when a guest comes."
+    },
+    {
+      "s": "Mai",
+      "t": "Here you are. Please hold the cup with both hands. It's hot."
+    },
+    {
+      "s": "Tom",
+      "t": "Mmm. It's a little bitter."
+    },
+    {
+      "s": "Mai",
+      "t": "Yes, but wait a moment. Can you feel a sweet taste now?"
+    },
+    {
+      "s": "Tom",
+      "t": "Oh, yes! That's interesting."
+    },
+    {
+      "s": "Mai",
+      "t": "We call that the sweet aftertaste. Would you like another cup?"
+    },
+    {
+      "s": "Tom",
+      "t": "Yes, please. It's really good."
+    }
+  ],
+  "listening": [
+    {
+      "q": "Where is Tom?",
+      "a": [
+        "At Mai's office",
+        "At a café",
+        "At a hotel",
+        "At the airport"
+      ],
+      "c": 0,
+      "why": "Welcome to our office, Tom."
+    },
+    {
+      "q": "Where is the tea from?",
+      "a": [
+        "Hanoi",
+        "Thai Nguyen",
+        "Da Lat",
+        "China"
+      ],
+      "c": 1,
+      "why": "It's green tea from Thai Nguyen."
+    },
+    {
+      "q": "How does Tom describe the tea at first?",
+      "a": [
+        "Sweet",
+        "Cold",
+        "A little bitter",
+        "Too strong to drink"
+      ],
+      "c": 2,
+      "why": "It's a little bitter."
+    },
+    {
+      "q": "What does Tom want at the end?",
+      "a": [
+        "A cup of coffee",
+        "Another cup of tea",
+        "To leave early",
+        "Some water"
+      ],
+      "c": 1,
+      "why": "Would you like another cup? — Yes, please."
+    }
+  ],
+  "reading": [
+    {
+      "q": "Why does Mai give Tom tea?",
+      "a": [
+        "He asks for it",
+        "Vietnamese people offer tea when a guest comes",
+        "It's lunchtime",
+        "Tom feels sick"
+      ],
+      "c": 1,
+      "why": "In Vietnam, we always offer tea when a guest comes."
+    },
+    {
+      "q": "\"Aftertaste\" means…",
+      "a": [
+        "the taste that stays after you drink",
+        "the first sip",
+        "the tea leaves",
+        "the hot water"
+      ],
+      "c": 0,
+      "why": "aftertaste = hậu vị, vị còn lại sau khi uống."
+    },
+    {
+      "q": "Why should Tom hold the cup with both hands?",
+      "a": [
+        "Because it's hot",
+        "Because it's heavy",
+        "Because it's broken",
+        "Because it's cold"
+      ],
+      "c": 0,
+      "why": "Please hold the cup with both hands. It's hot."
+    }
+  ],
+  "dictation": [
+    2,
+    4
+  ],
+  "speaking": [
+    2,
+    5,
+    9
+  ],
+  "write": {
+    "prompt": "A foreign guest visits your home. Write 2–3 sentences to offer tea and say one thing about it.",
+    "model": "Would you like some tea? This is green tea from Thai Nguyen, and it's a little bitter at first. Please hold the cup with both hands because it's hot."
+  }
+}

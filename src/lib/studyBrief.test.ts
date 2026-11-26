@@ -59,7 +59,7 @@ test("an empty start says so instead of inventing numbers", () => {
   assert.ok(brief.includes("Điểm trung bình: Nghe chưa có · Đọc chưa có · Viết chưa có · Nói chưa có"));
   assert.ok(brief.includes("Chưa làm bài nào ở Phòng nghe."));
   assert.ok(brief.includes("Chưa làm đề luyện nào."));
-  assert.ok(brief.includes("Chưa luyện 9"));
+  assert.ok(brief.includes(`Chưa luyện ${SITUATIONS.length}`));
   assert.ok(brief.includes("KẾ HOẠCH LẦN TRƯỚC: chưa có"));
   assert.ok(brief.includes("Bài hôm nay: chưa có bài mới trong Phòng nghe."));
   assert.ok(!brief.includes("yếu nhất"));

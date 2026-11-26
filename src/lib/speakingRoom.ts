@@ -203,6 +203,33 @@ export const SITUATIONS: SpeakSituation[] = [
     retell: "Giới thiệu thành phố hoặc quê bạn cho một khách nước ngoài: nổi tiếng về gì, nên ăn gì, nên đi lúc nào.",
   },
   {
+    id: "offer-tea", level: "medium", title: "Offering tea to a foreign guest", titleVi: "Mời trà khách nước ngoài",
+    goal: "Mời trà, giới thiệu ngắn loại trà, dặn cách uống, và xử lý khéo khi khách chưa quen vị chát.",
+    chunks: [
+      { en: "Would you like some tea?", vi: "Bạn uống trà nhé?" },
+      { en: "This is green tea from Thai Nguyen.", vi: "Đây là trà xanh Thái Nguyên." },
+      { en: "Please hold the cup with both hands. It's hot.", vi: "Bạn cầm chén bằng hai tay nhé, nóng đấy." },
+      { en: "Take a small sip first.", vi: "Nhấp một ngụm nhỏ trước." },
+      { en: "It's a little bitter at first, then sweet.", vi: "Lúc đầu hơi chát, sau thấy ngọt hậu." },
+      { en: "In Vietnam, we offer tea to every guest.", vi: "Ở Việt Nam, khách đến nhà là mời trà." },
+    ],
+    cases: [
+      { id: "welcome", name: "Mời trà khách đến nhà", plan: "Mời → một câu giới thiệu trà → dặn cầm chén, nhấp ngụm nhỏ → hỏi khách thấy thế nào.", turns: [
+        { partner: "What a lovely tea set! Is this for us?", cue: "Mời khách uống trà, nói đây là trà xanh Thái Nguyên.", model: "Yes, would you like some tea? It's green tea from Thai Nguyen." },
+        { partner: "I'd love some. How should I drink it?", cue: "Dặn cầm chén hai tay vì nóng, nhấp ngụm nhỏ trước.", model: "Please hold the cup with both hands, it's hot. Take a small sip first." },
+        { partner: "Hmm, it's a bit bitter!", cue: "Giải thích: lúc đầu chát, sau sẽ thấy ngọt hậu.", model: "Yes, it's a little bitter at first, then you'll feel a sweet aftertaste." },
+        { partner: "Do people drink tea like this every day here?", cue: "Nói khách đến là mời trà, nhiều nhà uống mỗi ngày.", model: "Yes. In Vietnam we offer tea to every guest, and many families drink it every day." },
+      ] },
+      { id: "not-used", name: "Khách chưa quen vị trà", plan: "Khách thấy chát → không ép; đề nghị pha loãng hơn hoặc đổi sang thứ khác dễ uống.", turns: [
+        { partner: "Sorry, it's too strong for me.", cue: "Nói không sao, bạn pha loãng hơn được.", model: "No problem. I can make it lighter for you." },
+        { partner: "Do you have anything without caffeine?", cue: "Nói có trà hoa cúc, không có caffeine, hơi ngọt.", model: "Yes, we have chrysanthemum tea. It has no caffeine and tastes a little sweet." },
+        { partner: "That sounds nice. Is it popular here?", cue: "Nói nhiều người uống buổi tối cho thư giãn.", model: "Yes, it's popular. Many people drink it in the evening to relax." },
+        { partner: "Thank you, you're very kind.", cue: "Đáp lịch sự, mời ăn thêm bánh đậu xanh.", model: "You're welcome. Please have some green bean cake with it, too." },
+      ] },
+    ],
+    retell: "Mời trà một vị khách nước ngoài: giới thiệu loại trà, cách uống, và một điều về văn hoá trà Việt.",
+  },
+  {
     id: "complaint", level: "hard", title: "Making a complaint", titleVi: "Khiếu nại và thương lượng",
     goal: "Nêu vấn đề lịch sự nhưng rõ ràng, đưa ra yêu cầu cụ thể, thương lượng khi bị từ chối.",
     chunks: [
@@ -282,6 +309,33 @@ export const SITUATIONS: SpeakSituation[] = [
       ] },
     ],
     retell: "Trình bày ngắn về một dự án bạn đang làm: mục tiêu, việc đã xong, bước tiếp theo.",
+  },
+  {
+    id: "tea-interpreter", level: "hard", title: "Interpreting at a tea tasting", titleVi: "Phiên dịch buổi thưởng trà",
+    goal: "Chuyển lời nghệ nhân trà sang tiếng Anh bằng câu gián tiếp, hỏi lại khi chưa rõ, giải thích từ tiếng Việt và nói về lịch sử trà mà không bịa.",
+    chunks: [
+      { en: "He says that…", vi: "Ông ấy nói rằng…" },
+      { en: "She'd like to know…", vi: "Cô ấy muốn biết…" },
+      { en: "Let me ask him.", vi: "Để tôi hỏi ông ấy." },
+      { en: "In Vietnamese, we call it… It roughly means…", vi: "Tiếng Việt gọi là… Nghĩa gần đúng là…" },
+      { en: "What he means is…", vi: "Ý ông ấy là…" },
+      { en: "I'm not sure about the exact year, but I can check.", vi: "Tôi không chắc năm chính xác, nhưng tôi kiểm tra được." },
+    ],
+    cases: [
+      { id: "relay", name: "Chuyển lời nghệ nhân", plan: "Nghe hết ý → mở bằng \"He says that…\" → câu ngắn, đúng ý, không thêm ý mình. Chưa rõ thì \"Let me ask him.\"", turns: [
+        { partner: "What is he saying about this tea?", cue: "Nghệ nhân nói: \"Trà này hái từ cây chè Shan Tuyết cổ thụ trên núi Hà Giang.\" Hãy dịch.", model: "He says this tea comes from old Shan Tuyet tea trees in the mountains of Ha Giang." },
+        { partner: "How old are the trees?", cue: "Nói bạn sẽ hỏi nghệ nhân, rồi dịch câu trả lời: \"Có cây vài trăm năm tuổi.\"", model: "Let me ask him. He says some of the trees are a few hundred years old." },
+        { partner: "Why does he pour the first cup away?", cue: "Nghệ nhân nói: \"Nước đầu để tráng trà, đánh thức lá trà.\" Dịch và nói tiếng Việt gọi là \"tráng trà\".", model: "He says the first pour rinses the leaves and wakes them up. In Vietnamese, we call it trang tra." },
+        { partner: "Can you tell him it's delicious?", cue: "Nhận lời, rồi dịch câu nghệ nhân đáp: \"Cảm ơn, mời chị uống thêm chén nữa.\"", model: "Of course. He says thank you, and he'd like you to have another cup." },
+      ] },
+      { id: "history", name: "Khách hỏi về lịch sử trà", plan: "Chỉ nói điều chắc chắn; không chắc thì nói thật và hẹn kiểm tra. Không bịa năm hay con số.", turns: [
+        { partner: "When did Vietnamese people start drinking tea?", cue: "Nói: đã nhiều thế kỷ, bạn không chắc năm chính xác, sẽ hỏi nghệ nhân.", model: "People here have drunk tea for many centuries. I'm not sure about the exact year, but I can ask him." },
+        { partner: "Where does tea come from originally?", cue: "Nói: nhiều nhà nghiên cứu cho rằng chè mọc hoang ở vùng núi giữa nam Trung Quốc và bắc Đông Nam Á, gồm cả miền Bắc Việt Nam.", model: "Many researchers think wild tea first grew in the mountains between southern China and the north of Southeast Asia, including northern Vietnam." },
+        { partner: "Is lotus tea a tradition too?", cue: "Nói: trà sen là đặc sản Hà Nội, trà xanh ướp với hoa sen Hồ Tây, rất công phu.", model: "Yes. Lotus tea is a Hanoi speciality. Green tea is scented with lotus flowers from West Lake, and it takes a lot of work." },
+        { partner: "Why is it so expensive?", cue: "Nói: cần rất nhiều hoa, người ta thường nói hơn một nghìn bông cho một ký trà.", model: "It needs a huge number of flowers. People often say more than a thousand for one kilo of tea." },
+      ] },
+    ],
+    retell: "Đóng vai phiên dịch: giới thiệu một loại trà Việt cho khách (nguồn gốc, cách pha, vị) bằng \"He says that…\", thêm một câu về lịch sử trà.",
   },
 ];
 
