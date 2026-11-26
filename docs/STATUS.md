@@ -2,6 +2,19 @@
 
 Last verified: 2026-11-12 (English listening lab; unit tests and harness browser check).
 
+
+## 2026-11-26 — English daily = a Phòng nghe lesson; Anh-Mỹ/Anh-Anh voice
+
+- New `content/listening-lab/YYYY-MM-DD.json` lessons (zod-validated, `src/lib/labDaily.ts`) open at
+  `/learning/listening/d-YYYY-MM-DD` with the six steps and scoring. /learning and the homepage
+  lead with "Bài hôm nay" (or "Bài mới nhất" when a day was missed), then "Học tiếp bài N".
+  /learning/listening lists the last 14 daily lessons. First lesson: 2026-11-26.
+- The old Daily card on /learning is Chinese-only; English Daily packets stay under "Bài Daily dạng
+  cũ". `docs/DAILY-LEARNING.md` now tells the ChatGPT automation to publish the English daily lesson
+  in this format. The ChatGPT brief reports today's lesson instead of Daily numbers.
+- "Giọng đọc: Anh-Mỹ | Anh-Anh" (device voices, saved per device) applies to every English
+  read-aloud; it says when the device lacks the chosen accent and how to add one.
+- Checks: see `docs/changes/LEARN-019-daily-in-listening-lab.md`.
 ## 2026-11-12 — Start card made readable + daily ChatGPT study brief
 
 - The "Tiếp tục từ việc quan trọng nhất" card reads in one line of sight: status label, lesson

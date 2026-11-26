@@ -180,6 +180,32 @@ async function progressReview(browser, engine) {
     console.log('PASS '+engine+' 320px: seven/28-day Done and review separation, languages, reload and overflow');
   } finally { await context.close(); }
 }
+async function dailyListeningFlow(browser, engine) {
+  // LEARN-019: English daily is a Phòng nghe lesson; the old start card is Chinese-only; accent choice persists.
+  const context = await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+  try {
+    const page = await context.newPage();
+    assert.equal((await page.goto(base+'/learning',{waitUntil:'domcontentloaded'}))?.status(),200);
+    assert.equal(await page.getByRole('heading',{name:'Tiếp tục từ việc quan trọng nhất'}).count(),0,'old English start card is gone');
+    const daily = page.getByRole('link',{name:/Học bài (hôm nay|mới nhất)/});
+    await daily.waitFor({timeout:15000});
+    assert.ok((await daily.boundingBox())?.height>=44);
+    await daily.click();
+    await page.waitForURL(/\/learning\/listening\/d-\d{4}-\d{2}-\d{2}$/);
+    await page.getByRole('navigation',{name:'Các bước của bài'}).waitFor();
+    const british = page.getByRole('radio',{name:'Anh-Anh'});
+    if (await british.count()) {
+      await british.click();
+      assert.equal(await page.evaluate(()=>localStorage.getItem('english-voice-accent-v1')),'en-GB');
+      await page.reload({waitUntil:'domcontentloaded'});
+      await page.getByRole('radio',{name:'Anh-Anh',checked:true}).waitFor();
+    } else console.log('INFO '+engine+': no speech synthesis, accent picker hidden');
+    assert.equal((await page.goto(base+'/learning/listening',{waitUntil:'domcontentloaded'}))?.status(),200);
+    await page.getByRole('heading',{name:'Bài mới mỗi ngày'}).waitFor();
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth)<=2,'Daily list overflow on 390px');
+    console.log('PASS '+engine+' 390px: daily Phòng nghe lesson opens from /learning; accent choice persists');
+  } finally { await context.close(); }
+}
 async function studyBriefFlow(browser, engine) {
   // LEARN-018: daily ChatGPT brief carries yesterday's plan; a pasted plan persists across reload.
   const context = await browser.newContext({viewport:{width:320,height:844},isMobile:true,hasTouch:true});
@@ -198,6 +224,7 @@ async function studyBriefFlow(browser, engine) {
     assert.equal(response?.status(),200);
     await page.getByRole('heading',{name:'Kế hoạch mỗi ngày với ChatGPT'}).waitFor();
     await page.getByText('Xem trước nội dung sẽ sao chép').click();
+    await page.waitForFunction(()=>document.querySelector('#sb-preview-text')?.value.startsWith('PHIẾU HỌC'),null,{timeout:15000});
     const preview = await page.locator('#sb-preview-text').inputValue();
     assert.match(preview,new RegExp('PHIẾU HỌC TIẾNG ANH — '+today));
     assert.ok(preview.includes('KẾ HOẠCH LẦN TRƯỚC (bạn giao ngày '+yesterday+'):\nQA synthetic plan: listening lesson 2'),'brief carries yesterday plan');
@@ -221,6 +248,7 @@ try {
       await assessmentEvidence(browser, engine);
       await progressReview(browser, engine);
       await studyBriefFlow(browser, engine);
+      await dailyListeningFlow(browser, engine);
     } finally {
       await browser.close();
       browser = undefined;

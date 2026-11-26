@@ -12,8 +12,7 @@ const base: StudyBriefData = {
   streak: 4,
   totalDone: 37,
   week: { activeDays: 5, doneCount: 9, reviewCount: 3, skills: { listening: 4, reading: 1, writing: 2, speaking: 2 } },
-  dueDailyReviews: 2,
-  nextDaily: "Daily 2026-11-12",
+  todayLesson: { title: "Meeting at the Station", date: "2026-11-12", state: "started", score: 58 },
   listening: {
     done: 3,
     total: 18,
@@ -36,7 +35,7 @@ test("a full brief carries every section, the previous plan and the coach tasks 
     "PHIẾU HỌC TIẾNG ANH — 2026-11-12",
     "7 ngày qua: 5/7 ngày có học · 9 lượt Done · 3 lượt ôn · theo kỹ năng: Nghe 4, Đọc 1, Viết 2, Nói 2",
     "Chuỗi ngày học: 4 ngày liên tiếp · tổng 37 lần Done",
-    "Daily: 2 bài đến hạn ôn · bài tiếp theo: Daily 2026-11-12",
+    "Bài hôm nay (Phòng nghe, ngày 2026-11-12): Meeting at the Station — đang làm dở, 58%",
     "Phòng nghe: 3/18 bài xong đủ 4 phần. Điểm trung bình: Nghe 78% · Đọc 70% · Viết 85% · Nói 66% (yếu nhất: Nói)",
     "Bài gần nhất: At the Coffee Shop — 88% (2026-11-12)",
     "Đề luyện gần nhất: 7/10 (2026-11-12, mức Dễ)",
@@ -52,7 +51,7 @@ test("a full brief carries every section, the previous plan and the coach tasks 
 test("an empty start says so instead of inventing numbers", () => {
   const brief = buildStudyBrief({
     ...base,
-    streak: 0, totalDone: 0, dueDailyReviews: 0, nextDaily: null,
+    streak: 0, totalDone: 0, todayLesson: null,
     listening: summarizeListening(emptyLabStore(), 18),
     speaking: summarizeSpeaking(parseSpeakStore(null), "2026-11-12"),
     previousPlan: null,
@@ -62,6 +61,7 @@ test("an empty start says so instead of inventing numbers", () => {
   assert.ok(brief.includes("Chưa làm đề luyện nào."));
   assert.ok(brief.includes("Chưa luyện 9"));
   assert.ok(brief.includes("KẾ HOẠCH LẦN TRƯỚC: chưa có"));
+  assert.ok(brief.includes("Bài hôm nay: chưa có bài mới trong Phòng nghe."));
   assert.ok(!brief.includes("yếu nhất"));
 });
 
@@ -69,6 +69,10 @@ test("summaries read the real listening and speaking stores", () => {
   let lab = withLessonResult(emptyLabStore(), "e1-coffee-shop", { listen: 1, read: 0.5, write: 1, speak: 1 }, "2026-11-10");
   lab = withLessonResult(lab, "e2-directions", { listen: 0.5, read: null, write: null, speak: null }, "2026-11-12");
   lab = withTestResult(lab, { date: "2026-11-12", score: 6, total: 10, minutes: 9, level: "easy" });
+  lab = withLessonResult(lab, "d-2026-11-13", { listen: 1, read: null, write: null, speak: null }, "2026-11-13");
+  assert.equal(summarizeListening(lab, 18, { "d-2026-11-13": "Meeting at the Station" }).lastLesson?.title, "Meeting at the Station", "daily lessons are named");
+  assert.equal(summarizeListening(lab, 18).lastLesson?.title, "Finding the Bookstore", "unknown ids are skipped");
+  lab = { ...lab, lessons: Object.fromEntries(Object.entries(lab.lessons).filter(([id]) => id !== "d-2026-11-13")) };
   const listening = summarizeListening(lab, 18);
   assert.equal(listening.done, 1);
   assert.deepEqual(listening.parts, { listen: 0.75, read: 0.5, write: 1, speak: 1 });
@@ -104,5 +108,5 @@ test("plans: one per day, newest first, kept 7 days, capped, removable; bad data
 });
 
 test("coach instructions name the app's sections and forbid CEFR claims", () => {
-  for (const word of ["Daily", "Phòng nghe", "Phòng nói", "KẾ HOẠCH HÔM NAY", "CEFR"]) assert.ok(COACH_INSTRUCTIONS.includes(word), word);
+  for (const word of ["Bài hôm nay", "Phòng nghe", "Phòng nói", "KẾ HOẠCH HÔM NAY", "CEFR"]) assert.ok(COACH_INSTRUCTIONS.includes(word), word);
 });

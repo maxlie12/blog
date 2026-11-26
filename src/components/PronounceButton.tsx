@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { pickVoices, readAccent } from "@/lib/englishVoice";
 
 const subscribe = () => () => {};
 
@@ -8,10 +9,11 @@ function speak(text: string) {
   const synth = window.speechSynthesis;
   synth.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
-  const voices = synth.getVoices().filter((voice) => voice.lang.toLowerCase().startsWith("en-us"));
-  const voice = voices.find((item) => /google|natural/i.test(item.name)) ?? voices[0];
+  // Giọng Anh-Mỹ hoặc Anh-Anh theo lựa chọn ở Phòng nghe/Phòng nói (lưu trên thiết bị).
+  const accent = readAccent();
+  const voice = pickVoices(synth.getVoices(), accent)[0];
   if (voice) utterance.voice = voice;
-  utterance.lang = "en-US";
+  utterance.lang = accent;
   utterance.rate = 0.9;
   synth.speak(utterance);
 }

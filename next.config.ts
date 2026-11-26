@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
       { source: "/projects/:slug", destination: "/play", permanent: true },
     ];
   },
-  outputFileTracingIncludes: { "/*": ["./content/daily-lessons/*.json", "./content/articles/*.mdx", ...(process.env.BLOG_READ_ONLY_PREVIEW === "1" ? ["./data/preview.db"] : [])] },
+  outputFileTracingIncludes: { "/*": ["./content/daily-lessons/*.json", "./content/listening-lab/*.json", "./content/articles/*.mdx", ...(process.env.BLOG_READ_ONLY_PREVIEW === "1" ? ["./data/preview.db"] : [])] },
 };
 
 export default nextConfig;

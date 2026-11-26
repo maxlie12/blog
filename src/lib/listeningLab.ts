@@ -1266,6 +1266,14 @@ export function withTestResult(store: LabStore, record: LabTestRecord): LabStore
 }
 
 /** Bài nên học tiếp: bài đầu tiên (Dễ → Khó) chưa làm đủ 4 phần; hết thì bài điểm thấp nhất. */
+/** Bài theo ngày (file `content/listening-lab`), phần gửi xuống trình duyệt. */
+export interface DailyLabSummary { id: string; date: string; title: string; titleVi: string; level: LabLevel; minutes: number }
+
+/** Bài hôm nay: bài mới nhất có ngày ≤ hôm nay (bài soạn trước cho ngày mai chưa hiện). */
+export function todayDaily(daily: DailyLabSummary[], today: string): DailyLabSummary | null {
+  return daily.filter((item) => item.date <= today).sort((a, b) => b.date.localeCompare(a.date))[0] ?? null;
+}
+
 export function nextLabLesson(store: LabStore): LabLesson {
   const open = LESSONS.find((lesson) => !store.lessons[lesson.id] || !isComplete(store.lessons[lesson.id].parts));
   if (open) return open;

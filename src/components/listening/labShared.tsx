@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { SpeakingRecorder } from "@/components/SpeakingRecorder";
+import { ACCENTS, ACCENT_CHANGED, hasAccentVoice, pickVoices, readAccent, saveAccent, type EnglishAccent } from "@/lib/englishVoice";
 import { readProfileStorage, writeProfileStorage } from "@/lib/learnerProfiles";
 import {
   LAB_STORE_KEY, SPEAK_RATINGS, compareDictation, parseLabStore, speakingRetryFeedback, type DictationResult, type LabChoice, type LabLesson,
@@ -42,22 +43,43 @@ export function useSpeechSupported(): boolean {
   return useSyncExternalStore(noop, () => "speechSynthesis" in window, () => false);
 }
 
-function englishVoices(): SpeechSynthesisVoice[] {
-  const all = window.speechSynthesis.getVoices().filter((voice) => voice.lang.toLowerCase().startsWith("en"));
-  const us = all.filter((voice) => voice.lang.toLowerCase().startsWith("en-us"));
-  return (us.length ? us : all).sort((a, b) => Number(/google|natural|premium/i.test(b.name)) - Number(/google|natural|premium/i.test(a.name)));
+/** Giọng chọn Anh-Mỹ / Anh-Anh, lưu theo thiết bị; mọi chỗ máy đọc tiếng Anh dùng chung. */
+function subscribeAccent(onChange: () => void) {
+  window.addEventListener(ACCENT_CHANGED, onChange);
+  window.addEventListener("storage", onChange);
+  return () => { window.removeEventListener(ACCENT_CHANGED, onChange); window.removeEventListener("storage", onChange); };
+}
+export function useAccent(): EnglishAccent {
+  return useSyncExternalStore(subscribeAccent, readAccent, (): EnglishAccent => "en-US");
 }
 
-/** Đọc lần lượt từng câu; mỗi người nói một giọng (hoặc một độ cao giọng nếu máy chỉ có một giọng). */
+// getVoices() trả mảng mới mỗi lần gọi và có thể rỗng tới khi máy nạp xong: giữ bản đã nạp.
+let voiceCache: SpeechSynthesisVoice[] = [];
+function subscribeVoices(onChange: () => void) {
+  const synth = window.speechSynthesis;
+  if (!synth) return () => {};
+  const update = () => { voiceCache = synth.getVoices(); onChange(); };
+  update();
+  synth.addEventListener?.("voiceschanged", update);
+  return () => synth.removeEventListener?.("voiceschanged", update);
+}
+function useVoices(): SpeechSynthesisVoice[] {
+  return useSyncExternalStore(subscribeVoices, () => voiceCache, () => voiceCache);
+}
+
+/** Đọc lần lượt từng câu; mỗi người nói một giọng cùng accent (hoặc một độ cao giọng nếu máy chỉ có một giọng). */
 export function speakLines(lines: LabLine[], rate: number, handlers: { onLine?: (index: number) => void; onEnd?: () => void } = {}) {
   const synth = window.speechSynthesis;
   synth.cancel();
-  const voices = englishVoices();
+  const accent = readAccent();
+  const ordered = pickVoices(synth.getVoices(), accent);
+  const sameAccent = ordered.filter((voice) => voice.lang.replace("_", "-").toLowerCase() === accent.toLowerCase());
+  const voices = sameAccent.length ? sameAccent : ordered;
   const speakers = [...new Set(lines.map((line) => line.s ?? ""))];
   lines.forEach((line, index) => {
     const who = speakers.indexOf(line.s ?? "");
     const utterance = new SpeechSynthesisUtterance(line.t);
-    utterance.lang = "en-US";
+    utterance.lang = accent;
     utterance.rate = rate;
     if (voices.length) utterance.voice = voices[who % voices.length];
     utterance.pitch = voices.length > 1 ? 1 : [1, 0.8, 1.2][who % 3];
@@ -79,6 +101,33 @@ const RATES = [
   { value: 0.9, label: "Vừa" },
   { value: 1, label: "Thường" },
 ] as const;
+
+/** Chọn giọng Anh-Mỹ / Anh-Anh; báo khi máy chưa có giọng của accent đã chọn và cách thêm. */
+export function AccentPicker() {
+  const supported = useSpeechSupported();
+  const accent = useAccent();
+  const voices = useVoices();
+  if (!supported) return null;
+  const missing = voices.length > 0 && !hasAccentVoice(voices, accent);
+  const label = ACCENTS.find((item) => item.id === accent)!.label;
+  return (
+    <div className="ll-accent">
+      <div className="ll-rate" role="radiogroup" aria-label="Giọng đọc tiếng Anh">
+        <span>Giọng đọc</span>
+        {ACCENTS.map((item) => (
+          <button key={item.id} type="button" role="radio" className="ll-chip" aria-checked={accent === item.id} onClick={() => saveAccent(item.id)}>
+            {item.label}
+          </button>
+        ))}
+      </div>
+      {missing && (
+        <p className="ll-note" role="status">
+          Máy này chưa có giọng {label}, đang đọc bằng giọng tiếng Anh khác. Thêm giọng: iPhone/iPad vào Cài đặt › Trợ năng › Nội dung được đọc › Giọng nói › Tiếng Anh; Android tìm mục &ldquo;Chuyển văn bản thành lời nói&rdquo; trong Cài đặt rồi tải giọng tiếng Anh ({accent === "en-GB" ? "Vương quốc Anh" : "Mỹ"}); máy tính dùng Chrome hoặc Edge.
+        </p>
+      )}
+    </div>
+  );
+}
 
 export function RatePicker({ rate, onRate }: { rate: number; onRate: (rate: number) => void }) {
   return (
@@ -110,7 +159,7 @@ export function LabPlayer({ lesson, rate, onRate }: { lesson: LabLesson; rate: n
           onPlay={(event) => { event.currentTarget.playbackRate = rate; setPlays((n) => n + 1); }} onError={() => setFailed(true)} />
         <RatePicker rate={rate} onRate={onRate} />
         <p className="ll-note" aria-live="polite">
-          {failed ? <>Không tải được audio từ VOA. </> : plays ? `Đã nghe ${plays} lần · ` : "Giọng thật của VOA · "}
+          {failed ? <>Không tải được audio từ VOA. </> : plays ? `Đã nghe ${plays} lần · ` : "Giọng thật của VOA (Anh-Mỹ, không đổi được) · "}
           {lesson.source}{lesson.sourceUrl && <> · <a href={lesson.sourceUrl} target="_blank" rel="noopener noreferrer">bài gốc</a></>}
         </p>
       </div>

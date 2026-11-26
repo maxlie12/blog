@@ -1,0 +1,46 @@
+{
+  "date": "2026-11-26",
+  "id": "d-2026-11-26",
+  "level": "medium",
+  "title": "Meeting at the Station",
+  "titleVi": "Đổi chỗ hẹn ở nhà ga",
+  "minutes": 15,
+  "intro": "Hai người bạn hẹn nhau ở nhà ga, trời mưa to nên phải đổi chỗ gặp. Nghe xem họ chốt gặp ở đâu và sẽ làm gì nếu một người đến trễ.",
+  "vocab": [
+    { "w": "pouring", "pos": "adj", "vi": "mưa như trút", "ex": "It's pouring outside, so take an umbrella." },
+    { "w": "entrance", "pos": "n", "vi": "lối vào, cổng", "ex": "Meet me at the north entrance." },
+    { "w": "platform", "pos": "n", "vi": "sân ga", "ex": "The train arrives on platform 4." },
+    { "w": "ticket machine", "pos": "n", "vi": "máy bán vé", "ex": "You can buy a ticket at the ticket machine." },
+    { "w": "battery is low", "pos": "phrase", "vi": "pin yếu", "ex": "My battery is low, so I'll text you later." },
+    { "w": "across the street", "pos": "phrase", "vi": "bên kia đường", "ex": "The café is across the street." }
+  ],
+  "transcript": [
+    { "s": "Jo", "t": "Hi Sam. Are we still meeting outside the station at eight?" },
+    { "s": "Sam", "t": "Eight works. But can we meet by the ticket machines instead? It's pouring outside." },
+    { "s": "Jo", "t": "Sure. Wait, there are machines at both entrances. Which ones?" },
+    { "s": "Sam", "t": "Good point. My train comes in on platform 4, so the north entrance is closer." },
+    { "s": "Jo", "t": "OK, the north entrance. Is that the one next to the bakery?" },
+    { "s": "Sam", "t": "Yes, the bakery with the green sign. I'll be by the first machine." },
+    { "s": "Jo", "t": "Great. My phone battery is low, so I might not see your messages." },
+    { "s": "Sam", "t": "Then let's not change the plan again. If I'm late, wait ten minutes." },
+    { "s": "Jo", "t": "Ten minutes, and then I'll go to the café across the street." },
+    { "s": "Sam", "t": "Perfect. See you at eight by the machines." }
+  ],
+  "listening": [
+    { "q": "Why do they change the meeting place?", "a": ["It's raining heavily", "The station is closed", "Jo will be late", "The café is full"], "c": 0, "why": "It's pouring outside = trời mưa rất to, nên hẹn vào trong ga." },
+    { "q": "Which entrance do they choose?", "a": ["The south entrance", "The north entrance", "The main entrance", "The east entrance"], "c": 1, "why": "Tàu của Sam vào sân ga 4, nên cổng bắc gần hơn." },
+    { "q": "What is next to the north entrance?", "a": ["A café", "A bakery with a green sign", "A bus stop", "A bank"], "c": 1, "why": "Yes, the bakery with the green sign." },
+    { "q": "What will Jo do if Sam is late?", "a": ["Go home", "Call Sam again and again", "Wait ten minutes, then go to the café across the street", "Buy a ticket and leave"], "c": 2, "why": "Ten minutes, and then I'll go to the café across the street." }
+  ],
+  "reading": [
+    { "q": "Why might Jo not see Sam's messages?", "a": ["Jo's phone battery is low", "Jo has no signal underground", "Jo will be on a train", "Jo never reads messages"], "c": 0, "why": "My phone battery is low, so I might not see your messages." },
+    { "q": "\"Let's not change the plan again\" means…", "a": ["Let's keep the plan we just made", "Let's make a new plan", "Let's cancel the meeting", "Let's meet another day"], "c": 0, "why": "not change the plan again = giữ nguyên kế hoạch vừa chốt." },
+    { "q": "What time are they meeting?", "a": ["At seven", "At eight", "At ten past eight", "At nine"], "c": 1, "why": "See you at eight by the machines." }
+  ],
+  "dictation": [3, 7],
+  "speaking": [2, 6, 9],
+  "write": {
+    "prompt": "You will be late to meet a friend at a busy place. Write a 2–3 sentence message: say how late you will be and exactly where to meet.",
+    "model": "Sorry, my bus is stuck in traffic, so I'll be about fifteen minutes late. Let's meet inside the station by the ticket machines at the north entrance. If you get cold, wait in the café across the street and I'll find you."
+  }
+}

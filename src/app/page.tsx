@@ -1,18 +1,17 @@
 import Link from "next/link";
 import { getPublicArticles } from "@/lib/posts";
-import { getAllLessons } from "@/lib/lessonsData";
 import { BlogCard } from "@/components/BlogCard";
 import { MountainJourney } from "@/components/MountainJourney";
-import { StartLearning } from "@/components/StartLearning";
-import { getAuthenticatedLearnerId } from "@/lib/learnerAuth";
+import { LabEntry } from "@/components/listening/LabIndex";
+import { dailySummaries, getDailyLabLessons } from "@/lib/labDaily";
 import { getJourneyCheckpoints } from "@/lib/journeyData";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [articles, lessons, checkpoints] = await Promise.all([
+  const [articles, daily, checkpoints] = await Promise.all([
     getPublicArticles(),
-    getAuthenticatedLearnerId().then((learnerId) => getAllLessons({ learnerId })),
+    getDailyLabLessons().then((lessons) => dailySummaries(lessons)),
     getJourneyCheckpoints(),
   ]);
   const latestArticles = articles.slice(0, 3);
@@ -61,7 +60,7 @@ export default async function Home() {
       </section>
 
       <aside className="home-grid__lessons" aria-label="Học hôm nay">
-        <StartLearning lessons={lessons} />
+        <LabEntry daily={daily} />
         <Link href="/learning" className="field-link">Xem tiến độ và kho bài →</Link>
       </aside>
     </div>
