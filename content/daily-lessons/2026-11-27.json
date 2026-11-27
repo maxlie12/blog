@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-27",
+  "title": "Mini-test tuần — Món quà nào còn thiếu?",
+  "kind": "weekly-test",
+  "note": "Bài ôn tự soạn, không phải bài thi chính thức. Chỉ cần làm mục tiếng Anh đầu tiên khi rảnh; không cần học bù.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-27-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Mini-test 5 phút — hai món quà, một chiếc hộp",
+      "level": "B1+ tự đánh giá",
+      "material": "Guest: Could you put those two packets in separate boxes? They’re gifts for different people.\nSeller: I’ve only got one box left. I can wrap the other packet in paper.\nGuest: That works. The mint tea is going straight to my friend. The jasmine tea has to survive a train ride.\nSeller: Got it. Let me check before I wrap them.",
+      "instructions": "Đọc hội thoại một lượt hoặc nghe bằng tính năng đọc màn hình của thiết bị (giọng máy). Che lời thoại trước khi trả lời. Bài dùng được dưới dạng văn bản; chưa xác minh trình phát nội bộ cho gói này.",
+      "exercises": "1. Vì sao việc chọn gói trà nào để vào hộp lại quan trọng với khách? Trả lời bằng một câu tiếng Anh. 2. Đóng vai người bán: nói hoặc viết một câu hỏi xác nhận gói nào cần hộp, sao cho khách chỉ cần đáp yes hoặc no.",
+      "completionCriteria": "Tự tạo một câu giải thích và một câu hỏi xác nhận bằng tiếng Anh."
+    },
+    {
+      "id": "daily-2026-11-27-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "title": "Tùy chọn 5 phút — hẹn khách lấy trà",
+      "level": "Sơ cấp · hội thoại",
+      "material": "在门口 zài ménkǒu — ở cửa ra vào\n在茶店门口 zài chádiàn ménkǒu — ở cửa tiệm trà\n等您 děng nín — đợi quý khách",
+      "instructions": "Đọc các cụm một lần, che lại rồi nhớ cách nói địa điểm và cách xưng hô lịch sự.",
+      "exercises": "Nói rồi gõ một câu báo bạn đợi khách ở cửa tiệm trà. Sau đó đổi địa điểm sang một nơi bạn tự chọn và gõ câu mới. Viết tay tùy chọn, không lưu hay tự chấm.",
+      "completionCriteria": "Đã tự nói câu hẹn và gõ hai câu dùng hai địa điểm khác nhau."
+    }
+  ]
+}
