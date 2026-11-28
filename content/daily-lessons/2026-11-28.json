@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-28",
+  "title": "Mời trà khi khách chỉ có ít phút",
+  "kind": "restart",
+  "note": "Hội thoại và bài tập tự soạn, không phải bài chính thức. Chỉ mục tiếng Anh đầu tiên là nhiệm vụ chính.",
+  "lessons": [
+    {
+      "id": "daily-2026-11-28-en-listening",
+      "language": "en",
+      "skill": "listening",
+      "title": "Khởi động 5 phút — khách muốn thử trà nhưng sắp phải đi",
+      "level": "B1+ tự đánh giá",
+      "material": "Mai: Would you like to try the green tea? I’m just putting the kettle on.\nBen: I’d love to, but my tour bus leaves in five minutes.\nMai: The green tea needs a few minutes. The lotus tea is ready to pour, though.\nBen: How does it smell? I usually go for something quite mild.",
+      "instructions": "Đọc một lượt hoặc dùng chức năng đọc màn hình của thiết bị (giọng máy), rồi che lời thoại. Bài có văn bản; chưa xác minh trình phát riêng cho gói Daily.",
+      "exercises": "1. Vì sao Mai nhắc đến trà sen mặc dù ban đầu mời trà xanh? Trả lời bằng một câu tiếng Anh. 2. Đóng vai Mai: trà sen hôm nay thơm nhẹ. Nói hoặc viết một câu đáp lại Ben và mời khách thử một ngụm.",
+      "completionCriteria": "Tự tạo một câu giải thích và một lời đáp cho khách."
+    },
+    {
+      "id": "daily-2026-11-28-zh-speaking",
+      "language": "zh",
+      "skill": "speaking",
+      "level": "Sơ cấp · hội thoại",
+      "title": "Tùy chọn 5 phút — mời khách nếm thử",
+      "material": "您想……吗？ nín xiǎng … ma? — quý khách có muốn… không?\n尝一尝 cháng yi cháng — nếm thử\n这种绿茶 zhè zhǒng lǜchá — loại trà xanh này\n这种花茶 zhè zhǒng huāchá — loại trà hoa này",
+      "instructions": "Đọc các cụm, che chữ rồi nhớ lại cách mời lịch sự.",
+      "exercises": "Tự nói rồi gõ lời mời một vị khách thử trà xanh. Khách khác muốn thử trà hoa: không nhìn mẫu, gõ một lời mời mới. Viết tay tùy chọn, không lưu hay tự chấm.",
+      "completionCriteria": "Tự nói lời mời và gõ hai câu phù hợp với hai khách."
+    }
+  ]
+}
